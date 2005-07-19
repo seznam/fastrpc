@@ -1,0 +1,8 @@
+Package: @PACKAGE@
+Version: @VERSION@
+Architecture: @ARCHITECTURE@
+Depends: libc6 (>= 2.2), libstdc++2.10-glibc2.2 (>= 2.95.4), libxml2 (>= 2.6.11-4.backports.org.1) 
+Maintainer: @MAINTAINER@
+Installed-Size: @SIZE@
+Description: Fastrpc - RPC library, supports binary and XML encoding
+ Fastrpc is a powerful and easy to make distributed applications.

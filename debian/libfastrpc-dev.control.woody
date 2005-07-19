@@ -1,0 +1,9 @@
+Package: @PACKAGE@
+Version: @VERSION@
+Architecture: @ARCHITECTURE@
+Depends: @EXTRA_DEPEND@
+Maintainer: @MAINTAINER@
+Installed-Size: @SIZE@
+Description: Development files for fastrpc library
+ Here are files necessary for developing new applications
+ that use fastrpc library and its C/C++ interface.
