@@ -1,5 +1,5 @@
 #
-# FILE              $Id: Makefile,v 1.1 2005-07-19 13:02:55 vasek Exp $
+# FILE              $Id: Makefile,v 1.2 2005-07-19 15:17:24 vasek Exp $
 #
 # DESCRIPTION       A makefile for fastrpc python module.
 #
@@ -39,3 +39,16 @@ clean:
                 $${python} setup.py clean --quiet --all; \
                 rm -rf $${libdir}; \
          done)
+
+dist:
+	rm -Rf python-fastrpc
+	mkdir python-fastrpc
+
+	cp -va --parents python-fastrpc.tar.gz api_doc.doxygen Doxyfile \
+	        fastrpcmodule.cc Makefile setup.py debian/fastrpc.control \
+		debian/fastrpc.version debian/make.sh example/client_example.py \
+	        python-fastrpc
+
+	tar cvzf python-fastrpc.tar.gz python-fastrpc
+
+	rm -Rf python-fastrpc
