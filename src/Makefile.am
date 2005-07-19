@@ -21,7 +21,7 @@
 # http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
 #
 #
-# $Id: Makefile.am,v 1.1 2005-07-19 13:02:53 vasek Exp $
+# $Id: Makefile.am,v 1.2 2005-07-19 13:46:13 vasek Exp $
 #
 # DESCRIPTION
 # A Fast RPC library.
@@ -49,7 +49,8 @@ include_HEADERS = frpc.h frpcvalue.h frpcarray.h frpcstruct.h frpcbinary.h frpcd
                   frpcmarshaller.h frpcunmarshaller.h frpcwriter.h frpcprotocolerror.h \
 	       	  frpchttperror.h frpcencodingerror.h frpchttpio.h frpchttp.h frpchttpclient.h \
                   frpctreebuilder.h frpctreefeeder.h frpcfault.h frpcmethod.h frpcdefaultmethod.h \
-                  frpcmethodregistry.h frpcserver.h frpcresponseerror.h frpcplatform.h frpcheadmethod.h
+                  frpcmethodregistry.h frpcserver.h frpcresponseerror.h frpcplatform.h frpcheadmethod.h \
+		  frpcsocket.h frpcsocketunix.h frpcsocketwin.h frpcplatform.h
 
 
 noinst_HEADERS = frpcinternals.h frpcbinmarshaller.h  frpcxmlmarshaller.h \
