@@ -21,7 +21,7 @@
 # http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
 #
 #
-# $Id: Makefile.am,v 1.1 2005-07-19 13:02:53 vasek Exp $
+# $Id: Makefile.am,v 1.2 2005-07-19 15:18:53 vasek Exp $
 #
 # DESCRIPTION
 # A makefile template for project Fast RPC.
@@ -36,5 +36,8 @@
 
 SUBDIRS = src
 
-EXTRA_DIST = debian
-# directories temporarily out of order: 'test doc'
+EXTRA_DIST = debian/libfastrpc.control.sarge debian/libfastrpc.control.woody \
+	     debian/libfastrpc-dev.control.sarge debian/libfastrpc-dev.control.woody \
+	     debian/libfastrpc.postinst.sarge debian/libfastrpc.postinst.woody \
+	     debian/make.sh
+
