@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcxmlmarshaller.cc,v 1.1 2005-07-19 13:02:55 vasek Exp $
+ * FILE          $Id: frpcxmlmarshaller.cc,v 1.2 2005-07-25 06:10:48 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -136,10 +136,10 @@ void XmlMarshaller_t::packBool(bool value)
 
 }
 
-void XmlMarshaller_t::packDateTime(short year, char month, char day, char hour, char min, char sec,
+void XmlMarshaller_t::packDateTime(short year, char month, char day, char hour, char minute, char sec,
                                    char weekDay, time_t unixTime, char timeZone)
 {
-    std::string data = getISODateTime(year,month,day,hour,min,sec,timeZone);
+    std::string data = getISODateTime(year,month,day,hour,minute,sec,timeZone);
 
     //write correct spaces
     packSpaces(level);

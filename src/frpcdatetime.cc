@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcdatetime.cc,v 1.1 2005-07-19 13:02:53 vasek Exp $
+ * FILE          $Id: frpcdatetime.cc,v 1.2 2005-07-25 06:10:47 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -25,10 +25,9 @@ namespace FRPC
 DateTime_t::~DateTime_t()
 {}
 
-
 DateTime_t::DateTime_t(Pool_t &pool, short year, char month, char day,
-                       char hour, char min, char sec, char weekDay, time_t unixTime, char timeZone)
-        :Value_t(pool),year(year),month(month),day(day),hour(hour),min(min),sec(sec),weekDay(weekDay),
+                       char hour, char minute, char sec, char weekDay, time_t unixTime, char timeZone)
+        :Value_t(pool),year(year),month(month),day(day),hour(hour),minute(minute),sec(sec),weekDay(weekDay),
         unixTime(unixTime),timeZone(timeZone)
 {
     struct tm time_tm;
@@ -37,7 +36,7 @@ DateTime_t::DateTime_t(Pool_t &pool, short year, char month, char day,
     time_tm.tm_mon = month - 1;
     time_tm.tm_mday = day;
     time_tm.tm_hour = hour;
-    time_tm.tm_min = min;
+    time_tm.tm_min = minute;
     time_tm.tm_sec = sec;
     long time_l = mktime(&time_tm);
     struct tm *timeValid = localtime(&time_l);
@@ -57,7 +56,7 @@ DateTime_t::DateTime_t(Pool_t &pool, time_t unixTime)
     month = time_tm->tm_mon + 1;
     day = time_tm->tm_mday;
     hour =  time_tm->tm_hour;
-    min =  time_tm->tm_min;
+    minute =  time_tm->tm_min;
     sec =  time_tm->tm_sec;
     weekDay =  time_tm->tm_wday;
     this->unixTime = unixTime;
@@ -80,7 +79,7 @@ DateTime_t::DateTime_t(Pool_t &pool)
     month = time_tm->tm_mon + 1;
     day = time_tm->tm_mday;
     hour =  time_tm->tm_hour;
-    min =  time_tm->tm_min;
+    minute =  time_tm->tm_min;
     sec =  time_tm->tm_sec;
     weekDay =  time_tm->tm_wday;
     this->unixTime = unixTime;
@@ -89,13 +88,13 @@ DateTime_t::DateTime_t(Pool_t &pool)
 DateTime_t::DateTime_t(Pool_t &pool, const std::string &isoFormat)
         :Value_t(pool)
 {
-    parseISODateTime(isoFormat.data(),isoFormat.size(),year,month,day,hour,min,sec,timeZone);
+    parseISODateTime(isoFormat.data(),isoFormat.size(),year,month,day,hour,minute,sec,timeZone);
     struct tm time_tm;
     time_tm.tm_year = year - 1900;
     time_tm.tm_mon = month - 1;
     time_tm.tm_mday = day;
     time_tm.tm_hour = hour;
-    time_tm.tm_min = min;
+    time_tm.tm_min = minute;
     time_tm.tm_sec = sec;
     long time_l = mktime(&time_tm);
     struct tm *timeValid = localtime(&time_l);
@@ -121,7 +120,7 @@ short DateTime_t::getHour()
 
 short DateTime_t::getMin()
 {
-    return min;
+    return minute;
 }
 
 
@@ -167,12 +166,12 @@ short DateTime_t::getDayOfWeek()
 
 std::string DateTime_t::isoFormat()
 {
-    return getISODateTime(year,month,day,hour,min,sec,timeZone);
+    return getISODateTime(year,month,day,hour,minute,sec,timeZone);
 }
 
 Value_t& FRPC::DateTime_t::clone(Pool_t &newPool) const
 {
-    return newPool.DateTime(year, month, day, hour, min, sec, weekDay, unixTime,
+    return newPool.DateTime(year, month, day, hour, minute, sec, weekDay, unixTime,
                             timeZone);
 }
 }

@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcsocketunix.h,v 1.1 2005-07-19 13:02:54 vasek Exp $
+ * FILE          $Id: frpcsocketunix.h,v 1.2 2005-07-25 06:10:48 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -22,6 +22,8 @@
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <unistd.h>
+#include <sys/time.h>
 
 #define ERRNO (errno)
 #define STRERROR(e) strerror(e)

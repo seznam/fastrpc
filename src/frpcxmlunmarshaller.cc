@@ -629,11 +629,11 @@ void XmlUnMarshaller_t::setValueData(const char *data, long len)
 
             // date vars
             short year;
-            char timeZone, month, day, hour, min, sec;
+            char timeZone, month, day, hour, minute, sec;
 
-            parseISODateTime(data, len, year, month, day, hour, min, sec, timeZone);
+            parseISODateTime(data, len, year, month, day, hour, minute, sec, timeZone);
 
-            dataBuilder.buildDateTime(year,month,day,hour,min,sec,-1,-1,
+            dataBuilder.buildDateTime(year,month,day,hour,minute,sec,-1,-1,
                                       timeZone);
             internalType = NONE;
         }

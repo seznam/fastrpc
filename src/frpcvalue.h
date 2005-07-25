@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcvalue.h,v 1.1 2005-07-19 13:02:55 vasek Exp $
+ * FILE          $Id: frpcvalue.h,v 1.2 2005-07-25 06:10:48 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -17,7 +17,6 @@
 
 #include <frpcplatform.h>
 
-#include <unistd.h>
 #include <string>
 #include "frpctypeerror.h"
 

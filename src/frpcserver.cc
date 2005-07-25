@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcserver.cc,v 1.1 2005-07-19 13:02:54 vasek Exp $
+ * FILE          $Id: frpcserver.cc,v 1.2 2005-07-25 06:10:48 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -20,9 +20,6 @@
 #include <strstream>
 #include <memory>
 #include <stdexcept>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <frpchttpclient.h>
 #include <frpcstreamerror.h>
 #include <frpchttpclient.h>
@@ -32,6 +29,8 @@
 #include <frpchttperror.h>
 #include <frpcinternals.h>
 #include <frpc.h>
+#include <frpcsocket.h>
+
 
 namespace FRPC
 {

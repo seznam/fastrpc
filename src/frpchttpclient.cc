@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpchttpclient.cc,v 1.1 2005-07-19 13:02:53 vasek Exp $
+ * FILE          $Id: frpchttpclient.cc,v 1.2 2005-07-25 06:10:47 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -13,13 +13,10 @@
  *       
  */
 
-#include <sys/time.h>
 #include <sys/types.h>
-#include <unistd.h>
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>
-#include <unistd.h>
 #include <fcntl.h>
 
 #include <string>
@@ -29,6 +26,7 @@
 #include <stdexcept>
 
 
+#include "frpcsocket.h"
 #include "frpchttpclient.h"
 #include <frpchttperror.h>
 #include <frpcunmarshaller.h>
@@ -37,7 +35,6 @@
 #include <frpcinternals.h>
 #include <frpcresponseerror.h>
 #include <frpc.h>
-#include <frpcsocket.h>
 
 
 using namespace FRPC;

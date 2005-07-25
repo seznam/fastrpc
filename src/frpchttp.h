@@ -1,5 +1,5 @@
 /*
- * FILE             $Id: frpchttp.h,v 1.1 2005-07-19 13:02:53 vasek Exp $
+ * FILE             $Id: frpchttp.h,v 1.2 2005-07-25 06:10:47 vasek Exp $
  *
  * DESCRIPTION      HTTP Base types
  *
@@ -24,8 +24,7 @@
 #include <utility>
 #include <iosfwd>
 
-#include <netinet/in.h>
-
+#include <frpcsocket.h>
 
 
 namespace FRPC {

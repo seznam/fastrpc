@@ -1,5 +1,5 @@
 /*
-* FILE             $Id: frpchttp.cc,v 1.1 2005-07-19 13:02:53 vasek Exp $
+* FILE             $Id: frpchttp.cc,v 1.2 2005-07-25 06:10:47 vasek Exp $
 *
 * DESCRIPTION      HTTP Base types
 *
@@ -13,24 +13,18 @@
 *                  First draft.
 */
 
-#include <sys/time.h>
 #include <sys/types.h>
-#include <unistd.h>
-#include <sys/socket.h>
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>
 #include <stdarg.h>
 #include <fcntl.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <arpa/inet.h>
-#include <netdb.h>
 
 #include <algorithm>
 #include <sstream>
 #include <strstream>
 
+#include "frpcsocket.h"
 #include <frpchttp.h>
 #include <frpchttperror.h>
 #include <frpctypeerror.h>

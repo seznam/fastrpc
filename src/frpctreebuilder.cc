@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpctreebuilder.cc,v 1.1 2005-07-19 13:02:54 vasek Exp $
+ * FILE          $Id: frpctreebuilder.cc,v 1.2 2005-07-25 06:10:48 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -49,9 +49,9 @@ void TreeBuilder_t::buildBool(bool value)
 
 }
 
-void TreeBuilder_t::buildDateTime(short year, char month, char day, char hour, char min, char sec, char weekDay, time_t unixTime, char timeZone)
+void TreeBuilder_t::buildDateTime(short year, char month, char day, char hour, char minute, char sec, char weekDay, time_t unixTime, char timeZone)
 {
-    Value_t &dateTime = pool.DateTime(year, month, day, hour, min, sec,
+    Value_t &dateTime = pool.DateTime(year, month, day, hour, minute, sec,
                                       weekDay, unixTime, timeZone);
     if(!isMember(dateTime))
         isFirst(dateTime);

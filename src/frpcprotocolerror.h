@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcprotocolerror.h,v 1.1 2005-07-19 13:02:54 vasek Exp $
+ * FILE          $Id: frpcprotocolerror.h,v 1.2 2005-07-25 06:10:48 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -19,7 +19,6 @@
 
 #include <string>
 #include <stdio.h>
-#include <unistd.h>
 #include <stdarg.h>
 
 namespace FRPC

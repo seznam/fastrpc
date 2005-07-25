@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcbinmarshaller.cc,v 1.1 2005-07-19 13:02:53 vasek Exp $
+ * FILE          $Id: frpcbinmarshaller.cc,v 1.2 2005-07-25 06:10:47 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -85,7 +85,7 @@ void BinMarshaller_t::packBool(bool value)
 
 }
 
-void BinMarshaller_t::packDateTime(short year, char month, char day, char hour, char min, char sec, char weekDay, time_t unixTime, char timeZone)
+void BinMarshaller_t::packDateTime(short year, char month, char day, char hour, char minute, char sec, char weekDay, time_t unixTime, char timeZone)
 {
     DateTimeData_t dateTime;
     //pack type
@@ -103,7 +103,7 @@ void BinMarshaller_t::packDateTime(short year, char month, char day, char hour, 
     dateTime.dateTime.month = month & 0x0f;
     dateTime.dateTime.day = day & 0x1f;
     dateTime.dateTime.hour = hour & 0x1f;
-    dateTime.dateTime.min = min & 0x3f;
+    dateTime.dateTime.minute = minute & 0x3f;
     dateTime.dateTime.sec = sec & 0x3f;
 
     dateTime.dateTime.weekDay = weekDay & 0x07;

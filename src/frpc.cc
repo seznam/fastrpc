@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpc.cc,v 1.1 2005-07-19 13:02:53 vasek Exp $
+ * FILE          $Id: frpc.cc,v 1.2 2005-07-25 06:10:47 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -28,7 +28,7 @@ void dummyFastRPC()
 */
 std::string getISODateTime(short year, char month,
                            char day, char hour,
-                           char min, char sec, char timeZone)
+                           char minute, char sec, char timeZone)
 {
     char dateTime[50];
 
@@ -37,14 +37,14 @@ std::string getISODateTime(short year, char month,
     {
         sprintf(dateTime,"%04d%02d%02dT%02d:%02d:%02d+%02d%02d",year
                 ,month ,
-                day ,hour,min,sec,
+                day ,hour,minute,sec,
                 (timeZone*15)/60,(timeZone*15)%60);
     }
     else
     {
         sprintf(dateTime,"%04d%02d%02dT%02d:%02d:%02d-%02d%02d",year
                 ,month ,
-                day, hour ,min ,sec,
+                day, hour ,minute ,sec,
                 abs((timeZone*15))/60,abs((timeZone*15)%60));
     }
 
@@ -58,10 +58,10 @@ and fill parameters
 
 void parseISODateTime(const char *data, long len, short &year, char &month,
                       char &day, char &hour,
-                      char &min, char &sec, char &timeZone)
+                      char &minute, char &sec, char &timeZone)
 {
 
-    year = month = day = hour = min = sec = timeZone = 0;
+    year = month = day = hour = minute = sec = timeZone = 0;
     // iterators
     char *sit = const_cast<char*>(data);
     char *end = const_cast<char*>(data)+len;
@@ -151,7 +151,7 @@ void parseISODateTime(const char *data, long len, short &year, char &month,
     if (tmp.length() == 0)
         return;
     //throw StreamError_t("Bad DATE format");
-    min = atoi(tmp.c_str());
+    minute = atoi(tmp.c_str());
 
     // skip optional delimiter
     if (sit != end && *sit == ':')

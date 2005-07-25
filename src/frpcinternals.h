@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcinternals.h,v 1.1 2005-07-19 13:02:54 vasek Exp $
+ * FILE          $Id: frpcinternals.h,v 1.2 2005-07-25 06:10:47 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -94,19 +94,18 @@ struct TypeStorage_t
     bool member;
 };
 
-#undef min
 
 struct DateTimeInternal_t
 {
     DateTimeInternal_t()
     :timeZone(0),unixTime(0),weekDay(0),sec(0),
-     min(0),hour(0),day(0),month(0),year(0)
+     minute(0),hour(0),day(0),month(0),year(0)
     {}
     unsigned char timeZone;
     unsigned long unixTime;
     unsigned char weekDay;
     unsigned char sec;
-    unsigned char min;
+    unsigned char minute;
     unsigned char hour;
     unsigned char day;
     unsigned char month;
@@ -131,7 +130,7 @@ struct DateTimeData_t
         data[0] = dateTime.timeZone;
         memcpy(&data[1],reinterpret_cast<char*>(&dateTime.unixTime),4) ;
         data[5] = (dateTime.sec & 0x1f) << 3 | (dateTime.weekDay & 0x07);
-        data[6] = ((dateTime.min & 0x3f) << 1) | ((dateTime.sec & 0x20) >> 5) |
+        data[6] = ((dateTime.minute & 0x3f) << 1) | ((dateTime.sec & 0x20) >> 5) |
                 ((dateTime.hour & 0x01) << 7);
         data[7] = ((dateTime.hour & 0x1e) >> 1) | ((dateTime.day & 0x0f) << 4);
         data[8] = ((dateTime.day & 0x1f) >> 4) | ((dateTime.month & 0x0f) << 1) |
@@ -144,7 +143,7 @@ struct DateTimeData_t
         dateTime.month = (data[8] & 0x1e) >> 1;
         dateTime.day = ((data[8] & 0x01) << 4) |(((data[7] & 0xf0) >> 4)); 
         dateTime.hour = ((data[7] & 0x0f) << 1) | ((data[6] & 0x80) >> 7);
-        dateTime.min = ((data[6] & 0x7e) >> 1);
+        dateTime.minute = ((data[6] & 0x7e) >> 1);
         dateTime.sec = ((data[6] & 0x01) << 5) | ((data[5] & 0xf8) >> 3);
         dateTime.weekDay = (data[5] & 0x07);
         memcpy(reinterpret_cast<char*>(&dateTime.unixTime),&data[1], 4 );

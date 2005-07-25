@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcbinunmarshaller.cc,v 1.1 2005-07-19 13:02:53 vasek Exp $
+ * FILE          $Id: frpcbinunmarshaller.cc,v 1.2 2005-07-25 06:10:47 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -339,12 +339,12 @@ void BinUnMarshaller_t::unMarshall(const char *data, long size, char type)
                 dateTime.unpack();
                 
                 if(dateTime.dateTime.year || dateTime.dateTime.month || dateTime.dateTime.day
-                        || dateTime.dateTime.hour || dateTime.dateTime.min || dateTime.dateTime.sec)
+                        || dateTime.dateTime.hour || dateTime.dateTime.minute || dateTime.dateTime.sec)
                 {
                     //call builder
                     dataBuilder.buildDateTime(dateTime.dateTime.year + 1600, dateTime.dateTime.month,
                                               dateTime.dateTime.day, dateTime.dateTime.hour,
-                                              dateTime.dateTime.min,dateTime.dateTime.sec,
+                                              dateTime.dateTime.minute,dateTime.dateTime.sec,
                                               dateTime.dateTime.weekDay,
                                               dateTime.dateTime.unixTime,
                                               dateTime.dateTime.timeZone);
@@ -353,7 +353,7 @@ void BinUnMarshaller_t::unMarshall(const char *data, long size, char type)
                 {
                     dataBuilder.buildDateTime(dateTime.dateTime.year, dateTime.dateTime.month,
                                               dateTime.dateTime.day, dateTime.dateTime.hour,
-                                              dateTime.dateTime.min,dateTime.dateTime.sec,
+                                              dateTime.dateTime.minute,dateTime.dateTime.sec,
                                               dateTime.dateTime.weekDay,
                                               dateTime.dateTime.unixTime,
                                               dateTime.dateTime.timeZone);

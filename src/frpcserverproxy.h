@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcserverproxy.h,v 1.1 2005-07-19 13:02:54 vasek Exp $
+ * FILE          $Id: frpcserverproxy.h,v 1.2 2005-07-25 06:10:48 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -74,8 +74,10 @@ public:
             @n @b readTimeout = 10000 ms
             @n @b writeTimeout = 1000 ms
         */
-        Config_t():connectTimeout(10000),readTimeout(10000),writeTimeout(1000),keepAlive(false),useHTTP10(false),
-                useBinary(ON_SUPPORT_ON_KEEP_ALIVE)
+        Config_t()
+            : connectTimeout(10000), readTimeout(10000), writeTimeout(1000),
+              keepAlive(false), useBinary(ON_SUPPORT_ON_KEEP_ALIVE),
+              useHTTP10(false)
         {}
         ///@brief internal representation of connectTimeout value
         long connectTimeout;
@@ -433,7 +435,7 @@ private:
     int connectTimeout;
     bool keepAlive;
     int rpcTransferMode;
-	bool useHTTP10;
+    bool useHTTP10;
     unsigned long serverSupportedProtocols;
 }
 ;

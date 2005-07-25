@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcpool.cc,v 1.1 2005-07-19 13:02:54 vasek Exp $
+ * FILE          $Id: frpcpool.cc,v 1.2 2005-07-25 06:10:48 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -105,10 +105,10 @@ Binary_t& Pool_t::Binary(const std::string &value)
 }
 
 DateTime_t&  Pool_t::DateTime(short year, char month, char day,
-                              char hour, char min, char sec, char weekDay, time_t unixTime,
+                              char hour, char minute, char sec, char weekDay, time_t unixTime,
                               char timeZone)
 {
-    DateTime_t *newValue =  new DateTime_t(*this, year, month, day, hour, min, sec, weekDay, unixTime,
+    DateTime_t *newValue =  new DateTime_t(*this, year, month, day, hour, minute, sec, weekDay, unixTime,
                                            timeZone);
 
     pointerStorage.push_back(newValue);
@@ -117,9 +117,9 @@ DateTime_t&  Pool_t::DateTime(short year, char month, char day,
 }
 
 DateTime_t&  Pool_t::DateTime(short year, char month, char day,
-                              char hour, char min, char sec)
+                              char hour, char minute, char sec)
 {
-    DateTime_t *newValue =  new DateTime_t(*this, year, month, day, hour, min, sec,-1,-1,0);
+    DateTime_t *newValue =  new DateTime_t(*this, year, month, day, hour, minute, sec,-1,-1,0);
 
     pointerStorage.push_back(newValue);
 

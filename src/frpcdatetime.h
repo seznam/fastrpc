@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcdatetime.h,v 1.1 2005-07-19 13:02:53 vasek Exp $
+ * FILE          $Id: frpcdatetime.h,v 1.2 2005-07-25 06:10:47 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -165,7 +165,7 @@ private:
     char month;        ///month
     char day;          ///day
     char hour;         ///hour
-    char min;          ///minute
+    char minute;          ///minute
     char sec;          /// second
     char weekDay;      ///day of week
     time_t        unixTime;     ///long unix time

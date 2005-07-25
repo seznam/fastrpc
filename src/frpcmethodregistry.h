@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcmethodregistry.h,v 1.1 2005-07-19 13:02:54 vasek Exp $
+ * FILE          $Id: frpcmethodregistry.h,v 1.2 2005-07-25 06:10:47 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -17,8 +17,9 @@
 
 #include<map>
 #include<string>
-#include<sys/time.h>
 #include<frpcmethod.h>
+
+#include "frpcsocket.h"
 
 
 namespace FRPC
