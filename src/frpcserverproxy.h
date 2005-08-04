@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcserverproxy.h,v 1.2 2005-07-25 06:10:48 vasek Exp $
+ * FILE          $Id: frpcserverproxy.h,v 1.3 2005-08-04 11:53:55 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -60,6 +60,9 @@ public:
             @param keepAlive -  it is keep alive connection parameter
             
             @param useBinary - says how client switching modes(XML, binary)
+
+            @param useHTTP10 - says that client must use HTTP/1.0 in all
+                               conditions
         */
         Config_t(long connectTimeout, long readTimeout, long writeTimeout,
                  bool keepAlive, long useBinary, bool useHTTP10 = false):

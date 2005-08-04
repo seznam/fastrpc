@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcbinmarshaller.h,v 1.2 2005-07-25 06:10:47 vasek Exp $
+ * FILE          $Id: frpcbinmarshaller.h,v 1.3 2005-08-04 11:53:55 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -41,7 +41,8 @@ public:
     virtual void packArray(long numOfItems);
     virtual void packBinary(const char* value, long size);
     virtual void packBool(bool value);
-    virtual void packDateTime(short year, char month, char day, char hour, char minute, char sec,
+    virtual void packDateTime(short year, char month, char day, char hour,
+                              char minute, char sec,
                               char weekDay, time_t unixTime, char timeZone);
     virtual void packDouble(double value);
     virtual void packFault(long errNumber, const char* errMsg, long size);
