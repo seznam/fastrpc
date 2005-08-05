@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcserver.cc,v 1.2 2005-07-25 06:10:48 vasek Exp $
+ * FILE          $Id: frpcserver.cc,v 1.3 2005-08-05 08:14:30 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -41,6 +41,14 @@ Server_t::~Server_t()
 
 void Server_t::serve(int fd, struct sockaddr_in* addr )
 {
+    // prepare query storage
+    queryStorage.push_back(std::string());
+    queryStorage.back().reserve(BUFFER_SIZE);
+    contentLength = 0;
+    closeConnection = false;
+    headersSent = false;
+    head = false;
+
     std::string clientIP;
 
     io.setSocket(fd);
@@ -146,13 +154,6 @@ void Server_t::serve(int fd, struct sockaddr_in* addr )
 
 void Server_t::readRequest(DataBuilder_t &builder)
 {
-
-    closeConnection = false;
-    contentLenght = 0;
-    headersSent = false;
-    head = false;
-
-
     HTTPHeader_t httpHead;
 
     std::string protocol;
@@ -321,7 +322,7 @@ void Server_t::readRequest(DataBuilder_t &builder)
 void Server_t::write(const char* data, long size)
 {
 
-    contentLenght += size;
+    contentLength += size;
 
     if(size > long(BUFFER_SIZE - queryStorage.back().size()))
     {
@@ -424,7 +425,7 @@ void Server_t::sendResponse()
 
         if (!useChunks)
         {
-            os.os << HTTP_HEADER_CONTENT_LENGTH << ": " << contentLenght
+            os.os << HTTP_HEADER_CONTENT_LENGTH << ": " << contentLength
             << "\r\n";
         }
         else

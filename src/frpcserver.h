@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcserver.h,v 1.1 2005-07-19 13:02:54 vasek Exp $
+ * FILE          $Id: frpcserver.h,v 1.2 2005-08-05 08:14:31 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -102,13 +102,11 @@ public:
             io(0,config.readTimeout, config.writeTimeout, -1 ,-1),
             keepAlive(config.keepAlive),maxKeepalive(config.maxKeepalive),
             callbacks(config.callbacks), outType(XML_RPC), closeConnection(true),
-            contentLenght(0),useChunks(false),headersSent(false),head(false)
+            contentLength(0),useChunks(false),headersSent(false),head(false)
 
     {
-        queryStorage.push_back(std::string(""));
-        queryStorage.back().reserve(BUFFER_SIZE);
-
     }
+
     void serve(int fd, struct sockaddr_in* addr = 0);
 
     ~Server_t();
@@ -118,6 +116,7 @@ public:
         return methodRegistry;
     }
 
+private:
     void readRequest(DataBuilder_t &builder);
 
     /**
@@ -142,7 +141,6 @@ public:
     */
     void sendHttpError(const HTTPError_t &httpError);
 
-private:
     Server_t();
 
     MethodRegistry_t methodRegistry;
@@ -154,7 +152,7 @@ private:
     bool closeConnection;
     std::list<std::string> queryStorage;
     //UnMarshaller_t *unmarshaller;
-    unsigned long contentLenght;
+    unsigned long contentLength;
     bool  useChunks;
     bool headersSent;
     bool head;
