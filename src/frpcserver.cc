@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcserver.cc,v 1.3 2005-08-05 08:14:30 vasek Exp $
+ * FILE          $Id: frpcserver.cc,v 1.4 2005-11-04 12:19:24 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -154,6 +154,11 @@ void Server_t::serve(int fd, struct sockaddr_in* addr )
 
 void Server_t::readRequest(DataBuilder_t &builder)
 {
+    closeConnection = false;
+    contentLength = 0;
+    headersSent = false;
+    head = false;
+
     HTTPHeader_t httpHead;
 
     std::string protocol;
@@ -297,6 +302,7 @@ void Server_t::readRequest(DataBuilder_t &builder)
         else
         {
             closeConnection = (connection != "KEEP-ALIVE");
+            useChunks = false;
         }
 
 
