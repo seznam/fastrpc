@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcserverproxy.h,v 1.3 2005-08-04 11:53:55 vasek Exp $
+ * FILE          $Id: frpcserverproxy.h,v 1.4 2005-12-01 08:46:39 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -78,9 +78,9 @@ public:
             @n @b writeTimeout = 1000 ms
         */
         Config_t()
-            : connectTimeout(10000), readTimeout(10000), writeTimeout(1000),
-              keepAlive(false), useBinary(ON_SUPPORT_ON_KEEP_ALIVE),
-              useHTTP10(false)
+                : connectTimeout(10000), readTimeout(10000), writeTimeout(1000),
+                keepAlive(false), useBinary(ON_SUPPORT_ON_KEEP_ALIVE),
+                useHTTP10(false)
         {}
         ///@brief internal representation of connectTimeout value
         long connectTimeout;
@@ -368,9 +368,30 @@ public:
            @n Where ret is return Value_t from remote method  and pool is alocator
     */
     Value_t& call(Pool_t &pool, const std::string &methodName, Array_t &params);
+    /**
+     *    @brief set new read timeout
+    */
+    inline void setReadTimeout(int timeout)
+    {
+        io.setReadTimeout(timeout);
+    }
+    /**
+    *    @brief set new write timeout
+    */
+    inline void setWriteTimeout(int timeout)
+    {
+        io.setWriteTimeout(timeout);
+    }
+    /**
+     *    @brief set new connect timeout
+     */
+    inline void setConnectTimeout(int timeout)
+    {
+        connectTimeout = timeout;
+    }
 
     const URL_t& getURL();
-    
+
 private:
     inline Marshaller_t* createMarshaller(HTTPClient_t &client)
     {
@@ -427,7 +448,7 @@ private:
     }
 
     void closeSocket();
-    
+
 
     ServerProxy_t();
 

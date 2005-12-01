@@ -1,5 +1,5 @@
 /*
- * FILE             $Id: frpchttpio.h,v 1.1 2005-07-19 13:02:53 vasek Exp $
+ * FILE             $Id: frpchttpio.h,v 1.2 2005-12-01 08:46:39 mirecta Exp $
  *
  * DESCRIPTION      HTTP I/O
  *
@@ -128,8 +128,20 @@ public:
     {
         this->fd = fd;
     }
-
-
+    /**
+     *    @brief set new read timeout
+     */
+    inline void setReadTimeout(int timeout)
+    {
+        readTimeout = timeout;
+    }
+    /**
+     *    @brief set new write timeout
+     */
+    inline void setWriteTimeout(int timeout)
+    {
+        writeTimeout = timeout;
+    }
 
 private:
     int fd;
