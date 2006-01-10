@@ -1,16 +1,16 @@
 /*
- * FILE          $Id: frpcserver.cc,v 1.4 2005-11-04 12:19:24 mirecta Exp $
+ * FILE          $Id: frpcserver.cc,v 1.5 2006-01-10 15:09:35 mirecta Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * Copyright (C) Seznam.cz a.s. 2002
  * All Rights Reserved
  *
  * HISTORY
- *       
+ *
  */
 #include "frpcserver.h"
 
@@ -158,7 +158,9 @@ void Server_t::readRequest(DataBuilder_t &builder)
     contentLength = 0;
     headersSent = false;
     head = false;
-
+    queryStorage.clear();
+    queryStorage.push_back(std::string());
+    queryStorage.back().reserve(BUFFER_SIZE);
     HTTPHeader_t httpHead;
 
     std::string protocol;
