@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpc.cc,v 1.2 2005-07-25 06:10:47 vasek Exp $
+ * FILE          $Id: frpc.cc,v 1.3 2006-02-09 16:00:26 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -15,12 +15,20 @@
 
 
 #include <frpc.h>
+#include <frpcinternals.h>
+
+using namespace FRPC;
 
 /**
 * @brief dummy method for test in configure 
 */
-void dummyFastRPC()
-{}
+extern "C" {
+    int FRPC_DLLEXPORT dummyFastRPC() {
+        return 0;
+    }
+}
+
+namespace FRPC {
 
 /**
 *@brief method render iso date time forma from parameters
@@ -48,7 +56,7 @@ std::string getISODateTime(short year, char month,
                 abs((timeZone*15))/60,abs((timeZone*15)%60));
     }
 
-return std::string(dateTime);
+    return std::string(dateTime);
 }
 
 /**
@@ -243,6 +251,7 @@ void parseISODateTime(const char *data, long len, short &year, char &month,
     timeZone = (tzhour * 60 + tzmin)/15 * sign;
 
 }
+
 /**
 @brief method render fastrpc Value_t to string with level level
 @param value1  - fast rpc value
@@ -396,8 +405,6 @@ int dumpFastrpcTree(const Value_t &value1,
 }
 
 
-
-
 //for debug
 void printSpaces(long spaces)
 {
@@ -514,4 +521,4 @@ void printValue(Value_t &value, long spaces )
     }
 }
 
-
+} // namespace FRPC

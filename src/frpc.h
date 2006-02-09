@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpc.h,v 1.2 2005-07-25 06:10:47 vasek Exp $
+ * FILE          $Id: frpc.h,v 1.3 2006-02-09 16:00:26 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -42,34 +42,21 @@
 #include <strstream>
 #include <string>
 
-extern "C"{
-void FRPC_DLLEXPORT dummyFastRPC();
-
-}
-
+namespace FRPC {
 
 void parseISODateTime(const char *data, long len, short &year, char &month,
                       char &day, char &hour,
                       char &minute, char &sec, char &timeZone);
-                      
+
 std::string getISODateTime(short year, char month,
                            char day, char hour,
                            char minute, char sec, char timeZone);
-using namespace FRPC;
 
-static const size_t MAX_LEN = 20;
 int FRPC_DLLEXPORT dumpFastrpcTree(const Value_t &value,
                     std::string &outstr, int level);
 
 void printValue(Value_t &value, long spaces = 0);
-const long BUFFER_SIZE = 65636;
 
-struct upper
-{
-    unsigned char operator() (unsigned char c)
-    {
-        return toupper(c);
-    }
-};
+} // namespace FRPC
 
 #endif

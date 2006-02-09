@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcstring.h,v 1.1 2005-07-19 13:02:54 vasek Exp $
+ * FILE          $Id: frpcstring.h,v 1.2 2006-02-09 16:00:26 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -39,7 +39,7 @@ public:
         @return  @b unsigned @b short always 
         @li @b Binary_t::TYPE - identificator of binary value
     */
-    virtual unsigned short getType()
+    virtual unsigned short getType() const
     {
         return TYPE;
     }
@@ -48,7 +48,7 @@ public:
         @return @b const @b char* always
         @li @b "String" - typename of String_t
     */
-    virtual const char* getTypeName()
+    virtual const char* getTypeName() const
     {
         return "string";
     }
@@ -56,24 +56,24 @@ public:
         @brief Get data itself. Data are not "\0"-terminated.
         @return Pointer to the binary data. 
     */
-    std::string::size_type size();
+    std::string::size_type size() const;
     /** 
         @brief Get data itself. Data are not "\0"-terminated.
         @return Pointer to the binary data. 
     */
 
-    const std::string::value_type* data();
+    const std::string::value_type* data() const;
     /**
         @brief Get binary data as STL string.
         @return Binary data as string. 
     */
     
-    std::string getString();
+    std::string getString() const;
     /**
         @brief Get binary data as C string.
         @return Binary data as C string. 
     */
-    const char* c_str();
+    const char* c_str() const;
     /**
         @brief Method to clone/copy Binary_t 
         @param newPool is reference of Pool_t which is used for allocate objects
@@ -148,6 +148,23 @@ inline FRPC_DLLEXPORT String_t& String(Value_t &value)
     return *string_v;
 }
 
+/**
+    @brief Inline method
+    
+    Used to retype Value_t to String_t 
+    @return  If Value_t  can  retype to String_t return reference to String_t
+    @n If Value_t can't retype to Int_t: throw exception TypeError_t
+    
+*/
+inline FRPC_DLLEXPORT const String_t& String(const Value_t &value)
+{
+    const String_t *string_v = dynamic_cast<const String_t*>(&value);
+
+    if(!string_v)
+        throw TypeError_t("Type is %s but not string",value.getTypeName());
+    
+    return *string_v;
+}
 
 
 };

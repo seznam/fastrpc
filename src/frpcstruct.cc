@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcstruct.cc,v 1.1 2005-07-19 13:02:54 vasek Exp $
+ * FILE          $Id: frpcstruct.cc,v 1.2 2006-02-09 16:00:26 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -54,7 +54,7 @@ Value_t& Struct_t::clone(Pool_t& newPool) const
     return  *newStruct;
 }
 
-bool Struct_t::has_key(const Struct_t::key_type &key)
+bool Struct_t::has_key(const Struct_t::key_type &key) const
 {
     if(structData.find(key) != structData.end())
         return true;
@@ -82,12 +82,12 @@ Struct_t::iterator Struct_t::end()
     return structData.end();
 }
 
-bool Struct_t::empty()
+bool Struct_t::empty() const
 {
     return structData.empty();
 }
 
-Struct_t::size_type Struct_t::size()
+Struct_t::size_type Struct_t::size() const
 {
     return structData.size();
 }
@@ -119,6 +119,15 @@ Value_t& Struct_t::operator[] (const Struct_t::key_type &key)
     return *(istructData->second);
 }
 
+const Value_t& Struct_t::operator[] (const Struct_t::key_type &key) const
+{
+    const_iterator istructData;
+
+    if ((istructData = structData.find(key)) == structData.end())
+        throw KeyError_t("Key %s is not exists",key.c_str());
+
+    return *(istructData->second);
+}
 
 
 void Struct_t::clear()

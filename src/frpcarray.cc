@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcarray.cc,v 1.1 2005-07-19 13:02:53 vasek Exp $
+ * FILE          $Id: frpcarray.cc,v 1.2 2006-02-09 16:00:26 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -71,7 +71,7 @@ Array_t::iterator Array_t::end()
 
 
 
-Array_t::size_type Array_t::size()
+Array_t::size_type Array_t::size() const
 {
     return arrayData.size();
 }
@@ -96,7 +96,7 @@ Array_t& Array_t::append(Value_t &value)
     return *this;
 }
 
-bool Array_t::empty()
+bool Array_t::empty() const
 {
     return arrayData.empty();
 }
@@ -109,7 +109,15 @@ Value_t& Array_t::operator[] (Array_t::size_type index)
     return *(arrayData[index]);
 }
 
-void Array_t::checkItems(const std::string &items)
+const Value_t& Array_t::operator[] (Array_t::size_type index) const
+{
+    if(index >= arrayData.size())
+        throw(IndexError_t("index %d is out of range 0 - %d", index, arrayData.size()));
+
+    return *(arrayData[index]);
+}
+
+void Array_t::checkItems(const std::string &items) const
 {
 
     if(arrayData.size() !=  items.size())

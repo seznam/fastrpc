@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcserver.cc,v 1.5 2006-01-10 15:09:35 mirecta Exp $
+ * FILE          $Id: frpcserver.cc,v 1.6 2006-02-09 16:00:26 vasek Exp $
  *
  * DESCRIPTION
  *
@@ -19,6 +19,8 @@
 #include <sstream>
 #include <strstream>
 #include <memory>
+#include <functional>
+
 #include <stdexcept>
 #include <frpchttpclient.h>
 #include <frpcstreamerror.h>
@@ -294,7 +296,7 @@ void Server_t::readRequest(DataBuilder_t &builder)
         std::string connection;
         httpHead.get("Connection", connection);
         std::transform(connection.begin(), connection.end(),
-                       connection.begin(), upper());
+                       connection.begin(), std::ptr_fun<int, int>(toupper));
         closeConnection = false;
 
         if (protocol == "HTTP/1.1")

@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcbool.h,v 1.1 2005-07-19 13:02:53 vasek Exp $
+ * FILE          $Id: frpcbool.h,v 1.2 2006-02-09 16:00:26 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -39,7 +39,7 @@ public:
         @return @b unsigned @b short always 
         @li @b Bool_t::TYPE - identificator of boolean value
     */
-    virtual unsigned short getType()
+    virtual unsigned short getType() const
     {
         return TYPE;
     }
@@ -48,7 +48,7 @@ public:
         @return @b const @b char* always
         @li @b "Bool" - typename of Bool_t
     */
-    virtual const char* getTypeName()
+    virtual const char* getTypeName() const
     {
         return "bool";
     }
@@ -56,7 +56,7 @@ public:
         @brief Getting internal boolean value
         @return  @b bool - internal value 
     */
-    bool getValue()
+    bool getValue() const
     {
         return value;
     }
@@ -113,9 +113,19 @@ private :
     @return  If Value_t  can  retype to Bool_t return reference to Bool_t
     @n If Value_t can't retype to Bool_t throw exception TypeError_t
 */
- inline FRPC_DLLEXPORT Bool_t& Bool(Value_t &value)
+inline FRPC_DLLEXPORT Bool_t& Bool(Value_t &value)
 {
     Bool_t *boolean = dynamic_cast<Bool_t*>(&value);
+
+    if(!boolean)
+        throw TypeError_t("Type is %s but not bool",value.getTypeName());
+        
+    return *boolean;
+}
+
+inline FRPC_DLLEXPORT const Bool_t& Bool(const Value_t &value)
+{
+    const Bool_t *boolean = dynamic_cast<const Bool_t*>(&value);
 
     if(!boolean)
         throw TypeError_t("Type is %s but not bool",value.getTypeName());

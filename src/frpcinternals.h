@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcinternals.h,v 1.2 2005-07-25 06:10:47 vasek Exp $
+ * FILE          $Id: frpcinternals.h,v 1.3 2006-02-09 16:00:26 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -110,9 +110,7 @@ struct DateTimeInternal_t
     unsigned char day;
     unsigned char month;
     unsigned short year;
-}
-//__attribute__((packed))
-;
+};
 
 
 struct DateTimeData_t
@@ -149,9 +147,10 @@ struct DateTimeData_t
         memcpy(reinterpret_cast<char*>(&dateTime.unixTime),&data[1], 4 );
         dateTime.timeZone = data[0];
     }
-}
-//__attribute__((packed))
-;
+};
+
+const long BUFFER_SIZE = 1 << 16;
+const size_t MAX_LEN = 20;
 
 }
 

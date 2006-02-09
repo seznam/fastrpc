@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcint.h,v 1.1 2005-07-19 13:02:54 vasek Exp $
+ * FILE          $Id: frpcint.h,v 1.2 2006-02-09 16:00:26 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -42,7 +42,7 @@ public:
     @return  @b unsigned @b short always 
     @li @b Int_t::type - identificator of inteeger value
     */
-    virtual unsigned short getType()
+    virtual unsigned short getType() const
     {
         return TYPE;
     }
@@ -51,7 +51,7 @@ public:
         @return @b const @b char  always
         @li @b "Int" - typename of Int_t
     */
-    virtual const char* getTypeName()
+    virtual const char* getTypeName() const
     {
         return "int";
     }
@@ -59,7 +59,7 @@ public:
     @brief Getting internal integer value
     @return   @b long - internal value 
     */
-    long getValue()
+    long getValue() const
     {
         return value;
     }
@@ -126,6 +126,22 @@ inline FRPC_DLLEXPORT Int_t& Int(Value_t &value)
     return *integer;
 }
 
+/**
+    @brief Inline method
+    
+    Used to retype Value_t to Int_t 
+    @return  If Value_t  can  retype to Int_t return reference to  Int_t
+    @n If Value_t can't retype to Int_t: throw exception TypeError_t
+    
+*/
+inline FRPC_DLLEXPORT const Int_t& Int(const Value_t &value)
+{
+    const Int_t *integer = dynamic_cast<const Int_t*>(&value);
+
+    if(!integer)
+        throw TypeError_t("Type is %s but not int",value.getTypeName());
+    return *integer;
+}
 };
 
 #endif

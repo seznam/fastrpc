@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcbinary.h,v 1.1 2005-07-19 13:02:53 vasek Exp $
+ * FILE          $Id: frpcbinary.h,v 1.2 2006-02-09 16:00:26 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -39,7 +39,7 @@ public:
         @return  @b unsigned @b short always 
         @li @b Binary_t::TYPE - identificator of binary value
     */
-    virtual unsigned short getType()
+    virtual unsigned short getType() const
     {
         return TYPE;
     }
@@ -48,7 +48,7 @@ public:
         @return @b const @b char* always
         @li @b "Binary" - typename of Binary_t
     */
-    virtual const char* getTypeName()
+    virtual const char* getTypeName() const
     {
         return "binary";
     }
@@ -57,18 +57,18 @@ public:
         @brief Get data itself. Data are not "\0"-terminated.
         @return Pointer to the binary data. 
     */
-    std::string::size_type size();
+    std::string::size_type size() const;
     /** 
         @brief Get data itself. Data are not "\0"-terminated.
         @return Pointer to the binary data. 
     */
 
-    const std::string::value_type* data();
+    const std::string::value_type* data() const;
     /**
         @brief Get binary data as STL string.
         @return Binary data as string. 
     */
-    std::string getString();
+    std::string getString() const;
     /**
         @brief Method to clone/copy Binary_t 
         @param newPool is reference of Pool_t which is used for allocate objects
@@ -123,6 +123,22 @@ private:
 inline FRPC_DLLEXPORT Binary_t& Binary(Value_t &value)
 {
     Binary_t *binary = dynamic_cast<Binary_t*>(&value);
+
+    if(!binary)
+        throw TypeError_t("Type is %s but not binary",value.getTypeName());
+    return *binary;
+}
+
+/**
+    @brief Inline method
+    
+    Used to retype Value_t to Binary_t 
+    @return  If Value_t  can  retype to Binary_t return reference to Binary_t
+    @n If Value_t can't retype to Binary_t throw exception TypeError_t
+*/
+inline FRPC_DLLEXPORT const Binary_t& Binary(const Value_t &value)
+{
+    const Binary_t *binary = dynamic_cast<const Binary_t*>(&value);
 
     if(!binary)
         throw TypeError_t("Type is %s but not binary",value.getTypeName());

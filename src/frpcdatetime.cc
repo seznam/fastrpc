@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcdatetime.cc,v 1.2 2005-07-25 06:10:47 vasek Exp $
+ * FILE          $Id: frpcdatetime.cc,v 1.3 2006-02-09 16:00:26 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -104,67 +104,67 @@ DateTime_t::DateTime_t(Pool_t &pool, const std::string &isoFormat)
 }
 
 
-short DateTime_t::getDay()
+short DateTime_t::getDay() const
 {
     return day;
 }
 
 
 
-short DateTime_t::getHour()
+short DateTime_t::getHour() const
 {
     return hour;
 }
 
 
 
-short DateTime_t::getMin()
+short DateTime_t::getMin() const
 {
     return minute;
 }
 
 
 
-short DateTime_t::getMonth()
+short DateTime_t::getMonth() const
 {
     return month;
 }
 
 
 
-short DateTime_t::getSec()
+short DateTime_t::getSec() const
 {
     return sec;
 }
 
 
 
-short DateTime_t::getTimeZone()
+short DateTime_t::getTimeZone() const
 {
     return timeZone;
 }
 
 
 
-short DateTime_t::getYear()
+short DateTime_t::getYear() const
 {
     return year;
 }
 
 
 
-time_t  DateTime_t::getUnixTime()
+time_t  DateTime_t::getUnixTime() const
 {
     return unixTime;
 }
 
 
-short DateTime_t::getDayOfWeek()
+short DateTime_t::getDayOfWeek() const
 {
     return weekDay;
 }
 
-std::string DateTime_t::isoFormat()
+std::string DateTime_t::isoFormat() const
 {
     return getISODateTime(year,month,day,hour,minute,sec,timeZone);
 }

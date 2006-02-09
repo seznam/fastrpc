@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcdatetime.h,v 1.2 2005-07-25 06:10:47 vasek Exp $
+ * FILE          $Id: frpcdatetime.h,v 1.3 2006-02-09 16:00:26 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -45,7 +45,7 @@ public:
         @return  @b unsigned @b short always 
         @li @b DateTime_t::TYPE - identificator of datetime value 
     */
-    virtual unsigned short getType()
+    virtual unsigned short getType() const
     {
         return TYPE;
     }
@@ -54,34 +54,34 @@ public:
         @return @b const @b char* always
         @li @b "DateTime" - typename of DateTime_t
     */
-    virtual const char* getTypeName()
+    virtual const char* getTypeName() const
     {
         return "dateTime";
     }
     /**
         @brief Get localtime day number.
         @return Day (1-31). */
-    short getDay();
+    short getDay() const;
     /**
         @brief Get localtime hours.
         @return Hour (0-23). 
     */
-    short getHour();
+    short getHour() const;
     /**
         @brief Get localtime minutes.
         @return Minute (0-59).
     */
-    short getMin();
+    short getMin() const;
     /**
         @brief Get localtime month number.
         @return Month (1-12).
     */
-    short getMonth();
+    short getMonth() const;
     /**
         @brief Get localtime seconds.
         @return Second (0-59).
     */
-    short getSec();
+    short getSec() const;
     /**
         @brief Get localtime shift in sec relative to GMT (should be local timezone).
 
@@ -90,22 +90,22 @@ public:
         For example Central European Time (CET=GMT+0100) would have +3600.
         @return Localtime offset to GMT in secs.
     */
-    short getTimeZone();
+    short getTimeZone() const;
     /**
         @brief Get localtime year number.
         @return Year (1600-3647).
     */
-    short getYear();
+    short getYear() const;
     /**
         @brief Get common unix time number (in UTC).
         @return Number of secs from 1970-01-01 00:00:00 UTC.
     */
-    time_t getUnixTime();
+    time_t getUnixTime() const;
     /**
         @brief  Get localtime day of week.
         @return Day of week (0=sunday, 1=monday, ..., 6=saturday).
     */
-    short getDayOfWeek();
+    short getDayOfWeek() const;
     /**
         @brief Method to clone/copy DateTime_t 
         @param newPool is reference of Pool_t which is used for allocate objects
@@ -115,7 +115,7 @@ public:
         @brief get iso format.
         @return iso format string
     */
-    std::string isoFormat(); 
+    std::string isoFormat() const;
     
 private:
     /**
@@ -181,6 +181,23 @@ private:
 inline FRPC_DLLEXPORT DateTime_t& DateTime(Value_t &value)
 {
     DateTime_t *dateTime = dynamic_cast<DateTime_t*>(&value);
+
+    if(!dateTime)
+        throw TypeError_t("Type is %s but not dateTime",value.getTypeName());
+    
+    return *dateTime;
+}
+
+/**
+    @brief Inline method
+    
+    Used to retype Value_t to DateTime_t
+    @return  If Value_t  can  retype to DateTime_t return reference to DateTime_t
+    @n If Value_t can't retype to DateTime_t throw exception TypeError_t
+*/
+inline FRPC_DLLEXPORT const DateTime_t& DateTime(const Value_t &value)
+{
+    const DateTime_t *dateTime = dynamic_cast<const DateTime_t*>(&value);
 
     if(!dateTime)
         throw TypeError_t("Type is %s but not dateTime",value.getTypeName());

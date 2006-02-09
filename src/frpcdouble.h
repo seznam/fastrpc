@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcdouble.h,v 1.1 2005-07-19 13:02:53 vasek Exp $
+ * FILE          $Id: frpcdouble.h,v 1.2 2006-02-09 16:00:26 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -40,7 +40,7 @@ public:
     @return  @b unsigned @b short always 
     @li @b Double_t::TYPE - identificator of double value
     */
-    virtual unsigned short getType()
+    virtual unsigned short getType() const
     {
         return TYPE;
     }
@@ -49,7 +49,7 @@ public:
         @return @b const @b char* always
         @li @b "Double" - typename of Double_t
     */
-    virtual const char* getTypeName()
+    virtual const char* getTypeName() const
     {
         return "double";
     }
@@ -115,6 +115,23 @@ private:
 inline FRPC_DLLEXPORT Double_t& Double(Value_t &value)
 {
     Double_t *double_v = dynamic_cast<Double_t*>(&value);
+
+    if(!double_v)
+        throw TypeError_t("Type is %s but not double",value.getTypeName());
+    
+    return *double_v;
+}
+
+/**
+    @brief Inline method
+    
+    Used to retype Value_t to Double_t 
+    @return  If Value_t  can  retype to Double_t return reference to Double_t
+    @n If Value_t can't retype to Double_t throw exception TypeError_t
+*/
+inline FRPC_DLLEXPORT const Double_t& Double(const Value_t &value)
+{
+    const Double_t *double_v = dynamic_cast<const Double_t*>(&value);
 
     if(!double_v)
         throw TypeError_t("Type is %s but not double",value.getTypeName());

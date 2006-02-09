@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpchttpclient.cc,v 1.2 2005-07-25 06:10:47 vasek Exp $
+ * FILE          $Id: frpchttpclient.cc,v 1.3 2006-02-09 16:00:26 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -21,6 +21,7 @@
 
 #include <string>
 #include <algorithm>
+#include <functional>
 #include <sstream>
 #include <strstream>
 #include <stdexcept>
@@ -280,7 +281,6 @@ void connectSocket(int &fd, bool keepAlive, int connectTimeout,
 namespace FRPC
 {
 
-
 HTTPClient_t::HTTPClient_t(HTTPIO_t &httpIO, URL_t &url, long connectTimeout,
                            bool keepAlive)
         : httpIO(httpIO), url(url), connectTimeout(connectTimeout),keepAlive(keepAlive),
@@ -477,7 +477,7 @@ void HTTPClient_t::readResponse(DataBuilder_t &builder)
         std::string connection;
         httpHead.get("Connection", connection);
         std::transform(connection.begin(), connection.end(),
-                       connection.begin(),upper());
+                       connection.begin(),std::ptr_fun<int, int>(toupper));
         //bool closeConnection = false;
 
         if (protocol == "HTTP/1.1")

@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcarray.h,v 1.1 2005-07-19 13:02:53 vasek Exp $
+ * FILE          $Id: frpcarray.h,v 1.2 2006-02-09 16:00:26 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -60,7 +60,7 @@ public:
         @return  @b unsigned @b short always 
         @li @b Array_t::TYPE - identificator of array value
     */
-    virtual unsigned short getType()
+    virtual unsigned short getType() const
     {
         return TYPE;
     }
@@ -69,7 +69,7 @@ public:
         @return @b const @b char * always
         @li @b "Array" - typename of Array_t
     */
-    virtual const char* getTypeName()
+    virtual const char* getTypeName() const
     {
         return "array";
     }
@@ -79,6 +79,13 @@ public:
         @return reference to Value_t or exception IndexError_t if index is out of range
     */
     Value_t& operator[] (size_type index);
+
+    /**
+        @brief operator []
+        @return reference to Value_t or exception IndexError_t if index is out of range
+    */
+    const Value_t& operator[] (size_type index) const;
+
     /**
         @brief getting iterator to first item
         @return Array_t::iterator - position to first item
@@ -89,11 +96,23 @@ public:
         @return Array_t::iterator - position to last item
     */
     iterator end();
+
+    /**
+        @brief getting iterator to first item
+        @return Array_t::iterator - position to first item
+    */
+    const_iterator begin() const;
+    /**
+        @brief getting iterator to last item
+        @return Array_t::iterator - position to last item
+    */
+    const_iterator end() const;
+
     /**
         @brief getting number of items in Array_t
         @return  Array_t::size_type -  number of items in Array_t
     */
-    size_type size();
+    size_type size() const;
     /**
         @brief checking if Array_t is empty
         @return bool
@@ -101,7 +120,7 @@ public:
         @li @b FALSE if the Array_t isn't empty
         
     */
-    bool empty();
+    bool empty() const;
     /**
         @brief delete all items in Array_t
     */
@@ -132,7 +151,7 @@ public:
         If items not correct function throw TypeError_t.
       @n This method is using for checking input parameters in methods.
     */  
-    void checkItems(const std::string &items);
+    void checkItems(const std::string &items) const;
     
 
 private:
@@ -167,6 +186,23 @@ private:
 inline FRPC_DLLEXPORT Array_t& Array(Value_t &value)
 {
     Array_t *array = dynamic_cast<Array_t*>(&value);
+
+    if(!array)
+        throw TypeError_t("Type is %s but not array",value.getTypeName());
+    return *array;
+}
+
+/** 
+    @brief Inline method
+    
+    Used to retype Value_t to Array_t
+    @param value is reference to Value_t 
+    @return  If Value_t  can  retype to Array_t return reference to Array_t
+    @n If Value_t can't retype to Array_t throw exception TypeError_t
+*/
+inline FRPC_DLLEXPORT const Array_t& Array(const Value_t &value)
+{
+    const Array_t *array = dynamic_cast<const Array_t*>(&value);
 
     if(!array)
         throw TypeError_t("Type is %s but not array",value.getTypeName());

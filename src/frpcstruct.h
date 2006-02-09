@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcstruct.h,v 1.1 2005-07-19 13:02:54 vasek Exp $
+ * FILE          $Id: frpcstruct.h,v 1.2 2006-02-09 16:00:26 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -74,7 +74,7 @@ public:
         @return  @b unsigned @b short always 
         @li @b Struct_t::TYPE - identificator of struct value
     */
-    virtual unsigned short getType()
+    virtual unsigned short getType() const
     {
         return TYPE;
     }
@@ -83,7 +83,7 @@ public:
         @return @b const @b char* always
         @li @b "Struct" - typename of Struct_t
     */
-    virtual const char* getTypeName()
+    virtual const char* getTypeName() const
     {
         return "struct";
     }
@@ -94,7 +94,7 @@ public:
         @li @b TRUE - if struct has key 'key'
         @li @b FALSE - if struct hasn't key 'key'
     */
-    bool has_key(const key_type &key);
+    bool has_key(const key_type &key) const;
     /**
         @brief Inserting a new item with key
         @param key is reference to Struct_t::key_type
@@ -118,12 +118,12 @@ public:
         @li @b TRUE if the Struct_t is empty @n
         @li @b FALSE if the Struct_t isn't empty   
     */
-    bool empty();
+    bool empty() const;
     /**
         @brief getting number of items in Struct_t
         @return  Struct_t::size_type -  number of items in Struct_t
     */
-    size_type size();
+    size_type size() const;
     
     /**
         @brief Getting iterator to first item
@@ -135,6 +135,18 @@ public:
         @return Struct_t::iterator - position to last item
     */
     iterator end();
+
+    /**
+        @brief Getting iterator to first item
+        @return Struct_t::iterator - position to first item
+    */
+    const_iterator begin() const;
+    /**
+        @brief Getting iterator to last item
+        @return Struct_t::iterator - position to last item
+    */
+    const_iterator end() const;
+
     /**
         @brief Insert Value_t to Struct_t with key
         @param value is is new pair Struct_t::pair(std::string key, Value_t* value)
@@ -148,12 +160,19 @@ public:
         @return Struct_t& reference with apended value
     */
     Struct_t& append(const key_type &key, Value_t &value);
+
     /**
         @brief operator []
         @return reference to Value_t or exeption KeyError_t if key isn't exist
     */
     Value_t& operator[] (const key_type &key);
-    
+
+    /**
+        @brief operator []
+        @return reference to Value_t or exeption KeyError_t if key isn't exist
+    */
+    const Value_t& operator[] (const key_type &key) const;
+
 private:
     /**
         @brief Default constructor is disabled
@@ -202,6 +221,23 @@ inline FRPC_DLLEXPORT Struct_t& Struct(Value_t &value)
 
 }
 
+/**
+    @brief Inline method
+    
+    Used to retype Value_t to Struct_t 
+    @return  If Value_t  can  retype to Struct_t return reference to  Struct_t
+    @n If Value_t can't retype to Struct_t: throw exception TypeError_t
+    
+*/
+inline FRPC_DLLEXPORT const Struct_t& Struct(const Value_t &value)
+{
+    const Struct_t *struct_v = dynamic_cast<const Struct_t*>(&value);
+
+    if(!struct_v)
+        throw TypeError_t("Type is %s but not struct",value.getTypeName());
+    return *struct_v;
+
+}
 }
 
 #endif

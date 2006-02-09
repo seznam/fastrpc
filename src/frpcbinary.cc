@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcbinary.cc,v 1.1 2005-07-19 13:02:53 vasek Exp $
+ * FILE          $Id: frpcbinary.cc,v 1.2 2006-02-09 16:00:26 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -32,19 +32,19 @@ Binary_t::Binary_t(Pool_t &pool, const std::string &value)
         :Value_t(pool),value(value)
 {}
 
-std::string::size_type Binary_t::size()
+std::string::size_type Binary_t::size() const
 {
     return value.size();
 }
 
 
-const std::string::value_type*  Binary_t::data()
+const std::string::value_type*  Binary_t::data() const
 {
     return  value.data();
 }
 
 
-std::string Binary_t::getString()
+std::string Binary_t::getString() const
 {
     return value;
 }

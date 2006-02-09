@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcmethodregistry.cc,v 1.1 2005-07-19 13:02:54 vasek Exp $
+ * FILE          $Id: frpcmethodregistry.cc,v 1.2 2006-02-09 16:00:26 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -28,6 +28,7 @@
 #include <frpckeyerror.h>
 #include <frpcindexerror.h>
 #include <frpc.h>
+#include <frpcinternals.h>
 #include <memory>
 
 #ifdef WIN32

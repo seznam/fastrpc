@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcvalue.h,v 1.2 2005-07-25 06:10:48 vasek Exp $
+ * FILE          $Id: frpcvalue.h,v 1.3 2006-02-09 16:00:26 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -54,7 +54,7 @@ public:
         @li @b  Struct_t::TYPE      - struct value type    
         @li @b  Arry_t::TYPE        - array value type     
     */
-    virtual unsigned short getType() = 0;
+    virtual unsigned short getType() const = 0;
     
     /**
         @brief Abstract virtual method to getting typename of value
@@ -69,7 +69,7 @@ public:
         @li @b  "Struct"        - struct value typename    
         @li @b  "Array"         - array value typename
     */
-    virtual const char* getTypeName() = 0;
+    virtual const char* getTypeName() const = 0;
 
     inline Value_t& clone() const
     {

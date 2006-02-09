@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcserverproxy.h,v 1.4 2005-12-01 08:46:39 mirecta Exp $
+ * FILE          $Id: frpcserverproxy.h,v 1.5 2006-02-09 16:00:26 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -449,8 +449,9 @@ private:
 
     void closeSocket();
 
+    ServerProxy_t(const ServerProxy_t&);
 
-    ServerProxy_t();
+    ServerProxy_t& operator=(const ServerProxy_t&);
 
 
     URL_t url;

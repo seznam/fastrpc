@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcstring.cc,v 1.1 2005-07-19 13:02:54 vasek Exp $
+ * FILE          $Id: frpcstring.cc,v 1.2 2006-02-09 16:00:26 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -117,23 +117,23 @@ String_t::operator std::wstring ()
 #endif //WIN32
 }
 
-std::string::size_type String_t::size()
+std::string::size_type String_t::size() const
 {
     return value.size();
 }
 
 
-const std::string::value_type*  String_t::data()
+const std::string::value_type*  String_t::data() const
 {
     return  value.data();
 }
 
-const char* String_t::c_str()
+const char* String_t::c_str() const
 {
 return value.c_str();
 }
 
-std::string String_t::getString()
+std::string String_t::getString() const
 {
     return value;
 }
