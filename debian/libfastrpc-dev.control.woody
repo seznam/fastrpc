@@ -2,6 +2,7 @@ Package: @PACKAGE@
 Version: @VERSION@
 Architecture: @ARCHITECTURE@
 Depends: @EXTRA_DEPEND@
+Conflicts: libfastrpc0-dev
 Maintainer: @MAINTAINER@
 Installed-Size: @SIZE@
 Description: Development files for fastrpc library

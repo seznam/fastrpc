@@ -21,7 +21,7 @@
 # http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
 #
 #
-# $Id: configure.in,v 1.1 2005-07-19 13:02:53 vasek Exp $
+# $Id: configure.in,v 1.2 2006-02-10 10:43:46 mirecta Exp $
 #
 # DESCRIPTION
 # configure template for fastrpc.
@@ -72,7 +72,7 @@ AC_SUBST(XML2_LIBS)
 # This version number needs to be changed in several different ways for each
 # release. Please read the libtool documentation (info libtool 'Updating
 # version info') before touching this.
-VERSION_INFO="-version-info 0:0:0"
+VERSION_INFO="-version-info 1:0:0"
 AC_SUBST(VERSION_INFO)
 
 
