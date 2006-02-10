@@ -2,7 +2,7 @@
  * FastRPC - RPC protocol suport Binary and XML.
  * Copyright (C) 2005 Seznam.cz, a.s.
  *
- * $Id: fastrpcmodule.cc,v 1.1 2005-07-19 13:02:55 vasek Exp $
+ * $Id: fastrpcmodule.cc,v 1.2 2006-02-10 11:06:49 mirecta Exp $
  * 
  * AUTHOR      Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
@@ -319,7 +319,7 @@ int DateTimeObject_init(DateTimeObject *self, PyObject *args, PyObject *kwds)
         char *data = PyString_AsString(pyValue);
         try
         {
-            parseISODateTime(data, len, year, month,
+		FRPC::parseISODateTime(data, len, year, month,
                              day, hour,
                              min, sec, timeZone);
         }
@@ -374,7 +374,7 @@ void DateTimeObject_dealloc(DateTimeObject *self)
 
 PyObject* DateTimeObject_repr(DateTimeObject *self)
 {
-    std::string  dateTime = getISODateTime(self->year
+    std::string  dateTime = FRPC::getISODateTime(self->year
                                            ,self->month ,
                                            self->day ,self->hour,self->min,self->sec,
                                            self->timeZone);
@@ -428,7 +428,7 @@ PyObject* DateTimeObject_getattr(DateTimeObject *self, char *name)
     if (!strcmp(name, "value"))
     {
 
-        std::string  dateTime = getISODateTime(self->year
+        std::string  dateTime = FRPC::getISODateTime(self->year
                                                ,self->month ,
                                                self->day ,self->hour,self->min,self->sec,
                                                self->timeZone);
