@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcstruct.cc,v 1.2 2006-02-09 16:00:26 vasek Exp $
+ * FILE          $Id: frpcstruct.cc,v 1.3 2006-02-16 13:14:06 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -36,7 +36,7 @@ Struct_t::Struct_t(Pool_t &pool, const std::string &key, Value_t &value):Value_t
 {
     if(key.size() > 255)
     {
-        throw LenError_t("Size of member name must be max 255 no %d ",key.size() );
+        throw LenError_t("Size of member name must be max 255 not %d.",key.size() );
     }
     structData.insert(value_type(key,&value));
 }
@@ -102,7 +102,7 @@ Struct_t& Struct_t::append(const Struct_t::key_type &key, Value_t &value)
 {
     if(key.size() > 255)
     {
-        throw LenError_t("Size of member name must be max 255 no %d ",key.size() );
+        throw LenError_t("Size of member name must be max 255 not %d.",key.size() );
     }
 
     structData.insert(value_type(key,&value));
@@ -114,7 +114,7 @@ Value_t& Struct_t::operator[] (const Struct_t::key_type &key)
     iterator istructData;
 
     if ((istructData = structData.find(key)) == structData.end())
-        throw KeyError_t("Key %s is not exists",key.c_str());
+        throw KeyError_t("Key \"%s\" does not exist.",key.c_str());
 
     return *(istructData->second);
 }
@@ -124,7 +124,7 @@ const Value_t& Struct_t::operator[] (const Struct_t::key_type &key) const
     const_iterator istructData;
 
     if ((istructData = structData.find(key)) == structData.end())
-        throw KeyError_t("Key %s is not exists",key.c_str());
+        throw KeyError_t("Key \"%s\" does not exist.",key.c_str());
 
     return *(istructData->second);
 }

@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcarray.cc,v 1.2 2006-02-09 16:00:26 vasek Exp $
+ * FILE          $Id: frpcarray.cc,v 1.3 2006-02-16 13:14:06 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -104,7 +104,7 @@ bool Array_t::empty() const
 Value_t& Array_t::operator[] (Array_t::size_type index)
 {
     if(index >= arrayData.size())
-        throw(IndexError_t("index %d is out of range 0 - %d", index, arrayData.size()));
+        throw(IndexError_t("index %d is out of range 0 - %d.", index, arrayData.size()));
 
     return *(arrayData[index]);
 }
@@ -112,7 +112,7 @@ Value_t& Array_t::operator[] (Array_t::size_type index)
 const Value_t& Array_t::operator[] (Array_t::size_type index) const
 {
     if(index >= arrayData.size())
-        throw(IndexError_t("index %d is out of range 0 - %d", index, arrayData.size()));
+        throw(IndexError_t("index %d is out of range 0 - %d.", index, arrayData.size()));
 
     return *(arrayData[index]);
 }
@@ -133,49 +133,49 @@ void Array_t::checkItems(const std::string &items) const
         {
         case 'i':
             if((*i)->getType() != Int_t::TYPE)
-                throw TypeError_t("Parameter %d must be int not %s",itemNum + 1,
+                throw TypeError_t("Parameter %d must be int not %s.",itemNum + 1,
                                   (*i)->getTypeName());
             break;
 
         case 's':
             if((*i)->getType() != String_t::TYPE)
-                throw TypeError_t("Parameter %d must be string not %s",itemNum + 1,
+                throw TypeError_t("Parameter %d must be string not %s.",itemNum + 1,
                                   (*i)->getTypeName());
             break;
 
         case 'd':
             if((*i)->getType() != Double_t::TYPE)
-                throw TypeError_t("Parameter %d must be double not %s",itemNum + 1,
+                throw TypeError_t("Parameter %d must be double not %s.",itemNum + 1,
                                   (*i)->getTypeName());
             break;
 
         case 'b':
             if((*i)->getType() != Bool_t::TYPE)
-                throw TypeError_t("Parameter %d must be bool not %s",itemNum + 1,
+                throw TypeError_t("Parameter %d must be bool not %s.",itemNum + 1,
                                   (*i)->getTypeName());
             break;
 
         case 'D':
             if((*i)->getType() != DateTime_t::TYPE)
-                throw TypeError_t("Parameter %d must be dateTime not %s",itemNum + 1,
+                throw TypeError_t("Parameter %d must be dateTime not %s.",itemNum + 1,
                                   (*i)->getTypeName());
             break;
 
         case 'B':
             if((*i)->getType() != Binary_t::TYPE)
-                throw TypeError_t("Parameter %d must be binary not %s",itemNum + 1,
+                throw TypeError_t("Parameter %d must be binary not %s.",itemNum + 1,
                                   (*i)->getTypeName());
             break;
 
         case 'S':
             if((*i)->getType() != Struct_t::TYPE)
-                throw TypeError_t("Parameter %d must be struct not %s",itemNum + 1,
+                throw TypeError_t("Parameter %d must be struct not %s.",itemNum + 1,
                                   (*i)->getTypeName());
             break;
 
         case 'A':
             if((*i)->getType() != Array_t::TYPE)
-                throw TypeError_t("Parameter %d must be array not %s",itemNum + 1,
+                throw TypeError_t("Parameter %d must be array not %s.",itemNum + 1,
                                   (*i)->getTypeName());
             break;
 
