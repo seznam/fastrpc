@@ -22,7 +22,7 @@
 # http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
 #
 #
-# $Id: make.sh,v 1.1 2005-07-19 13:02:53 vasek Exp $
+# $Id: make.sh,v 1.2 2006-02-24 15:21:00 vasek Exp $
 #
 # DESCRIPTION
 # Packager for Fastrpc library.
@@ -116,6 +116,19 @@ function make_dirs {
     chmod 0755 ${CONTROL_DIR}
 }
 
+function replace_vars {
+    # Process control file -- all <tags> will be replaced with
+    # appropriate data.
+    sed -e "s/@VERSION@/${VERSION}/" \
+        -e "s/@PACKAGE@/${PACKAGE_NAME}/" \
+        -e "s/@MAINTAINER@/${MAINTAINER}/" \
+        -e "s/@ARCHITECTURE@/$(dpkg --print-architecture)/" \
+        -e "s/@SIZE@/${SIZE}/" \
+        -e "s/@EXTRA_DEPEND@/${EXTRA_DEPEND}/" \
+        -e "s/@SO_VERSION@/${LIBRARY_VERSION}/" \
+        $1 > $2 || exit -1
+}
+
 function build_package {
     ########################################################################
     # Package housekeeping                                                 #
@@ -160,15 +173,10 @@ function build_package {
     
     VERSION=$(< ../version)
 
-    # Process control file -- all <tags> will be replaced with
-    # appropriate data.
-    sed     -e "s/@VERSION@/${VERSION}/" \
-            -e "s/@PACKAGE@/${PACKAGE_NAME}/" \
-            -e "s/@MAINTAINER@/${MAINTAINER}/" \
-            -e "s/@ARCHITECTURE@/$(dpkg --print-architecture)/" \
-            -e "s/@SIZE@/${SIZE}/" \
-            -e "s/@EXTRA_DEPEND@/${EXTRA_DEPEND}/" \
-            ${PROJECT_NAME}.control${DISTRIB} > build/${PACKAGE_NAME}/DEBIAN/control || exit 1
+    replace_vars ${PROJECT_NAME}.control${DISTRIB} ${CONTROL_DIR}/control || exit 1
+
+    (test -f ${PROJECT_NAME}.shlibs${DISTRIB} && \
+        (replace_vars ${PROJECT_NAME}.shlibs${DISTRIB} ${CONTROL_DIR}/shlibs) || exit 1)
 
     # Create and rename the package.
     dpkg --build ${DEBIAN_BASE} ${PACKAGE_DIR}/${PACKAGE_NAME}.deb || exit 1

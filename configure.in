@@ -21,7 +21,7 @@
 # http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
 #
 #
-# $Id: configure.in,v 1.2 2006-02-10 10:43:46 mirecta Exp $
+# $Id: configure.in,v 1.3 2006-02-24 15:20:59 vasek Exp $
 #
 # DESCRIPTION
 # configure template for fastrpc.
@@ -36,12 +36,14 @@
 
 
 # initialize autoconf
-AC_INIT(src/frpcvalue.cc)
+AC_INIT(fastrpc, 1.1.1, fastrpc@firma.seznam.cz)
 # initialize automake(use AC_INIT's arguments)
-AM_INIT_AUTOMAKE(fastrpc, 1.0)
+AM_INIT_AUTOMAKE(AC_PACKAGE_NAME, AC_PACKAGE_VERSION)
 
 # tell autoconf where to find sources
-#AC_CONFIG_SRCDIR([src/frpcvalue.cc])
+AC_CONFIG_SRCDIR([src/frpcvalue.cc])
+
+AC_PREREQ(2.50)
 
 # check for C compiled
 AC_PROG_CC
@@ -78,6 +80,6 @@ AC_SUBST(VERSION_INFO)
 
 
 # generate Makefile
-AC_OUTPUT(Makefile src/Makefile)
+AC_OUTPUT(Makefile src/Makefile version)
 
 #          doc/Makefile doc/manual/Makefile doc/manual/en/Makefile)
