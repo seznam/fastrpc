@@ -22,7 +22,7 @@
 # http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
 #
 #
-# $Id: make.sh,v 1.2 2006-02-24 15:21:00 vasek Exp $
+# $Id: make.sh,v 1.3 2006-02-24 15:53:55 vasek Exp $
 #
 # DESCRIPTION
 # Packager for Fastrpc library.
@@ -86,6 +86,10 @@ while [ "$#" != "0" ]; do
     esac
     shift
 done
+
+if test "$DEBUG" = "debug"; then
+    set -x
+fi
 
 function make_dirs {
     # Compose package name
@@ -175,8 +179,8 @@ function build_package {
 
     replace_vars ${PROJECT_NAME}.control${DISTRIB} ${CONTROL_DIR}/control || exit 1
 
-    (test -f ${PROJECT_NAME}.shlibs${DISTRIB} && \
-        (replace_vars ${PROJECT_NAME}.shlibs${DISTRIB} ${CONTROL_DIR}/shlibs) || exit 1)
+    test -f ${PROJECT_NAME}.shlibs${DISTRIB} && \
+        replace_vars ${PROJECT_NAME}.shlibs${DISTRIB} ${CONTROL_DIR}/shlibs
 
     # Create and rename the package.
     dpkg --build ${DEBIAN_BASE} ${PACKAGE_DIR}/${PACKAGE_NAME}.deb || exit 1
