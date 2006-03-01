@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcstruct.cc,v 1.3 2006-02-16 13:14:06 vasek Exp $
+ * FILE          $Id: frpcstruct.cc,v 1.4 2006-03-01 11:49:19 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -78,6 +78,16 @@ Struct_t::iterator Struct_t::begin()
 }
 
 Struct_t::iterator Struct_t::end()
+{
+    return structData.end();
+}
+
+Struct_t::const_iterator Struct_t::begin() const
+{
+    return structData.begin();
+}
+
+Struct_t::const_iterator Struct_t::end() const
 {
     return structData.end();
 }
