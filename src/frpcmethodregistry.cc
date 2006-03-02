@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcmethodregistry.cc,v 1.2 2006-02-09 16:00:26 vasek Exp $
+ * FILE          $Id: frpcmethodregistry.cc,v 1.3 2006-03-02 13:55:39 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -182,40 +182,30 @@ Value_t& MethodRegistry_t::processCall(const std::string &clientIP, const std::s
     Value_t *result;
     try
     {
-        std::map<std::string, RegistryEntry_t>::const_iterator pos = methodMap.find(
-                    methodName);
+        std::map<std::string, RegistryEntry_t>::const_iterator
+            pos = methodMap.find(methodName);
 
-        if(pos == methodMap.end())
-        {
+        if (pos == methodMap.end()){
+            if (callbacks)
+                callbacks->preProcess(methodName, clientIP, params);
 
-            //if default method registered call it
-            if(!defaultMethod)
-            {
-                throw Fault_t(FRPC_NO_SUCH_METHOD_ERROR,"Method %s not found",
+            // if not default method generate fault
+            if (!defaultMethod)
+                throw Fault_t(FRPC_NO_SUCH_METHOD_ERROR, "Method %s not found",
                               methodName.c_str());
-            }
-            else
-            {
-                if(callbacks)
-                    callbacks->preProcess(methodName, clientIP, params);
 
-
-                result = &(defaultMethod->call(pool, methodName,params));
-                if(callbacks)
-                    callbacks->postProcess(methodName, clientIP, params, *result,timeD.diff());
-
-            }
-
-        }
-        else
-        {
+            result = &(defaultMethod->call(pool, methodName,params));
+            if (callbacks)
+                callbacks->postProcess(methodName, clientIP, params, *result,
+                                       timeD.diff());
+        } else {
             if(callbacks)
                 callbacks->preProcess(methodName, clientIP, params);
 
             result = &(pos->second.method->call(pool, params));
             if(callbacks)
-                callbacks->postProcess(methodName, clientIP, params, *result,timeD.diff());
-
+                callbacks->postProcess(methodName, clientIP, params, *result,
+                                       timeD.diff());
         }
     }
     catch(const TypeError_t &typeError)
