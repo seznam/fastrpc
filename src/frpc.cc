@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpc.cc,v 1.3 2006-02-09 16:00:26 vasek Exp $
+ * FILE          $Id: frpc.cc,v 1.4 2006-03-03 11:07:14 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -319,13 +319,13 @@ int dumpFastrpcTree(const Value_t &value1,
             DateTime_t &dt = DateTime(value);
             char buff[50];
             if(dt.getTimeZone() > 0)
-                sprintf(buff," %04d%02d%02dT%02d:%02d:%02d+%02d%02d ",dt.getYear(),
+                sprintf(buff,"%04d%02d%02dT%02d:%02d:%02d+%02d%02d",dt.getYear(),
                         dt.getMonth(), dt.getDay(),
                         dt.getHour(), dt.getMin(), dt.getSec(),
                         (dt.getTimeZone()*15)/60,
                         (dt.getTimeZone()*15)%60);
             else
-                sprintf(buff," %04d%02d%02dT%02d:%02d:%02d-%02d%02d ",dt.getYear(),
+                sprintf(buff,"%04d%02d%02dT%02d:%02d:%02d-%02d%02d",dt.getYear(),
                         dt.getMonth(), dt.getDay(),
                         dt.getHour(), dt.getMin(), dt.getSec(),
                         abs((dt.getTimeZone()*15)/60),

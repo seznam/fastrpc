@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcserver.cc,v 1.6 2006-02-09 16:00:26 vasek Exp $
+ * FILE          $Id: frpcserver.cc,v 1.7 2006-03-03 11:07:14 mirecta Exp $
  *
  * DESCRIPTION
  *
@@ -287,8 +287,8 @@ void Server_t::readRequest(DataBuilder_t &builder)
 
 
 
-        // read body of response
-        io.readContent(httpHead, data, false);
+        // read body of request
+        io.readContent(httpHead, data, true);
 
         unmarshaller->finish();
 

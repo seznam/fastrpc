@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcpool.h,v 1.1 2005-07-19 13:02:54 vasek Exp $
+ * FILE          $Id: frpcpool.h,v 1.2 2006-03-03 11:07:14 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -115,7 +115,7 @@ public:
         @return reference to DateTime_t
     */
     DateTime_t&  DateTime(short year, char month, char day,
-                          char hour, char min, char sec);
+                          char hour = 0, char min = 0, char sec = 0);
 
     /**
         @brief Create new DateTime_t object from unix timestamp
