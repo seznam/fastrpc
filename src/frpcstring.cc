@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcstring.cc,v 1.2 2006-02-09 16:00:26 vasek Exp $
+ * FILE          $Id: frpcstring.cc,v 1.3 2006-03-15 08:54:12 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -65,33 +65,7 @@ String_t::String_t(Pool_t &pool, const std::wstring &value_w)
 #endif //WIN32
 }
 
-String_t::operator const std::wstring () const
-{
-#ifdef WIN32
-    std::wstring _value_w;
-    LPCSTR szValue = value.c_str();
-    int iWideCharValueLen = MultiByteToWideChar(CP_UTF8, NULL, szValue, 
-                                                value.length(), NULL, 0);
-
-    LPWSTR wszValue = new wchar_t [iWideCharValueLen + 1];
-    memset ((LPVOID)szValue, 0, (iWideCharValueLen + 1) * sizeof(wchar_t));
-    if (iWideCharValueLen == MultiByteToWideChar(CP_UTF8, NULL, szValue, 
-                                                value.length(), wszValue, 
-                                                iWideCharValueLen + 1))
-        _value_w = wszValue;
-    else
-        throw TypeError_t("Cannot convert %s from widechar to multibyte.", value.c_str());
-
-    delete szValue;
-    
-    return _value_w;
-#else //WIN32
-    std::wstring _value_w(L"");
-    return _value_w;
-#endif //WIN32
-}
-
-String_t::operator std::wstring ()
+String_t::operator std::wstring () const
 {
 #ifdef WIN32
     std::wstring _value_w(L"");

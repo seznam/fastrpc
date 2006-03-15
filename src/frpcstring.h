@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcstring.h,v 1.2 2006-02-09 16:00:26 vasek Exp $
+ * FILE          $Id: frpcstring.h,v 1.3 2006-03-15 08:54:12 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -43,6 +43,7 @@ public:
     {
         return TYPE;
     }
+
     /**
         @brief Getting typename of value
         @return @b const @b char* always
@@ -52,33 +53,38 @@ public:
     {
         return "string";
     }
+
     /** 
         @brief Get data itself. Data are not "\0"-terminated.
         @return Pointer to the binary data. 
     */
     std::string::size_type size() const;
+
     /** 
         @brief Get data itself. Data are not "\0"-terminated.
         @return Pointer to the binary data. 
     */
 
     const std::string::value_type* data() const;
+
     /**
         @brief Get binary data as STL string.
         @return Binary data as string. 
     */
-    
     std::string getString() const;
+
     /**
         @brief Get binary data as C string.
         @return Binary data as C string. 
     */
     const char* c_str() const;
+
     /**
         @brief Method to clone/copy Binary_t 
         @param newPool is reference of Pool_t which is used for allocate objects
     */
     virtual Value_t& clone(Pool_t &newPool) const;
+
     /**
         @brief operator const std::string
     */
@@ -86,22 +92,11 @@ public:
     {
         return value;
     }
-   /**
+
+    /**
         @brief operator const std::wstring
     */
-    operator const std::wstring () const;
-    /**
-        @brief operator std::string
-    */
-    inline operator std::string& () 
-    {
-        return value;
-    }
-   /**
-        @brief operator std::wstring
-    */
-    operator std::wstring ();
-
+    operator std::wstring () const;
 
 private:
     /**

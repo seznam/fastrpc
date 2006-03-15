@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcint.h,v 1.2 2006-02-09 16:00:26 vasek Exp $
+ * FILE          $Id: frpcint.h,v 1.3 2006-03-15 08:54:12 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -46,6 +46,7 @@ public:
     {
         return TYPE;
     }
+
     /**
         @brief Getting typename of value
         @return @b const @b char  always
@@ -55,6 +56,7 @@ public:
     {
         return "int";
     }
+
     /**
     @brief Getting internal integer value
     @return   @b long - internal value 
@@ -63,6 +65,7 @@ public:
     {
         return value;
     }
+
     /**
     @brief Operator long
     */
@@ -70,20 +73,7 @@ public:
     {
         return value;
     }
-    /**
-    @brief Operator const long&
-    */
-    operator const long& () const
-    {
-        return value;
-    }
-    /**
-    @brief Operator long&
-    */
-    operator long& ()
-    {
-        return value;
-    }
+
     /**
         @brief Method for clone/copy Double_t 
         @param newPool is reference of Pool_t which is used for allocate objects

@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcdouble.h,v 1.2 2006-02-09 16:00:26 vasek Exp $
+ * FILE          $Id: frpcdouble.h,v 1.3 2006-03-15 08:54:12 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -53,21 +53,16 @@ public:
     {
         return "double";
     }
+
     /**
     @brief Getting internal double value
     @return  @b double - internal value 
     */
-    double getValue()
+    double getValue() const
     {
         return value;
     }
-    /**
-        @brief Operator double
-    */
-    inline operator double& ()
-    {
-        return value;
-    }
+
     /**
         @brief Operator double const
     */
@@ -75,13 +70,7 @@ public:
     {
         return value;
     }
-    /**
-        @brief Operator const double const
-    */
-    inline operator const double& () const 
-    {
-        return value;
-    }
+
     /**
         @brief Method for clone/copy Double_t 
         @param newPool is reference of Pool_t which is used for allocate objects
