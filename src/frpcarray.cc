@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcarray.cc,v 1.4 2006-03-15 15:42:37 mirecta Exp $
+ * FILE          $Id: frpcarray.cc,v 1.5 2006-03-15 15:44:33 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -63,7 +63,7 @@ Array_t::iterator Array_t::begin() const
 
 Array_t::iterator Array_t::end() const
 {
-    return arrayData.end()
+    return arrayData.end();
 }
 
 Array_t::iterator Array_t::begin()
