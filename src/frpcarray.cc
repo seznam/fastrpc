@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcarray.cc,v 1.5 2006-03-15 15:44:33 mirecta Exp $
+ * FILE          $Id: frpcarray.cc,v 1.6 2006-03-15 15:47:42 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -56,12 +56,12 @@ Array_t::Array_t(Pool_t &pool, Value_t  &item ):Value_t(pool)
     arrayData.push_back(&item);
 }
 
-Array_t::iterator Array_t::begin() const
+Array_t::const_iterator Array_t::begin() const
 {
     return arrayData.begin();
 }
 
-Array_t::iterator Array_t::end() const
+Array_t::const_iterator Array_t::end() const
 {
     return arrayData.end();
 }
