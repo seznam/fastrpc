@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcarray.h,v 1.2 2006-02-09 16:00:26 vasek Exp $
+ * FILE          $Id: frpcarray.h,v 1.3 2006-03-17 09:43:10 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -125,11 +125,26 @@ public:
         @brief delete all items in Array_t
     */
     void clear();
+    
+    /**
+        @brief reserve memory for Array_t 
+        @param size is new size
+    */
+    void reserve(size_type size);
+    
+    /**
+       @brief return cacacity of Array_t
+       @return size_type capacity of Array_t
+    */
+    
+    size_type capacity();
+    
     /**
         @brief append Value_t to end of Array_t
         @param value is new Value_t 
     */
     void push_back(Value_t &value);
+    
     /**
         @brief append Value_t to end of Array_t
         @param value is new Value_t

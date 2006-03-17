@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcarray.cc,v 1.6 2006-03-15 15:47:42 mirecta Exp $
+ * FILE          $Id: frpcarray.cc,v 1.7 2006-03-17 09:43:10 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -91,7 +91,15 @@ void Array_t::clear()
     arrayData.clear();
 }
 
+void Array_t::reserve(Array_t::size_type size)
+{
+   arrayData.reserve(size);
+}
 
+Array_t::size_type Array_t::capacity()
+{
+   return arrayData.capacity();
+}
 
 void Array_t::push_back(Value_t &value)
 {
