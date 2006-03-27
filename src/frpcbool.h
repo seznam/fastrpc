@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcbool.h,v 1.2 2006-02-09 16:00:26 vasek Exp $
+ * FILE          $Id: frpcbool.h,v 1.3 2006-03-27 13:33:13 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -60,27 +60,15 @@ public:
     {
         return value;
     }
-    /**
-        @brief Operator bool
-    */
-    inline operator bool& ()
-    {
-    return value;
-    }
+
     /**
         @brief Operator bool const
     */
     inline operator bool() const 
     {
-    return value;
+        return value;
     }
-    /**
-        @brief Operator const bool const
-    */
-    inline operator const bool& () const
-    {
-    return value;
-    }
+
     /**
         @brief Method to clone/copy Bool_t 
         @param newPool is reference of Pool_t which is used for allocate objects
