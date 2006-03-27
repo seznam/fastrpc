@@ -2,7 +2,7 @@
  * FastRPC - RPC protocol suport Binary and XML.
  * Copyright (C) 2005 Seznam.cz, a.s.
  *
- * $Id: fastrpcmodule.cc,v 1.2 2006-02-10 11:06:49 mirecta Exp $
+ * $Id: fastrpcmodule.cc,v 1.3 2006-03-27 16:15:34 vasek Exp $
  * 
  * AUTHOR      Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
@@ -347,6 +347,7 @@ int DateTimeObject_init(DateTimeObject *self, PyObject *args, PyObject *kwds)
         time_tm.tm_hour = hour;
         time_tm.tm_min = min;
         time_tm.tm_sec = sec;
+        time_tm.tm_isdst = -1;
         self->unixTime = mktime(&time_tm);
 
         if(self->unixTime != -1)
@@ -536,6 +537,7 @@ DateTimeObject* newDateTime(short year, char month, char day, char hour, char
     time_tm.tm_hour = hour;
     time_tm.tm_min = min;
     time_tm.tm_sec = sec;
+    time_tm.tm_isdst = -1;
     self->unixTime = mktime(&time_tm);
 
     if(self->unixTime != -1)
