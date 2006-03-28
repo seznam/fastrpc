@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcmethodregistry.cc,v 1.3 2006-03-02 13:55:39 vasek Exp $
+ * FILE          $Id: frpcmethodregistry.cc,v 1.4 2006-03-28 09:33:22 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -30,6 +30,7 @@
 #include <frpc.h>
 #include <frpcinternals.h>
 #include <memory>
+#include <stdexcept>
 
 #ifdef WIN32
 #include <windows.h>
@@ -168,8 +169,25 @@ long MethodRegistry_t::processCall(const std::string &clientIP, const std::strin
             callbacks->postProcess(methodName, clientIP, params, fault,timeD.diff());
         marshaller->packFault(fault.errorNum(),fault.message().c_str());
         marshaller->flush();
-    }
 
+    } catch (const std::exception &e) {
+        Fault_t fault(FRPC_INTERNAL_ERROR,
+                      "Caught std::exception<%s> while dispatching "
+                      "method call.", e.what());
+        if (callbacks)
+            callbacks->postProcess(methodName, clientIP, params, fault, timeD.diff());
+        marshaller->packFault(fault.errorNum(),fault.message().c_str());
+        marshaller->flush();
+
+    } catch (...) {
+        Fault_t fault(FRPC_INTERNAL_ERROR,
+                      "Caught unknown exception while dispatching "
+                      "method call.");
+        if (callbacks)
+            callbacks->postProcess(methodName, clientIP, params, fault, timeD.diff());
+        marshaller->packFault(fault.errorNum(),fault.message().c_str());
+        marshaller->flush();
+    }
 
     return 0;
 }

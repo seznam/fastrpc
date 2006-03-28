@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcdatetime.cc,v 1.4 2006-03-27 17:00:18 vasek Exp $
+ * FILE          $Id: frpcdatetime.cc,v 1.5 2006-03-28 09:33:22 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -38,7 +38,7 @@ DateTime_t::DateTime_t(Pool_t &pool, short year, char month, char day,
     time_tm.tm_hour = hour;
     time_tm.tm_min = minute;
     time_tm.tm_sec = sec;
-    time_tm.isdst = -1; // we do not know nothing about daylight savings time
+    time_tm.tm_isdst = -1; // we do not know nothing about daylight savings time
     long time_l = mktime(&time_tm);
     struct tm *timeValid = localtime(&time_l);
 
@@ -97,7 +97,7 @@ DateTime_t::DateTime_t(Pool_t &pool, const std::string &isoFormat)
     time_tm.tm_hour = hour;
     time_tm.tm_min = minute;
     time_tm.tm_sec = sec;
-    time_tm.isdst = -1; // we do not know nothing about daylight savings time
+    time_tm.tm_isdst = -1; // we do not know nothing about daylight savings time
     long time_l = mktime(&time_tm);
     struct tm *timeValid = localtime(&time_l);
 
