@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcserver.cc,v 1.7 2006-03-03 11:07:14 mirecta Exp $
+ * FILE          $Id: frpcserver.cc,v 1.8 2006-04-05 07:52:34 mirecta Exp $
  *
  * DESCRIPTION
  *
@@ -78,6 +78,12 @@ void Server_t::serve(int fd, struct sockaddr_in* addr )
 
     do
     {
+        
+//         if (callbacks)
+//         {
+//            callbacks->preRead(clientIP, requestCount);
+//         }
+        
         Pool_t pool;
         TreeBuilder_t builder(pool);
 
@@ -92,7 +98,8 @@ void Server_t::serve(int fd, struct sockaddr_in* addr )
         {
             std::auto_ptr<Marshaller_t> marshaller(Marshaller_t::create(
                                                        ((outType ==
-                                                         BINARY_RPC)?Marshaller_t::BINARY_RPC
+                                                         BINARY_RPC)?
+                                                         Marshaller_t::BINARY_RPC
                                                         :Marshaller_t::XML_RPC),*this));
 
             marshaller->packFault(MethodRegistry_t::FRPC_PARSE_ERROR, streamError.message().c_str());
@@ -142,11 +149,6 @@ void Server_t::serve(int fd, struct sockaddr_in* addr )
             break;
         }
 
-        catch(...)
-        {
-            break;
-        }
-
         requestCount++;
 
 
@@ -168,6 +170,7 @@ void Server_t::readRequest(DataBuilder_t &builder)
     std::string protocol;
     std::string transferMethod;
     std::string contentType;
+    std::string uriPath;
     std::auto_ptr<UnMarshaller_t> unmarshaller;
     //SocketCloser_t closer(httpIO.socket());
 
@@ -201,7 +204,20 @@ void Server_t::readRequest(DataBuilder_t &builder)
                                   "Bad HTTP protocol version or type: '%s'.",
                                   header[2].c_str());
             }
-
+             
+            uriPath = header[1];
+              
+//             if (!path.empty())
+//             {
+//                if (uriPath != path)
+//                {
+//                   throw HTTPError_t(HTTP_NOT_FOUND,
+//                                   "Uri not found '%s'.",
+//                                   header[1].c_str()); 
+//                }
+            
+//             }
+            
             transferMethod =  header[0];
 
 

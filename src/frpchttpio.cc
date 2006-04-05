@@ -1,5 +1,5 @@
 /*
- * FILE             $Id: frpchttpio.cc,v 1.2 2005-07-25 06:10:47 vasek Exp $
+ * FILE             $Id: frpchttpio.cc,v 1.3 2006-04-05 07:52:34 mirecta Exp $
  *
  * DESCRIPTION      HTTP I/O
  *
@@ -29,6 +29,7 @@
 #include "frpcsocket.h"
 #include "frpchttpio.h"
 #include <frpchttperror.h>
+#include <frpcprotocolerror.h>
 #include <frpcresponseerror.h>
 #include <frpchttpclient.h>
 
@@ -153,11 +154,11 @@ std::string HTTPIO_t::readLine(bool checkLimit)
         switch (ready)
         {
         case 0:
-            throw HTTPError_t(HTTP_TIMEOUT, "Timeout while reading.");
+            throw ProtocolError_t(HTTP_TIMEOUT, "Timeout while reading.");
 
         case -1:
             // other error
-            throw HTTPError_t(HTTP_SYSCALL, "Syscall error: <%d, %s>.",
+            throw ProtocolError_t(HTTP_SYSCALL, "Syscall error: <%d, %s>.",
                               ERRNO, STRERROR(ERRNO));
         }
 
@@ -167,11 +168,11 @@ std::string HTTPIO_t::readLine(bool checkLimit)
         {
         case 0:
             // protìjsí strana zavøela spojení
-            throw HTTPError_t(HTTP_CLOSED, "Connection closed by foreign host");
+            throw ProtocolError_t(HTTP_CLOSED, "Connection closed by foreign host");
 
         case -1:
             // other error
-            throw HTTPError_t(HTTP_SYSCALL, "Syscall error: <%d, %s>.",
+            throw ProtocolError_t(HTTP_SYSCALL, "Syscall error: <%d, %s>.",
                               ERRNO, STRERROR(ERRNO));
         }
 
@@ -186,7 +187,7 @@ std::string HTTPIO_t::readLine(bool checkLimit)
                     ((lineBuff.length() + toRead)
                      > static_cast<unsigned int>(lineSizeLimit)))
             {
-                throw HTTPError_t
+                throw ProtocolError_t
                 (HTTP_LINE_TOO_LONG,"Security limit exceeded: line "
                  "is too long ('%u' > '%d')",
                  lineBuff.length() + toRead,
@@ -198,12 +199,12 @@ std::string HTTPIO_t::readLine(bool checkLimit)
             {
             case 0:
                 // protìjsí strana zavøela spojení
-                throw HTTPError_t(HTTP_CLOSED,
+                throw ProtocolError_t(HTTP_CLOSED,
                                   "Connection closed by foreign host");
 
             case -1:
                 // other error
-                throw HTTPError_t(HTTP_SYSCALL, "Syscall error: <%d, %s>.",
+                throw ProtocolError_t(HTTP_SYSCALL, "Syscall error: <%d, %s>.",
                                   ERRNO, STRERROR(ERRNO));
 
             default:
@@ -231,7 +232,7 @@ std::string HTTPIO_t::readLine(bool checkLimit)
                     ((lineBuff.length() + toRead)
                      > static_cast<unsigned int>(lineSizeLimit)))
             {
-                throw HTTPError_t
+                throw ProtocolError_t
                 (HTTP_LINE_TOO_LONG, "Security limit exceeded: line "
                  "is too long ('%u' > '%d')",
                  lineBuff.length() + toRead,
@@ -243,12 +244,12 @@ std::string HTTPIO_t::readLine(bool checkLimit)
             {
             case 0:
                 // protìjsí strana zavøela spojení
-                throw HTTPError_t(HTTP_CLOSED,
+                throw ProtocolError_t(HTTP_CLOSED,
                                   "Connection closed by foreign host");
 
             case -1:
                 // other error
-                throw HTTPError_t(HTTP_SYSCALL, "Syscall error: <%d, %s>.",
+                throw ProtocolError_t(HTTP_SYSCALL, "Syscall error: <%d, %s>.",
                                   ERRNO, STRERROR(ERRNO));
 
             default:
@@ -294,11 +295,11 @@ void HTTPIO_t::sendData(const char *data, size_t length, bool watchForResponse)
         switch (ready)
         {
         case 0:
-            throw HTTPError_t(HTTP_TIMEOUT, "Timeout while writing.");
+            throw ProtocolError_t(HTTP_TIMEOUT, "Timeout while writing.");
 
         case -1:
             // other error
-            throw HTTPError_t(HTTP_SYSCALL, "Syscall error: <%d, %s>.",
+            throw ProtocolError_t(HTTP_SYSCALL, "Syscall error: <%d, %s>.",
                               ERRNO, STRERROR(ERRNO));
         }
 
@@ -321,7 +322,7 @@ void HTTPIO_t::sendData(const char *data, size_t length, bool watchForResponse)
                 throw ResponseError_t();
             }
             // other error
-            throw HTTPError_t(HTTP_SYSCALL, "Syscall error: <%d, %s>.",
+            throw ProtocolError_t(HTTP_SYSCALL, "Syscall error: <%d, %s>.",
                               ERRNO, STRERROR(ERRNO));
 
         default:
@@ -351,7 +352,7 @@ void HTTPIO_t::readBlock(long int contentLength_, DataSink_t &data)
 
     // check if content fits the max block size
     if ((bodySizeLimit >= 0) && (contentLength_ > bodySizeLimit))
-        throw HTTPError_t
+        throw ProtocolError_t
         (HTTP_BODY_TOO_LONG, "Security limit exceeded: line "
          "is too long ('%ld' > '%d')",
          contentLength_, bodySizeLimit);
@@ -375,11 +376,11 @@ void HTTPIO_t::readBlock(long int contentLength_, DataSink_t &data)
         switch (ready)
         {
         case 0:
-            throw HTTPError_t(HTTP_TIMEOUT, "Timeout while reading.");
+            throw ProtocolError_t(HTTP_TIMEOUT, "Timeout while reading.");
 
         case -1:
             // other error
-            throw HTTPError_t(HTTP_SYSCALL, "Syscall error: <%d, %s>.",
+            throw ProtocolError_t(HTTP_SYSCALL, "Syscall error: <%d, %s>.",
                               ERRNO, STRERROR(ERRNO));
         }
 
@@ -393,11 +394,11 @@ void HTTPIO_t::readBlock(long int contentLength_, DataSink_t &data)
             // protìjsí strana zavøela spojení
             if (contentLength_ < 0)
                 return; //done
-            throw HTTPError_t(HTTP_CLOSED, "Connection closed by foreign host");
+            throw ProtocolError_t(HTTP_CLOSED, "Connection closed by foreign host");
 
         case -1:
             // other error
-            throw HTTPError_t(HTTP_SYSCALL, "Syscall error: <%d, %s>.",
+            throw ProtocolError_t(HTTP_SYSCALL, "Syscall error: <%d, %s>.",
                               ERRNO, STRERROR(ERRNO));
 
         default:
@@ -407,7 +408,7 @@ void HTTPIO_t::readBlock(long int contentLength_, DataSink_t &data)
             // test for maxblocksize
             if (bodySizeLimit >= 0 && data.written()
                     > static_cast<unsigned long int>(bodySizeLimit))
-                throw HTTPError_t
+                throw ProtocolError_t
                 (HTTP_BODY_TOO_LONG, "Security limit exceeded: content "
                  "is too large (%u > %d)",
                  data.written(), bodySizeLimit);
@@ -433,14 +434,14 @@ void HTTPIO_t::readHeader(HTTPHeader_t &header)
         // parse header line
         if (getHeaderValue(line, name, value))
             // oops, nìkdo nám poslal binec...
-            throw HTTPError_t(HTTP_VALUE, "Invalid header line '%s'/",
+            throw ProtocolError_t(HTTP_VALUE, "Invalid header line '%s'/",
                               line.substr(0, 30).c_str());
         if (name.empty())
         {
             // continuing line
             if (header.empty())
                 // but no line to attach
-                throw HTTPError_t(HTTP_VALUE, "Invalid header line '%s'/",
+                throw ProtocolError_t(HTTP_VALUE, "Invalid header line '%s'/",
                                   line.substr(0, 30).c_str());
 
             header.appendValue(value);
@@ -459,7 +460,7 @@ long int HTTPIO_t::readChunkSize()
     long int chunkSize;
     if (!(is >> std::hex >> chunkSize) || (chunkSize < 0))
         // reading of chunk size failed
-        throw HTTPError_t(HTTP_VALUE, "Bad chunk size: '%s'.",
+        throw ProtocolError_t(HTTP_VALUE, "Bad chunk size: '%s'.",
                           line.substr(0, 30).c_str());
     return chunkSize;
 }
@@ -473,7 +474,7 @@ void HTTPIO_t::readChunkedContent(HTTPHeader_t &header, DataSink_t &data)
         if ((bodySizeLimit >= 0) &&
                 ((data.written() + chunkSize)
                  > static_cast<unsigned int>(bodySizeLimit)))
-            throw HTTPError_t
+            throw ProtocolError_t
             (HTTP_BODY_TOO_LONG, "Security limit exceeded: line "
              "is too long ('%ld > %d)",
              data.written() + chunkSize,
@@ -485,7 +486,7 @@ void HTTPIO_t::readChunkedContent(HTTPHeader_t &header, DataSink_t &data)
         // read CRLF after chunk
         std::string emptyLine(readLine());
         if (!emptyLine.empty())
-            throw HTTPError_t(HTTP_VALUE,
+            throw ProtocolError_t(HTTP_VALUE,
                               "Chunk terminator should be empty, "
                               "not '%s'.", emptyLine.substr(0, 30).c_str());
     }
@@ -504,13 +505,13 @@ void HTTPIO_t::readContent(HTTPHeader_t &header, DataSink_t &data,
         long int contentLength;
         std::istringstream is(value);
         if (!(is >> contentLength) || (contentLength < 0))
-            throw HTTPError_t(HTTP_VALUE,
+            throw ProtocolError_t(HTTP_VALUE,
                               "Invalid content length header '%s'.",
                               value.substr(0, 30).c_str());
 
         // check for body limit
         if ((bodySizeLimit >= 0) && (contentLength > bodySizeLimit))
-            throw HTTPError_t
+            throw ProtocolError_t
             (HTTP_BODY_TOO_LONG, "Security limit exceeded: line "
              "is too long ('%ld > %d)",
              contentLength, bodySizeLimit);
@@ -533,7 +534,7 @@ void HTTPIO_t::readContent(HTTPHeader_t &header, DataSink_t &data,
         }
         else
         {
-            throw HTTPError_t(HTTP_VALUE,
+            throw ProtocolError_t(HTTP_VALUE,
                               "Invalid content-transfer-encoding "
                               "header '%s'.", value.substr(0, 30).c_str());
         }

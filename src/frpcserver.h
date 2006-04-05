@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcserver.h,v 1.2 2005-08-05 08:14:31 vasek Exp $
+ * FILE          $Id: frpcserver.h,v 1.3 2006-04-05 07:52:34 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -55,14 +55,17 @@ public:
             @param maxKeepalive - mas request on keep alive
             @param introspectionEnabled see MethodRegistry_t
             @param callbacks pointer to callback class for logging
+            @param path uri path
         */
         Config_t(long readTimeout, long writeTimeout,
                  bool keepAlive, long maxKeepalive, bool introspectionEnabled,
-                 MethodRegistry_t::Callbacks_t *callbacks )
+                 MethodRegistry_t::Callbacks_t *callbacks //, const std::string path
+                 )
                 :readTimeout(readTimeout),writeTimeout(writeTimeout),
                 keepAlive(keepAlive),maxKeepalive(maxKeepalive),
                 introspectionEnabled(introspectionEnabled),
                 callbacks(callbacks)
+            //,path(path)
         {}
         /**
             @brief Default constructor 
@@ -94,6 +97,8 @@ public:
         bool introspectionEnabled;
 
         MethodRegistry_t::Callbacks_t *callbacks;
+        
+//         std::string path;
 
     };
 
@@ -101,7 +106,8 @@ public:
             :Writer_t(), methodRegistry(config.callbacks, config.introspectionEnabled),
             io(0,config.readTimeout, config.writeTimeout, -1 ,-1),
             keepAlive(config.keepAlive),maxKeepalive(config.maxKeepalive),
-            callbacks(config.callbacks), outType(XML_RPC), closeConnection(true),
+             callbacks(config.callbacks),//path(config.path),
+            outType(XML_RPC), closeConnection(true),
             contentLength(0),useChunks(false),headersSent(false),head(false)
 
     {
@@ -148,6 +154,7 @@ private:
     bool keepAlive;
     long maxKeepalive;
     MethodRegistry_t::Callbacks_t *callbacks;
+//     std::string path;
     long outType;
     bool closeConnection;
     std::list<std::string> queryStorage;

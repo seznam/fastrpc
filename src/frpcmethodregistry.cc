@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcmethodregistry.cc,v 1.4 2006-03-28 09:33:22 vasek Exp $
+ * FILE          $Id: frpcmethodregistry.cc,v 1.5 2006-04-05 07:52:34 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -27,6 +27,7 @@
 #include <frpclenerror.h>
 #include <frpckeyerror.h>
 #include <frpcindexerror.h>
+#include <frpcprotocolerror.h>
 #include <frpc.h>
 #include <frpcinternals.h>
 #include <memory>
@@ -169,6 +170,9 @@ long MethodRegistry_t::processCall(const std::string &clientIP, const std::strin
             callbacks->postProcess(methodName, clientIP, params, fault,timeD.diff());
         marshaller->packFault(fault.errorNum(),fault.message().c_str());
         marshaller->flush();
+
+    } catch (const ProtocolError_t &pe) {
+        throw;
 
     } catch (const std::exception &e) {
         Fault_t fault(FRPC_INTERNAL_ERROR,

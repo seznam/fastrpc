@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcmethodregistry.h,v 1.2 2005-07-25 06:10:47 vasek Exp $
+ * FILE          $Id: frpcmethodregistry.h,v 1.3 2006-04-05 07:52:34 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -99,6 +99,8 @@ public:
     public :
         Callbacks_t()
         {}
+        
+        
         /**
         @brief this method was called before method call 
         */
@@ -119,8 +121,16 @@ public:
                                  const Array_t &params,
                                  const Fault_t &fault, const TimeDiff_t &time) = 0 ;
 
+        
         virtual ~Callbacks_t()
         {}
+        
+//         /**
+//         @brief this method was called before reading from socket
+//         */
+        
+//         virtual void preRead(const std::string &clientIP, int requestCount)
+//         {}
     }
     ;
     /**
