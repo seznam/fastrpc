@@ -2,7 +2,7 @@
  * FastRPC - RPC protocol suport Binary and XML.
  * Copyright (C) 2005 Seznam.cz, a.s.
  *
- * $Id: fastrpcmodule.cc,v 1.3 2006-03-27 16:15:34 vasek Exp $
+ * $Id: fastrpcmodule.cc,v 1.4 2006-05-18 15:24:02 vasek Exp $
  * 
  * AUTHOR      Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
@@ -756,6 +756,7 @@ extern "C"
     static void BooleanObject_dealloc(BooleanObject *self);
     static int BooleanObject_cmp(BooleanObject *self, BooleanObject *other);
     static PyObject* BooleanObject_repr(BooleanObject *self);
+    static PyObject* BooleanObject_str(BooleanObject *self);
     static PyObject* BooleanObject_getattr(BooleanObject *self, char *name);
     static int BooleanObject_setattr(BooleanObject *self, char *name, PyObject*
                                      value);
@@ -827,7 +828,7 @@ PyTypeObject BooleanObject_Type =
         0,                                      /* tp_as_mapping */
         0,                                      /* tp_hash */
         0,                                      /* tp_call */
-        0,                                      /* tp_str */
+        (reprfunc)BooleanObject_str,            /* tp_str */
         0,                                      /* tp_getattro */
         0,                                      /* tp_setattro */
         0,                                      /* tp_as_buffer */
@@ -964,6 +965,11 @@ PyObject* BooleanObject_repr(BooleanObject *self)
                                "Boolean: FALSE");
 }
 
+PyObject* BooleanObject_str(BooleanObject *self)
+{
+    return PyString_FromString(PyObject_IsTrue(self->value) ? "1" : "0");
+}
+
 int BooleanObject_nonzero(BooleanObject *self)
 {
     // check for true
@@ -989,6 +995,31 @@ BooleanObject* newBoolean(bool value)
     Py_INCREF(self->value);
     return self;
 }
+
+enum StringMode_t {
+    STRING_MODE_INVALID = -1,
+    STRING_MODE_MIXED = 0,
+    STRING_MODE_UNICODE,
+    STRING_MODE_STRING
+};
+
+StringMode_t parseStringMode(const char *stringMode) {
+    if (stringMode) {
+        if (!strcmp(stringMode, "string")) {
+            return STRING_MODE_STRING;
+        } else if (!strcmp(stringMode, "unicode")) {
+            return STRING_MODE_UNICODE;
+        } else if (strcmp(stringMode, "mixed")) {
+            PyErr_Format(PyExc_ValueError,
+                         "Invalid valu '%s' of stringMode.", stringMode);
+            return STRING_MODE_INVALID;
+        }
+    }
+
+    // default
+    return STRING_MODE_MIXED;
+}
+
 }
 /***************************************************************************/
 /***Builder for unmarshaller                                             ***/
@@ -1013,9 +1044,9 @@ public:
          STRUCT=10,ARRAY,METHOD_CALL=13,METHOD_RESPONSE,FAULT,
          MEMBER_NAME = 100,METHOD_NAME,METHOD_NAME_LEN,MAGIC,MAIN };
 
-    Builder_t(PyObject *methodObject)
+    Builder_t(PyObject *methodObject, StringMode_t stringMode)
         : DataBuilder_t(), first(true), error(false), retValue(Py_None),
-          methodObject(methodObject), methodName(0)
+          methodObject(methodObject), methodName(0), stringMode(stringMode)
     {
         Py_INCREF(retValue);
     }
@@ -1039,7 +1070,9 @@ public:
     virtual void buildMethodCall(const char* methodName, long size );
     virtual void buildMethodCall(const std::string &methodName);
     virtual void buildString(const char* data, long size );
-    virtual void buildString(const std::string &data);
+    virtual void buildString(const std::string &data) {
+        return buildString(data.data(), data.size());
+    }
     virtual void buildStructMember(const char *memberName, long size );
     virtual void buildStructMember(const std::string &memberName);
     virtual void closeArray();
@@ -1180,6 +1213,7 @@ private :
     std::vector<TypeStorage_t> entityStorage;
     PyObject *methodObject;
     std::string *methodName;
+    StringMode_t stringMode;
 };
 
 void Builder_t::buildMethodResponse()
@@ -1322,68 +1356,33 @@ void Builder_t::buildString(const char* data, long size)
 {
     if(isError())
         return;
-    bool utf8 = false;
-    PyObject *stringVal;
+    bool utf8 = (stringMode == STRING_MODE_UNICODE);
 
-    for(long i = 0; i < size; i++)
-    {
-        if(data[i] & 0x80)
-        {
-            utf8 = true;
-            break;
+    // check 8-bit string only iff mixed
+    if (stringMode == STRING_MODE_MIXED) {
+        for(long i = 0; i < size; i++) {
+            if(data[i] & 0x80) {
+                utf8 = true;
+                break;
+            }
         }
     }
 
-    if(utf8)
-    {
+    PyObject *stringVal;
+
+    if (utf8) {
         stringVal = PyUnicode_DecodeUTF8(data, size, "strict");
-    }
-    else
-    {
+    } else {
         stringVal = PyString_FromStringAndSize(const_cast<char*>(data), size);
     }
 
     if(!stringVal)
         setError();
-        
-    
+
     if(!isMember(stringVal))
         isFirst(stringVal);
-
 }
-void Builder_t::buildString(const std::string &data)
-{
-    if(isError())
-        return;
-    PyObject *stringVal;
-    bool utf8 = false;
 
-    for(long i = 0; i < data.size(); i++)
-    {
-        if(data[i] & 0x80)
-        {
-            utf8 = true;
-            break;
-        }
-    }
-
-    if(utf8)
-    {
-        stringVal = PyUnicode_DecodeUTF8(data.data(), data.size(), "strict");
-    }
-    else
-    {
-        stringVal = PyString_FromString(data.c_str());
-    }
-
-    if(!stringVal)
-        setError();
-    
-    if(!isMember(stringVal))
-        isFirst(stringVal);
-
-
-}
 void Builder_t::buildStructMember(const char *memberName, long size )
 {
     if(isError())
@@ -1507,13 +1506,13 @@ public:
     Proxy_t(const std::string &serverUrl, int readTimeout,
             int writeTimeout, int connectTimeout, bool keepAlive,
             int rpcTransferMode, const std::string &encoding, bool useHTTP10,
-            const std::string &proxyVia)
+            const std::string &proxyVia, StringMode_t stringMode)
         : url(serverUrl, proxyVia), socket(-1),
           io(socket, readTimeout, writeTimeout, -1, -1),
           connectTimeout(connectTimeout), keepAlive(keepAlive),
           rpcTransferMode(rpcTransferMode), encoding(encoding),
           serverSupportedProtocols(HTTPClient_t::XML_RPC),
-          useHTTP10(useHTTP10)
+          useHTTP10(useHTTP10), stringMode(stringMode)
     {}
 
     ~Proxy_t()
@@ -1553,6 +1552,7 @@ private:
 
     bool useHTTP10;
     std::string lastCall;
+    StringMode_t stringMode;
 };
 
 struct ServerProxyObject
@@ -1703,6 +1703,8 @@ PyObject* newMethod(ServerProxyObject *proxy, const std::string &name)
 
 void Method_dealloc(MethodObject *self)
 {
+    using std::string;
+
     // call destructor for name
     self->name.~string();
 
@@ -1770,8 +1772,8 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *self, PyObject *args,
 {
     static char *kwlist[] = {"serverUrl", "readTimeout", "writeTimeout",
                              "connectTimeout",
-                             "keepAlive","useBinary","encoding",
-                             "useHTTP10", "proxyVia", 0};
+                             "keepAlive", "useBinary","encoding",
+                             "useHTTP10", "proxyVia", "stringMode", 0};
 
     // parse arguments
     char *serverUrl;
@@ -1781,16 +1783,17 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *self, PyObject *args,
     int connectTimeout = -1;
     int keepAlive = 0;
     int mode = Proxy_t::BINARY_ON_SUPPORT_ON_KEEP_ALIVE;
+    char *stringMode_ = 0;
     char *encoding = "utf-8";
     int useHTTP10 = false;
     char *proxyVia = "";
 
     if (!PyArg_ParseTupleAndKeywords(args, keywds,
-                                     "s#|iiiiisis:ServerProxy.__init__", kwlist,
+                                     "s#|iiiiisiss:ServerProxy.__init__", kwlist,
                                      &serverUrl, &serverUrlLen, &readTimeout,
                                      &writeTimeout, &connectTimeout,
                                      &keepAlive,&mode, &encoding,
-                                     &useHTTP10, &proxyVia))
+                                     &useHTTP10, &proxyVia, &stringMode_))
         return 0;
 
     // create server proxy object
@@ -1800,13 +1803,16 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *self, PyObject *args,
 
     proxy->proxyOk = false;
 
+    StringMode_t stringMode = parseStringMode(stringMode_);
+    if (stringMode == STRING_MODE_INVALID) return 0;
+
     try
     {
         // initialize underlying proxy (inplace!)
         new (&proxy->proxy) Proxy_t(std::string(serverUrl, serverUrlLen),
                                     readTimeout, writeTimeout,
                                     connectTimeout, keepAlive,mode, encoding,
-                                    useHTTP10, proxyVia);
+                                    useHTTP10, proxyVia, stringMode);
         proxy->proxyOk = true;
     }
     catch (const HTTPError_t &httpError)
@@ -2011,7 +2017,8 @@ PyObject* Proxy_t::operator()(MethodObject *methodObject, PyObject *args)
     lastCall = methodObject->name;
 
     HTTPClient_t client(io,url,connectTimeout,false, useHTTP10);
-    Builder_t builder(reinterpret_cast<PyObject*>(methodObject));
+    Builder_t builder(reinterpret_cast<PyObject*>(methodObject),
+                      stringMode);
     Marshaller_t *marshaller;
 
     switch(rpcTransferMode) {
@@ -2245,7 +2252,7 @@ PyObject* fastrpc_dumps(PyObject *self, PyObject *args, PyObject *keywds) {
     int useBinary = false;
 
     if (!PyArg_ParseTupleAndKeywords(args, keywds,
-                                     "O|sisi:fastrpc.dumps", kwlist,
+                                     "O|zisi:fastrpc.dumps", kwlist,
                                      &params, &methodname, &methodresponse,
                                      &encoding, &useBinary))
         return 0;
@@ -2269,7 +2276,17 @@ PyObject* fastrpc_dumps(PyObject *self, PyObject *args, PyObject *keywds) {
                 feeder.feed(params);
             } else if (methodresponse) {
                 marshaller->packMethodResponse();
-                feeder.feedValue(params);
+                PyObject *firstParam = 0;
+                if (PyTuple_Check(params)) {
+                    firstParam = (PyTuple_GET_SIZE(params)
+                                  ? PyTuple_GET_ITEM(params, 0)
+                                  : 0);
+                } else {
+                    firstParam = (PyList_GET_SIZE(params)
+                                  ? PyList_GET_ITEM(params, 0)
+                                  : 0);
+                }
+                if (firstParam) feeder.feedValue(firstParam);
             } else {
                 // raw data
                 feeder.feedValue(params);
@@ -2334,9 +2351,13 @@ static char fastrpc_loads__doc__[] =
 PyObject* fastrpc_loads(PyObject *self, PyObject *args) {
     // parse arguments
     PyObject *data;
+    char *stringMode_ = 0;
 
-    if (!PyArg_ParseTuple(args, "O:fastrpc.loads", &data))
+    if (!PyArg_ParseTuple(args, "O|s:fastrpc.loads", &data, &stringMode_))
         return 0;
+
+    StringMode_t stringMode = parseStringMode(stringMode_);
+    if (stringMode == STRING_MODE_INVALID) return 0;
 
     char *dataStr;
     int dataSize;
@@ -2344,7 +2365,7 @@ PyObject* fastrpc_loads(PyObject *self, PyObject *args) {
         return 0;
 
     try {
-        Builder_t builder(0);
+        Builder_t builder(0, stringMode);
         std::auto_ptr<UnMarshaller_t> unmarshaller
             (UnMarshaller_t::create(dataStr, dataSize, builder));
 
