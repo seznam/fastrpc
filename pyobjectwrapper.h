@@ -2,7 +2,7 @@
  * FastRPC - RPC protocol suport Binary and XML.
  * Copyright (C) 2005 Seznam.cz, a.s.
  *
- * $Id: pyobjectwrapper.h,v 1.2 2006-06-27 12:04:06 vasek Exp $
+ * $Id: pyobjectwrapper.h,v 1.3 2006-06-27 14:13:38 vasek Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -71,6 +71,10 @@ public:
     }
 
     PyObject*& operator*() {
+        return object;
+    }
+
+    PyObject* operator->() {
         return object;
     }
 
