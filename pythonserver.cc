@@ -2,7 +2,7 @@
  * FastRPC - RPC protocol suport Binary and XML.
  * Copyright (C) 2005 Seznam.cz, a.s.
  *
- * $Id: pythonserver.cc,v 1.6 2006-06-27 12:56:47 vasek Exp $
+ * $Id: pythonserver.cc,v 1.7 2006-06-27 14:16:40 vasek Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -187,35 +187,11 @@ namespace {
 
     struct Method_t {
         Method_t(const std::string &name, PyObject *callback,
-                 PyObject *signature, PyObject *help, PyObject *context = 0)
-            : name(name), callback(callback, true),
-              signature(signature, true), help(help, true),
-              context(context, true)
-        {
-            if (PyString_Check(signature)) {
-                char *sig;
-                int sigSize;
-                if (PyString_AsStringAndSize(signature, &sig, &sigSize))
-                    throw PyError_t();
-                if (!(this->signature =
-                      stringToSignature(std::string(sig, sigSize))))
-                    throw PyError_t();
-            }
-        }
+                 PyObject *signature, PyObject *help, PyObject *context = 0);
 
         Method_t(const std::string &name, PyObject *callback,
                  const std::string &signature, const std::string &help,
-                 PyObject *context = 0)
-            : name(name), callback(callback, true),
-              signature(), help(), context(context, true)
-        {
-            if (!(this->help = PyString_FromStringAndSize
-                  (help.data(), help.size())))
-                throw PyError_t();
-
-            if (!(this->signature = stringToSignature(signature)))
-                throw PyError_t();
-        }
+                 PyObject *context = 0);
 
         PyObject* operator()(PyObject *runtime, PyObject *args) const;
 
@@ -1077,12 +1053,7 @@ namespace {
                                 const std::string &signature,
                                 const std::string &help)
     {
-        PyObjectWrapper_t callback
-            (PyObject_GetAttrString
-             (asObject(self), const_cast<char*>(("__" + name).c_str())));
-        if (!callback) throw PyError_t();
-
-        Method_t m(name, callback, signature, help, asObject(self));
+        Method_t m(name, asObject(self), signature, help);
         self->lookup->insert(MethodLookup_t::value_type(m.name, m));
     }
 }
@@ -1736,19 +1707,57 @@ static DECL_METHOD(ServerObject, serve) {
 }
 
 namespace {
+    Method_t::Method_t(const std::string &name, PyObject *callback,
+                       PyObject *signature, PyObject *help, PyObject *context)
+        : name(name), callback
+        (callback, !PyObject_TypeCheck(callback, &MethodRegistryObject_Type)),
+          signature(signature, true), help(help, true),
+          context(context, true)
+    {
+        if (PyString_Check(signature)) {
+            char *sig;
+            int sigSize;
+            if (PyString_AsStringAndSize(signature, &sig, &sigSize))
+                throw PyError_t();
+            if (!(this->signature =
+                  stringToSignature(std::string(sig, sigSize))))
+                throw PyError_t();
+        }
+    }
+
+    Method_t::Method_t(const std::string &name, PyObject *callback,
+                       const std::string &signature, const std::string &help,
+                       PyObject *context)
+        : name(name), callback
+        (callback, !PyObject_TypeCheck(callback, &MethodRegistryObject_Type)),
+          signature(), help(), context(context, true)
+    {
+        if (!(this->help = PyString_FromStringAndSize
+              (help.data(), help.size())))
+            throw PyError_t();
+
+        if (!(this->signature = stringToSignature(signature)))
+            throw PyError_t();
+    }
+
     PyObject* Method_t::operator()(PyObject *runtime, PyObject *args) const {
-        // use context or unwind call
-        if (!context) return PyObject_CallObject(callback.object, args);
+        if (PyObject_TypeCheck(callback.object, &MethodRegistryObject_Type)) {
+            // callback is just method registry => call method
 
-        // use runtime as context if present and context is method registry
-        if (runtime
-            && PyObject_TypeCheck(context.object, &MethodRegistryObject_Type))
+            // prepare for call
+            std::string method("__" + name);
+            char *c_method = const_cast<char*>(method.c_str());
+            return PyObject_CallMethod
+                (callback.object, c_method, "(OO)", runtime, args);
+        } else {
+            // callback is realy something callback
+
+            // use context or unwind call
+            if (!context) return PyObject_CallObject(callback.object, args);
+
             return PyObject_CallFunctionObjArgs
-                (callback.object, runtime, args, 0);
-
-        // just method with context
-        return PyObject_CallFunctionObjArgs
-            (callback.object, context.object, args, 0);
+                (callback.object, context.object, args, 0);
+        }
     }
 }
 
