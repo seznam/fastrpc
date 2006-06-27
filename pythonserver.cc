@@ -2,7 +2,7 @@
  * FastRPC - RPC protocol suport Binary and XML.
  * Copyright (C) 2005 Seznam.cz, a.s.
  *
- * $Id: pythonserver.cc,v 1.5 2006-06-27 12:54:27 vasek Exp $
+ * $Id: pythonserver.cc,v 1.6 2006-06-27 12:56:47 vasek Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -14,6 +14,7 @@
  *              Created
  */
 
+#define __ENABLE_WSTRING
 
 #include <iostream>
 #include <sstream>
