@@ -2,7 +2,7 @@
  * FastRPC - RPC protocol suport Binary and XML.
  * Copyright (C) 2005 Seznam.cz, a.s.
  *
- * $Id: pythonserver.cc,v 1.2 2006-06-27 12:04:06 vasek Exp $
+ * $Id: pythonserver.cc,v 1.3 2006-06-27 12:38:16 vasek Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -681,11 +681,18 @@ PyObject* Server_t::serve(int fd, PyObjectWrapper_t addr) {
                     PyObjectWrapper_t result
                         (PyObject_CallFunctionObjArgs
                          (serverObject->registry->headMethod, 0));
-                    if (!result) return 0;
+                    if (!result) {
+                        throw FRPC::HTTPError_t
+                            (FRPC::HTTP_INTERNAL_SERVER_ERROR,
+                             "Error while dispatching call.");
+                    }
 
                     long int r = PyInt_AsLong(result);
-                    if ((r == -1) && PyErr_Occurred())
-                        return 0;
+                    if ((r == -1) && PyErr_Occurred()) {
+                        throw FRPC::HTTPError_t
+                            (FRPC::HTTP_INTERNAL_SERVER_ERROR,
+                             "Error while dispatching call.");
+                    }
 
                     if (r)
                         throw FRPC::HTTPError_t(FRPC::HTTP_SERVICE_UNAVAILABLE,
@@ -712,10 +719,11 @@ PyObject* Server_t::serve(int fd, PyObjectWrapper_t addr) {
                     if (PyObject_IsInstance(result, Fault)) {
                         PyObjectWrapper_t pyFaultCode
                             (PyObject_GetAttrString(result, "faultCode"));
-                        if (!pyFaultCode) return 0;
+                        if (!pyFaultCode) throw PyError_t();
+
                         long int faultCode = PyInt_AsLong(pyFaultCode);
                         if ((faultCode == -1) && PyErr_Occurred())
-                            return 0;
+                            throw PyError_t();
 
                         PyObjectWrapper_t pyFaultString
                             (PyObject_GetAttrString(result, "faultString"));
@@ -725,7 +733,8 @@ PyObject* Server_t::serve(int fd, PyObjectWrapper_t addr) {
                         if (PyString_AsStringAndSize(pyFaultString,
                                                      &faultString,
                                                      &faultStringSize))
-                            return 0;
+                            throw PyError_t();
+
                         marshaller->packFault(faultCode, faultString,
                                               faultStringSize);
                     } else {
@@ -734,11 +743,15 @@ PyObject* Server_t::serve(int fd, PyObjectWrapper_t addr) {
                     }
                     marshaller->flush();
                 } catch (const PyError_t &) {
-                    // oops error during marshalling
-#warning don''t know what to do: throw some exception
+                    // oops error during processing result
+                    throw FRPC::HTTPError_t
+                        (FRPC::HTTP_INTERNAL_SERVER_ERROR,
+                         "Error while dispatching call.");
                 } catch (const FRPC::StreamError_t &streamError) {
                     // oops error during marshalling
-#warning don''t know what to do: throw some exception
+                    PyErr_SetString(PyExc_RuntimeError,
+                                   "Error marshalling result, bailing out.");
+                    return 0;
                 } catch (const FRPC::ProtocolError_t &pe) {
                     PyObject *args = Py_BuildValue
                         ("(is#)", pe.errorNum(), pe.message().data(),
@@ -751,6 +764,9 @@ PyObject* Server_t::serve(int fd, PyObjectWrapper_t addr) {
         } catch (const FRPC::HTTPError_t &httpError) {
             sendHttpError(httpError);
             break;
+        } catch (const PyError_t &) {
+            // oops, pass error upwards
+            return 0;
         }
 
         requestCount++;
