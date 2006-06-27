@@ -2,7 +2,7 @@
  * FastRPC - RPC protocol suport Binary and XML.
  * Copyright (C) 2005 Seznam.cz, a.s.
  *
- * $Id: fastrpcmodule.cc,v 1.4 2006-05-18 15:24:02 vasek Exp $
+ * $Id: fastrpcmodule.cc,v 1.5 2006-06-27 12:04:06 vasek Exp $
  * 
  * AUTHOR      Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
@@ -17,6 +17,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <sstream>
 
 #include <Python.h>
 #include <unistd.h>
@@ -28,7 +29,6 @@
 #include <frpcmarshaller.h>
 #include <frpcwriter.h>
 #include <frpcunmarshaller.h>
-#include <frpcdatabuilder.h>
 #include <frpchttpclient.h>
 #include <frpchttpio.h>
 #include <frpcerror.h>
@@ -40,9 +40,12 @@
 #include <frpclenerror.h>
 #include <frpcresponseerror.h>
 
+#include "fastrpcmodule.h"
+#include "pythonbuilder.h"
+#include "pythonfeeder.h"
+
 using FRPC::Marshaller_t;
 using FRPC::UnMarshaller_t;
-using FRPC::DataBuilder_t;
 using FRPC::Writer_t;
 using FRPC::HTTPClient_t;
 using FRPC::URL_t;
@@ -56,137 +59,15 @@ using FRPC::EncodingError_t;
 using FRPC::LenError_t;
 using FRPC::ResponseError_t;
 
-// exceptions
-static PyObject *Error = 0;
-static PyObject *ProtocolError = 0;
-static PyObject *Fault = 0;
-static PyObject *ResponseError = 0;
+using namespace FRPC::Python;
 
 // support constants
 static PyObject *emptyString = 0;
-
-#define PyDateTime_Check(op) PyObject_TypeCheck(op, &DateTimeObject_Type)
-#define PyDateTime_CheckExact(op) ((op)->ob_type == &DateTimeObject_Type)
-#define PyBinary_Check(op) PyObject_TypeCheck(op, &BinaryObject_Type)
-#define PyBinary_CheckExact(op) ((op)->ob_type == &BinaryObject_Type)
-#define PyBoolean_Check(op) PyObject_TypeCheck(op, &BooleanObject_Type)
-#define PyBoolean_CheckExact(op) ((op)->ob_type == &BooleanObject_Type)
-#define PyFault_Check(op) PyObject_TypeCheck(op, &Fault)
-
-namespace
-{
-
-class PyError_t
-{
-public:
-    PyError_t()
-    {}
-    ~PyError_t()
-    {}
-}
-;
-}
-
-/*************************************************************************/
-/***New Python exceptions
-           ***/
-/*************************************************************************/
-class PyObjectWrapper_t
-{
-public:
-    PyObjectWrapper_t(PyObject *object = 0, bool incref = false)
-            : object(object)
-    {
-        if (incref)
-            inc();
-    }
-
-    PyObjectWrapper_t(const PyObjectWrapper_t &o)
-            : object(o.object)
-    {
-        inc();
-    }
-
-    PyObjectWrapper_t& operator=(const PyObjectWrapper_t &o)
-    {
-        if (this != &o)
-        {
-            dec();
-            object = o.object;
-        }
-        inc();
-        return *this;
-    }
-
-    ~PyObjectWrapper_t()
-    {
-
-        Py_XDECREF(object);
-    }
-
-    PyObject*& inc()
-    {
-
-        Py_XINCREF(object);
-        return object;
-    }
-
-    void dec()
-    {
-        Py_XDECREF(object);
-    }
-
-    operator PyObject*&()
-    {
-        return object;
-    }
-
-    PyObject*& get() {
-        return object;
-    }
-
-    PyObject*& operator*()
-    {
-        return object;
-    }
-
-    bool operator !() const
-    {
-        return !object;
-    }
-
-    PyObject** addr()
-    {
-        return &object;
-    }
-
-    template <typename object_type> object_type* get() {
-        return reinterpret_cast<object_type*>(object);
-    }
-
-    PyObject *object;
-};
 
 /**************************************************************************/
 /* Python DateTime declaration                                            */
 /**************************************************************************/
 
-namespace
-{
-struct DateTimeObject
-{
-    PyObject_HEAD                   /* python standard */
-    short year;        ///year
-    char month;        ///month
-    char day;          ///day
-    char hour;         ///hour
-    char min;          ///minute
-    char sec;          /// second
-    char weekDay;      ///day of week
-    time_t        unixTime;     ///long unix time
-    char          timeZone;     ///time zone
-};
-}
 extern "C"
 {
     static PyObject* DateTimeObject_new(PyTypeObject *self, PyObject *args,
@@ -204,6 +85,7 @@ extern "C"
 /*
 * map characterstics of a boolean
 */
+namespace FRPC { namespace Python {
 PyTypeObject DateTimeObject_Type =
     {
         PyObject_HEAD_INIT(&PyType_Type)
@@ -249,6 +131,8 @@ PyTypeObject DateTimeObject_Type =
         _PyObject_Del                           /* tp_free */
     };
 
+
+} } // namespace FRPC::Python
 
 PyObject* DateTimeObject_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
@@ -508,8 +392,8 @@ int DateTimeObject_setattr(DateTimeObject *self, char *name, PyObject *value)
     return -1;
 }
 
-namespace
-{
+namespace FRPC { namespace Python {
+
 DateTimeObject* newDateTime(short year, char month, char day, char hour, char
                             min, char sec,
                             char weekDay, time_t unixTime, char timeZone)
@@ -551,20 +435,9 @@ DateTimeObject* newDateTime(short year, char month, char day, char hour, char
 
     return self;
 }
-}
 
-/**************************************************************************/
-/* Python Binary declaration                                              */
-/**************************************************************************/
+} } // namespace FRPC::Python
 
-namespace
-{
-struct BinaryObject
-{
-    PyObject_HEAD                   /* python standard */
-    PyObject *value;                /* true/false value */
-};
-}
 extern "C"
 {
     static PyObject* BinaryObject_new(PyTypeObject *self, PyObject *args,
@@ -577,6 +450,8 @@ extern "C"
     static int BinaryObject_setattr(BinaryObject *self, char *name, PyObject
                                     *value);
 }
+
+namespace FRPC { namespace Python {
 
 /*
 * map characterstics of a boolean
@@ -625,6 +500,7 @@ PyTypeObject BinaryObject_Type =
         _PyObject_Del                           /* tp_free */
     };
 
+} } // namespace FRPC::Python
 
 PyObject* BinaryObject_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
@@ -717,8 +593,8 @@ int BinaryObject_setattr(BinaryObject *self, char *name, PyObject *value)
     return -1;
 }
 
-namespace
-{
+namespace FRPC { namespace Python {
+
 BinaryObject* newBinary(const char* data, long size)
 {
     BinaryObject *self = PyObject_NEW(BinaryObject, &BinaryObject_Type);
@@ -727,25 +603,13 @@ BinaryObject* newBinary(const char* data, long size)
     self->value = PyString_FromStringAndSize(data, size);
     return self;
 }
-}
+
+} } // namespace FRPC::Python
 
 /**************************************************************************/
 /* Python Bool declaration                                                */
 /**************************************************************************/
 
-namespace
-{
-/*
-    * boolean object
-    */
-struct BooleanObject
-{
-    PyObject_HEAD                   /* python standard */
-    PyObject *value;                /* true/false value */
-};
-
-
-};
 
 extern "C"
 {
@@ -807,6 +671,8 @@ static PyNumberMethods Boolean_AsNumber = {
         };
 
 
+namespace FRPC { namespace Python {
+
 /*
  * map characterstics of a boolean
  */
@@ -853,6 +719,9 @@ PyTypeObject BooleanObject_Type =
         BooleanObject_new,                      /* tp_new */
         _PyObject_Del                           /* tp_free */
     };
+
+
+} } // namespace FRPC::Python
 
 /*
  * free resources associated with a boolean object
@@ -982,8 +851,8 @@ PyObject* BooleanObject_int(BooleanObject *self)
     return self->value;
 }
 
-namespace
-{
+namespace FRPC { namespace Python {
+
 BooleanObject* newBoolean(bool value)
 {
     BooleanObject *self = PyObject_NEW(BooleanObject, &BooleanObject_Type);
@@ -996,452 +865,8 @@ BooleanObject* newBoolean(bool value)
     return self;
 }
 
-enum StringMode_t {
-    STRING_MODE_INVALID = -1,
-    STRING_MODE_MIXED = 0,
-    STRING_MODE_UNICODE,
-    STRING_MODE_STRING
-};
+} } // namespace FRPC::Python
 
-StringMode_t parseStringMode(const char *stringMode) {
-    if (stringMode) {
-        if (!strcmp(stringMode, "string")) {
-            return STRING_MODE_STRING;
-        } else if (!strcmp(stringMode, "unicode")) {
-            return STRING_MODE_UNICODE;
-        } else if (strcmp(stringMode, "mixed")) {
-            PyErr_Format(PyExc_ValueError,
-                         "Invalid valu '%s' of stringMode.", stringMode);
-            return STRING_MODE_INVALID;
-        }
-    }
-
-    // default
-    return STRING_MODE_MIXED;
-}
-
-}
-/***************************************************************************/
-/***Builder for unmarshaller                                             ***/
-/***************************************************************************/
-namespace
-{
-
-struct TypeStorage_t
-{
-
-    TypeStorage_t(PyObject *container, char
-                  type):type(type),container(container)
-    {}
-    char type;
-    PyObject* container;
-};
-
-class Builder_t:public DataBuilder_t
-{
-public:
-    enum{NONE=0, INT=1,BOOL,DOUBLE,STRING,DATETIME,BINARY,
-         STRUCT=10,ARRAY,METHOD_CALL=13,METHOD_RESPONSE,FAULT,
-         MEMBER_NAME = 100,METHOD_NAME,METHOD_NAME_LEN,MAGIC,MAIN };
-
-    Builder_t(PyObject *methodObject, StringMode_t stringMode)
-        : DataBuilder_t(), first(true), error(false), retValue(Py_None),
-          methodObject(methodObject), methodName(0), stringMode(stringMode)
-    {
-        Py_INCREF(retValue);
-    }
-
-    ~Builder_t() {
-        delete methodName;
-        Py_XDECREF(retValue);
-    }
-
-    virtual void buildMethodResponse();
-    virtual void buildBinary(const char* data, long size);
-    virtual void buildBinary(const std::string &data);
-    virtual void buildBool(bool value);
-    virtual void buildDateTime(short year, char month, char day,char hour, char
-                               min, char sec,
-                               char weekDay, time_t unixTime, char timeZone);
-    virtual void buildDouble(double value);
-    virtual void buildFault(long errNumber, const char* errMsg, long size );
-    virtual void buildFault(long errNumber, const std::string &errMsg);
-    virtual void buildInt(long value);
-    virtual void buildMethodCall(const char* methodName, long size );
-    virtual void buildMethodCall(const std::string &methodName);
-    virtual void buildString(const char* data, long size );
-    virtual void buildString(const std::string &data) {
-        return buildString(data.data(), data.size());
-    }
-    virtual void buildStructMember(const char *memberName, long size );
-    virtual void buildStructMember(const std::string &memberName);
-    virtual void closeArray();
-    virtual void closeStruct();
-    virtual void openArray(long numOfItems);
-    virtual void openStruct(long numOfMembers);
-    inline  void setError()
-    {
-        Py_XDECREF(retValue);
-        retValue = 0;
-        first = false;
-        error = true;
-    }
-    inline bool isError()
-    {
-        return error;
-    }
-    inline bool isFirst( PyObject* value )
-    {
-        if(isError())
-            return false;
-        
-        if(first)
-        {
-            Py_XDECREF(retValue);
-            retValue = value;
-            first = false;
-            return true;
-        }
-        return false;
-    }
-    inline bool isMember( PyObject* value )
-    {
-        
-        
-        if(isError())
-            return false;
-    
-        if(entityStorage.size() < 1)
-            return false;
-        switch(entityStorage.back().type)
-        {
-        case ARRAY:
-            {
-                if(PyList_Append(entityStorage.back().container, value) !=0)
-                {
-                    setError();
-                    Py_DECREF(value);
-                    return false;
-                }
-                Py_DECREF(value);
-                //entityStorage.back().numOfItems--;
-            }
-            break;
-        case STRUCT:
-            {
-
-                bool utf8 = false;
-                for(long i = 0; i < memberName.size(); i++)
-                {
-                    if(memberName[i] & 0x80)
-                    {
-                        utf8 = true;
-                        break;
-                    }
-                }
-
-                if(utf8)
-                {
-                    PyObject *pyMemberName =
-                        PyUnicode_DecodeUTF8(memberName.data(),
-                                             memberName.size(), "strict");
-                    if(pyMemberName == 0x00)
-                    {
-                        setError();
-                        Py_DECREF(value);
-                        return false;
-                    }
-
-                    if(PyDict_SetItem(entityStorage.back().container,
-                                      pyMemberName, value) !=0 )
-
-                    {
-                        setError();
-                        Py_DECREF(value);
-                        return false;
-                    }
-                    Py_DECREF(value);
-                }
-                else
-                {
-                    if(PyDict_SetItemString(entityStorage.back().container,
-                                            const_cast<char*>(memberName.c_str()),
-                                            value) !=0 )
-                    {
-                        setError();
-                        Py_DECREF(value);
-                        return false;
-                    }
-                    Py_DECREF(value);
-                }
-                //entityStorage.back().numOfItems--;
-            }
-            break;
-        default:
-            //OOPS
-            break;
-
-        }
-        /*if(entityStorage.back().numOfItems == 0)
-        entityStorage.pop_back();*/
-        return true;
-    }
-
-    inline PyObject* getUnMarshaledData() {
-        if (methodName) return PySequence_Tuple(retValue);
-
-        Py_XINCREF(retValue);
-        return retValue;
-    }
-
-    inline PyObject* getMethodName() {
-        if (!methodName) {
-            Py_INCREF(Py_None);
-            return Py_None;
-        }
-
-        // return method
-        return PyString_FromStringAndSize(methodName->data(),
-                                          methodName->size());
-    }
-
-private :
-    bool first;
-    bool error;
-    PyObject *retValue;
-    std::string memberName;
-    std::vector<TypeStorage_t> entityStorage;
-    PyObject *methodObject;
-    std::string *methodName;
-    StringMode_t stringMode;
-};
-
-void Builder_t::buildMethodResponse()
-{}
-void Builder_t::buildBinary(const char* data, long size)
-{
-    if(isError())
-        return;
-    PyObject *binary = reinterpret_cast<PyObject*>(newBinary(data, size));
-
-    if(!binary)
-        setError();
-    
-    if(!isMember(binary))
-        isFirst(binary);
-
-}
-void Builder_t::buildBinary(const std::string &data)
-{
-    if(isError())
-        return;
-    PyObject *binary = reinterpret_cast<PyObject*>(newBinary(data.data(),
-                       data.size()));
-    if(!binary)
-        setError();
-                       
-    if(!isMember(binary))
-        isFirst(binary);
-}
-void Builder_t::buildBool(bool value)
-{
-    if(isError())
-        return;
-    PyObject *boolean = reinterpret_cast<PyObject*>(newBoolean(value));
-
-    if(!boolean)
-        setError();
-        
-    if(!isMember(boolean))
-        isFirst(boolean);
-}
-void Builder_t::buildDateTime(short year, char month, char day,char hour, char
-                              min, char sec,
-                              char weekDay, time_t unixTime, char timeZone)
-{
-    if(isError())
-        return;
-    
-    PyObject *dateTime = reinterpret_cast<PyObject*>(newDateTime(year, month,
-                         day, hour, min,
-                         sec, weekDay, unixTime, timeZone) );
-    if(!dateTime)
-        setError();
-        
-    if(!isMember(dateTime))
-        isFirst(dateTime);
-}
-void Builder_t::buildDouble(double value)
-{
-    if(isError())
-        return;
-    PyObject *doubleVal = PyFloat_FromDouble(value);
-
-    if(!doubleVal)
-        setError();
-    
-    if(!isMember(doubleVal))
-        isFirst(doubleVal);
-
-}
-void Builder_t::buildFault(long errNumber, const char* errMsg, long size)
-{
-    if(isError())
-        return;
-    PyObject *args =Py_BuildValue("iNO",errNumber,
-                                  PyString_FromStringAndSize(errMsg,size),
-                                  methodObject ? methodObject : Py_None);
-    PyObject *fault = PyInstance_New(Fault, args, 0);
-    //isFirst(fault);
-    
-    if(!fault)
-        setError();
-    
-    Py_XDECREF(retValue);
-    retValue = fault;
-    first = true;
-
-}
-void Builder_t::buildFault(long errNumber, const std::string &errMsg)
-{
-    if(isError())
-        return;
-    PyObject *args =Py_BuildValue("isO", errNumber, errMsg.c_str(),
-                                  methodObject ? methodObject : Py_None);
-    PyObject *fault = PyInstance_New(Fault, args, 0);
-        
-    if(!fault)
-        setError();
-        
-    Py_XDECREF(retValue);
-    retValue = fault;
-    first = true;
-}
-void Builder_t::buildInt(long value)
-{
-    if(isError())
-        return;
-    PyObject *integer = PyInt_FromLong(value);
-
-    if(!integer)
-        setError();
-        
-    if(!isMember(integer))
-        isFirst(integer);
-
-}
-void Builder_t::buildMethodCall(const char* methodName1, long size) {
-    if (methodName) delete methodName;
-    methodName = new std::string(methodName1, size);
-
-    PyObject *params = PyList_New(0);
-    if (!params) setError();
-
-    isFirst(params);
-    entityStorage.push_back(TypeStorage_t(params, ARRAY));
-}
-
-void Builder_t::buildMethodCall(const std::string &methodName1) {
-    if (methodName) delete methodName;
-    methodName = new std::string(methodName1);
-    
-    PyObject *params = PyList_New(0);
-    if (!params) setError();
-
-    isFirst(params);
-    entityStorage.push_back(TypeStorage_t(params, ARRAY));
-}
-
-void Builder_t::buildString(const char* data, long size)
-{
-    if(isError())
-        return;
-    bool utf8 = (stringMode == STRING_MODE_UNICODE);
-
-    // check 8-bit string only iff mixed
-    if (stringMode == STRING_MODE_MIXED) {
-        for(long i = 0; i < size; i++) {
-            if(data[i] & 0x80) {
-                utf8 = true;
-                break;
-            }
-        }
-    }
-
-    PyObject *stringVal;
-
-    if (utf8) {
-        stringVal = PyUnicode_DecodeUTF8(data, size, "strict");
-    } else {
-        stringVal = PyString_FromStringAndSize(const_cast<char*>(data), size);
-    }
-
-    if(!stringVal)
-        setError();
-
-    if(!isMember(stringVal))
-        isFirst(stringVal);
-}
-
-void Builder_t::buildStructMember(const char *memberName, long size )
-{
-    if(isError())
-        return;
-    std::string buf(memberName,size);
-    this->memberName =  buf;
-
-}
-void Builder_t::buildStructMember(const std::string &memberName)
-{
-    if(isError())
-        return;
-    this->memberName = memberName;
-}
-void Builder_t::closeArray()
-{
-    if(isError())
-        return;
-    entityStorage.pop_back();
-}
-void Builder_t::closeStruct()
-{
-    if(isError())
-        return;
-    entityStorage.pop_back();
-}
-void Builder_t::openArray(long numOfItems)
-{
-    if(isError())
-        return;
-    PyObject *array = PyList_New(0);
-
-    if(!array)
-        setError();
-    
-    if(!isMember(array))
-        isFirst(array);
-
-    entityStorage.push_back(TypeStorage_t(array,ARRAY));
-}
-void Builder_t::openStruct(long numOfMembers)
-{
-
-    if(isError())
-        return;
-    PyObject *structVal = PyDict_New();
-
-    if(!structVal)
-        setError();
-    
-    if(!isMember(structVal))
-        isFirst(structVal);
-
-    entityStorage.push_back(TypeStorage_t(structVal,STRUCT));
-}
-
-
-
-}
 
 
 /**************************************************************************/
@@ -1562,26 +987,6 @@ struct ServerProxyObject
     Proxy_t proxy;
     bool proxyOk;
 };
-}
-
-namespace
-{
-class  Feeder_t
-{
-public:
-    Feeder_t(Marshaller_t *marshaller,const std::string &encoding)
-            :marshaller(marshaller), encoding(encoding)
-    {}
-
-    void feed(PyObject *args);
-    void feedValue(PyObject *value);
-
-private:
-    Feeder_t();
-    Marshaller_t *marshaller;
-    const std::string encoding;
-};
-
 }
 
 extern "C"
@@ -1895,122 +1300,6 @@ PyObject* ServerProxy_getattr(ServerProxyObject *self, char *name)
     return newMethod(self, name);
 }
 
-void Feeder_t::feed(PyObject *args)
-{
-    int argc = PyTuple_GET_SIZE(args);
-
-    for (int pos = 0; pos < argc; ++pos)
-        feedValue(PyTuple_GET_ITEM(args, pos));
-}
-
-void Feeder_t::feedValue(PyObject *value)
-{
-    if (PyInt_Check(value)) {
-        marshaller->packInt(PyInt_AsLong(value));
-    } else if(PyLong_Check(value)) {
-        marshaller->packInt(PyLong_AsLong(value));
-    } else if (PyFloat_Check(value)) {
-        marshaller->packDouble(PyFloat_AsDouble(value));
-    } else if (PyDateTime_Check(value)) {
-        DateTimeObject *dateTime = reinterpret_cast<DateTimeObject*>(value);
-        marshaller->packDateTime(dateTime->year, dateTime->month, dateTime->day,
-                                 dateTime->hour, dateTime->min, dateTime->sec,
-                                 dateTime->weekDay, dateTime->unixTime,
-                                 dateTime->timeZone);
-    } else if (PyBinary_Check(value)) {
-        BinaryObject *bin = reinterpret_cast<BinaryObject*>(value);
-        
-        char *str;
-        int strLen;
-        if (PyString_AsStringAndSize(bin->value, &str, &strLen))
-            throw PyError_t();
-
-        marshaller->packBinary(str, strLen);
-    } else if (PyBoolean_Check(value)) {
-        BooleanObject *boolean = reinterpret_cast<BooleanObject*>(value);
-        marshaller->packBool(boolean->value == Py_True);
-    } else if (PyString_Check(value)) {
-        //is utf8 ?
-        if (encoding == "utf-8")  {
-            // get string and marshall it
-            char *str;
-            int strLen;
-            if (PyString_AsStringAndSize(value, &str, &strLen))
-                throw PyError_t();
-            
-            marshaller->packString(str, strLen);
-        } else {
-            PyObjectWrapper_t unicode
-                (PyUnicode_FromEncodedObject(value, encoding.c_str(), "strict"));
-            if (!unicode) throw PyError_t();
-            
-            // convert unicode to utf-8
-            PyObjectWrapper_t utf8(PyUnicode_AsUTF8String(unicode));
-            if (!utf8) throw PyError_t();
-            
-            // get string and marshall it
-            char *str;
-            int strLen;
-            if (PyString_AsStringAndSize(utf8, &str, &strLen))
-                throw PyError_t();
-            
-            marshaller->packString(str, strLen);
-        }
-    } else if (PyUnicode_Check(value)) {
-        // convert unicode to utf-8
-        PyObjectWrapper_t utf8(PyUnicode_AsUTF8String(value));
-        if (!utf8) throw PyError_t();
-        
-        // get string and marshall it
-        char *str;
-        int strLen;
-        if (PyString_AsStringAndSize(utf8, &str, &strLen))
-            throw PyError_t();
-        
-        marshaller->packString(str, strLen);
-    } else if (PyList_Check(value)) {
-        int argc = PyList_GET_SIZE(value);
-        
-        marshaller->packArray(argc);
-        
-        for (int pos = 0; pos < argc; ++pos)
-            feedValue(PyList_GET_ITEM(value, pos));
-    } else if (PyTuple_Check(value)) {
-        int argc = PyTuple_GET_SIZE(value);
-
-        marshaller->packArray(argc);
-
-        for (int pos = 0; pos < argc; ++pos)
-            feedValue(PyTuple_GET_ITEM(value, pos));
-    } else if (PyDict_Check(value)) {
-        int argc = PyDict_Size(value);
-        int pos = 0;
-        PyObject *key, *member;
-
-        marshaller->packStruct(argc);
-
-        while (PyDict_Next(value, &pos, &key, &member)) {
-            if(!PyString_Check(key)) {
-                PyErr_SetString(PyExc_TypeError,
-                                "Key in Dictionary must be string.");
-                throw PyError_t();
-            }
-
-            char *str;
-            int strLen;
-            if (PyString_AsStringAndSize(key, &str, &strLen))
-                throw PyError_t();
-
-            marshaller->packStructMember(str, strLen);
-            feedValue(member);
-        }
-    } else {
-        PyErr_SetString(PyExc_TypeError,"Unknown type to marshall");
-        throw PyError_t();
-    }
-}
-
-
 PyObject* Proxy_t::operator()(MethodObject *methodObject, PyObject *args)
 {
     // remember last method
@@ -2163,8 +1452,7 @@ extern "C"
     static PyObject* fastrpc_dumps(PyObject *self, PyObject *args,
                                    PyObject *keywds);
 
-    static PyObject* fastrpc_loads(PyObject *self, PyObject *args,
-                                   PyObject *keywds);
+    static PyObject* fastrpc_loads(PyObject *self, PyObject *args);
 }
 
 static char fastrpc_boolean__doc__[] =
@@ -2409,6 +1697,154 @@ PyObject* fastrpc_loads(PyObject *self, PyObject *args) {
     }
 }
 
+static char fastrpc_dumpTree__doc__[] =
+    "Dump value as RPC data tree.\n";
+
+namespace {
+inline int printString(std::ostringstream &out, PyObject *obj,
+                       const char *prefix = "\"",
+                       const char *suffix = "\"",
+                       const char *err = "<STRING>",
+                       int limit = 10)
+{
+    // 7bit string
+    char *str;
+    int len;
+    if (PyString_AsStringAndSize(obj, &str, &len)) {
+        // oops, cannot get string
+        out << err;
+        return -1;
+    } else {
+        // ok, put at most MAX_STRING_LENGTH chars
+        out << prefix;
+        if ((limit < 0) || (len < limit)) {
+            out << std::string(str, len);
+        } else {
+            out << std::string(str, limit) << "...";
+        }
+        out << suffix;
+    }
+    return 0;
+}
+
+int printPyFastRPCTree(PyObject *tree, std::ostringstream &out,
+                       int level = 1)
+{
+    int ret = 0;
+
+    if (PyInt_Check(tree)) {
+        // integer
+        out << PyInt_AS_LONG(tree);
+    } else if (PyFloat_Check(tree)) {
+        // float
+        out << PyFloat_AS_DOUBLE(tree);
+    } else if (PyString_Check(tree)) {
+        if (printString(out, tree)) return -1;
+    } else if (PyUnicode_Check(tree)) {
+        // unicode string
+        PyObjectWrapper_t pystr =
+            PyUnicode_AsUnicodeEscapeString(tree);
+        if (!pystr) return -1;
+        if (printString(out, pystr, "u\"", "\"", "<UNICODE>"))
+            return -1;
+    } else if (PyTuple_Check(tree) || PyList_Check(tree)) {
+        // list or tuple
+        out << '(';
+        if (level) {
+            // level is ok, we can go on
+            int size = PySequence_Size(tree);
+            if (size < 0) {
+                // oops, cannot get size
+                return -1;
+            } else {
+                // print all items
+                for (int i = 0; i < size; ++i) {
+                    if (i) out << ", ";
+                    PyObjectWrapper_t subTree(PySequence_GetItem(tree, i));
+                    if (!subTree) {
+                        // oops, cannot get item
+                        return -1;
+                    } else {
+                        // print item
+                        if (printPyFastRPCTree(subTree, out, level - 1))
+                            return -1;
+                    }
+                }
+            }
+        } else out << "...";
+        out << ')';
+    } else if (PyDict_Check(tree)) {
+        // dict
+        out << '{';
+        if (level) {
+            // level is ok, we can go on
+            PyObject *key;
+            PyObject *value;
+            bool other = false;
+
+            // iterate over dict
+            for (int pos = 0; PyDict_Next(tree, &pos, &key, &value); ) {
+                if (other) out << ", ";
+                else other = true;
+
+                // print key
+                if (printPyFastRPCTree(key, out, level - 1))
+                    return -1;
+
+                // put key && value
+                out << ": ";
+
+                // print value
+                if (printPyFastRPCTree(value, out, level - 1))
+                    return -1;
+
+            }
+        } else out << "...";
+        out << '}';
+    } else if (PyBoolean_Check(tree)) {
+        // print Boolean
+        int value = PyObject_IsTrue(tree);
+        if (value < 0) {
+            return -1;
+        } else out << (value ? "true" : "false");
+    } else if (PyDateTime_Check(tree)) {
+        // print DateTime
+        PyObjectWrapper_t value(PyObject_GetAttrString(tree, "value"));
+        if (!value) {
+            out << "<DATETIME>";
+            return -1;
+        }
+        if (printString(out, value, "", "", "<DATETIME>", -1))
+            return -1;
+    } else if (PyBinary_Check(tree)) {
+        // print DateTime
+        PyObjectWrapper_t data(PyObject_GetAttrString(tree, "data"));
+        if (!data) return -1;
+        if (printString(out, data, "b\"", "\"", "<BASE64>", 10))
+            return -1;
+    } else {
+        // other, unsupported type
+        out << "<UNSUPPORTED>";
+    }
+
+    // OK
+    return 0;
+}
+}
+
+PyObject* fastrpc_dumpTree(PyObject *self, PyObject *args) {
+    PyObject *value;
+    int level = 1;
+    if (!PyArg_ParseTuple(args, "O|i:fastrpc.dumpTree", &value, &level))
+        return 0;
+
+    std::ostringstream out;
+    printPyFastRPCTree(value, out, level);
+
+    // OK
+    return PyString_FromStringAndSize(out.str().data(), out.str().size());
+}
+
 /**************************************************************************/
 /*** Module stuff                                                       ***/
 /**************************************************************************/
@@ -2437,81 +1873,18 @@ static PyMethodDef frpc_methods[] =
             (PyCFunction) fastrpc_loads,
             METH_VARARGS,
             fastrpc_loads__doc__
+        }, {
+            "dumpTree",
+            (PyCFunction) fastrpc_dumpTree,
+            METH_VARARGS,
+            fastrpc_dumpTree__doc__
         },
         {0, 0 } // end of map
     };
 
-namespace
-{
-PyObject* initException(PyObject *module, char *name,
-                        char *niceName, PyObject *base,
-                        PyMethodDef *methodDef)
-{
-    PyObjectWrapper_t Exception_dict(PyDict_New());
-    // create runtime error
-    PyObject *Exception = PyErr_NewException(niceName, base,
-                          Exception_dict);
-    if (!Exception)
-        return 0;
 
-    // populate runtime error class with its methods
-    for (PyMethodDef *md = methodDef; md->ml_name; ++md)
-    {
-        PyObjectWrapper_t func(PyCFunction_New(md, NULL));
-        if (!func)
-            return 0;
 
-        // turn the function into an unbound method
-        PyObjectWrapper_t method(PyMethod_New(func, NULL, Exception));
-        if (!func)
-            return 0;
-        if (PyDict_SetItemString(Exception_dict, md->ml_name, method))
-            return 0;
-    }
-
-    // add this exception into the xmlrpcserver module
-    if (PyModule_AddObject(module, name, Exception))
-        return 0;
-
-    // OK
-    return Exception;
-}
-}
-
-//******************************************************************
-/***Error */
-//******************************************************************
-extern "C"
-{
-
-    static PyObject* Error__init__(PyObject *self, PyObject *args)
-    {
-        Py_INCREF(Py_None);
-        return Py_None;
-    }
-
-    static PyObject* Error__repr__(PyObject *self, PyObject *args)
-    {
-        return PyString_FromString("<fastrpc.Error>");
-    }
-
-    static PyMethodDef ErrorMethod_methods[] = {
-                { "__init__", Error__init__,
-                  METH_VARARGS, "fastrpc.Error constuctor" },
-                { "__repr__", Error__repr__,
-                  METH_VARARGS, "print fastrpc.Error)" },
-                { "__str__", Error__repr__,
-                  METH_VARARGS, "print fastrpc.Error)" },
-                { NULL, NULL, 0, NULL } // sentinel
-            };
-
-} // extern "C"
-
-//********************************************************************
-//*****ProtocolError
-//********************************************************************
-
-namespace {
+namespace FRPC { namespace Python {
     PyObject* errorRepr(PyObject *self, const std::string &name,
                         char *status, char *statusMessage)
     {
@@ -2571,185 +1944,7 @@ namespace {
         // do the format
         return PyString_Format(formatString, formatArgs);
     }
-}
-
-extern "C"
-{
-
-    static PyObject* ProtocolError__init__(PyObject *self, PyObject *args)
-    {
-        PyObject *status = 0;
-        PyObject *statusMessage = 0;
-        PyObject *method = Py_None;
-
-        if (!PyArg_ParseTuple(args, "OOO|O:__init__", &self,
-                              &status, &statusMessage, &method))
-            return 0;
-
-        if (!PyNumber_Check(status)) {
-            PyErr_Format(PyExc_TypeError,
-                         "ProtocolError.status must be number, not %s.",
-                         status->ob_type->tp_name);
-            return 0;
-        }
-
-        if (!(PyString_Check(statusMessage) || PyUnicode_Check(statusMessage)))
-        {
-            PyErr_Format(PyExc_TypeError,
-                         "ProtocolError.statusMessage must be string "
-                         "or unicode, not %s.",
-                         statusMessage->ob_type->tp_name);
-            return 0;
-        }
-
-        if (PyObject_SetAttrString(self, "status", status)
-            || PyObject_SetAttrString(self, "statusMessage", statusMessage)
-            || PyObject_SetAttrString(self, "method", method))
-            return 0;
-        
-
-        Py_INCREF(Py_None);
-        return Py_None;
-    }
-
-    static PyObject* ProtocolError__repr__(PyObject *self, PyObject *args)
-    {
-        self = PyTuple_GetItem(args, 0);
-        if (!self) return 0;
-
-        return errorRepr(self, "ProtocolError", "status", "statusMessage");
-    }
-
-    static PyMethodDef ProtocolErrorMethod_methods[] = {
-                { "__init__", ProtocolError__init__,
-                  METH_VARARGS, "fastrpc.ProtocolError constuctor" },
-                { "__repr__", ProtocolError__repr__,
-                  METH_VARARGS, "repr(ProtocolError)" },
-                { "__str__", ProtocolError__repr__,
-                  METH_VARARGS, "str(ProtocolError)" },
-                { NULL, NULL, 0, NULL } // sentinel
-            };
-
-} // extern "C"
-
-//*************************************************************************
-//**Fault
-//*************************************************************************
-
-extern "C"
-{
-
-    static PyObject* Fault__init__(PyObject *self, PyObject *args)
-    {
-        PyObject *faultCode;
-        PyObject *faultString;
-        PyObject *method = Py_None;
-
-        if (!PyArg_ParseTuple(args, "OOO|O:__init__", &self,
-                              &faultCode, &faultString, &method))
-            return 0;
-
-        if (!PyNumber_Check(faultCode))
-        {
-            PyErr_Format(PyExc_TypeError,
-                         "Fault.faultCode must be number, not %s.",
-                         faultCode->ob_type->tp_name);
-            return 0;
-        }
-
-        if (!(PyString_Check(faultString) || PyUnicode_Check(faultString)))
-        {
-            PyErr_Format(PyExc_TypeError,
-                         "Fault.faultString must be string "
-                         "or unicode, not %s.",
-                         faultString->ob_type->tp_name);
-            return 0;
-        }
-
-        if (PyObject_SetAttrString(self, "faultCode", faultCode)
-            || PyObject_SetAttrString(self, "faultString", faultString)
-            || PyObject_SetAttrString(self, "method", method))
-            return 0;
-
-        Py_INCREF(Py_None);
-        return Py_None;
-    }
-
-    static PyObject* Fault__repr__(PyObject *self, PyObject *args)
-    {
-        self = PyTuple_GetItem(args, 0);
-        if (!self)
-            return 0;
-
-        return errorRepr(self, "Fault", "faultCode", "faultString");
-    }
-
-    static PyMethodDef FaultMethod_methods[] = {
-                { "__init__", Fault__init__,
-                  METH_VARARGS, "fastrpc.Fault constuctor" },
-                { "__repr__", Fault__repr__,
-                  METH_VARARGS, "repr(Fault)" },
-                { "__str__", Fault__repr__,
-                  METH_VARARGS, "str(Fault)" },
-                { NULL, NULL, 0, NULL } // sentinel
-            };
-
-} // extern "C"
-
-//*************************************************************************
-//*ResponseError
-//*************************************************************************
-extern "C"
-{
-
-    static PyObject* ResponseError__init__(PyObject *self, PyObject *args)
-    {
-
-        PyObject *statusMessage;
-        PyObject *method = Py_None;
-
-        if (!PyArg_ParseTuple(args, "OO|O:__init__", &self, &statusMessage,
-                              &method))
-            return 0;
-
-        if (!(PyString_Check(statusMessage) || PyUnicode_Check(statusMessage)))
-        {
-            PyErr_Format(PyExc_TypeError,
-                         "ResponseError.statusMessage must be string "
-                         "or unicode, not %s.",
-                         statusMessage->ob_type->tp_name);
-            return 0;
-        }
-
-
-        if (PyObject_SetAttrString(self, "statusMessage", statusMessage)
-            || PyObject_SetAttrString(self, "method", method))
-            return 0;
-
-        Py_INCREF(Py_None);
-        return Py_None;
-    }
-
-    static PyObject* ResponseError__repr__(PyObject *self, PyObject *args)
-    {
-        self = PyTuple_GetItem(args, 0);
-        if (!self) return 0;
-
-
-        return errorRepr(self, "ResponseError", 0, "statusMessage");
-    }
-
-    static PyMethodDef ResponseErrorMethod_methods[] = {
-                { "__init__", ResponseError__init__,
-                  METH_VARARGS, "fastrpc.ResponseError constuctor" },
-                { "__repr__", ResponseError__repr__,
-                  METH_VARARGS, "repr(ResponseError)" },
-                { "__str__", ResponseError__repr__,
-                  METH_VARARGS, "str(ResponseError)" },
-                { NULL, NULL, 0, NULL } // sentinel
-            };
-
-} // extern "C"
+} } // namespace FRPC::Python
 
 /** Initialize FRPC module
  */
@@ -2776,39 +1971,12 @@ extern "C" DL_EXPORT(void) initfastrpc(void)
                            reinterpret_cast<PyObject*>(&BooleanObject_Type)))
         return;
 
-    /**************************************************************/
-    //Error init
-    /**************************************************************/
-    Error = initException(fastrpc_module, "Error", "fastrpc.Error",
-                          PyExc_Exception, ErrorMethod_methods);
-    if (!Error)
+    // initialize server support
+    if (FRPC::Python::initServer(fastrpc_module))
         return;
 
-    /********************************************************************/
-    //ProtocolError
-    /**************************************************************/
-    ProtocolError = initException(fastrpc_module, "ProtocolError",
-                                  "fastrpc.ProtocolError",
-                                  Error, ProtocolErrorMethod_methods);
-    if (!ProtocolError)
-        return;
-
-    /********************************************************************/
-    //fault
-    /********************************************************************/
-    Fault = initException(fastrpc_module, "Fault", "fastrpc.Fault",
-                          Error, FaultMethod_methods);
-    if (!Fault)
-        return;
-
-    /********************************************************************/
-    // ResponseError
-    /**************************************************************/
-    ResponseError = initException(fastrpc_module, "ResponseError",
-                                  "fastrpc.ResponseError",
-                                  Error, ResponseErrorMethod_methods);
-    if (!ResponseError)
-        return;
+    // initialize errors
+    initErrors(fastrpc_module);
 
     /********************************************************************/
     // Add constants

@@ -1,5 +1,5 @@
 #
-# FILE              $Id: Makefile,v 1.2 2005-07-19 15:17:24 vasek Exp $
+# FILE              $Id: Makefile,v 1.3 2006-06-27 12:04:06 vasek Exp $
 #
 # DESCRIPTION       A makefile for fastrpc python module.
 #
@@ -21,9 +21,11 @@ PYTHON_BINARIES = /usr/bin/python2.2
 all: lib/*/fastrpcmodule.so
 
 # create all modules
-# for all found python binaries create 
+# for all found python binaries create
 #
-lib/*/fastrpcmodule.so:
+lib/*/fastrpcmodule.so: pyobjectwrapper.h fastrpcmodule.cc fastrpcmodule.h \
+						pythonserver.cc pyerrors.cc pythonbuilder.h \
+						pythonbuilder.cc pythonfeeder.h pythonfeeder.cc
 	(for python in $(PYTHON_BINARIES); do \
                 echo "building python module for `basename $${python}`" || exit $?; \
                 libddir=`pwd`"/lib/"`basename $${python}` || exit $?; \

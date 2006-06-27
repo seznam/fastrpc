@@ -45,7 +45,9 @@ setup (
     description      = DESCRIPTION,
     long_description = LONG_DESCRIPTION,
     ext_modules = [
-        Extension ("fastrpcmodule", ["fastrpcmodule.cc"],
+        Extension ("fastrpcmodule", ["fastrpcmodule.cc", "pythonserver.cc",
+                                     "pyerrors.cc", "pythonbuilder.cc",
+                                     "pythonfeeder.cc"],
                    libraries=["fastrpc"]),
         ]
 )
