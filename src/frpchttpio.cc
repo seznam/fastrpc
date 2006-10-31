@@ -1,5 +1,5 @@
 /*
- * FILE             $Id: frpchttpio.cc,v 1.3 2006-04-05 07:52:34 mirecta Exp $
+ * FILE             $Id: frpchttpio.cc,v 1.4 2006-10-31 11:19:42 vasek Exp $
  *
  * DESCRIPTION      HTTP I/O
  *
@@ -228,7 +228,7 @@ std::string HTTPIO_t::readLine(bool checkLimit)
             // jinak vyèteme v¹echna dostupná data
             unsigned int toRead = bytes;
             // check line size limit
-            if ((lineSizeLimit >= 0) &&
+            if (checkLimit && (lineSizeLimit >= 0) &&
                     ((lineBuff.length() + toRead)
                      > static_cast<unsigned int>(lineSizeLimit)))
             {

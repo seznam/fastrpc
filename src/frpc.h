@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpc.h,v 1.3 2006-02-09 16:00:26 vasek Exp $
+ * FILE          $Id: frpc.h,v 1.4 2006-10-31 11:19:41 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -39,7 +39,6 @@
 #include <frpcstreamerror.h>
 
 
-#include <strstream>
 #include <string>
 
 namespace FRPC {

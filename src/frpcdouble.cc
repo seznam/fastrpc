@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcdouble.cc,v 1.1 2005-07-19 13:02:53 vasek Exp $
+ * FILE          $Id: frpcdouble.cc,v 1.2 2006-10-31 11:19:42 vasek Exp $
  *
  * DESCRIPTION   
  *

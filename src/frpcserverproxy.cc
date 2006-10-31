@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcserverproxy.cc,v 1.2 2005-07-25 06:10:48 vasek Exp $
+ * FILE          $Id: frpcserverproxy.cc,v 1.3 2006-10-31 11:19:42 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -23,6 +23,15 @@
 namespace FRPC
 {
 
+
+ServerProxy_t::ServerProxy_t(const std::string &server, const Config_t &config)
+    : url(server, config.proxyUrl), socket(-1),
+      io(socket, config.readTimeout, config.writeTimeout, -1 ,-1),
+      connectTimeout(config.connectTimeout), keepAlive(config.keepAlive),
+      rpcTransferMode(config.useBinary),
+      useHTTP10(config.useHTTP10),
+      serverSupportedProtocols(HTTPClient_t::XML_RPC)
+{}
 
 ServerProxy_t::ServerProxy_t(const std::string &server, Config_t &config)
     : url(server, config.proxyUrl), socket(-1),

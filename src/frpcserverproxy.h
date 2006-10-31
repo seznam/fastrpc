@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcserverproxy.h,v 1.5 2006-02-09 16:00:26 vasek Exp $
+ * FILE          $Id: frpcserverproxy.h,v 1.6 2006-10-31 11:19:42 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -107,6 +107,10 @@ public:
                       @li "http://192.168.10.2:2800/RPC2"
         @param config is configuration structure ServerProxy_t::Config_t
     */
+    ServerProxy_t(const std::string &server, const Config_t &config);
+
+    /** Compatibility version...
+     */
     ServerProxy_t(const std::string &server, Config_t &config);
 
     /**
