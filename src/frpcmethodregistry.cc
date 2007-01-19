@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcmethodregistry.cc,v 1.5 2006-04-05 07:52:34 mirecta Exp $
+ * FILE          $Id: frpcmethodregistry.cc,v 1.6 2007-01-19 13:34:13 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -102,7 +102,18 @@ MethodRegistry_t::MethodRegistry_t(Callbacks_t *callbacks, bool introspectionEna
 void MethodRegistry_t::registerMethod(const std::string &methodName, Method_t *method,
                                       const std::string signature , const std::string help )
 {
-    methodMap.insert(std::make_pair(methodName, RegistryEntry_t(method, signature, help)));
+    typedef std::map<std::string, RegistryEntry_t> Map_t;
+
+    RegistryEntry_t entry(method, signature, help);
+
+    // try to insert method
+    std::pair<Map_t::iterator, bool>
+        res(methodMap.insert(Map_t::value_type(methodName, entry)));
+
+    if (!res.second) {
+        // not inserted => replace method
+        res.first->second = entry;
+    }
 }
 
 void MethodRegistry_t::registerDefaultMethod(DefaultMethod_t *defaultMethod)
