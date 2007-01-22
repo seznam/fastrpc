@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcbinunmarshaller.cc,v 1.2 2005-07-25 06:10:47 vasek Exp $
+ * FILE          $Id: frpcbinunmarshaller.cc,v 1.3 2007-01-22 09:48:35 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -93,7 +93,7 @@ void BinUnMarshaller_t::unMarshall(const char *data, long size, char type)
             break;
         case METHOD_NAME_LEN:
             {
-                dataWanted = mainBuff[0];
+                dataWanted = static_cast<unsigned char>(mainBuff[0]);
                 internalType = METHOD_NAME;
                 mainBuff.erase();
             }
@@ -122,7 +122,7 @@ void BinUnMarshaller_t::unMarshall(const char *data, long size, char type)
             {
                 if(isNextMember())
                 {
-                    dataWanted = mainBuff[0];
+                    dataWanted = static_cast<unsigned char>(mainBuff[0]);
                     mainBuff.erase();
                     internalType = MEMBER_NAME;
                 }
