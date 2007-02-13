@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcserverproxy.cc,v 1.3 2006-10-31 11:19:42 vasek Exp $
+ * FILE          $Id: frpcserverproxy.cc,v 1.4 2007-02-13 10:35:15 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -43,7 +43,9 @@ ServerProxy_t::ServerProxy_t(const std::string &server, Config_t &config)
 {}
 
 ServerProxy_t::~ServerProxy_t()
-{}
+{
+    closeSocket();
+}
 
 Value_t& ServerProxy_t::operator() (Pool_t &pool, const std::string &methodName)
 {
