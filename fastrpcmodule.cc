@@ -2,7 +2,7 @@
  * FastRPC - RPC protocol suport Binary and XML.
  * Copyright (C) 2005 Seznam.cz, a.s.
  *
- * $Id: fastrpcmodule.cc,v 1.5 2006-06-27 12:04:06 vasek Exp $
+ * $Id: fastrpcmodule.cc,v 1.6 2007-03-10 11:34:04 vasek Exp $
  * 
  * AUTHOR      Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
@@ -932,8 +932,8 @@ public:
             int writeTimeout, int connectTimeout, bool keepAlive,
             int rpcTransferMode, const std::string &encoding, bool useHTTP10,
             const std::string &proxyVia, StringMode_t stringMode)
-        : url(serverUrl, proxyVia), socket(-1),
-          io(socket, readTimeout, writeTimeout, -1, -1),
+        : url(serverUrl, proxyVia),
+          io(-1, readTimeout, writeTimeout, -1, -1),
           connectTimeout(connectTimeout), keepAlive(keepAlive),
           rpcTransferMode(rpcTransferMode), encoding(encoding),
           serverSupportedProtocols(HTTPClient_t::XML_RPC),
@@ -963,7 +963,6 @@ public:
 private:
 
     URL_t url;
-    int socket;
     HTTPIO_t io;
     int readTimeout;
     int writeTimeout;
@@ -1111,7 +1110,7 @@ void Method_dealloc(MethodObject *self)
     using std::string;
 
     // call destructor for name
-    self->name.~string();
+    self->name.string::~string();
 
     // get rid of reference to proxy
     Py_DECREF(self->proxy);
@@ -1339,7 +1338,7 @@ PyObject* Proxy_t::operator()(MethodObject *methodObject, PyObject *args)
     case BINARY_ON_SUPPORT_ON_KEEP_ALIVE:
     default:
         if(serverSupportedProtocols & HTTPClient_t::XML_RPC || keepAlive ==
-           false || socket != -1) {
+           false || io.socket() != -1) {
             //using XML_RPC
             marshaller= Marshaller_t::create(Marshaller_t::XML_RPC,client);
             client.prepare(HTTPClient_t::XML_RPC);
