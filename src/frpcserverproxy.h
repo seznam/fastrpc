@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcserverproxy.h,v 1.6 2006-10-31 11:19:42 vasek Exp $
+ * FILE          $Id: frpcserverproxy.h,v 1.7 2007-03-10 11:30:58 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -431,7 +431,7 @@ private:
         default:
             {
                 if(serverSupportedProtocols & HTTPClient_t::XML_RPC || keepAlive == false
-                        || socket != -1)
+                        || io.socket() != -1)
                 {
                     //using XML_RPC
                     marshaller= Marshaller_t::create(Marshaller_t::XML_RPC,client);
@@ -451,15 +451,13 @@ private:
         return marshaller;
     }
 
-    void closeSocket();
-
     ServerProxy_t(const ServerProxy_t&);
 
     ServerProxy_t& operator=(const ServerProxy_t&);
 
 
     URL_t url;
-    int socket;
+    int socket_unused;
     HTTPIO_t io;
     int connectTimeout;
     bool keepAlive;

@@ -1,5 +1,5 @@
 /*
- * FILE             $Id: frpchttpio.h,v 1.2 2005-12-01 08:46:39 mirecta Exp $
+ * FILE             $Id: frpchttpio.h,v 1.3 2007-03-10 11:30:58 vasek Exp $
  *
  * DESCRIPTION      HTTP I/O
  *
@@ -42,6 +42,8 @@ public:
             : fd(fd), readTimeout(readTimeout), writeTimeout(writeTimeout),
             lineSizeLimit(lineSizeLimit), bodySizeLimit(bodySizeLimit)
     {}
+
+    ~HTTPIO_t();
 
     static std::vector<std::string> splitBySpace(const std::string &line,
             size_t upto);

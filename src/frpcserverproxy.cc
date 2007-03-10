@@ -1,5 +1,5 @@
 /*
- * FILE          $Id: frpcserverproxy.cc,v 1.4 2007-02-13 10:35:15 mirecta Exp $
+ * FILE          $Id: frpcserverproxy.cc,v 1.5 2007-03-10 11:30:58 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -25,8 +25,8 @@ namespace FRPC
 
 
 ServerProxy_t::ServerProxy_t(const std::string &server, const Config_t &config)
-    : url(server, config.proxyUrl), socket(-1),
-      io(socket, config.readTimeout, config.writeTimeout, -1 ,-1),
+    : url(server, config.proxyUrl),
+      io(-1, config.readTimeout, config.writeTimeout, -1 ,-1),
       connectTimeout(config.connectTimeout), keepAlive(config.keepAlive),
       rpcTransferMode(config.useBinary),
       useHTTP10(config.useHTTP10),
@@ -34,8 +34,8 @@ ServerProxy_t::ServerProxy_t(const std::string &server, const Config_t &config)
 {}
 
 ServerProxy_t::ServerProxy_t(const std::string &server, Config_t &config)
-    : url(server, config.proxyUrl), socket(-1),
-      io(socket, config.readTimeout, config.writeTimeout, -1 ,-1),
+    : url(server, config.proxyUrl),
+      io(-1, config.readTimeout, config.writeTimeout, -1 ,-1),
       connectTimeout(config.connectTimeout), keepAlive(config.keepAlive),
       rpcTransferMode(config.useBinary),
       useHTTP10(config.useHTTP10),
@@ -44,7 +44,6 @@ ServerProxy_t::ServerProxy_t(const std::string &server, Config_t &config)
 
 ServerProxy_t::~ServerProxy_t()
 {
-    closeSocket();
 }
 
 Value_t& ServerProxy_t::operator() (Pool_t &pool, const std::string &methodName)
@@ -460,15 +459,6 @@ Value_t& ServerProxy_t::call(Pool_t &pool, const std::string &methodName, Array_
 const URL_t& ServerProxy_t::getURL()
 {
     return url;
-}
-
-void ServerProxy_t::closeSocket()
-{
-    if(socket != -1 )
-    {
-        close(socket);
-        socket = -1 ;
-    }
 }
 
 }

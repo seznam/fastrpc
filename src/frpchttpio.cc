@@ -1,5 +1,5 @@
 /*
- * FILE             $Id: frpchttpio.cc,v 1.4 2006-10-31 11:19:42 vasek Exp $
+ * FILE             $Id: frpchttpio.cc,v 1.5 2007-03-10 11:30:58 vasek Exp $
  *
  * DESCRIPTION      HTTP I/O
  *
@@ -34,6 +34,11 @@
 #include <frpchttpclient.h>
 
 using namespace FRPC;
+
+HTTPIO_t::~HTTPIO_t() {
+    // check whether socket is valid fd and close it
+    if (fd > -1) close(fd);
+}
 
 std::vector<std::string>
 HTTPIO_t::splitBySpace(const std::string &line, size_t upto)
