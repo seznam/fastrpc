@@ -1,6 +1,6 @@
 #
 # Fast RPC
-# Copyright (C) 2004  Seznam.cz, a.s.
+# Copyright (C) 2005-7  Seznam.cz, a.s.
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -17,11 +17,11 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 # Seznam.cz, a.s.
-# Naskove 1, Praha 5, 15000, Czech Republic
+# Radlicka 2, Praha 5, 15000, Czech Republic
 # http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
 #
 #
-# $Id: Makefile.am,v 1.3 2006-10-31 11:19:41 vasek Exp $
+# $Id: Makefile.am,v 1.4 2007-04-02 15:28:21 vasek Exp $
 #
 # DESCRIPTION
 # A Fast RPC library.
