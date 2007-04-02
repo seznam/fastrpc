@@ -2,7 +2,7 @@
  * FastRPC - RPC protocol suport Binary and XML.
  * Copyright (C) 2005 Seznam.cz, a.s.
  *
- * $Id: fastrpcmodule.cc,v 1.6 2007-03-10 11:34:04 vasek Exp $
+ * $Id: fastrpcmodule.cc,v 1.7 2007-04-02 15:40:41 vasek Exp $
  * 
  * AUTHOR      Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
@@ -1674,7 +1674,7 @@ PyObject* fastrpc_loads(PyObject *self, PyObject *args) {
         }
 
         // normal response
-    return Py_BuildValue("(NN)", umdata, builder.getMethodName());
+        return Py_BuildValue("(NN)", umdata, builder.getMethodName());
     } catch (const TypeError_t &typeError) {
         PyErr_SetString(PyExc_TypeError, typeError.message().c_str());
         return 0;
