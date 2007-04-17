@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: pythonserver.cc,v 1.9 2007-04-02 15:42:58 vasek Exp $
+ * $Id: pythonserver.cc,v 1.10 2007-04-17 16:33:56 vasek Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -203,6 +203,14 @@ namespace {
         return array.inc();
     }
 
+    PyObject *stringToSignature(PyObject *signature) {
+        int size;
+        char *buffer;
+        if (PyString_AsStringAndSize(signature, &buffer, &size) == -1)
+            return 0;
+        return stringToSignature(std::string(buffer, size));
+    }
+
     struct Method_t {
         Method_t(const std::string &name, PyObject *callback,
                  PyObject *signature, PyObject *help, PyObject *context = 0);
@@ -230,6 +238,9 @@ namespace {
 
         MethodLookup_t *lookup;
         PyObject *defaultMethod;
+        PyObject *defaultListMethods;
+        PyObject *defaultMethodHelp;
+        PyObject *defaultMethodSignature;
         PyObject *headMethod;
 
         int introspectionEnabled;
@@ -486,7 +497,7 @@ extern "C" {
 
     static DECL_METHOD_KWD(MethodRegistryObject, register);
 
-    static DECL_METHOD(MethodRegistryObject, registerDefault);
+    static DECL_METHOD_KWD(MethodRegistryObject, registerDefault);
 
     static DECL_METHOD(MethodRegistryObject, registerHead);
 
@@ -532,7 +543,7 @@ static PyMethodDef MethodRegistryObject_methods[] = {
     }, {
         "registerDefault",
         reinterpret_cast<PyCFunction>(MethodRegistryObject_registerDefault),
-        METH_VARARGS,
+        METH_VARARGS | METH_KEYWORDS,
         "Register default method callback."
     }, {
         "registerHead",
@@ -1055,6 +1066,9 @@ void MethodRegistryObject_dealloc(MethodRegistryObject *self) {
     Py_XDECREF(self->postProcess);
     delete self->lookup;
     Py_XDECREF(self->defaultMethod);
+    Py_XDECREF(self->defaultListMethods);
+    Py_XDECREF(self->defaultMethodHelp);
+    Py_XDECREF(self->defaultMethodSignature);
 
     self->ob_type->tp_free(asObject(self));
 }
@@ -1096,6 +1110,10 @@ PyObject* MethodRegistryObject_new(PyTypeObject *type, PyObject *args,
     self->preProcess = 0;
     self->postProcess = 0;
     self->defaultMethod = 0;
+    self->defaultListMethods;
+    self->defaultMethodHelp;
+    self->defaultMethodSignature;
+
     self->introspectionEnabled = true;
 
     static char *kwlist[] = {"preProcess", "postProcess",
@@ -1188,26 +1206,53 @@ DECL_METHOD_KWD(MethodRegistryObject, register) {
     return None.inc();
 }
 
-DECL_METHOD(MethodRegistryObject, registerDefault) {
-    char *name;
-    PyObject *callback;
+DECL_METHOD_KWD(MethodRegistryObject, registerDefault) {
+    struct Callback_t {
+        char *name;
+        PyObject **destination;
+        PyObject *callback;
+    };
+
+    Callback_t callbacks[] = {
+        { "default method callback",  &self->defaultMethod},
+        { "default method list callback", &self->defaultListMethods },
+        { "default method help callback", &self->defaultMethodHelp},
+        { "default method signature callback", &self->defaultMethodSignature },
+        {}
+    };
+
+    static char *kwlist[] = {"method", "listMethods", "methodHelp",
+                             "methodSignature", 0};
 
     // parse arguments
-    if (!PyArg_ParseTuple(args, "O",  &callback))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|OOO", kwlist,
+                                     &callbacks[0].callback,
+                                     &callbacks[1].callback,
+                                     &callbacks[2].callback,
+                                     &callbacks[3].callback))
         return 0;
 
-    // callback must me callable
-    if (!PyCallable_Check(callback)) {
-        return PyErr_Format(PyExc_TypeError,
-                            "Callback object of HTTP DEFAULT method is of "
-                            "type <%s> and is not callable.",
-                            callback->ob_type->tp_name);
+    // callbacks must be callable
+    for (Callback_t *callback = callbacks; callback->name; ++callback) {
+        if (callback->callback
+            && !PyCallable_Check(callback->callback)) {
+            return PyErr_Format(PyExc_TypeError,
+                                "Callback object of %s method is of "
+                                "type <%s> and is not callable.",
+                                callback->name,
+                                callback->callback->ob_type->tp_name);
+        }
     }
 
-    // reasign default method
-    Py_XDECREF(self->defaultMethod);
-    self->defaultMethod = callback;
-    Py_INCREF(self->defaultMethod);
+    // assign new values
+    for (Callback_t *callback = callbacks; callback->name; ++callback) {
+        // reasign methods
+        if (callback->callback) {
+            Py_XDECREF(*callback->destination);
+            *callback->destination = callback->callback;
+            Py_INCREF(*callback->destination);
+        }
+    }
 
     // OK
     return None.inc();
@@ -1215,7 +1260,6 @@ DECL_METHOD(MethodRegistryObject, registerDefault) {
 
 
 DECL_METHOD(MethodRegistryObject, registerHead) {
-    char *name;
     PyObject *callback;
 
     // parse arguments
@@ -1413,9 +1457,22 @@ DECL_METHOD(MethodRegistryObject, system_methodSignature) {
 
     // find method's signature
     MethodLookup_t::const_iterator flookup = self->lookup->find(name);
-    if (flookup == self->lookup->end())
+    if (flookup == self->lookup->end()) {
+        if (self->defaultMethodSignature) {
+            // method not found but default fallback found
+            PyObjectWrapper_t signature
+                (PyObject_CallFunction(self->defaultMethodSignature,
+                                       "(s)", name));
+            // check for error or non-string signature
+            if (!signature || !PyString_Check(signature))
+                return signature.inc();
+
+            // string => convert to array of arrays
+            return stringToSignature(signature);
+        }
         return makeFault(FRPC::MethodRegistry_t::FRPC_INDEX_ERROR,
                          "Method '%s' not found.", name);
+    }
 
     // OK
     return flookup->second.signature.inc();
@@ -1443,9 +1500,15 @@ DECL_METHOD(MethodRegistryObject, system_methodHelp) {
 
     // find method's signature
     MethodLookup_t::const_iterator flookup = self->lookup->find(name);
-    if (flookup == self->lookup->end())
+    if (flookup == self->lookup->end()) {
+        if (self->defaultMethodHelp) {
+            // method not found but default fallback found
+            return PyObject_CallFunction(self->defaultMethodHelp,
+                                         "(s)", name);
+        }
         return makeFault(FRPC::MethodRegistry_t::FRPC_INDEX_ERROR,
                          "Method '%s' not found.", name);
+    }
 
     // OK
     return flookup->second.help.inc();
