@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: pythonserver.cc,v 1.10 2007-04-17 16:33:56 vasek Exp $
+ * $Id: pythonserver.cc,v 1.11 2007-04-18 11:37:11 vasek Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -1412,9 +1412,22 @@ DECL_METHOD(MethodRegistryObject, system_listMethods) {
             (FRPC::MethodRegistry_t::FRPC_INTROSPECTION_DISABLED_ERROR,
              "Introspection API disabled for security reasons.");
 
-    // create result tuple
-    PyObjectWrapper_t result = PyTuple_New(self->lookup->size());
-    if (!result) return 0;
+    PyObjectWrapper_t result;
+    int defaultSize = 0;
+
+    if (self->defaultListMethods) {
+        // we have some default method lister
+        result = (PyObject_CallFunction(self->defaultListMethods, "()"));
+        if (!result) return 0;
+        defaultSize = PyList_Size(result);
+        if (defaultSize == -1) return 0;
+    }
+
+    // create result tuple (or use defaultList)
+    if (!result) {
+        result = PyList_New(self->lookup->size());
+        if (!result) return 0;
+    }
 
     // fill this tuple with method names
     int i = 0;
@@ -1424,12 +1437,15 @@ DECL_METHOD(MethodRegistryObject, system_listMethods) {
         PyObject *name = PyString_FromStringAndSize(ilookup->first.data(),
                                                     ilookup->first.length());
         if (!name) return 0;
-        // add method name to the tuple
-        if (PyTuple_SetItem(result, i, name)) {
+        if (PyList_Append(result, name)) {
             Py_DECREF(name);
             return 0;
         }
     }
+
+    // sort if some default method helps available
+    if (defaultSize && (PyList_Sort(result) == -1))
+        return 0;
 
     // OK
     return result.inc();
