@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: pythonserver.cc,v 1.11 2007-04-18 11:37:11 vasek Exp $
+ * $Id: pythonserver.cc,v 1.12 2007-04-19 14:35:56 vasek Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -1425,7 +1425,7 @@ DECL_METHOD(MethodRegistryObject, system_listMethods) {
 
     // create result tuple (or use defaultList)
     if (!result) {
-        result = PyList_New(self->lookup->size());
+        result = PyList_New(0);
         if (!result) return 0;
     }
 
