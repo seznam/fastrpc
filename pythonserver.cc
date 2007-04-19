@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: pythonserver.cc,v 1.12 2007-04-19 14:35:56 vasek Exp $
+ * $Id: pythonserver.cc,v 1.13 2007-04-19 15:53:43 vasek Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -634,6 +634,40 @@ static PyTypeObject MethodRegistryObject_Type = {
 
 namespace {
     const long BUFFER_SIZE = 1 << 16;
+
+    std::string getException() {
+        // fetch exception
+        PyObjectWrapper_t type;
+        PyObjectWrapper_t value;
+        PyObjectWrapper_t tb;
+        PyErr_Fetch(type.addr(), value.addr(), tb.addr());
+
+        // prepar exception for format
+        PyObjectWrapper_t format(PyString_FromString("%s: %s"));
+        if (!format) return "Cannot format exception";
+
+        PyObjectWrapper_t args
+            (Py_BuildValue("(OO)", type.get(), value.get()));
+        if (!args) return "Cannot format exception";
+
+        // format exception
+        PyObjectWrapper_t message(PyString_Format(format, args));
+        if (!message) return "Cannot format exception";
+
+        // convert message to utf-8 if unicode string
+        if (PyUnicode_Check(message)) {
+            message = PyUnicode_AsEncodedString(message, "utf-8", "replace");
+            if (!message) return "Cannot decode exception from unicode";
+        }
+
+        // fetch string as C string
+        int size;
+        char *buf;
+        PyString_AsStringAndSize(message, &buf, &size);
+
+        // OK
+        return std::string(buf, size);
+    }
 }
 
 PyObject* Server_t::serve(int fd, PyObjectWrapper_t addr) {
@@ -700,14 +734,16 @@ PyObject* Server_t::serve(int fd, PyObjectWrapper_t addr) {
                     if (!result) {
                         throw FRPC::HTTPError_t
                             (FRPC::HTTP_INTERNAL_SERVER_ERROR,
-                             "Error while dispatching call.");
+                             "Error while running head method: <%s>.",
+                             getException().c_str());
                     }
 
                     long int r = PyInt_AsLong(result);
                     if ((r == -1) && PyErr_Occurred()) {
                         throw FRPC::HTTPError_t
                             (FRPC::HTTP_INTERNAL_SERVER_ERROR,
-                             "Error while dispatching call.");
+                             "Head should return number: <%s>.",
+                             getException().c_str());
                     }
 
                     if (r)
@@ -762,7 +798,8 @@ PyObject* Server_t::serve(int fd, PyObjectWrapper_t addr) {
                     // oops error during processing result
                     throw FRPC::HTTPError_t
                         (FRPC::HTTP_INTERNAL_SERVER_ERROR,
-                         "Error while dispatching call.");
+                         "Error while dispatching call: <%s>.",
+                         getException().c_str());
                 } catch (const FRPC::StreamError_t &streamError) {
                     // oops error during marshalling
                     PyErr_SetString(PyExc_RuntimeError,
