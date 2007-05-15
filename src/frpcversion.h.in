@@ -1,0 +1,49 @@
+/* -*- C++ -*-
+ * FastRPC -- Fast RPC library compatible with XML-RPC
+ * Copyright (C) 2005-7  Seznam.cz, a.s.
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * Seznam.cz, a.s.
+ * Radlicka 2, Praha 5, 15000, Czech Republic
+ * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
+ *
+ * FILE          $Id: frpcversion.h.in,v 1.1 2007-05-15 09:48:11 vasek Exp $
+ *
+ * DESCRIPTION
+ *
+ * AUTHOR
+ *              Miroslav Talasek <vaclav.blazek@firma.seznam.cz>
+ *
+ * HISTORY
+ *
+ */
+
+#ifndef FRPCVERSION_H_
+#define FRPCVERSION_H_
+
+/** FastRPC library major version (libtool's CURRENT version component).
+ */
+#define FASTRPC_MAJOR @FASTRPC_MAJOR@
+
+/** FastRPC library minor version (libtool's REVISION version component).
+ */
+#define FASTRPC_MINOR @FASTRPC_MINOR@
+
+/** FastRPC library version.
+ */
+#define FASTRPC_VERSION "@FASTRPC_MAJOR@.@FASTRPC_MINOR@"
+
+#endif // FRPCVERSION_H_

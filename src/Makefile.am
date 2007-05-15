@@ -21,7 +21,7 @@
 # http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
 #
 #
-# $Id: Makefile.am,v 1.4 2007-04-02 15:28:21 vasek Exp $
+# $Id: Makefile.am,v 1.5 2007-05-15 09:48:11 vasek Exp $
 #
 # DESCRIPTION
 # A Fast RPC library.
@@ -36,7 +36,7 @@
 
 
 # warn on all
-AM_CXXFLAGS = -Wall -g $(XML2_CFLAGS) -Wno-deprecated
+AM_CXXFLAGS = -Wall -g $(XML2_CFLAGS) -Wno-deprecated 
 
 # extra compiler options
 AM_CPPFLAGS = -D_ISOC99_SOURCE -D__ENABLE_WSTRING=1
@@ -47,10 +47,10 @@ include_HEADERS = frpc.h frpcvalue.h frpcarray.h frpcstruct.h frpcbinary.h frpcd
                   frpcerror.h frpckeyerror.h frpctypeerror.h frpcindexerror.h \
                   frpcstreamerror.h frpclenerror.h frpcserverproxy.h frpcdatabuilder.h \
                   frpcmarshaller.h frpcunmarshaller.h frpcwriter.h frpcprotocolerror.h \
-	       	  frpchttperror.h frpcencodingerror.h frpchttpio.h frpchttp.h frpchttpclient.h \
+                  frpchttperror.h frpcencodingerror.h frpchttpio.h frpchttp.h frpchttpclient.h \
                   frpctreebuilder.h frpctreefeeder.h frpcfault.h frpcmethod.h frpcdefaultmethod.h \
                   frpcmethodregistry.h frpcserver.h frpcresponseerror.h frpcplatform.h frpcheadmethod.h \
-		  frpcsocket.h frpcsocketunix.h frpcsocketwin.h frpcplatform.h
+                  frpcsocket.h frpcsocketunix.h frpcsocketwin.h frpcplatform.h frpcversion.h
 
 
 noinst_HEADERS = frpcinternals.h frpcbinmarshaller.h  frpcxmlmarshaller.h \
