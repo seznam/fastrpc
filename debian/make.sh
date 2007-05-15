@@ -22,7 +22,7 @@
 # http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
 #
 #
-# $Id: make.sh,v 1.3 2006-02-24 15:53:55 vasek Exp $
+# $Id: make.sh,v 1.4 2007-05-15 09:43:40 vasek Exp $
 #
 # DESCRIPTION
 # Packager for Fastrpc library.
@@ -129,6 +129,7 @@ function replace_vars {
         -e "s/@ARCHITECTURE@/$(dpkg --print-architecture)/" \
         -e "s/@SIZE@/${SIZE}/" \
         -e "s/@EXTRA_DEPEND@/${EXTRA_DEPEND}/" \
+        -e "s/@SH_DEPEND@/${SH_DEPEND}/" \
         -e "s/@SO_VERSION@/${LIBRARY_VERSION}/" \
         $1 > $2 || exit -1
 }
@@ -138,34 +139,17 @@ function build_package {
     # Package housekeeping                                                 #
     ########################################################################
 
-    case $(< /etc/debian_version) in
-        "3.0")
-            # woody
-            DISTRIB=".woody"
-            ;;
-
-        "3.1")
-            # sarge
-            DISTRIB=".sarge"
-            ;;
-
-        *)
-            # unknown
-            DISTRIB=""
-            ;;
-    esac
-
     # Copy extra package files -- runnable
     for FILE in postinst preinst prerm postrm; do
-        if test -f ${PROJECT_NAME}.${FILE}${DISTRIB}; then
-            cp ${PROJECT_NAME}.${FILE}${DISTRIB} ${CONTROL_DIR}/${FILE}
+        if test -f ${PROJECT_NAME}.${FILE}; then
+            cp ${PROJECT_NAME}.${FILE} ${CONTROL_DIR}/${FILE}
             chmod 755 ${CONTROL_DIR}/${FILE}
         fi
     done
 
     # Copy unrunnable files
-    test -f ${PROJECT_NAME}.conffiles${DISTRIB} && \
-        cp ${PROJECT_NAME}.conffiles${DISTRIB} ${CONTROL_DIR}/conffiles
+    test -f ${PROJECT_NAME}.conffiles && \
+        cp ${PROJECT_NAME}.conffiles ${CONTROL_DIR}/conffiles
 
     # Remove any lost CVS entries in the package tree.
     find ${DEBIAN_BASE} -path "*CVS*" -exec rm -Rf '{}' \; || exit 1
@@ -174,13 +158,13 @@ function build_package {
     SIZEDU=$(du -sk ${DEBIAN_BASE} | awk '{ print $1}') || exit 1
     SIZEDIR=$(find ${DEBIAN_BASE} -type d | wc | awk '{print $1}') || exit 1
     SIZE=$[ $SIZEDU - $SIZEDIR ] || exit 1
-    
+
     VERSION=$(< ../version)
 
-    replace_vars ${PROJECT_NAME}.control${DISTRIB} ${CONTROL_DIR}/control || exit 1
+    replace_vars ${PROJECT_NAME}.control ${CONTROL_DIR}/control || exit 1
 
-    test -f ${PROJECT_NAME}.shlibs${DISTRIB} && \
-        replace_vars ${PROJECT_NAME}.shlibs${DISTRIB} ${CONTROL_DIR}/shlibs
+    test -f ${PROJECT_NAME}.shlibs && \
+        replace_vars ${PROJECT_NAME}.shlibs ${CONTROL_DIR}/shlibs
 
     # Create and rename the package.
     dpkg --build ${DEBIAN_BASE} ${PACKAGE_DIR}/${PACKAGE_NAME}.deb || exit 1
@@ -207,6 +191,10 @@ if test "${MODE}" = "binary"; then
 #    # info files
 #    mkdir -p ${DEBIAN_BASE}/usr/share/info
 #    cp -vR ${INSTALL_DIR}/usr/share/info ${DEBIAN_BASE}/usr/share || exit 1
+
+    # build extra depend
+    SH_DEPEND=$(dpkg-shlibdeps -O ${INSTALL_DIR}/usr/lib/libfastrpc.so.*.* | \
+        gawk '{match($0, /^.*Depends=(.*)$/, a); print a[1]}')
 
     # Build the package
     build_package
