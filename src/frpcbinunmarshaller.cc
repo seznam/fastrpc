@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcbinunmarshaller.cc,v 1.4 2007-04-02 15:28:21 vasek Exp $
+ * FILE          $Id: frpcbinunmarshaller.cc,v 1.5 2007-05-16 08:50:09 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -162,8 +162,8 @@ void BinUnMarshaller_t::unMarshall(const char *data, long size, char type)
                         {
                             internalType = INT;
                             dataWanted = FRPC_GET_DATA_TYPE_INFO(mainBuff[0]);
-                            if(!dataWanted)
-                                throw StreamError_t("Size of int is 0 !!!");
+                            if(dataWanted > 4 || !dataWanted)
+                                throw StreamError_t("Size of int is 0 or > 4 !!!");
                             mainBuff.erase();
                         }
                         break;
