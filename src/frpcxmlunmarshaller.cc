@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcxmlunmarshaller.cc,v 1.4 2007-04-02 15:28:20 vasek Exp $
+ * FILE          $Id: frpcxmlunmarshaller.cc,v 1.5 2007-05-17 14:07:36 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -36,7 +36,8 @@
 #include <string.h>
 #include <frpcstreamerror.h>
 #include <memory.h>
-
+#include <stdint.h>
+#include <errno.h>
 using namespace FRPC;
 
 
@@ -466,6 +467,10 @@ namespace {
                 {
                     return INT;
                 }
+                else if (name[1] == '8' && len == 2)
+                {
+                    return INT; 
+                }
                 else
                     return NONE;
             }
@@ -757,6 +762,11 @@ void XmlUnMarshaller_t::setValueData(const char *data, long len)
             long value = strtol(intStr.c_str(),&end,10);
             if(*end)
                 throw StreamError_t("Integrity xml Int error !!!");
+            
+            if((value == LONG_MIN || value == LONG_MAX ) && errno == ERANGE)
+            {
+                throw StreamError_t("Unsupported size of int (too big) !!!");
+            }
             if(mainInternalType == FAULT)
                 //it is errNum
                 internalValue = value;
