@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcdatabuilder.h,v 1.3 2007-04-02 15:28:21 vasek Exp $
+ * FILE          $Id: frpcdatabuilder.h,v 1.4 2007-05-18 15:29:45 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -34,7 +34,7 @@
 #define FRPCFRPCDATABUILDER_H
 
 #include <frpcplatform.h>
-
+#include <frpcint.h>
 #include <time.h>
 #include <string>
 namespace FRPC
@@ -50,25 +50,29 @@ public:
     virtual ~DataBuilder_t();
 
     virtual void buildMethodResponse() = 0;
-    virtual void buildBinary(const char* data, long size) = 0;
+    virtual void buildBinary(const char* data, unsigned int size) = 0;
     virtual void buildBinary(const std::string &data) = 0;
     virtual void buildBool(bool value) = 0;
     virtual void buildDateTime(short year, char month, char day,char hour, char minute, char sec,
                                char weekDay, time_t unixTime, char timeZone) = 0;
     virtual void buildDouble(double value) = 0;
-    virtual void buildFault(long errNumber, const char* errMsg, long size = -1) = 0;
-    virtual void buildFault(long errNumber, const std::string &errMsg) = 0;
-    virtual void buildInt(long value) = 0;
-    virtual void buildMethodCall(const char* methodName, long size = -1) = 0;
+    virtual void buildFault(int errNumber, const char* errMsg, unsigned int size ) = 0;
+    void buildFault(int errNumber, const char* errMsg);
+    virtual void buildFault(int errNumber, const std::string &errMsg) = 0;
+    virtual void buildInt(Int_t::value_type value) = 0;
+    virtual void buildMethodCall(const char* methodName, unsigned int size) = 0;
+    void buildMethodCall(const char* methodName);
     virtual void buildMethodCall(const std::string &methodName) = 0;
-    virtual void buildString(const char* data, long size = -1) = 0;
+    virtual void buildString(const char* data, unsigned int size) = 0;
+    void buildString(const char* data);
     virtual void buildString(const std::string &data) = 0;
-    virtual void buildStructMember(const char *memberName, long size = -1) = 0;
+    virtual void buildStructMember(const char *memberName, unsigned int size) = 0;
+    void buildStructMember(const char *memberName);
     virtual void buildStructMember(const std::string &memberName) = 0;
     virtual void closeArray() = 0;
     virtual void closeStruct() = 0;
-    virtual void openArray(long numOfItems) = 0;
-    virtual void openStruct(long numOfMembers) = 0;
+    virtual void openArray(unsigned int numOfItems) = 0;
+    virtual void openStruct(unsigned int numOfMembers) = 0;
 
 
 

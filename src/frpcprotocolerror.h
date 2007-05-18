@@ -20,33 +20,31 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcprotocolerror.h,v 1.3 2007-04-02 15:28:20 vasek Exp $
+ * FILE          $Id: frpcprotocolerror.h,v 1.4 2007-05-18 15:29:45 mirecta Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #ifndef FRPCFRPCPROTOCOLERROR_H
 #define FRPCFRPCPROTOCOLERROR_H
 
 #include <frpcplatform.h>
-
+#include <frpcerror.h>
 #include <string>
 #include <stdio.h>
 #include <stdarg.h>
 
-namespace FRPC
-{
+namespace FRPC {
 
 /**
 @author Miroslav Talasek
 */
-class FRPC_DLLEXPORT ProtocolError_t
-{
+class FRPC_DLLEXPORT ProtocolError_t: public Error_t {
 public:
     /**
     @brief Constructor from format string and arguments
@@ -54,8 +52,7 @@ public:
     @param format is const char* format string 
     @param ... is other arguments
      */
-    ProtocolError_t(long errNum,const char *format, ...):errNum(errNum)
-    {
+    ProtocolError_t(int errNum,const char *format, ...):errNum(errNum) {
 
         // open variadic arguments
         va_list valist;
@@ -75,43 +72,28 @@ public:
      * @brief constructor with only errnum 
      * used in child clases
      * */
-    ProtocolError_t(long errNum):errNum(errNum)
-    {}
-    
-    
-    ~ProtocolError_t();
+    ProtocolError_t(int errNum):errNum(errNum) {}
 
-    /**
-    @brief Getting error message
-     @return std::string is error message
-    */
-   const std::string message()
-    {
-        return msg;
-    }
 
-    const std::string message()  const
-    {
-        return msg;
-    }
+    ~ProtocolError_t() throw();
+
+
     /**
     * @brief Getting error message
     * @return long is error number
      * */
-    long errorNum()
-    {
+    int errorNum() {
         return errNum;
     }
-    
-    long errorNum()  const
-    {
+
+    int errorNum()  const {
         return errNum;
     }
 protected:
     ProtocolError_t();
 
-    long errNum;
-    std::string msg;
+    int errNum;
+    
 
 };
 

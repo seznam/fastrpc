@@ -20,15 +20,15 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcserver.h,v 1.4 2007-04-02 15:28:20 vasek Exp $
+ * FILE          $Id: frpcserver.h,v 1.5 2007-05-18 15:29:46 mirecta Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #ifndef FRPCFRPCSERVER_H
 #define FRPCFRPCSERVER_H
@@ -45,8 +45,7 @@
 #include <string>
 
 
-namespace FRPC
-{
+namespace FRPC {
 class DataBuilder_t;
 class UnMarshaller_t;
 
@@ -54,13 +53,11 @@ class UnMarshaller_t;
 /**
 @author Miroslav Talasek
 */
-class FRPC_DLLEXPORT Server_t:public Writer_t
-{
+class FRPC_DLLEXPORT Server_t:public Writer_t {
 public:
     enum{XML_RPC = 0x01, BINARY_RPC = 0x02};
 
-    class Config_t
-    {
+    class Config_t {
     public:
 
         /**
@@ -78,12 +75,12 @@ public:
         Config_t(long readTimeout, long writeTimeout,
                  bool keepAlive, long maxKeepalive, bool introspectionEnabled,
                  MethodRegistry_t::Callbacks_t *callbacks //, const std::string path
-                 )
+                )
                 :readTimeout(readTimeout),writeTimeout(writeTimeout),
                 keepAlive(keepAlive),maxKeepalive(maxKeepalive),
                 introspectionEnabled(introspectionEnabled),
                 callbacks(callbacks)
-            //,path(path)
+                //,path(path)
         {}
         /**
             @brief Default constructor 
@@ -100,8 +97,7 @@ public:
         */
         Config_t():readTimeout(10000),writeTimeout(1000),keepAlive(false),maxKeepalive(0),
                 introspectionEnabled(true),
-                callbacks(0)
-        {}
+                callbacks(0) {}
 
         ///@brief internal representation of readTimeout value
         long readTimeout;
@@ -115,7 +111,7 @@ public:
         bool introspectionEnabled;
 
         MethodRegistry_t::Callbacks_t *callbacks;
-        
+
 //         std::string path;
 
     };
@@ -124,19 +120,16 @@ public:
             :Writer_t(), methodRegistry(config.callbacks, config.introspectionEnabled),
             io(0,config.readTimeout, config.writeTimeout, -1 ,-1),
             keepAlive(config.keepAlive),maxKeepalive(config.maxKeepalive),
-             callbacks(config.callbacks),//path(config.path),
+            callbacks(config.callbacks),//path(config.path),
             outType(XML_RPC), closeConnection(true),
             contentLength(0),useChunks(false),headersSent(false),head(false)
-
-    {
-    }
+            {}
 
     void serve(int fd, struct sockaddr_in* addr = 0);
 
     ~Server_t();
 
-    MethodRegistry_t &registry()
-    {
+    MethodRegistry_t &registry() {
         return methodRegistry;
     }
 
@@ -181,6 +174,7 @@ private:
     bool  useChunks;
     bool headersSent;
     bool head;
+    ProtocolVersion_t protocolVersion;
 };
 
 };

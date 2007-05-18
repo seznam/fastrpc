@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcxmlunmarshaller.cc,v 1.5 2007-05-17 14:07:36 mirecta Exp $
+ * FILE          $Id: frpcxmlunmarshaller.cc,v 1.6 2007-05-18 15:29:46 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -397,7 +397,7 @@ void XmlUnMarshaller_t::finish()
 }
 
 
-void XmlUnMarshaller_t::unMarshall( const char *data, long size, char type)
+void XmlUnMarshaller_t::unMarshall( const char *data, unsigned int size, char type)
 {
 
     int terminate = (size == 0)?1:0;
@@ -635,7 +635,7 @@ void XmlUnMarshaller_t::setValueType(const char *name)
             mainInternalType = NONE;
         }
         if(mainInternalType != TYPE_FAULT)
-            dataBuilder.openStruct(-1);
+            dataBuilder.openStruct(0);
         break;
     case ARRAY:
         if(mainInternalType == TYPE_METHOD_RESPONSE)
@@ -643,7 +643,7 @@ void XmlUnMarshaller_t::setValueType(const char *name)
             dataBuilder.buildMethodResponse();
             mainInternalType = NONE;
         }
-        dataBuilder.openArray(-1);
+        dataBuilder.openArray(0);
         break;
     case FAULT:
     case METHOD_CALL:
@@ -711,7 +711,7 @@ const std::string XmlUnMarshaller_t::decodeBase64(const char *data, long len)
 }
 
 
-void XmlUnMarshaller_t::setValueData(const char *data, long len)
+void XmlUnMarshaller_t::setValueData(const char *data, unsigned int len)
 {
 
 

@@ -20,15 +20,15 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcbinmarshaller.h,v 1.4 2007-04-02 15:28:21 vasek Exp $
+ * FILE          $Id: frpcbinmarshaller.h,v 1.5 2007-05-18 15:29:45 mirecta Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #ifndef FRPCFRPCBINMARSHALLER_H
 #define FRPCFRPCBINMARSHALLER_H
@@ -36,10 +36,12 @@
 #include <frpcmarshaller.h>
 #include <vector>
 #include <frpcinternals.h>
+#include <frpc.h>
 #include <frpcwriter.h>
+#include <frpcint.h>
+#include <frpcstreamerror.h>
 
-namespace FRPC
-{
+namespace FRPC {
 
 
 
@@ -48,53 +50,83 @@ namespace FRPC
 @brief Binary Marshaller (FastRPC)
 @author Miroslav Talasek
 */
-class BinMarshaller_t : public Marshaller_t
-{
+class BinMarshaller_t : public Marshaller_t {
 public:
-    BinMarshaller_t(Writer_t &writer):writer(writer)
-    {}
+    BinMarshaller_t(Writer_t &writer,
+                    const ProtocolVersion_t &protocolVersion);
 
     virtual ~BinMarshaller_t();
 
-    virtual void packArray(long numOfItems);
-    virtual void packBinary(const char* value, long size);
+    virtual void packArray(unsigned int numOfItems);
+    virtual void packBinary(const char* value, unsigned int size);
     virtual void packBool(bool value);
     virtual void packDateTime(short year, char month, char day, char hour,
                               char minute, char sec,
                               char weekDay, time_t unixTime, char timeZone);
     virtual void packDouble(double value);
-    virtual void packFault(long errNumber, const char* errMsg, long size);
-    virtual void packInt(long value);
-    virtual void packMethodCall(const char* methodName, long size);
-    virtual void packString(const char* value, long size);
-    virtual void packStruct(long numOfMembers);
-    virtual void packStructMember(const char* memberName, long size);
+    virtual void packFault(int errNumber, const char* errMsg, unsigned int size);
+    virtual void packInt(Int_t::value_type value);
+    virtual void packMethodCall(const char* methodName, unsigned int size);
+    virtual void packString(const char* value, unsigned int size);
+    virtual void packStruct(unsigned int numOfMembers);
+    virtual void packStructMember(const char* memberName, unsigned int size);
     virtual void packMethodResponse();
     virtual void flush();
 
 private:
 
-    BinMarshaller_t();  
+    BinMarshaller_t();
 
-    inline unsigned char getNumberSize(unsigned long number)
-    {
-        
-        if(!(number & 0xffffff00))
-            return CHAR8;
+    inline unsigned int getNumberSize(Int_t::value_type number) {
 
-        if(!(number & 0xffff0000))
-            return SHORT16;
+        if (protocolVersion.versionMajor < 2) {
 
-        if(!(number & 0xff000000))
-            return LONG24;
+            // + 1 => old marking
+            if (!(number & INT8_MASK))
+                return CHAR8 + 1;
 
-        return LONG32;
+            if (!(number & INT16_MASK))
+                return SHORT16 + 1;
+
+            if (!(number & INT24_MASK))
+                return LONG24 + 1;
+
+            if (!(number & INT32_MASK))
+                return LONG32 + 1;
+
+            throw StreamError_t("Number is too big for protocol version 1.0");
+        } else {
+            if (!(number & INT8_MASK))
+                return CHAR8;
+
+            if (!(number & INT16_MASK))
+                return SHORT16;
+
+            if (!(number & INT24_MASK))
+                return LONG24;
+
+            if (!(number & INT32_MASK))
+                return LONG32;
+
+            if (!(number & INT40_MASK))
+                return LONG40;
+
+            if (!(number & INT48_MASK))
+                return LONG48;
+
+            if (!(number & INT56_MASK))
+                return LONG56;
+
+            return LONG64;
+
+        }
     }
-    
+
     void packMagic();
 
     //vector<TypeStorage_t> vectEntity; //not used
     Writer_t  &writer;
+    ProtocolVersion_t protocolVersion;
 };
 
 }

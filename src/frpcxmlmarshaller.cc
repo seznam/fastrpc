@@ -20,40 +20,39 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcxmlmarshaller.cc,v 1.3 2007-04-02 15:28:20 vasek Exp $
+ * FILE          $Id: frpcxmlmarshaller.cc,v 1.4 2007-05-18 15:29:46 mirecta Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #include "frpcxmlmarshaller.h"
 #include <string.h>
 #include <stdio.h>
 #include <frpclenerror.h>
 #include <frpc.h>
-namespace FRPC
-{
+
+namespace FRPC {
 
 
+XmlMarshaller_t::XmlMarshaller_t(Writer_t &writer)
+        :writer(writer),level(0) {
+}
 
-
-XmlMarshaller_t::~XmlMarshaller_t()
-{
+XmlMarshaller_t::~XmlMarshaller_t() {
     entityStorage.clear();
 }
 
 
-void XmlMarshaller_t::packArray(long numOfItems)
-{
+void XmlMarshaller_t::packArray(unsigned int numOfItems) {
 
     //write correct spaces
     packSpaces(level);
-    if(entityStorage.empty())
-    {
+    if (entityStorage.empty()) {
         writer.write("<param>\n",8);
         level++;
     }
@@ -72,34 +71,29 @@ void XmlMarshaller_t::packArray(long numOfItems)
     //write array tag
     writer.write("<data>\n",7);
     level++;
-    if(numOfItems == 0)
-    {
+    if (numOfItems == 0) {
         level--;
         writer.write("</data>\n",8);
         level--;
         writer.write("</array>\n",9);
         level--;
         writer.write("</value>\n",9);
-        if( entityStorage.size() == 0)
+        if ( entityStorage.size() == 0)
             writer.write("</param>\n",9);
         decrementItem();
-    }
-    else
-    {
+    } else {
         //entity to storage
         entityStorage.push_back(TypeStorage_t(ARRAY,numOfItems));
     }
 }
 
-void XmlMarshaller_t::packBinary(const char* value, long size)
-{
+void XmlMarshaller_t::packBinary(const char* value, unsigned int size) {
 
 
 
     //write correct spaces
     packSpaces(level);
-    if(entityStorage.empty())
-    {
+    if (entityStorage.empty()) {
         writer.write("<param>\n",8);
         level++;
     }
@@ -115,8 +109,7 @@ void XmlMarshaller_t::packBinary(const char* value, long size)
 
 
 
-    if(entityStorage.empty())
-    {
+    if (entityStorage.empty()) {
         packSpaces(level - 1);
         writer.write("</param>\n",9);
         level--;
@@ -125,14 +118,12 @@ void XmlMarshaller_t::packBinary(const char* value, long size)
 
 }
 
-void XmlMarshaller_t::packBool(bool value)
-{
+void XmlMarshaller_t::packBool(bool value) {
 
     char boolean = (value==true)?'1':'0';
     //write correct spaces
     packSpaces(level);
-    if(entityStorage.empty())
-    {
+    if (entityStorage.empty()) {
         writer.write("<param>\n",8);
         level++;
     }
@@ -144,8 +135,7 @@ void XmlMarshaller_t::packBool(bool value)
 
 
 
-    if(entityStorage.empty())
-    {
+    if (entityStorage.empty()) {
         packSpaces(level - 1);
         writer.write("</param>\n",9);
         level--;
@@ -155,14 +145,12 @@ void XmlMarshaller_t::packBool(bool value)
 }
 
 void XmlMarshaller_t::packDateTime(short year, char month, char day, char hour, char minute, char sec,
-                                   char weekDay, time_t unixTime, char timeZone)
-{
+                                   char weekDay, time_t unixTime, char timeZone) {
     std::string data = getISODateTime(year,month,day,hour,minute,sec,timeZone);
 
     //write correct spaces
     packSpaces(level);
-    if(entityStorage.empty())
-    {
+    if (entityStorage.empty()) {
         writer.write("<param>\n",8);
         level++;
     }
@@ -176,8 +164,7 @@ void XmlMarshaller_t::packDateTime(short year, char month, char day, char hour, 
 
 
 
-    if(entityStorage.empty())
-    {
+    if (entityStorage.empty()) {
         packSpaces(level - 1);
         writer.write("</param>\n",9);
         level--;
@@ -188,16 +175,14 @@ void XmlMarshaller_t::packDateTime(short year, char month, char day, char hour, 
 
 }
 
-void XmlMarshaller_t::packDouble(double value)
-{
+void XmlMarshaller_t::packDouble(double value) {
     char buff[50];
 
     sprintf(buff,"%f",value);
 
     //write correct spaces
     packSpaces(level);
-    if(entityStorage.empty())
-    {
+    if (entityStorage.empty()) {
         writer.write("<param>\n",8);
         level++;
     }
@@ -211,8 +196,7 @@ void XmlMarshaller_t::packDouble(double value)
 
 
 
-    if(entityStorage.empty())
-    {
+    if (entityStorage.empty()) {
         packSpaces(level - 1);
         writer.write("</param>\n",9);
         level--;
@@ -221,11 +205,8 @@ void XmlMarshaller_t::packDouble(double value)
 
 }
 
-void XmlMarshaller_t::packFault(long errNumber, const char* errMsg, long size)
-{
-    long msgSize;
-    //obtain a right lenght of string
-    msgSize = (size == -1)? strlen(errMsg):size;
+void XmlMarshaller_t::packFault(int errNumber, const char* errMsg, unsigned int size) {
+
     //magic
     packMagic();
     writer.write("<methodResponse>\n",17);
@@ -241,7 +222,7 @@ void XmlMarshaller_t::packFault(long errNumber, const char* errMsg, long size)
     packStructMember("faultCode",9);
     packInt(errNumber);
     packStructMember("faultString",11);
-    packString(errMsg,msgSize);
+    packString(errMsg,size);
 
     packSpaces(level - 1);
     writer.write("</fault>\n",9);
@@ -254,48 +235,49 @@ void XmlMarshaller_t::packFault(long errNumber, const char* errMsg, long size)
 
 }
 
-void XmlMarshaller_t::packInt(long value)
-{
+void XmlMarshaller_t::packInt(Int_t::value_type value) {
     char buff[50];
 
-    sprintf(buff,"%ld",value);
+
 
     //write correct spaces
     packSpaces(level);
-    if(entityStorage.empty())
-    {
+    if (entityStorage.empty()) {
         writer.write("<param>\n",8);
         level++;
     }
 
     //write correct spaces
     packSpaces(level);
-    writer.write("<value><int>",12);
-    writer.write(buff,strlen(buff));
-    writer.write("</int></value>\n",15);
+    if ((value & INT32_MASK)) {
+        writer.write("<value><i8>",11);
+        sprintf(buff,"%lld",value);
+        writer.write(buff,strlen(buff));
+        writer.write("</i8></value>\n",14);
+    }
+    else {
+        writer.write("<value><i4>",11);
+        sprintf(buff,"%lld",value);
+        writer.write(buff,strlen(buff));
+        writer.write("</i4></value>\n",14);
+    }
 
 
 
 
-    if(entityStorage.empty())
-    {
+    if (entityStorage.empty()) {
         packSpaces(level - 1);
         writer.write("</param>\n",9);
         level--;
     }
     decrementItem();
-
-
 }
 
-void XmlMarshaller_t::packMethodCall(const char* methodName, long size)
-{
-    long nameSize;
-    //obtain a right lenght of string
-    nameSize = (size == -1)? strlen(methodName):size;
+void XmlMarshaller_t::packMethodCall(const char* methodName, unsigned int size) {
 
-    if(nameSize > 255 || nameSize == 0)
-        throw LenError_t("Lenght of method name is %d not in interval (1-255)",nameSize);
+
+    if (size > 255 || size == 0)
+        throw LenError_t("Lenght of method name is %d not in interval (1-255)",size);
 
     //pack MAgic header
     packMagic();
@@ -304,7 +286,7 @@ void XmlMarshaller_t::packMethodCall(const char* methodName, long size)
     level++;
     packSpaces(level);
     writer.write("<methodName>",12);
-    writeQuotedString(methodName,nameSize);
+    writeQuotedString(methodName,size);
     //writer.write(methodName,nameSize);
     writer.write("</methodName>\n",14);
     writer.write("<params>\n",9);
@@ -314,8 +296,7 @@ void XmlMarshaller_t::packMethodCall(const char* methodName, long size)
 
 }
 
-void XmlMarshaller_t::packMethodResponse()
-{
+void XmlMarshaller_t::packMethodResponse() {
     packMagic();
     writer.write("<methodResponse>\n",17);
     level++;
@@ -327,16 +308,12 @@ void XmlMarshaller_t::packMethodResponse()
 
 }
 
-void XmlMarshaller_t::packString(const char* value, long size)
-{
-    long strSize;
-    //obtain a right lenght of string
-    strSize = (size == -1)? strlen(value):size;
+void XmlMarshaller_t::packString(const char* value, unsigned int size) {
+
 
     //write correct spaces
     packSpaces(level);
-    if(entityStorage.empty())
-    {
+    if (entityStorage.empty()) {
         writer.write("<param>\n",8);
         level++;
     }
@@ -345,13 +322,12 @@ void XmlMarshaller_t::packString(const char* value, long size)
     //write tags
     writer.write("<value><string>",15);
     //write value
-    writeQuotedString(value,strSize);
+    writeQuotedString(value,size);
     //writer.write(value,strSize);
     //write tags
     writer.write("</string></value>\n",18);
 
-    if(entityStorage.empty())
-    {
+    if (entityStorage.empty()) {
         packSpaces(level - 1);
         writer.write("</param>\n",9);
         level--;
@@ -360,12 +336,10 @@ void XmlMarshaller_t::packString(const char* value, long size)
 
 }
 
-void XmlMarshaller_t::packStruct(long numOfMembers)
-{
+void XmlMarshaller_t::packStruct(unsigned int numOfMembers) {
     //write correct spaces
     packSpaces(level);
-    if(entityStorage.empty())
-    {
+    if (entityStorage.empty()) {
         writer.write("<param>\n",8);
         level++;
     }
@@ -377,18 +351,15 @@ void XmlMarshaller_t::packStruct(long numOfMembers)
     packSpaces(level);
     writer.write("<struct>\n",9);
     level++;
-    if(numOfMembers == 0)
-    {
+    if (numOfMembers == 0) {
         level--;
         writer.write("</struct>\n",10);
         level--;
         writer.write("</value>\n",9);
-        if( entityStorage.size() == 0)
+        if ( entityStorage.size() == 0)
             writer.write("</param>\n",9);
         decrementItem();
-    }
-    else
-    {
+    } else {
 
         //entity to storage
         entityStorage.push_back(TypeStorage_t(STRUCT,numOfMembers));
@@ -396,14 +367,11 @@ void XmlMarshaller_t::packStruct(long numOfMembers)
 
 }
 
-void XmlMarshaller_t::packStructMember(const char* memberName, long size)
-{
-    long nameSize;
-    //obtain a right lenght of string
-    nameSize = (size == -1)? strlen(memberName):size;
+void XmlMarshaller_t::packStructMember(const char* memberName, unsigned int size) {
 
-    if(size > 255 || nameSize == 0)
-        throw LenError_t("Lenght of member name is %d not in interval (1-255)",nameSize);
+
+    if (size > 255 || size == 0)
+        throw LenError_t("Lenght of member name is %d not in interval (1-255)",size);
 
     packSpaces(level);
     writer.write("<member>\n",9);
@@ -411,16 +379,14 @@ void XmlMarshaller_t::packStructMember(const char* memberName, long size)
 
     packSpaces(level);
     writer.write("<name>",6);
-    writeQuotedString(memberName,nameSize);
+    writeQuotedString(memberName,size);
     //writer.write(memberName,nameSize);
     writer.write("</name>\n",8);
 
 }
-void XmlMarshaller_t::flush()
-{
+void XmlMarshaller_t::flush() {
 
-    switch(mainType)
-    {
+    switch (mainType) {
 
     case METHOD_CALL:
         packSpaces(level-1);
@@ -443,23 +409,20 @@ void XmlMarshaller_t::flush()
 }
 
 
-void XmlMarshaller_t::packMagic()
-{
+void XmlMarshaller_t::packMagic() {
     char magic[]="<?xml version=\"1.0\"?>\n";
     //write magic
     writer.write(magic,strlen(magic));
 
 }
 
-void XmlMarshaller_t::writeEncodeBase64(const char *data, long len)
-{
+void XmlMarshaller_t::writeEncodeBase64(const char *data, unsigned int len) {
     static const char table[] =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
     std::string src(data,len);
 
-    if (src.empty())
-    {
+    if (src.empty()) {
 
         return ;
     }
@@ -470,15 +433,13 @@ void XmlMarshaller_t::writeEncodeBase64(const char *data, long len)
     size_t lineLen = 0;
     std::string::const_iterator end = src.end();
     for (std::string::const_iterator isrc = src.begin();
-            isrc != end; )
-    {
+            isrc != end; ) {
         unsigned char input[3];
         int n = 0;
         for (; (isrc != end) && (n < 3) ; isrc++, n++)
             input[n] = *isrc;
 
-        if (n)
-        {
+        if (n) {
             writer.write(&table[input[0] >> 2],1);
             writer.write(&table[((input[0] & 0x03) << 4) | (input[1] >> 4)],1);
             if (n > 1)
@@ -490,16 +451,14 @@ void XmlMarshaller_t::writeEncodeBase64(const char *data, long len)
             else
                 writer.write("=",1);
             lineLen += 4;
-            if (lineLen > 72)
-            {
+            if (lineLen > 72) {
                 writer.write("\r\n",2);
                 lineLen = 0;
             }
         }
     }
 
-    if (lineLen)
-    {
+    if (lineLen) {
         writer.write("\r\n",2);
         lineLen = 0;
     }
@@ -507,12 +466,9 @@ void XmlMarshaller_t::writeEncodeBase64(const char *data, long len)
 
     return ;
 }
-void XmlMarshaller_t::writeQuotedString(const char *data, long len)
-{
-    for(int i = 0; i < len; i++)
-    {
-        switch(data[i])
-        {
+void XmlMarshaller_t::writeQuotedString(const char *data, unsigned int len) {
+    for (unsigned int i = 0; i < len; i++) {
+        switch (data[i]) {
         case '<':
             writer.write("&lt;",4);
             break;
@@ -524,7 +480,7 @@ void XmlMarshaller_t::writeQuotedString(const char *data, long len)
             break;
         case '&':
             writer.write("&amp;",5);
-            break;  
+            break;
         default:
             writer.write(&data[i],1);
             break;

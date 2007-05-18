@@ -20,15 +20,15 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcfault.h,v 1.3 2007-04-02 15:28:21 vasek Exp $
+ * FILE          $Id: frpcfault.h,v 1.4 2007-05-18 15:29:45 mirecta Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #ifndef FRPCFRPCFAULT_H
 #define FRPCFRPCFAULT_H
@@ -39,22 +39,18 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-namespace FRPC
-{
+namespace FRPC {
 
 /**
 @author Miroslav Talasek
 */
-class FRPC_DLLEXPORT Fault_t
-{
+class FRPC_DLLEXPORT Fault_t:public std::exception {
 public:
-    Fault_t(long errNum, const std::string &errMsg):errNum(errNum),
-            errMsg(errMsg)
-    {}
-    
-     Fault_t(long errNum, const char *format, ...):errNum(errNum)
-     {
-       // open variadic arguments
+    Fault_t(int errNum, const std::string &errMsg):errNum(errNum),
+            errMsg(errMsg) {}
+
+    Fault_t(int errNum, const char *format, ...):errNum(errNum) {
+        // open variadic arguments
         va_list valist;
         va_start(valist, format);
 
@@ -68,31 +64,32 @@ public:
         // return formated message
         errMsg = buf;
 
-     
-     }
 
-    ~Fault_t();
-    long errorNum()
-    {
+    }
+
+    ~Fault_t() throw();
+    int errorNum() {
+        return errNum;
+    }
+    
+    const std::string& message() {
+        return errMsg;
+    }
+    int errorNum()   const {
         return errNum;
     }
 
-    const std::string& message()
-    {
+    const std::string& message() const {
         return errMsg;
     }
-    long errorNum()   const 
-    {
-        return errNum;
+    
+    virtual const char * what () const throw ()  { 
+        return  errMsg.c_str();
     }
-
-    const std::string& message() const 
-    {
-        return errMsg;
-    }
+    
 private:
     Fault_t();
-    long errNum;
+    int errNum;
     std::string errMsg;
 
 

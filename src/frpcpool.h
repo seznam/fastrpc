@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcpool.h,v 1.3 2007-04-02 15:28:20 vasek Exp $
+ * FILE          $Id: frpcpool.h,v 1.4 2007-05-18 15:29:45 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -35,14 +35,15 @@
 
 #include <frpcplatform.h>
 
-#include "frpcvalue.h"
+#include <frpcvalue.h>
 #include <vector>
 #include <string>
+#include <frpcint.h>
 
 namespace FRPC
 {
 
-class Int_t;
+
 class Bool_t;
 class Double_t;
 class Binary_t;
@@ -76,7 +77,7 @@ public:
         @param value is a long number
         @return reference to Int_t
     */
-    Int_t&  Int(long value);
+    Int_t&  Int(Int_t::value_type value);
     /**
         @brief Create new Bool_t object from bool value
         @param value is a bool value

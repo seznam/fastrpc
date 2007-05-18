@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpctreebuilder.h,v 1.2 2007-04-02 15:28:20 vasek Exp $
+ * FILE          $Id: frpctreebuilder.h,v 1.3 2007-05-18 15:29:46 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -60,30 +60,33 @@ class Pool_t;
 class FRPC_DLLEXPORT TreeBuilder_t : public DataBuilder_t
 {
 public:
-    TreeBuilder_t(Pool_t &pool):DataBuilder_t(), pool(pool),first(true),retValue(0),errNum(-500)
+    TreeBuilder_t(Pool_t &pool):DataBuilder_t(),
+                  pool(pool),first(true),retValue(0),errNum(-500)
     {}
     enum{ARRAY=0,STRUCT};
     virtual ~TreeBuilder_t();
 
-    virtual void buildBinary(const char* data, long size);
+    virtual void buildBinary(const char* data, unsigned int size);
     virtual void buildBinary(const std::string& data);
     virtual void buildBool(bool value);
-    virtual void buildDateTime(short year, char month, char day, char hour, char min, char sec, char weekDay, time_t unixTime, char timeZone);
+    virtual void buildDateTime(short year, char month, char day, 
+                               char hour, char min, char sec, char weekDay,
+                                time_t unixTime, char timeZone);
     virtual void buildDouble(double value);
-    virtual void buildFault(long errNumber, const char* errMsg, long size);
-    virtual void buildFault(long errNumber, const std::string& errMsg);
-    virtual void buildInt(long value);
-    virtual void buildMethodCall(const char* methodName, long size);
+    virtual void buildFault(int errNumber, const char* errMsg, unsigned int size);
+    virtual void buildFault(int errNumber, const std::string& errMsg);
+    virtual void buildInt(Int_t::value_type value);
+    virtual void buildMethodCall(const char* methodName, unsigned int size);
     virtual void buildMethodCall(const std::string& methodName);
     virtual void buildMethodResponse();
-    virtual void buildString(const char* data, long size);
+    virtual void buildString(const char* data, unsigned int size);
     virtual void buildString(const std::string& data);
-    virtual void buildStructMember(const char* memberName, long size);
+    virtual void buildStructMember(const char* memberName, unsigned int size);
     virtual void buildStructMember(const std::string& memberName);
     virtual void closeArray();
     virtual void closeStruct();
-    virtual void openArray(long numOfItems);
-    virtual void openStruct(long numOfMembers);
+    virtual void openArray(unsigned int numOfItems);
+    virtual void openStruct(unsigned int numOfMembers);
     inline bool isFirst( Value_t  &value )
     {
         if(first)
@@ -110,7 +113,8 @@ public:
             break;
         case STRUCT:
             {
-                dynamic_cast<Struct_t*>(entityStorage.back().container)->append(memberName ,value);
+                dynamic_cast<Struct_t*>(entityStorage.back().container)->
+                        append(memberName ,value);
 
 
                 //entityStorage.back().numOfItems--;
@@ -152,7 +156,7 @@ private:
     Value_t *retValue;
     std::string memberName;
     std::string methodName;
-    long errNum;
+    int errNum;
     std::string errMsg;
     std::vector<ValueTypeStorage_t> entityStorage;
 };

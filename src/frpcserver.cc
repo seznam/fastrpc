@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcserver.cc,v 1.9 2007-04-02 15:28:20 vasek Exp $
+ * FILE          $Id: frpcserver.cc,v 1.10 2007-05-18 15:29:46 mirecta Exp $
  *
  * DESCRIPTION
  *
@@ -35,7 +35,6 @@
 #include <string>
 #include <algorithm>
 #include <sstream>
-#include <strstream>
 #include <memory>
 #include <functional>
 
@@ -118,9 +117,12 @@ void Server_t::serve(int fd, struct sockaddr_in* addr )
                                                        ((outType ==
                                                          BINARY_RPC)?
                                                          Marshaller_t::BINARY_RPC
-                                                        :Marshaller_t::XML_RPC),*this));
+                                                        :Marshaller_t::XML_RPC),
+                                                         *this,
+                                                         ProtocolVersion_t()));
 
-            marshaller->packFault(MethodRegistry_t::FRPC_PARSE_ERROR, streamError.message().c_str());
+            marshaller->packFault(MethodRegistry_t::FRPC_PARSE_ERROR,
+                                  streamError.message().c_str());
             marshaller->flush();
 
 
@@ -156,7 +158,7 @@ void Server_t::serve(int fd, struct sockaddr_in* addr )
                                            Array(builder.getUnMarshaledData()),*this,
                                            ((outType ==
                                              BINARY_RPC)?Marshaller_t::BINARY_RPC
-                                            :Marshaller_t::XML_RPC));
+                                            :Marshaller_t::XML_RPC),protocolVersion);
             }
         }
 
@@ -325,7 +327,7 @@ void Server_t::readRequest(DataBuilder_t &builder)
         io.readContent(httpHead, data, true);
 
         unmarshaller->finish();
-
+        protocolVersion = unmarshaller->getProtocolVersion();
 
         std::string connection;
         httpHead.get("Connection", connection);
@@ -422,7 +424,7 @@ void Server_t::sendHttpError(const HTTPError_t &httpError)
     // append separator
     os.os << "\r\n";
     // send header
-    io.sendData(os.os.str(), os.os.pcount());
+    io.sendData(os.os.str());
 }
 
 void Server_t::sendResponse()
@@ -485,7 +487,7 @@ void Server_t::sendResponse()
 
 
         // send header
-        io.sendData(os.os.str(), os.os.pcount());
+        io.sendData(os.os.str());
 
         headersSent = true;
 
@@ -499,7 +501,7 @@ void Server_t::sendResponse()
         // write chunk size
         StreamHolder_t os;
         os.os << std::hex << queryStorage.back().size() << "\r\n";
-        io.sendData(os.os.str(), os.os.pcount());
+        io.sendData(os.os.str());
         // write chunk
         io.sendData(queryStorage.back().data(),queryStorage.back().size() );
         // write chunk terminator

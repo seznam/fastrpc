@@ -20,24 +20,22 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcunmarshaller.h,v 1.2 2007-04-02 15:28:20 vasek Exp $
+ * FILE          $Id: frpcunmarshaller.h,v 1.3 2007-05-18 15:29:46 mirecta Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #ifndef FRPCFRPCUNMARSHALLER_H
 #define FRPCFRPCUNMARSHALLER_H
 
 #include <frpcplatform.h>
-
-
-namespace FRPC
-{
+#include <frpc.h>
+namespace FRPC {
 
 class DataBuilder_t;
 
@@ -45,8 +43,7 @@ class DataBuilder_t;
 /**
 @author Miroslav Talasek
 */
-class FRPC_DLLEXPORT UnMarshaller_t
-{
+class FRPC_DLLEXPORT UnMarshaller_t {
 
 public:
     enum {
@@ -55,28 +52,28 @@ public:
         TYPE_FAULT,
         TYPE_ANY
     };
-    
+
     enum {
         BINARY_RPC,
         XML_RPC
     };
-    
+
     UnMarshaller_t();
 
     virtual ~UnMarshaller_t();
     /**
         @brief unmarshall data
         @param data is input data 
-            
+        
         @param size is size of input data
         @param type expected main data type 
             @li @b TYPE_METHOD_CALL - method call
             @li @b TYPE_METHOD_RESPONSE - method response
             @li @b TYPE_ANY - any
-    
-    */  
-    
-    virtual void unMarshall(const char *data, long size, char type) = 0;
+
+    */
+
+    virtual void unMarshall(const char *data, unsigned int size, char type) = 0;
     /**
         @brief create marshaller object with contentType
         @param contentType is an content type 
@@ -85,23 +82,30 @@ public:
         
         @param dataBuilder is abstract object used to build data tree
         @return reference to new unMarshaller
-    
-    */  
-    static UnMarshaller_t* create(long contentType, DataBuilder_t& dataBuilder);
+
+    */
+    static UnMarshaller_t* create(unsigned int contentType, DataBuilder_t& dataBuilder);
     /**
         @brief create marshaller object from first container of data min 4 bytes
         @param data pointer to data which be unmarshalled
         @param size is data size min 4 bytes
         @param dataBuilder is abstract object used to build data tree
         @return reference to new unMarshaller
-    
-    */  
 
-    static UnMarshaller_t* create(const char* data, long size, DataBuilder_t& dataBuilder);
+    */
+
+    static UnMarshaller_t* create(const char* data, unsigned int size,
+                                  DataBuilder_t& dataBuilder);
     /**
         @brief finishing unmarshalling  
     */
     virtual void finish() = 0;
+    /**
+    @brief get actual protocol version 
+    */
+    virtual ProtocolVersion_t getProtocolVersion() {
+        return ProtocolVersion_t();
+    }
 
 };
 

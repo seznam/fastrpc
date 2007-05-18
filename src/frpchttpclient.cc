@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpchttpclient.cc,v 1.4 2007-04-02 15:28:21 vasek Exp $
+ * FILE          $Id: frpchttpclient.cc,v 1.5 2007-05-18 15:29:45 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -41,7 +41,7 @@
 #include <algorithm>
 #include <functional>
 #include <sstream>
-#include <strstream>
+
 #include <stdexcept>
 
 
@@ -609,7 +609,7 @@ void HTTPClient_t::sendRequest()
         try
         {
             // send header
-            httpIO.sendData(os.os.str(), os.os.pcount());
+            httpIO.sendData(os.os.str());
         }
         catch(const ResponseError_t &e)
         {
@@ -628,7 +628,7 @@ void HTTPClient_t::sendRequest()
             // write chunk size
             StreamHolder_t os;
             os.os << std::hex << queryStorage.back().size() << "\r\n";
-            httpIO.sendData(os.os.str(), os.os.pcount(),true);
+            httpIO.sendData(os.os.str(),true);
             // write chunk
             httpIO.sendData(queryStorage.back().data(),queryStorage.back().size(),true );
             // write chunk terminator

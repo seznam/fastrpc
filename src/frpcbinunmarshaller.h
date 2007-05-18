@@ -20,15 +20,15 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcbinunmarshaller.h,v 1.2 2007-04-02 15:28:21 vasek Exp $
+ * FILE          $Id: frpcbinunmarshaller.h,v 1.3 2007-05-18 15:29:45 mirecta Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #ifndef FRPCFRPCBINUNMARSHALLER_H
 #define FRPCFRPCBINUNMARSHALLER_H
@@ -36,54 +36,50 @@
 #include <frpcunmarshaller.h>
 #include <frpcdatabuilder.h>
 #include <frpcinternals.h>
-
+#include <frpc.h>
 #include <vector>
 #include <string>
 
-namespace FRPC
-{
+namespace FRPC {
 
 /**
 @author Miroslav Talasek
 */
-class BinUnMarshaller_t : public UnMarshaller_t
-{
+class BinUnMarshaller_t : public UnMarshaller_t {
 public:
     BinUnMarshaller_t(DataBuilder_t & dataBuilder)
             :dataBuilder(dataBuilder),internalType(MAGIC),typeEvent(NONE)
             ,mainInternalType(NONE),
-            dataWanted(4),readPosition(0)
-    {}
+            dataWanted(4),readPosition(0) {}
 
     virtual ~BinUnMarshaller_t();
 
-    virtual void unMarshall(const char *data, long size, char type);
+    virtual void unMarshall(const char *data, unsigned int size, char type);
     virtual void finish();
+    virtual ProtocolVersion_t getProtocolVersion() {
+        return protocolVersion;
+    }
 
 private:
     BinUnMarshaller_t();
-    inline int readData(const char *data, long size)
-    {
+    inline int readData(const char *data, unsigned int size) {
 
-        long readSize = (dataWanted > (size-readPosition))?size - readPosition:dataWanted;
-        
-        if(readPosition == size)
-        {
+        unsigned int readSize = (dataWanted > (size-readPosition))?size
+                                - readPosition:dataWanted;
+
+        if (readPosition == size) {
             readPosition = 0;
             return -1;
-        } 
+        }
 
 
         mainBuff.append(&data[readPosition], readSize);
         dataWanted -= readSize;
         readPosition += readSize;
 
-        if(dataWanted == 0)
-        {
+        if (dataWanted == 0) {
             return 0;
-        }
-        else
-        {
+        } else {
             readPosition = 0;
             return -1;
         }
@@ -94,36 +90,33 @@ private:
     /**
         @brief this method check if next item is struct member or value
     */
-    inline bool isNextMember()
-    {
-        if(entityStorage.size() < 1)
+    inline bool isNextMember() {
+        if (entityStorage.size() < 1)
             return false;
 
-        if(entityStorage.back().type != STRUCT)
+        if (entityStorage.back().type != STRUCT)
             return false;
 
-        if(entityStorage.back().member)
+        if (entityStorage.back().member)
             return false;
 
         return true;
     }
     //decrement member count if any ARRAY or STRUCT exist
-    inline void decrementMember()
-    {
-        if(entityStorage.size() < 1)
+    inline void decrementMember() {
+        if (entityStorage.size() < 1)
             return ;
 
         //decrement member count
         entityStorage.back().numOfItems--;
         //if struct want member name
-        if(entityStorage.back().type == STRUCT)
+        if (entityStorage.back().type == STRUCT)
             entityStorage.back().member = false;
 
-        if(entityStorage.back().numOfItems != 0 )
+        if (entityStorage.back().numOfItems != 0 )
             return;
         //call builder to close entity
-        switch(entityStorage.back().type)
-        {
+        switch (entityStorage.back().type) {
 
         case STRUCT:
             dataBuilder.closeStruct();
@@ -143,16 +136,17 @@ private:
     }
 
     DataBuilder_t &dataBuilder;
-    
+
     std::vector<TypeStorage_t> entityStorage;
     char internalType;
     char typeEvent;
     char mainInternalType;
     std::string mainBuff;
     //long dataReaded;
-    long dataWanted;
-    long readPosition;
-    long errNo;
+    unsigned int dataWanted;
+    unsigned int readPosition;
+    unsigned int errNo;
+    ProtocolVersion_t protocolVersion;
 };
 
 };

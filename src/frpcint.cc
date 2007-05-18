@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcint.cc,v 1.3 2007-04-02 15:28:20 vasek Exp $
+ * FILE          $Id: frpcint.cc,v 1.4 2007-05-18 15:29:45 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -31,7 +31,7 @@
  *       
  */
 #include "frpcint.h"
-
+#include "frpcpool.h"
 namespace FRPC
 {
 

@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcinternals.h,v 1.4 2007-04-02 15:28:20 vasek Exp $
+ * FILE          $Id: frpcinternals.h,v 1.5 2007-05-18 15:29:45 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -33,28 +33,56 @@
 #ifndef FRPCINTERNALS_H
 #define FRPCINTERNALS_H
 #include <memory.h>
-#include <strstream>
+#include <sstream>
+#include <frpcint.h>
 
-#define FRPC_MAJOR_VERSION 1
+#define FRPC_MAJOR_VERSION 2
 #define FRPC_MINOR_VERSION 0
 #define FRPC_LITTLE_ENDIAN(data)
 namespace FRPC
 {
 
-enum{NONE=0, INT=1,BOOL,DOUBLE,STRING,DATETIME,BINARY,
+enum{NONE=0, INT=1,BOOL,DOUBLE,STRING,DATETIME,BINARY,INTP8,INTN8,
      STRUCT=10,ARRAY,METHOD_CALL=13,METHOD_RESPONSE,FAULT,
      MEMBER_NAME = 100,METHOD_NAME,METHOD_NAME_LEN,MAGIC,MAIN };
 
-enum{CHAR8=1,SHORT16,LONG24,LONG32};
+enum{CHAR8=0,SHORT16=1,LONG24,LONG32,LONG40,LONG48,LONG56,LONG64};
 enum{DATA,LENGTH};
+
+const Int_t::value_type ZERO = 0;
+const Int_t::value_type ALLONES = ~ZERO;
+const Int_t::value_type INT8_MASK = ALLONES << 8;
+const Int_t::value_type INT16_MASK = ALLONES << 16;
+const Int_t::value_type INT24_MASK = ALLONES << 24;
+const Int_t::value_type INT32_MASK = ALLONES << 32;
+const Int_t::value_type INT40_MASK = ALLONES << 40;
+const Int_t::value_type INT48_MASK = ALLONES << 48;
+const Int_t::value_type INT56_MASK = ALLONES << 56;
 
 union Number_t
 {
-    Number_t(long number):number(number)
+    Number_t(Int_t::value_type number):number(number)
     {
         FRPC_LITTLE_ENDIAN(data);
     }
     Number_t(const char *number, char size)
+    {
+        memset(data, 0, 8);
+        memcpy(data, number, size);
+
+        FRPC_LITTLE_ENDIAN(data);
+    }
+    char data[8];
+    Int_t::value_type number;
+};
+
+union Number32_t
+{
+    Number32_t(long number):number(number)
+    {
+        FRPC_LITTLE_ENDIAN(data);
+    }
+    Number32_t(const char *number, char size)
     {
         memset(data, 0, 4);
         memcpy(data, number, size);
@@ -67,7 +95,6 @@ union Number_t
 
 
 
-
 struct StreamHolder_t
 {
     StreamHolder_t()
@@ -76,10 +103,10 @@ struct StreamHolder_t
 
     ~StreamHolder_t()
     {
-        os.freeze(false);
+        
     }
 
-    std::ostrstream os;
+    std::ostringstream os;
 };
 
 
@@ -96,7 +123,9 @@ struct TypeStorage_t
         @param type is data type  STRUCT or ARRAY
         @param numOfItems says how many items(ARRAY) or members(STRUCT) has
     */
-    TypeStorage_t(char type, long numOfItems):type(type),numOfItems(numOfItems),member(false)
+    TypeStorage_t(char type, 
+                  unsigned int numOfItems)
+             :type(type),numOfItems(numOfItems),member(false)
     {}
     /**
         @brief Data Type (STRUCT or ARRAY)
@@ -105,7 +134,7 @@ struct TypeStorage_t
     /**
         @brief  says how many items(ARRAY) or members(STRUCT) has
     */
-    long numOfItems;
+    unsigned int numOfItems;
     /**
         @brief says if member name has built or set only in STRUCT
     */

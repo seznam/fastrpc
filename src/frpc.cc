@@ -20,15 +20,15 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpc.cc,v 1.5 2007-04-02 15:28:21 vasek Exp $
+ * FILE          $Id: frpc.cc,v 1.6 2007-05-18 15:29:45 mirecta Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 
 
@@ -38,7 +38,7 @@
 using namespace FRPC;
 
 /**
-* @brief dummy method for test in configure 
+* @brief dummy method for test in configure
 */
 extern "C" {
     int FRPC_DLLEXPORT dummyFastRPC() {
@@ -54,20 +54,16 @@ namespace FRPC {
 */
 std::string getISODateTime(short year, char month,
                            char day, char hour,
-                           char minute, char sec, char timeZone)
-{
+                           char minute, char sec, char timeZone) {
     char dateTime[50];
 
 
-    if(timeZone > 0)
-    {
+    if (timeZone > 0) {
         sprintf(dateTime,"%04d%02d%02dT%02d:%02d:%02d+%02d%02d",year
                 ,month ,
                 day ,hour,minute,sec,
                 (timeZone*15)/60,(timeZone*15)%60);
-    }
-    else
-    {
+    } else {
         sprintf(dateTime,"%04d%02d%02dT%02d:%02d:%02d-%02d%02d",year
                 ,month ,
                 day, hour ,minute ,sec,
@@ -84,8 +80,7 @@ and fill parameters
 
 void parseISODateTime(const char *data, long len, short &year, char &month,
                       char &day, char &hour,
-                      char &minute, char &sec, char &timeZone)
-{
+                      char &minute, char &sec, char &timeZone) {
 
     year = month = day = hour = minute = sec = timeZone = 0;
     // iterators
@@ -99,8 +94,7 @@ void parseISODateTime(const char *data, long len, short &year, char &month,
     // get year
     std::string tmp;
     int i = 0;
-    while (sit != end && i < 4 && isdigit(*sit))
-    {
+    while (sit != end && i < 4 && isdigit(*sit)) {
         tmp += *sit;
         ++sit;
         ++i;
@@ -115,8 +109,7 @@ void parseISODateTime(const char *data, long len, short &year, char &month,
     // get month
     tmp.erase();
     i = 0;
-    while (sit != end && i < 2 && isdigit(*sit))
-    {
+    while (sit != end && i < 2 && isdigit(*sit)) {
         tmp += *sit;
         ++sit;
         ++i;
@@ -131,8 +124,7 @@ void parseISODateTime(const char *data, long len, short &year, char &month,
     // get day
     tmp.erase();
     i = 0;
-    while (sit != end && i < 2 && isdigit(*sit))
-    {
+    while (sit != end && i < 2 && isdigit(*sit)) {
         tmp += *sit;
         ++sit;
         ++i;
@@ -151,8 +143,7 @@ void parseISODateTime(const char *data, long len, short &year, char &month,
     // get hour
     tmp.erase();
     i = 0;
-    while (sit != end && i < 2 && isdigit(*sit))
-    {
+    while (sit != end && i < 2 && isdigit(*sit)) {
         tmp += *sit;
         ++sit;
         ++i;
@@ -168,8 +159,7 @@ void parseISODateTime(const char *data, long len, short &year, char &month,
     // get min
     tmp.erase();
     i = 0;
-    while (sit != end && i < 2 && isdigit(*sit))
-    {
+    while (sit != end && i < 2 && isdigit(*sit)) {
         tmp += *sit;
         ++sit;
         ++i;
@@ -185,8 +175,7 @@ void parseISODateTime(const char *data, long len, short &year, char &month,
     // get sec
     tmp.erase();
     i = 0;
-    while (sit != end && i < 2 && isdigit(*sit))
-    {
+    while (sit != end && i < 2 && isdigit(*sit)) {
         tmp += *sit;
         ++sit;
         ++i;
@@ -197,8 +186,7 @@ void parseISODateTime(const char *data, long len, short &year, char &month,
     sec = atoi(tmp.c_str());
 
     // if sec fraction
-    if (sit != end && *sit == '.')
-    {
+    if (sit != end && *sit == '.') {
         ++sit; //skip delimiter
         while (sit != end && isdigit(*sit))
             ++sit; //sec fraction is ignored
@@ -211,25 +199,20 @@ void parseISODateTime(const char *data, long len, short &year, char &month,
     tzmin = 0;
 
     // timezone sign +/- or 'Z' for UTC
-    if (sit != end)
-    {
+    if (sit != end) {
         tzsign = *sit;
         ++sit;
     }
     // if timezone specified
-    if (tzsign == 'Z' || tzsign == 'z')
-    {
+    if (tzsign == 'Z' || tzsign == 'z') {
         // Z means zero meridian GMT+0
         tzhour = 0;
         tzmin = 0;
-    }
-    else if (tzsign == '+' || tzsign == '-')
-    {
+    } else if (tzsign == '+' || tzsign == '-') {
         // get TZ hour
         tmp.erase();
         i = 0;
-        while (sit != end && i < 2 && isdigit(*sit))
-        {
+        while (sit != end && i < 2 && isdigit(*sit)) {
             tmp += *sit;
             ++sit;
             ++i;
@@ -245,8 +228,7 @@ void parseISODateTime(const char *data, long len, short &year, char &month,
         // get TZ min
         tmp.erase();
         i = 0;
-        while (sit != end && i < 2 && isdigit(*sit))
-        {
+        while (sit != end && i < 2 && isdigit(*sit)) {
             tmp += *sit;
             ++sit;
             ++i;
@@ -273,40 +255,34 @@ void parseISODateTime(const char *data, long len, short &year, char &month,
 /**
 @brief method render fastrpc Value_t to string with level level
 @param value1  - fast rpc value
-@param outstr - out string 
+@param outstr - out string
 @param level - level of render
-@return always zero 
+@return always zero
 */
 int dumpFastrpcTree(const Value_t &value1,
-                    std::string &outstr, int level)
-{
+                    std::string &outstr, int level) {
 
-    std::ostrstream out;
+    std::ostringstream out;
     Value_t &value = const_cast<Value_t&>(value1);
 
-    switch(value.getType())
-    {
-    case Int_t::TYPE:
-        {
+    switch (value.getType()) {
+    case Int_t::TYPE: {
             out << Int(value).getValue();
 
         }
         break;
 
-    case Bool_t::TYPE:
-        {
+    case Bool_t::TYPE: {
             out << (Bool(value).getValue() ? "true" : "false");
         }
         break;
 
-    case Double_t::TYPE:
-        {
+    case Double_t::TYPE: {
             out << Double(value).getValue();
         }
         break;
 
-    case String_t::TYPE:
-        {
+    case String_t::TYPE: {
 
             out << '"';
             if (String(value).size() > MAX_LEN)
@@ -319,8 +295,7 @@ int dumpFastrpcTree(const Value_t &value1,
         }
         break;
 
-    case Binary_t::TYPE:
-        {
+    case Binary_t::TYPE: {
 
             out << "b\"";
             if (Binary(value).size() > MAX_LEN)
@@ -332,11 +307,10 @@ int dumpFastrpcTree(const Value_t &value1,
         }
         break;
 
-    case DateTime_t::TYPE:
-        {
+    case DateTime_t::TYPE: {
             DateTime_t &dt = DateTime(value);
             char buff[50];
-            if(dt.getTimeZone() > 0)
+            if (dt.getTimeZone() > 0)
                 sprintf(buff,"%04d%02d%02dT%02d:%02d:%02d+%02d%02d",dt.getYear(),
                         dt.getMonth(), dt.getDay(),
                         dt.getHour(), dt.getMin(), dt.getSec(),
@@ -353,16 +327,13 @@ int dumpFastrpcTree(const Value_t &value1,
         }
         break;
 
-    case Struct_t::TYPE:
-        {
+    case Struct_t::TYPE: {
             Struct_t &structVal = Struct(value);
             bool first = true;
             out << '{';
 
-            if (level)
-            {
-                for(Struct_t::iterator i = structVal.begin(); i != structVal.end(); ++i)
-                {
+            if (level) {
+                for (Struct_t::iterator i = structVal.begin(); i != structVal.end(); ++i) {
 
                     if (i->second && first != true)
                         out << ", ";
@@ -374,8 +345,7 @@ int dumpFastrpcTree(const Value_t &value1,
                     out << i->first << ": " << val_str;
 
                 }
-            }
-            else
+            } else
                 out << "...";
             out << '}';
 
@@ -383,27 +353,23 @@ int dumpFastrpcTree(const Value_t &value1,
         }
         break;
 
-    case Array_t::TYPE:
-        {
+    case Array_t::TYPE: {
             Array_t &array = Array(value);
             bool first = true;
             out << '(';
-            if (level)
-            {
+            if (level) {
 
-                for(Array_t::iterator i = array.begin(); i != array.end(); ++i)
-                {
+                for (Array_t::iterator i = array.begin(); i != array.end(); ++i) {
                     if (*i && first != true)
                         out << ", ";
                     else
                         first = false;
-                    
+
                     std::string str;
                     dumpFastrpcTree(**i, str, level - 1);
                     out << str;
                 }
-            }
-            else
+            } else
                 out << "...";
             out << ')';
 
@@ -418,15 +384,14 @@ int dumpFastrpcTree(const Value_t &value1,
     out << '\0';
     // vytvo�e vstupn�et�ec
     outstr = out.str();
-    out.freeze(false);
+    
     return 0;
 }
 
 
 //for debug
-void printSpaces(long spaces)
-{
-    for(long i= spaces ; i != 0; i--)
+void printSpaces(long spaces) {
+    for (long i= spaces ; i != 0; i--)
 
         printf(" ");
 }
@@ -434,52 +399,44 @@ void printSpaces(long spaces)
 
 /**
 @brief method print fastrpc value to stdout in human readable format
-@param value  fastrpc value 
+@param value  fastrpc value
 @param spaces from left border of screen (for recursive)
-use for debug 
+use for debug
 */
-void printValue(Value_t &value, long spaces )
-{
-    switch(value.getType())
-    {
-    case Int_t::TYPE:
-        {
-            printf("%ld\n",Int(value).getValue());
+void printValue(Value_t &value, long spaces ) {
+    switch (value.getType()) {
+    case Int_t::TYPE: {
+            printf("%lld\n",Int(value).getValue());
         }
         break;
 
-    case Bool_t::TYPE:
-        {
+    case Bool_t::TYPE: {
             printf("%s\n",(Bool(value).getValue())? "TRUE":"FALSE");
         }
         break;
 
-    case Double_t::TYPE:
-        {
+    case Double_t::TYPE: {
             printf("%f\n",Double(value).getValue());
         }
         break;
 
-    case String_t::TYPE:
-        {
+    case String_t::TYPE: {
 
             printf("%s\n",String(value).c_str());
 
         }
         break;
 
-    case Binary_t::TYPE:
-        {
+    case Binary_t::TYPE: {
 
             printf("binary %d bytes\n",Binary(value).size());
 
         }
         break;
 
-    case DateTime_t::TYPE:
-        {
+    case DateTime_t::TYPE: {
             DateTime_t &dt = DateTime(value);
-            if(dt.getTimeZone() > 0)
+            if (dt.getTimeZone() > 0)
                 printf("%04d%02d%02dT%02d:%02d:%02d+%02d%02d\n",dt.getYear(),
                        dt.getMonth(), dt.getDay(),
                        dt.getHour(), dt.getMin(), dt.getSec(),
@@ -495,15 +452,13 @@ void printValue(Value_t &value, long spaces )
         }
         break;
 
-    case Struct_t::TYPE:
-        {
+    case Struct_t::TYPE: {
             Struct_t &structVal = Struct(value);
 
 
             printf("{\n");
             spaces ++;
-            for(Struct_t::iterator i = structVal.begin(); i != structVal.end(); ++i)
-            {
+            for (Struct_t::iterator i = structVal.begin(); i != structVal.end(); ++i) {
                 //printf(" ");
 
                 printSpaces(spaces);
@@ -518,13 +473,11 @@ void printValue(Value_t &value, long spaces )
         }
         break;
 
-    case Array_t::TYPE:
-        {
+    case Array_t::TYPE: {
             Array_t &array = Array(value);
             printf("(\n");
             spaces ++;
-            for(Array_t::iterator i = array.begin(); i != array.end(); ++i)
-            {
+            for (Array_t::iterator i = array.begin(); i != array.end(); ++i) {
                 printSpaces(spaces);
                 printValue(**(i),spaces);
             }
@@ -538,5 +491,14 @@ void printValue(Value_t &value, long spaces )
 
     }
 }
+ProtocolVersion_t::ProtocolVersion_t(unsigned char versionMajor, 
+                                     unsigned char versionMinor)
+    :versionMajor(versionMajor),versionMinor(versionMinor) {}
 
+ProtocolVersion_t::ProtocolVersion_t()
+    :versionMajor(FRPC_MAJOR_VERSION),versionMinor(FRPC_MINOR_VERSION) {}
+ProtocolVersion_t ProtocolVersion_t::operator=(const ProtocolVersion_t& other ) {
+    this->versionMajor = other.versionMajor;
+    this->versionMinor = other.versionMinor;
+}
 } // namespace FRPC

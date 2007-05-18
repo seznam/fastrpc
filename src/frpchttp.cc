@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
-* FILE             $Id: frpchttp.cc,v 1.3 2007-04-02 15:28:21 vasek Exp $
+* FILE             $Id: frpchttp.cc,v 1.4 2007-05-18 15:29:45 mirecta Exp $
 *
 * DESCRIPTION      HTTP Base types
 *
@@ -40,7 +40,7 @@
 
 #include <algorithm>
 #include <sstream>
-#include <strstream>
+
 
 #include "frpcsocket.h"
 #include <frpchttp.h>
@@ -254,7 +254,7 @@ void URL_t::parse(const std::string &url) {
         host = url.substr(HTTP_SCHEMA.length(), colon_pos - HTTP_SCHEMA.length());
         ++colon_pos;
         // port pøevedeme na èíslo
-        std::istrstream(url.substr(colon_pos, slash_pos - colon_pos).c_str()) >> port;
+        std::istringstream(url.substr(colon_pos, slash_pos - colon_pos).c_str()) >> port;
     }
     else
     {

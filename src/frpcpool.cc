@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcpool.cc,v 1.3 2007-04-02 15:28:20 vasek Exp $
+ * FILE          $Id: frpcpool.cc,v 1.4 2007-05-18 15:29:45 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -72,7 +72,7 @@ void Pool_t::free()
 
 }
 
-Int_t&  Pool_t::Int(long value)
+Int_t&  Pool_t::Int(Int_t::value_type value)
 {
     Int_t* newValue =  new Int_t(*this, value);
 

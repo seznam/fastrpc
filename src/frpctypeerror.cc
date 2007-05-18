@@ -20,26 +20,24 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpctypeerror.cc,v 1.2 2007-04-02 15:28:20 vasek Exp $
+ * FILE          $Id: frpctypeerror.cc,v 1.3 2007-05-18 15:29:46 mirecta Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #include "frpctypeerror.h"
 
-namespace FRPC
-{
+namespace FRPC {
 
 
 
 
-TypeError_t::~TypeError_t()
-{}
+TypeError_t::~TypeError_t() throw () {}
 
 
 }

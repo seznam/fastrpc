@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpctreebuilder.cc,v 1.3 2007-04-02 15:28:20 vasek Exp $
+ * FILE          $Id: frpctreebuilder.cc,v 1.4 2007-05-18 15:29:46 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -44,7 +44,7 @@ TreeBuilder_t::~TreeBuilder_t()
 }
 
 
-void TreeBuilder_t::buildBinary(const char* data, long size)
+void TreeBuilder_t::buildBinary(const char* data, unsigned int size)
 {
     Value_t &binary = pool.Binary(const_cast<char*>(data),size);
     if(!isMember(binary))
@@ -84,7 +84,7 @@ void TreeBuilder_t::buildDouble(double value)
         isFirst(doubleVal);
 }
 
-void TreeBuilder_t::buildFault(long errNumber, const char* errMsg, long size)
+void TreeBuilder_t::buildFault(int errNumber, const char* errMsg, unsigned int size)
 {
     this->errNum = errNumber;
     this->errMsg.erase();
@@ -94,7 +94,7 @@ void TreeBuilder_t::buildFault(long errNumber, const char* errMsg, long size)
 
 }
 
-void TreeBuilder_t::buildFault(long errNumber, const std::string& errMsg)
+void TreeBuilder_t::buildFault(int errNumber, const std::string& errMsg)
 {
     this->errNum = errNumber;
     this->errMsg = errMsg;
@@ -103,7 +103,7 @@ void TreeBuilder_t::buildFault(long errNumber, const std::string& errMsg)
 
 }
 
-void TreeBuilder_t::buildInt(long value)
+void TreeBuilder_t::buildInt(Int_t::value_type value)
 {
     Value_t &integer = pool.Int(value);
 
@@ -112,7 +112,7 @@ void TreeBuilder_t::buildInt(long value)
 
 }
 
-void TreeBuilder_t::buildMethodCall(const char* methodName, long size)
+void TreeBuilder_t::buildMethodCall(const char* methodName, unsigned int size)
 {
     this->methodName.erase();
     this->methodName.append(methodName, size);
@@ -141,7 +141,7 @@ void TreeBuilder_t::buildMethodCall(const std::string& methodName)
 void TreeBuilder_t::buildMethodResponse()
 {}
 
-void TreeBuilder_t::buildString(const char* data, long size)
+void TreeBuilder_t::buildString(const char* data, unsigned int size)
 {
     Value_t &stringVal = pool.String(const_cast<char*>(data), size);
 
@@ -158,7 +158,7 @@ void TreeBuilder_t::buildString(const std::string& data)
         isFirst(stringVal);
 }
 
-void TreeBuilder_t::buildStructMember(const char* memberName, long size)
+void TreeBuilder_t::buildStructMember(const char* memberName, unsigned int size)
 {
     this->memberName.erase();
     this->memberName.append(memberName,size);
@@ -180,7 +180,7 @@ void TreeBuilder_t::closeStruct()
     entityStorage.pop_back();
 }
 
-void TreeBuilder_t::openArray(long numOfItems)
+void TreeBuilder_t::openArray(unsigned int numOfItems)
 {
     Value_t &array = pool.Array();
 
@@ -191,7 +191,7 @@ void TreeBuilder_t::openArray(long numOfItems)
 
 }
 
-void TreeBuilder_t::openStruct(long numOfMembers)
+void TreeBuilder_t::openStruct(unsigned int numOfMembers)
 {
     Value_t &structVal = pool.Struct();
     

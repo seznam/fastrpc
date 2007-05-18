@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcmarshaller.h,v 1.2 2007-04-02 15:28:20 vasek Exp $
+ * FILE          $Id: frpcmarshaller.h,v 1.3 2007-05-18 15:29:45 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -34,6 +34,7 @@
 #define FRPCFRPCMARSHALLER_H
 
 #include <frpcplatform.h>
+#include <frpcint.h>
 
 #include <string>
 
@@ -46,11 +47,11 @@ namespace FRPC
 */
 
 class Writer_t;
+struct  ProtocolVersion_t;
 class FRPC_DLLEXPORT Marshaller_t
 {
 public:
     enum{BINARY_RPC,XML_RPC};
-    
     /**
         @brief Default constructor
     */
@@ -62,12 +63,13 @@ public:
     /**
         @brief Marshall a sturct  member
         @param memberName pointer to struct's member name must ending with special character "\0"
-        @param size size of member name. If size is -1 method obtain size with using strlen()
+        @param size size of member name. Second variant of method obtain size with using strlen()
         
         If marshaller is create as binary  using method Binary(FastRPC)
         or if created as XML using method XML(Xml-RPC)
     */  
-    virtual void packStructMember(const char* memberName, long size = -1) = 0;
+    virtual void packStructMember(const char* memberName, unsigned int size ) = 0;
+    void packStructMember(const char* memberName);
     /**
         @brief Marshall an arrray type
         @param numOfItems  - is count of items in array type
@@ -75,7 +77,7 @@ public:
         If marshaller is create as binary  using method Binary(FastRPC)
         or if created as XML using method XML(Xml-RPC)
     */ 
-    virtual void packArray(long numOfItems) = 0;
+    virtual void packArray(unsigned int numOfItems) = 0;
     /**
         @brief Marshall a binary  type
         @param value pointer to binary data
@@ -84,7 +86,7 @@ public:
         If marshaller is create as binary  using method Binary(FastRPC)
         or if created as XML using method XML(Xml-RPC)
     */   
-    virtual void packBinary(const char* value, long size) = 0;
+    virtual void packBinary(const char* value, unsigned int size) = 0;
     /**
         @brief Marshall an bool type
         @param value  - is a boolean value which be marshalled
@@ -127,16 +129,17 @@ public:
         If marshaller is create as binary  using method Binary(FastRPC)
         or if created as XML using method XML(Xml-RPC)  
     */
-    virtual void packInt(long value) = 0;
+    virtual void packInt(Int_t::value_type value) = 0;
     /**
         @brief Marshall a string  type
         @param value pointer to string data must ending with special character "\0"
-        @param size size of string data. If size is -1 method obtain size with using strlen()
-        
+        @param size size of string data. Second variant of method obtain size with using strlen()
+    :major(FRPC_MAJOR_VERSION),minor(FRPC_MINOR_VERSION){}
         If marshaller is create as binary  using method Binary(FastRPC)
         or if created as XML using method XML(Xml-RPC)
     */
-    virtual void packString(const char* value, long size = -1) = 0;
+    virtual void packString(const char* value, unsigned  int size) = 0;
+    void packString(const char* value);
     /**
         @brief Marshall an struct type
         @param numOfMembers  - is count of members in struct type
@@ -144,26 +147,28 @@ public:
         If marshaller is create as binary  using method Binary(FastRPC)
         or if created as XML using method XML(Xml-RPC)
     */
-    virtual void packStruct(long numOfMembers) = 0;
+    virtual void packStruct(unsigned int numOfMembers) = 0;
     /**
         @brief Marshall a fault message 
         @param errNumber is error number 
         @param errMsg pointer to message must ending with special character "\0"
-        @param size size of message. If size is -1 method obtain size with using strlen()
+        @param size size of message. Second variant of method obtain size with using strlen()
         
         If marshaller is create as binary  using method Binary(FastRPC)
         or if created as XML using method XML(Xml-RPC)
     */
-    virtual void packFault(long errNumber, const char* errMsg, long size = -1) = 0;
+    virtual void packFault(int errNumber, const char* errMsg, unsigned int size) = 0;
+    void packFault(int errNumber, const char* errMsg);
     /**
         @brief Marshall a method call
         @param methodName pointer to method name must ending with special character "\0"
-        @param size size of message. If size is -1 method obtain size with using strlen()
+        @param size size of message. Second variant of method obtain size with using strlen()
         
         If marshaller is create as binary  using method Binary(FastRPC)
         or if created as XML using method XML(Xml-RPC)
     */
-    virtual void packMethodCall(const char* methodName, long size = -1) = 0;
+    virtual void packMethodCall(const char* methodName, unsigned int size) = 0;
+    void packMethodCall(const char* methodName);
    /**
         @brief Marshall a method response
 
@@ -187,7 +192,8 @@ public:
         @return reference to new marshaller
     
     */  
-    static Marshaller_t* create(long contentType, Writer_t& writer);
+    static Marshaller_t* create(unsigned int contentType, Writer_t& writer,
+                                const ProtocolVersion_t &protocolVersion);
     
 
 

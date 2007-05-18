@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpc.h,v 1.6 2007-05-15 09:48:11 vasek Exp $
+ * FILE          $Id: frpc.h,v 1.7 2007-05-18 15:29:45 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -74,6 +74,17 @@ int FRPC_DLLEXPORT dumpFastrpcTree(const Value_t &value,
                     std::string &outstr, int level);
 
 void printValue(Value_t &value, long spaces = 0);
+
+struct ProtocolVersion_t{
+    ProtocolVersion_t(unsigned char versionMajor, unsigned char versionMinor);
+    
+    ProtocolVersion_t();
+    
+    ProtocolVersion_t operator=(const ProtocolVersion_t& other );
+    
+    unsigned char versionMajor;
+    unsigned char versionMinor;
+};
 
 } // namespace FRPC
 

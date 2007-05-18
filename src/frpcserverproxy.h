@@ -20,15 +20,15 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcserverproxy.h,v 1.8 2007-04-02 15:28:20 vasek Exp $
+ * FILE          $Id: frpcserverproxy.h,v 1.9 2007-05-18 15:29:46 mirecta Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #ifndef FRPCFRPCSERVERPROXY_H
 #define FRPCFRPCSERVERPROXY_H
@@ -43,19 +43,17 @@
 #include <frpchttpclient.h>
 #include <frpcmarshaller.h>
 
-namespace FRPC
-{
+namespace FRPC {
 
 /**
 @brief ServerProxy Object
- 
- 
-Server proxy is FastRpc client which call method on remote server 
+
+
+Server proxy is FastRpc client which call method on remote server
 @author Miroslav Talasek
 */
 
-class FRPC_DLLEXPORT ServerProxy_t
-{
+class FRPC_DLLEXPORT ServerProxy_t {
 public:
     /**
         @brief ServerProxy_t configuartion class 
@@ -63,10 +61,9 @@ public:
         Is used to setting parameters as connectTimeout, readTimeout,...
         @author Miroslav Talasek
     */
-    class Config_t
-    {
+    class Config_t {
     public:
-        enum{ON_SUPPORT_ON_KEEP_ALIVE = 0, ON_SUPPORT, ALWAYS};
+        enum{ON_SUPPORT_ON_KEEP_ALIVE = 0, ON_SUPPORT, ALWAYS,NEVER};
         /**
             @brief Constructor of config class
             @param connectTimeout - it is connection timeout in miliseconds
@@ -85,8 +82,7 @@ public:
         Config_t(long connectTimeout, long readTimeout, long writeTimeout,
                  bool keepAlive, long useBinary, bool useHTTP10 = false):
                 connectTimeout(connectTimeout),readTimeout(readTimeout),writeTimeout(writeTimeout),
-                keepAlive(keepAlive), useBinary(useBinary), useHTTP10(useHTTP10)
-        {}
+                keepAlive(keepAlive), useBinary(useBinary), useHTTP10(useHTTP10) {}
         /**
             @brief Default constructor 
             
@@ -98,8 +94,7 @@ public:
         Config_t()
                 : connectTimeout(10000), readTimeout(10000), writeTimeout(1000),
                 keepAlive(false), useBinary(ON_SUPPORT_ON_KEEP_ALIVE),
-                useHTTP10(false)
-        {}
+                useHTTP10(false) {}
         ///@brief internal representation of connectTimeout value
         long connectTimeout;
         ///@brief internal representation of readTimeout value
@@ -195,7 +190,7 @@ public:
        @return return value from remote method Value_t
        @param param1 is Value_t parameter nr.1 for the remote method
        @param param2 is Value_t parameter nr.2 for the remote method
-       @param param3 is Value_t parameter nr.3 for the remote method       
+       @param param3 is Value_t parameter nr.3 for the remote method    
        @n @b Example:   box is ServerProxy_t object and calling methot (getStatus) with three 
        parameters on remote server likes:
            @n
@@ -294,7 +289,7 @@ public:
        @return return value from remote method Value_t
        
        Using similar as other 
-         
+        
     */
     Value_t& operator() (Pool_t &pool, const std::string &methodName, const Value_t &param1,
                          const Value_t &param2,
@@ -317,7 +312,7 @@ public:
        @return return value from remote method Value_t
        
        Using similar as other 
-         
+        
     */
     Value_t& operator() (Pool_t &pool, const std::string &methodName, const Value_t &param1,
                          const Value_t &param2,
@@ -341,7 +336,7 @@ public:
        @return return value from remote method Value_t
        
        Using similar as other 
-         
+        
     */
     Value_t& operator() (Pool_t &pool, const std::string &methodName, const Value_t &param1,
                          const Value_t &param2,
@@ -367,7 +362,7 @@ public:
        @return return value from remote method Value_t
        
        Using similar as other 
-         
+        
     */
     Value_t& operator() (Pool_t &pool, const std::string &methodName, const Value_t &param1,
                          const Value_t &param2,
@@ -393,78 +388,76 @@ public:
     /**
      *    @brief set new read timeout
     */
-    inline void setReadTimeout(int timeout)
-    {
+    inline void setReadTimeout(int timeout) {
         io.setReadTimeout(timeout);
     }
     /**
     *    @brief set new write timeout
     */
-    inline void setWriteTimeout(int timeout)
-    {
+    inline void setWriteTimeout(int timeout) {
         io.setWriteTimeout(timeout);
     }
     /**
      *    @brief set new connect timeout
      */
-    inline void setConnectTimeout(int timeout)
-    {
+    inline void setConnectTimeout(int timeout) {
         connectTimeout = timeout;
     }
 
     const URL_t& getURL();
 
 private:
-    inline Marshaller_t* createMarshaller(HTTPClient_t &client)
-    {
+    inline Marshaller_t* createMarshaller(HTTPClient_t &client) {
         Marshaller_t *marshaller;
-
-        switch(rpcTransferMode)
-        {
-        case Config_t::ON_SUPPORT:
-            {
-                if(serverSupportedProtocols & HTTPClient_t::BINARY_RPC)
-                {
+        ProtocolVersion_t protocolVersion;
+        switch (rpcTransferMode) {
+        case Config_t::ON_SUPPORT: {
+                if (serverSupportedProtocols & HTTPClient_t::BINARY_RPC) {
                     //using BINARY_RPC
-                    marshaller= Marshaller_t::create(Marshaller_t::BINARY_RPC,client);
+                    marshaller= Marshaller_t::create(Marshaller_t::BINARY_RPC,
+                                                     client,protocolVersion);
                     client.prepare(HTTPClient_t::BINARY_RPC);
-                }
-                else
-                {
+                } else {
                     //using XML_RPC
-                    marshaller= Marshaller_t::create(Marshaller_t::XML_RPC,client);
+                    marshaller= Marshaller_t::create(Marshaller_t::XML_RPC,client,
+                                                     protocolVersion);
                     client.prepare(HTTPClient_t::XML_RPC);
                 }
             }
             break;
-
-        case Config_t::ALWAYS:
-            {
+        case Config_t::NEVER: {
                 //using BINARY_RPC  always
-                marshaller= Marshaller_t::create(Marshaller_t::BINARY_RPC,client);
+                marshaller= Marshaller_t::create(Marshaller_t::XML_RPC,
+                                                 client,protocolVersion);
+                client.prepare(HTTPClient_t::BINARY_RPC);
+            }
+            break;
+        case Config_t::ALWAYS: {
+                //using BINARY_RPC  always
+                marshaller= Marshaller_t::create(Marshaller_t::BINARY_RPC,
+                                                 client,protocolVersion);
                 client.prepare(HTTPClient_t::BINARY_RPC);
             }
             break;
         case Config_t::ON_SUPPORT_ON_KEEP_ALIVE:
-        default:
-            {
-                if(serverSupportedProtocols & HTTPClient_t::XML_RPC || keepAlive == false
-                        || io.socket() != -1)
-                {
-                    //using XML_RPC
-                    marshaller= Marshaller_t::create(Marshaller_t::XML_RPC,client);
-                    client.prepare(HTTPClient_t::XML_RPC);
-                }
-                else
-                {
-                    //using BINARY_RPC
-                    marshaller= Marshaller_t::create(Marshaller_t::BINARY_RPC,client);
-                    client.prepare(HTTPClient_t::BINARY_RPC);
-                }
-
-
+        default: {
+            if ((serverSupportedProtocols & HTTPClient_t::XML_RPC) 
+                    || keepAlive == false
+                    || io.socket() != -1) {
+                //using XML_RPC
+                marshaller= Marshaller_t::create(Marshaller_t::XML_RPC,client,
+                                                 protocolVersion);
+                client.prepare(HTTPClient_t::XML_RPC);
+            } else {
+                //using BINARY_RPC
+                marshaller= Marshaller_t::create(Marshaller_t::BINARY_RPC,
+                                                 client,protocolVersion);
+                client.prepare(HTTPClient_t::BINARY_RPC);
             }
-            break;
+
+
+        }
+        break;
         }
         return marshaller;
     }

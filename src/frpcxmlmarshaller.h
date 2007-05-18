@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcxmlmarshaller.h,v 1.2 2007-04-02 15:28:20 vasek Exp $
+ * FILE          $Id: frpcxmlmarshaller.h,v 1.3 2007-05-18 15:29:46 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -37,6 +37,7 @@
 #include <vector>
 #include <frpcwriter.h>
 #include <frpcinternals.h>
+#include <frpcint.h>
 //#define XML_HUMAN_FORMAT
 namespace FRPC
 {
@@ -50,34 +51,33 @@ namespace FRPC
 class XmlMarshaller_t : public Marshaller_t
 {
 public:
-    XmlMarshaller_t(Writer_t &writer):writer(writer),level(0)
-    {}
+    XmlMarshaller_t(Writer_t &writer);
 
     virtual ~XmlMarshaller_t();
 
-    virtual void packArray(long numOfItems);
-    virtual void packBinary(const char* value, long size);
+    virtual void packArray(unsigned int numOfItems);
+    virtual void packBinary(const char* value, unsigned int size);
     virtual void packBool(bool value);
     virtual void packDateTime(short year, char month, char day, char hour, char min, char sec, char weekDay, time_t unixTime, char timeZone);
     virtual void packDouble(double value);
-    virtual void packFault(long errNumber, const char* errMsg, long size);
-    virtual void packInt(long value);
-    virtual void packMethodCall(const char* methodName, long size);
+    virtual void packFault(int errNumber, const char* errMsg, unsigned int size);
+    virtual void packInt(Int_t::value_type value);
+    virtual void packMethodCall(const char* methodName, unsigned int size);
     virtual void packMethodResponse();
-    virtual void packString(const char* value, long size);
-    virtual void packStruct(long numOfMembers);
-    virtual void packStructMember(const char* memberName, long size);
+    virtual void packString(const char* value, unsigned int size);
+    virtual void packStruct(unsigned int numOfMembers);
+    virtual void packStructMember(const char* memberName, unsigned int size);
     virtual void flush();
     
 private:
     XmlMarshaller_t();
-    void writeEncodeBase64(const char *data, long len);
+    void writeEncodeBase64(const char *data, unsigned int len);
     void packMagic();
-    void writeQuotedString(const char *data, long len);
-    inline void packSpaces(long numSpaces)
+    void writeQuotedString(const char *data, unsigned int len);
+    inline void packSpaces(unsigned int numSpaces)
     {
 #ifdef XML_HUMAN_FORMAT
-        for(int i=0; i< numSpaces; i++)
+        for(unsigned int i=0; i< numSpaces; i++)
             writer.write(" ",1);
 #endif
     }
@@ -135,9 +135,8 @@ private:
     }
     std::vector<TypeStorage_t> entityStorage;
     Writer_t  &writer;
-    long level;
+    unsigned int level;
     char mainType;
-
 
 };
 

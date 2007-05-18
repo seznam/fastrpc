@@ -20,15 +20,15 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcerror.h,v 1.3 2007-04-02 15:28:21 vasek Exp $
+ * FILE          $Id: frpcerror.h,v 1.4 2007-05-18 15:29:45 mirecta Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #ifndef FRPCFRPCERROR_H
 #define FRPCFRPCERROR_H
@@ -40,15 +40,13 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-namespace FRPC
-{
+namespace FRPC {
 
 /**
 @brief API Error
 @author Miroslav Talasek
 */
-class FRPC_DLLEXPORT Error_t
-{
+class FRPC_DLLEXPORT Error_t:public std::exception {
 public:
 
     /**
@@ -56,8 +54,7 @@ public:
         @param format is const char* format string 
         @param ... is other arguments
     */
-    Error_t(const char *format, ...)
-    {
+    Error_t(const char *format, ...) {
 
         // open variadic arguments
         va_list valist;
@@ -78,25 +75,26 @@ public:
         @brief Getting error message
         @return std::string is error message
     */
-   const std::string message()
-    {
-        return msg;
+    virtual const char * what () const throw() {
+        return msg.c_str();
     }
     
-    const std::string message()  const
-    {
+    const std::string message() {
+        return msg;
+    }
+
+    const std::string message()  const {
         return msg;
     }
     /**
         @brief Default destructor
     */
-    ~Error_t();
+    ~Error_t() throw();
 protected:
     /**
         @brief Default constructor
     */
-    Error_t()
-    {}
+    Error_t() {}
     std::string msg;
 };
 

@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcint.h,v 1.4 2007-04-02 15:28:20 vasek Exp $
+ * FILE          $Id: frpcint.h,v 1.5 2007-05-18 15:29:45 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -34,9 +34,11 @@
 #define FRPCINT_H
 
 #include <frpcvalue.h>
-#include "frpcpool.h"
+#include <stdint.h>
 
-#include "frpctypeerror.h"
+
+
+#include <frpctypeerror.h>
 namespace FRPC
 {
 class Pool_t;
@@ -48,7 +50,9 @@ class FRPC_DLLEXPORT Int_t : public Value_t
 {
     friend class Pool_t;
 public:
-
+    
+    typedef int64_t value_type;
+    
     /**
     @brief Destructor
     */
@@ -79,7 +83,7 @@ public:
     @brief Getting internal integer value
     @return   @b long - internal value 
     */
-    long getValue() const
+    value_type getValue() const
     {
         return value;
     }
@@ -87,7 +91,7 @@ public:
     /**
     @brief Operator long
     */
-    operator long () const
+    operator value_type () const
     {
         return value;
     }
@@ -114,7 +118,7 @@ private:
     {}
 
 
-    long value; /**  Internal long value */
+    value_type value; /**  Internal long value */
 
 };
 /**

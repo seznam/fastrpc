@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcunmarshaller.cc,v 1.2 2007-04-02 15:28:20 vasek Exp $
+ * FILE          $Id: frpcunmarshaller.cc,v 1.3 2007-05-18 15:29:46 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -47,7 +47,7 @@ UnMarshaller_t::~UnMarshaller_t()
 {}
 
 
-UnMarshaller_t* UnMarshaller_t::create(long contentType,
+UnMarshaller_t* UnMarshaller_t::create(unsigned int contentType,
                                        DataBuilder_t& dataBuilder)
 {
     UnMarshaller_t *unMarshaller;
@@ -70,11 +70,11 @@ UnMarshaller_t* UnMarshaller_t::create(long contentType,
     return unMarshaller;
 }
 
-UnMarshaller_t* UnMarshaller_t::create(const char* data, long size,
+UnMarshaller_t* UnMarshaller_t::create(const char* data, unsigned int size,
                                        DataBuilder_t& dataBuilder)
 {
     UnMarshaller_t *unMarshaller;
-    char magic[]={0xCA, 0x11, FRPC_MAJOR_VERSION, FRPC_MINOR_VERSION};
+    char magic[]={0xCA, 0x11};
     
     if(size < 4)
     {
@@ -82,7 +82,7 @@ UnMarshaller_t* UnMarshaller_t::create(const char* data, long size,
         unMarshaller->unMarshall(data, size, TYPE_ANY);
     }
         
-    if(memcmp(data, magic, 4) != 0)
+    if(memcmp(data, magic, 2) != 0)
     {
         unMarshaller = new XmlUnMarshaller_t(dataBuilder);
         unMarshaller->unMarshall(data, size, TYPE_ANY);

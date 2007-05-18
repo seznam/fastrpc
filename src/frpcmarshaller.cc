@@ -20,52 +20,67 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcmarshaller.cc,v 1.2 2007-04-02 15:28:20 vasek Exp $
+ * FILE          $Id: frpcmarshaller.cc,v 1.3 2007-05-18 15:29:45 mirecta Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #include "frpcmarshaller.h"
 #include <frpcwriter.h>
 #include <frpcbinmarshaller.h>
 #include <frpcxmlmarshaller.h>
 #include <frpcerror.h>
+#include <string.h>
 
-namespace FRPC
-{
+namespace FRPC {
 
-Marshaller_t::Marshaller_t()
-{}
+Marshaller_t::Marshaller_t() {}
 
 
-Marshaller_t::~Marshaller_t()
-{}
+Marshaller_t::~Marshaller_t() {}
 
- Marshaller_t* Marshaller_t::create(long contentType, Writer_t& writer)
- {
+Marshaller_t* Marshaller_t::create(unsigned int contentType, Writer_t& writer,
+                                  const ProtocolVersion_t &protocolVersion) {
     Marshaller_t *marshaller;
-    
-        switch(contentType)
-        {
-         case BINARY_RPC:
-            marshaller = new BinMarshaller_t(writer);
-            break;
-         
-         case XML_RPC:
-            marshaller = new XmlMarshaller_t(writer);
-            break;
-         
-         default:
-            throw Error_t("This marshaller not exists");
-            break;
-        }
- 
-        return marshaller;
- }
 
+    switch (contentType) {
+    case BINARY_RPC:
+        marshaller = new BinMarshaller_t(writer,protocolVersion);
+        break;
+
+    case XML_RPC:
+        marshaller = new XmlMarshaller_t(writer);
+        break;
+
+    default:
+        throw Error_t("This marshaller not exists");
+        break;
+    }
+
+    return marshaller;
+}
+
+void Marshaller_t::packStructMember(const char* memberName) {
+    unsigned int size = strlen(memberName);
+    packStructMember(memberName, size);
+}
+
+void  Marshaller_t::packString(const char* value){
+    unsigned int size = strlen(value);
+    packString(value,size);
+
+}
+void Marshaller_t::packFault(int errNumber, const char* errMsg){
+    unsigned int size = strlen(errMsg);
+    packFault(errNumber,errMsg,size);
+}
+void Marshaller_t::packMethodCall(const char* methodName){
+    unsigned int size = strlen(methodName);
+    packMethodCall(methodName,size);
+}
 }

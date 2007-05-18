@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcmethodregistry.h,v 1.4 2007-04-02 15:28:20 vasek Exp $
+ * FILE          $Id: frpcmethodregistry.h,v 1.5 2007-05-18 15:29:45 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -91,7 +91,7 @@ public:
     public:
         Reader_t()
         {}
-        virtual long read(char *data, long size) = 0;
+        virtual unsigned int read(char *data, unsigned int size) = 0;
         virtual ~Reader_t()
         {}
     }
@@ -99,7 +99,7 @@ public:
 
     struct TimeDiff_t
     {
-        TimeDiff_t(long second, long usecond):second(second),usecond(usecond)
+        TimeDiff_t(unsigned int second, unsigned int usecond):second(second),usecond(usecond)
         {}
         TimeDiff_t();
         TimeDiff_t diff();
@@ -189,16 +189,18 @@ public:
     /**
     @brief call method  
     */
-    long processCall(const std::string &clientIP, Reader_t &reader, long typeIn,
-                     Writer_t &writer, long typeOut);
+    long processCall(const std::string &clientIP, Reader_t &reader, unsigned int typeIn,
+                     Writer_t &writer, unsigned int typeOut);
 
     long processCall(const std::string &clientIP, const std::string &methodName,
-                     Array_t &params, Writer_t &writer, long typeOut);
+                     Array_t &params, Writer_t &writer, unsigned int typeOut,
+                     const ProtocolVersion_t &protocolVersion);
 
     Value_t& processCall(const std::string &clientIP, const std::string &methodName,
                          Array_t &params, Pool_t &pool);
 
-    Value_t& processCall(const std::string &clientIP, Reader_t &reader, long typeIn,Pool_t &pool);
+    Value_t& processCall(const std::string &clientIP, Reader_t &reader, 
+                         unsigned int typeIn,Pool_t &pool);
 
     /**
     @brief register  default method which be call when method not found
