@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcwriter.h,v 1.2 2007-04-02 15:28:20 vasek Exp $
+ * FILE          $Id: frpcwriter.h,v 1.3 2007-05-21 15:10:13 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -48,7 +48,7 @@ public:
     Writer_t();
 
     virtual ~Writer_t();
-    virtual void write(const char *data, long size ) = 0;
+    virtual void write(const char *data, unsigned int size ) = 0;
     virtual void flush() = 0;
 
     

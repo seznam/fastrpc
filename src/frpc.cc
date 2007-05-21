@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpc.cc,v 1.6 2007-05-18 15:29:45 mirecta Exp $
+ * FILE          $Id: frpc.cc,v 1.7 2007-05-21 15:10:12 mirecta Exp $
  *
  * DESCRIPTION
  *
@@ -497,8 +497,9 @@ ProtocolVersion_t::ProtocolVersion_t(unsigned char versionMajor,
 
 ProtocolVersion_t::ProtocolVersion_t()
     :versionMajor(FRPC_MAJOR_VERSION),versionMinor(FRPC_MINOR_VERSION) {}
-ProtocolVersion_t ProtocolVersion_t::operator=(const ProtocolVersion_t& other ) {
+/*ProtocolVersion_t& ProtocolVersion_t::operator=(const ProtocolVersion_t& other ) {
     this->versionMajor = other.versionMajor;
     this->versionMinor = other.versionMinor;
-}
+    return *this;
+}*/
 } // namespace FRPC

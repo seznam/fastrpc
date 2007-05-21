@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcinternals.h,v 1.5 2007-05-18 15:29:45 mirecta Exp $
+ * FILE          $Id: frpcinternals.h,v 1.6 2007-05-21 15:10:12 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -59,6 +59,13 @@ const Int_t::value_type INT40_MASK = ALLONES << 40;
 const Int_t::value_type INT48_MASK = ALLONES << 48;
 const Int_t::value_type INT56_MASK = ALLONES << 56;
 
+const int32_t OLD_ZERO = 0;
+const int32_t OLD_ALLONES = ~ZERO;
+const int32_t OLD_INT8_MASK = OLD_ALLONES << 8;
+const int32_t OLD_INT16_MASK = OLD_ALLONES << 16;
+const int32_t OLD_INT24_MASK = OLD_ALLONES << 24;
+const int32_t OLD_INT32_MASK = OLD_ZERO;
+
 union Number_t
 {
     Number_t(Int_t::value_type number):number(number)
@@ -90,7 +97,7 @@ union Number32_t
         FRPC_LITTLE_ENDIAN(data);
     }
     char data[4];
-    long number;
+    int32_t number;
 };
 
 
@@ -149,7 +156,7 @@ struct DateTimeInternal_t
      minute(0),hour(0),day(0),month(0),year(0)
     {}
     unsigned char timeZone;
-    unsigned long unixTime;
+    time_t unixTime;
     unsigned char weekDay;
     unsigned char sec;
     unsigned char minute;
@@ -196,7 +203,7 @@ struct DateTimeData_t
     }
 };
 
-const long BUFFER_SIZE = 1 << 16;
+const unsigned int  BUFFER_SIZE = 1 << 16;
 const size_t MAX_LEN = 20;
 
 }

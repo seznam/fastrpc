@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcbinmarshaller.cc,v 1.4 2007-05-18 15:29:45 mirecta Exp $
+ * FILE          $Id: frpcbinmarshaller.cc,v 1.5 2007-05-21 15:10:12 mirecta Exp $
  *
  * DESCRIPTION
  *
@@ -162,12 +162,13 @@ void BinMarshaller_t::packFault(int errNumber, const char* errMsg, unsigned int 
 }
 
 void BinMarshaller_t::packInt(Int_t::value_type value) {
-    //obtain int size for compress
-    unsigned int numSize = getNumberSize(value);
+    
 
     if (protocolVersion.versionMajor > 1) {
 
         if (value < 0) { // negative int8
+            //obtain int size for compress
+            unsigned int numSize = getNumberSize(-value);
             char type = FRPC_DATA_TYPE(INTN8,numSize);
             Number_t  number(-value);
             //write type
@@ -175,6 +176,7 @@ void BinMarshaller_t::packInt(Int_t::value_type value) {
             writer.write(number.data,numSize);
 
         } else { //positive int8
+            unsigned int numSize = getNumberSize(value);
             char type = FRPC_DATA_TYPE(INTP8,numSize);
             Number_t  number(value);
             //write type
@@ -184,6 +186,7 @@ void BinMarshaller_t::packInt(Int_t::value_type value) {
         }
         
     } else {
+        unsigned int numSize = getNumberSize(value);
         //pack type
         char type = FRPC_DATA_TYPE(INT,numSize);
         //pack number value
@@ -221,7 +224,7 @@ void BinMarshaller_t::packString(const char* value, unsigned int size) {
     //obtain size of number
     int numSize = getNumberSize(size);
     //pack type
-    char type = FRPC_DATA_TYPE(STRING,size);
+    char type = FRPC_DATA_TYPE(STRING,numSize);
     //pack strSize
     Number_t number(size);
 

@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcserver.h,v 1.5 2007-05-18 15:29:46 mirecta Exp $
+ * FILE          $Id: frpcserver.h,v 1.6 2007-05-21 15:10:12 mirecta Exp $
  *
  * DESCRIPTION
  *
@@ -72,8 +72,8 @@ public:
             @param callbacks pointer to callback class for logging
             @param path uri path
         */
-        Config_t(long readTimeout, long writeTimeout,
-                 bool keepAlive, long maxKeepalive, bool introspectionEnabled,
+        Config_t(unsigned int readTimeout, unsigned int writeTimeout,
+                 bool keepAlive, unsigned int maxKeepalive, bool introspectionEnabled,
                  MethodRegistry_t::Callbacks_t *callbacks //, const std::string path
                 )
                 :readTimeout(readTimeout),writeTimeout(writeTimeout),
@@ -100,13 +100,13 @@ public:
                 callbacks(0) {}
 
         ///@brief internal representation of readTimeout value
-        long readTimeout;
+        unsigned int readTimeout;
         ///@brief internal representation of writeTimeout  value
-        long writeTimeout;
+        unsigned int writeTimeout;
         ///@brief internal representation of keepAlive value
         bool keepAlive;
 
-        long maxKeepalive;
+        unsigned int maxKeepalive;
 
         bool introspectionEnabled;
 
@@ -146,7 +146,7 @@ private:
     * @param data pointer to data 
     * @param size size of data
     */
-    virtual void write(const char* data, long size);
+    virtual void write(const char* data, unsigned int size);
     /**
     * @brief send response to client
     *
@@ -163,14 +163,14 @@ private:
     MethodRegistry_t methodRegistry;
     HTTPIO_t io;
     bool keepAlive;
-    long maxKeepalive;
+    unsigned int maxKeepalive;
     MethodRegistry_t::Callbacks_t *callbacks;
 //     std::string path;
-    long outType;
+    unsigned int outType;
     bool closeConnection;
     std::list<std::string> queryStorage;
     //UnMarshaller_t *unmarshaller;
-    unsigned long contentLength;
+    unsigned int contentLength;
     bool  useChunks;
     bool headersSent;
     bool head;

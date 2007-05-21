@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcbinmarshaller.h,v 1.5 2007-05-18 15:29:45 mirecta Exp $
+ * FILE          $Id: frpcbinmarshaller.h,v 1.6 2007-05-21 15:10:12 mirecta Exp $
  *
  * DESCRIPTION
  *
@@ -80,18 +80,18 @@ private:
     inline unsigned int getNumberSize(Int_t::value_type number) {
 
         if (protocolVersion.versionMajor < 2) {
-
+            int32_t oldNumber = int32_t(number);
             // + 1 => old marking
-            if (!(number & INT8_MASK))
+            if (!(oldNumber & OLD_INT8_MASK))
                 return CHAR8 + 1;
 
-            if (!(number & INT16_MASK))
+            if (!(oldNumber & OLD_INT16_MASK))
                 return SHORT16 + 1;
 
-            if (!(number & INT24_MASK))
+            if (!(oldNumber & OLD_INT24_MASK))
                 return LONG24 + 1;
 
-            if (!(number & INT32_MASK))
+            if (!(oldNumber & OLD_INT32_MASK))
                 return LONG32 + 1;
 
             throw StreamError_t("Number is too big for protocol version 1.0");

@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcmethodregistry.h,v 1.5 2007-05-18 15:29:45 mirecta Exp $
+ * FILE          $Id: frpcmethodregistry.h,v 1.6 2007-05-21 15:10:12 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -184,15 +184,15 @@ public:
     @li @b  -1 method not registered     
 
     */
-    long headCall();
+    int headCall();
 
     /**
     @brief call method  
     */
-    long processCall(const std::string &clientIP, Reader_t &reader, unsigned int typeIn,
+    int processCall(const std::string &clientIP, Reader_t &reader, unsigned int typeIn,
                      Writer_t &writer, unsigned int typeOut);
 
-    long processCall(const std::string &clientIP, const std::string &methodName,
+    int  processCall(const std::string &clientIP, const std::string &methodName,
                      Array_t &params, Writer_t &writer, unsigned int typeOut,
                      const ProtocolVersion_t &protocolVersion);
 

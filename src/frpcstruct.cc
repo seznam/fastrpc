@@ -20,125 +20,120 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcstruct.cc,v 1.5 2007-04-02 15:28:20 vasek Exp $
+ * FILE          $Id: frpcstruct.cc,v 1.6 2007-05-21 15:10:12 mirecta Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #include "frpcstruct.h"
 #include "frpcpool.h"
 #include "frpckeyerror.h"
 #include "frpclenerror.h"
 
-namespace FRPC
-{
+namespace FRPC {
 
-Struct_t::Struct_t(Pool_t &pool):Value_t(pool)
-{}
+Struct_t::Struct_t(Pool_t &pool):Value_t(pool) {}
 
 
-Struct_t::~Struct_t()
-{}
+Struct_t::~Struct_t() {}
 
-Struct_t::Struct_t(Pool_t &pool, Struct_t::pair value):Value_t(pool)
-{
+Struct_t::Struct_t(Pool_t &pool, Struct_t::pair value):Value_t(pool) {
     structData.insert(value);
 }
 
-Struct_t::Struct_t(Pool_t &pool, const std::string &key, Value_t &value):Value_t(pool)
-{
-    if(key.size() > 255)
-    {
+Struct_t::Struct_t(Pool_t &pool, const std::string &key, Value_t &value):Value_t(pool) {
+    if (key.size() > 255) {
         throw LenError_t("Size of member name must be max 255 not %d.",key.size() );
     }
     structData.insert(value_type(key,&value));
 }
 
-Value_t& Struct_t::clone(Pool_t& newPool) const
-{
+Value_t& Struct_t::clone(Pool_t& newPool) const {
     Struct_t *newStruct = &newPool.Struct();
 
-    for(std::map<std::string,Value_t*>::const_iterator istructData = structData.begin();
-            istructData != structData.end(); ++istructData)
-    {
+    for (std::map<std::string,Value_t*>::const_iterator istructData = structData.begin();
+            istructData != structData.end(); ++istructData) {
         newStruct->insert(value_type(istructData->first,&(istructData->second)->clone(newPool)));
     }
 
     return  *newStruct;
 }
 
-bool Struct_t::has_key(const Struct_t::key_type &key) const
-{
-    if(structData.find(key) != structData.end())
+bool Struct_t::has_key(const Struct_t::key_type &key) const {
+    if (structData.find(key) != structData.end())
         return true;
     return false;
 }
 
-std::pair<Struct_t::iterator, bool> Struct_t::insert(const Struct_t::key_type &key, Value_t &value)
-{
+std::pair<Struct_t::iterator, bool> Struct_t::insert(
+    const Struct_t::key_type &key, Value_t &value) {
 
     return  structData.insert(value_type(key,&value));
 }
 
-std::pair<Struct_t::iterator, bool> Struct_t::insert(Struct_t::pair value)
-{
+std::pair<Struct_t::iterator, bool> Struct_t::insert(Struct_t::pair value) {
     return structData.insert(value);
 }
 
-Struct_t::iterator Struct_t::begin()
-{
+Struct_t::iterator Struct_t::begin() {
     return structData.begin();
 }
 
-Struct_t::iterator Struct_t::end()
-{
+Struct_t::iterator Struct_t::end() {
     return structData.end();
 }
 
-Struct_t::const_iterator Struct_t::begin() const
-{
+Struct_t::const_iterator Struct_t::begin() const {
     return structData.begin();
 }
 
-Struct_t::const_iterator Struct_t::end() const
-{
+Struct_t::const_iterator Struct_t::end() const {
     return structData.end();
 }
 
-bool Struct_t::empty() const
-{
+bool Struct_t::empty() const {
     return structData.empty();
 }
 
-Struct_t::size_type Struct_t::size() const
-{
+Struct_t::size_type Struct_t::size() const {
     return structData.size();
 }
 
-Struct_t& Struct_t::append(Struct_t::pair value)
-{
-    structData.insert(value);
+Struct_t& Struct_t::append(Struct_t::pair value) {
+    std::pair<Struct_t::iterator, bool> res = structData.insert(value);
+    if (!res.second) {
+        res.first->second = value.second;
+    }
     return *this;
 }
 
-Struct_t& Struct_t::append(const Struct_t::key_type &key, Value_t &value)
-{
-    if(key.size() > 255)
-    {
+Struct_t& Struct_t::append(const Struct_t::key_type &key, Value_t &value) {
+    if (key.size() > 255) {
         throw LenError_t("Size of member name must be max 255 not %d.",key.size() );
     }
 
-    structData.insert(value_type(key,&value));
+    std::pair<Struct_t::iterator, bool> res = structData.insert(value_type(key,&value));
+    if (!res.second) {
+        res.first->second = &value;
+    }
     return *this;
 }
 
-Value_t& Struct_t::operator[] (const Struct_t::key_type &key)
-{
+Value_t* Struct_t::get(const key_type &key) {
+    iterator istructData;
+
+    if ((istructData = structData.find(key)) == structData.end())
+        return 0;
+    return istructData->second;
+
+}
+
+Value_t& Struct_t::operator[] (const Struct_t::key_type &key) {
     iterator istructData;
 
     if ((istructData = structData.find(key)) == structData.end())
@@ -147,8 +142,7 @@ Value_t& Struct_t::operator[] (const Struct_t::key_type &key)
     return *(istructData->second);
 }
 
-const Value_t& Struct_t::operator[] (const Struct_t::key_type &key) const
-{
+const Value_t& Struct_t::operator[] (const Struct_t::key_type &key) const {
     const_iterator istructData;
 
     if ((istructData = structData.find(key)) == structData.end())
@@ -158,8 +152,7 @@ const Value_t& Struct_t::operator[] (const Struct_t::key_type &key) const
 }
 
 
-void Struct_t::clear()
-{
+void Struct_t::clear() {
     structData.clear();
 
 }

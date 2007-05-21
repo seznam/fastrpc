@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpchttpclient.cc,v 1.5 2007-05-18 15:29:45 mirecta Exp $
+ * FILE          $Id: frpchttpclient.cc,v 1.6 2007-05-21 15:10:12 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -103,7 +103,7 @@ struct SocketCloser_t
     bool doClose;
 };
 
-void connectSocket(int &fd, bool keepAlive, int connectTimeout,
+void connectSocket(int &fd, bool keepAlive, unsigned int connectTimeout,
                    const struct in_addr &ipaddr,
                    unsigned short int port)
 {
@@ -175,7 +175,7 @@ void connectSocket(int &fd, bool keepAlive, int connectTimeout,
         }
 
 #ifdef WIN32
-        unsigned long flag = 1;
+        unsigned int flag = 1;
         if (::ioctlsocket((SOCKET)fd, FIONBIO, &flag) < 0)
 #else //WIN32
 
@@ -299,7 +299,7 @@ void connectSocket(int &fd, bool keepAlive, int connectTimeout,
 namespace FRPC
 {
 
-HTTPClient_t::HTTPClient_t(HTTPIO_t &httpIO, URL_t &url, long connectTimeout,
+HTTPClient_t::HTTPClient_t(HTTPIO_t &httpIO, URL_t &url, unsigned int connectTimeout,
                            bool keepAlive)
         : httpIO(httpIO), url(url), connectTimeout(connectTimeout),keepAlive(keepAlive),
         headersSent(false),useChunks(false),supportedProtocols(XML_RPC),
@@ -311,7 +311,7 @@ HTTPClient_t::HTTPClient_t(HTTPIO_t &httpIO, URL_t &url, long connectTimeout,
 
 }
 
-HTTPClient_t::HTTPClient_t(HTTPIO_t &httpIO, URL_t &url, long connectTimeout,
+HTTPClient_t::HTTPClient_t(HTTPIO_t &httpIO, URL_t &url, unsigned int connectTimeout,
                            bool keepAlive, bool useHTTP10)
         : httpIO(httpIO), url(url), connectTimeout(connectTimeout),keepAlive(keepAlive),
         headersSent(false),useChunks(false),supportedProtocols(XML_RPC),
@@ -356,12 +356,12 @@ void HTTPClient_t::flush()
 
 }
 
-void HTTPClient_t::write(const char* data, long size)
+void HTTPClient_t::write(const char* data, unsigned int size)
 {
 
     contentLenght += size;
 
-    if(size > long(BUFFER_SIZE - queryStorage.back().size()))
+    if(size > BUFFER_SIZE - queryStorage.back().size())
     {
         if(useChunks)
         {

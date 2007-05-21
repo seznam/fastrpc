@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcstruct.h,v 1.3 2007-04-02 15:28:20 vasek Exp $
+ * FILE          $Id: frpcstruct.h,v 1.4 2007-05-21 15:10:13 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -178,7 +178,12 @@ public:
         @return Struct_t& reference with apended value
     */
     Struct_t& append(const key_type &key, Value_t &value);
-
+    /**
+        @brief Get poiter to value or sero if not exists
+        @param key is reference to Struct_t::key_type
+        @return Value_t* pointer or zero
+    */
+    Value_t* get(const key_type &key);
     /**
         @brief operator []
         @return reference to Value_t or exeption KeyError_t if key isn't exist

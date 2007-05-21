@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcarray.cc,v 1.8 2007-04-02 15:28:21 vasek Exp $
+ * FILE          $Id: frpcarray.cc,v 1.9 2007-05-21 15:10:12 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -163,7 +163,7 @@ void Array_t::checkItems(const std::string &items) const
         throw LenError_t("Array must have %d parameters.",items.size() );
     }
 
-    long itemNum = 0;
+    unsigned int  itemNum = 0;
 
     for( std::vector<Value_t*>::const_iterator i = arrayData.begin(); i != arrayData.end(); ++i)
     {

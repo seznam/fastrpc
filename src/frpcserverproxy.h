@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcserverproxy.h,v 1.9 2007-05-18 15:29:46 mirecta Exp $
+ * FILE          $Id: frpcserverproxy.h,v 1.10 2007-05-21 15:10:12 mirecta Exp $
  *
  * DESCRIPTION
  *
@@ -429,7 +429,7 @@ private:
                 //using BINARY_RPC  always
                 marshaller= Marshaller_t::create(Marshaller_t::XML_RPC,
                                                  client,protocolVersion);
-                client.prepare(HTTPClient_t::BINARY_RPC);
+                client.prepare(HTTPClient_t::XML_RPC);
             }
             break;
         case Config_t::ALWAYS: {
