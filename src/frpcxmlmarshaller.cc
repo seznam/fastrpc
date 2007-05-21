@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcxmlmarshaller.cc,v 1.4 2007-05-18 15:29:46 mirecta Exp $
+ * FILE          $Id: frpcxmlmarshaller.cc,v 1.5 2007-05-21 15:57:59 mirecta Exp $
  *
  * DESCRIPTION
  *
@@ -35,6 +35,7 @@
 #include <stdio.h>
 #include <frpclenerror.h>
 #include <frpc.h>
+#include <sstream>
 
 namespace FRPC {
 
@@ -236,10 +237,9 @@ void XmlMarshaller_t::packFault(int errNumber, const char* errMsg, unsigned int 
 }
 
 void XmlMarshaller_t::packInt(Int_t::value_type value) {
-    char buff[50];
-
-
-
+    
+    std::ostringstream buff;
+    buff << value;
     //write correct spaces
     packSpaces(level);
     if (entityStorage.empty()) {
@@ -251,14 +251,12 @@ void XmlMarshaller_t::packInt(Int_t::value_type value) {
     packSpaces(level);
     if ((value & INT32_MASK)) {
         writer.write("<value><i8>",11);
-        sprintf(buff,"%lld",value);
-        writer.write(buff,strlen(buff));
+        writer.write(buff.str().data(),buff.str().size());
         writer.write("</i8></value>\n",14);
     }
     else {
         writer.write("<value><i4>",11);
-        sprintf(buff,"%lld",value);
-        writer.write(buff,strlen(buff));
+        writer.write(buff.str().data(),buff.str().size());
         writer.write("</i4></value>\n",14);
     }
 

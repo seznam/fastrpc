@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpc.cc,v 1.7 2007-05-21 15:10:12 mirecta Exp $
+ * FILE          $Id: frpc.cc,v 1.8 2007-05-21 15:57:59 mirecta Exp $
  *
  * DESCRIPTION
  *
@@ -34,6 +34,9 @@
 
 #include <frpc.h>
 #include <frpcinternals.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sstream>
 
 using namespace FRPC;
 
@@ -406,7 +409,9 @@ use for debug
 void printValue(Value_t &value, long spaces ) {
     switch (value.getType()) {
     case Int_t::TYPE: {
-            printf("%lld\n",Int(value).getValue());
+            std::ostringstream os;
+	    os << Int(value).getValue();
+            printf("%s\n",os.str().c_str());
         }
         break;
 
@@ -429,7 +434,7 @@ void printValue(Value_t &value, long spaces ) {
 
     case Binary_t::TYPE: {
 
-            printf("binary %d bytes\n",Binary(value).size());
+            printf("binary %ld bytes\n",Binary(value).size());
 
         }
         break;
