@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
 {
     Pool_t pool; //memory pool
     ServerProxy_t::Config_t config;
-    ServerProxy_t client("http://localhost:2424/RPC2",config);
+    ServerProxy_t client("http://tom:9898/RPC2",config);
 
     try
     {
@@ -40,10 +40,10 @@ int main(int argc, char *argv[])
         printValue(client(pool,"system.methodSignature",
                           pool.String(String(Array(retVal1)[4]).getString())));
 
-        Struct_t result = Struct(client(pool,"test1",pool.Int(2),pool.String("hello")));
+        Struct_t &result = Struct(client(pool,"test2",pool.Int(100000000),pool.String("hello")));
 
         printValue(result);
-        printf("\nStatus is %ld\n",Int(result["status"]).getValue());
+        printf("\nStatus is %lld\n",Int(result["status"]).getValue());
 
 
 

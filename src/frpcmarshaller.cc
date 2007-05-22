@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcmarshaller.cc,v 1.3 2007-05-18 15:29:45 mirecta Exp $
+ * FILE          $Id: frpcmarshaller.cc,v 1.4 2007-05-22 13:03:23 mirecta Exp $
  *
  * DESCRIPTION
  *
@@ -54,7 +54,7 @@ Marshaller_t* Marshaller_t::create(unsigned int contentType, Writer_t& writer,
         break;
 
     case XML_RPC:
-        marshaller = new XmlMarshaller_t(writer);
+        marshaller = new XmlMarshaller_t(writer,protocolVersion);
         break;
 
     default:

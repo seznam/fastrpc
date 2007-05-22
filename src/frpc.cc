@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpc.cc,v 1.8 2007-05-21 15:57:59 mirecta Exp $
+ * FILE          $Id: frpc.cc,v 1.9 2007-05-22 13:03:23 mirecta Exp $
  *
  * DESCRIPTION
  *
@@ -387,7 +387,7 @@ int dumpFastrpcTree(const Value_t &value1,
     out << '\0';
     // vytvo�e vstupn�et�ec
     outstr = out.str();
-    
+
     return 0;
 }
 
@@ -410,7 +410,7 @@ void printValue(Value_t &value, long spaces ) {
     switch (value.getType()) {
     case Int_t::TYPE: {
             std::ostringstream os;
-	    os << Int(value).getValue();
+            os << Int(value).getValue();
             printf("%s\n",os.str().c_str());
         }
         break;
@@ -433,9 +433,9 @@ void printValue(Value_t &value, long spaces ) {
         break;
 
     case Binary_t::TYPE: {
-
-            printf("binary %ld bytes\n",Binary(value).size());
-
+            std::ostringstream os;
+            os << "binary " << Binary(value).size() << " bytes \n";
+            printf("%s\n",os.str().c_str());
         }
         break;
 
@@ -496,12 +496,12 @@ void printValue(Value_t &value, long spaces ) {
 
     }
 }
-ProtocolVersion_t::ProtocolVersion_t(unsigned char versionMajor, 
+ProtocolVersion_t::ProtocolVersion_t(unsigned char versionMajor,
                                      unsigned char versionMinor)
-    :versionMajor(versionMajor),versionMinor(versionMinor) {}
+        :versionMajor(versionMajor),versionMinor(versionMinor) {}
 
 ProtocolVersion_t::ProtocolVersion_t()
-    :versionMajor(FRPC_MAJOR_VERSION),versionMinor(FRPC_MINOR_VERSION) {}
+        :versionMajor(FRPC_MAJOR_VERSION),versionMinor(FRPC_MINOR_VERSION) {}
 /*ProtocolVersion_t& ProtocolVersion_t::operator=(const ProtocolVersion_t& other ) {
     this->versionMajor = other.versionMajor;
     this->versionMinor = other.versionMinor;

@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcbinmarshaller.h,v 1.6 2007-05-21 15:10:12 mirecta Exp $
+ * FILE          $Id: frpcbinmarshaller.h,v 1.7 2007-05-22 13:03:23 mirecta Exp $
  *
  * DESCRIPTION
  *
@@ -76,8 +76,14 @@ public:
 private:
 
     BinMarshaller_t();
-
-    inline unsigned int getNumberSize(Int_t::value_type number) {
+    
+    inline unsigned int getNumberSize(unsigned int size){
+        if (protocolVersion.versionMajor < 2)
+            return size;
+        return size + 1;
+    }
+    
+    inline unsigned int getNumberType(Int_t::value_type number) {
 
         if (protocolVersion.versionMajor < 2) {
             int32_t oldNumber = int32_t(number);

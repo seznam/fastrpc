@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcxmlmarshaller.h,v 1.3 2007-05-18 15:29:46 mirecta Exp $
+ * FILE          $Id: frpcxmlmarshaller.h,v 1.4 2007-05-22 13:03:23 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -38,6 +38,7 @@
 #include <frpcwriter.h>
 #include <frpcinternals.h>
 #include <frpcint.h>
+#include <frpc.h>
 //#define XML_HUMAN_FORMAT
 namespace FRPC
 {
@@ -51,14 +52,16 @@ namespace FRPC
 class XmlMarshaller_t : public Marshaller_t
 {
 public:
-    XmlMarshaller_t(Writer_t &writer);
+    XmlMarshaller_t(Writer_t &writer,
+                    const ProtocolVersion_t &protocolVersion);
 
     virtual ~XmlMarshaller_t();
 
     virtual void packArray(unsigned int numOfItems);
     virtual void packBinary(const char* value, unsigned int size);
     virtual void packBool(bool value);
-    virtual void packDateTime(short year, char month, char day, char hour, char min, char sec, char weekDay, time_t unixTime, char timeZone);
+    virtual void packDateTime(short year, char month, char day, char hour,
+                              char min, char sec, char weekDay, time_t unixTime, char timeZone);
     virtual void packDouble(double value);
     virtual void packFault(int errNumber, const char* errMsg, unsigned int size);
     virtual void packInt(Int_t::value_type value);
@@ -137,7 +140,7 @@ private:
     Writer_t  &writer;
     unsigned int level;
     char mainType;
-
+    ProtocolVersion_t protocolVersion;
 };
 
 };

@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcinternals.h,v 1.6 2007-05-21 15:10:12 mirecta Exp $
+ * FILE          $Id: frpcinternals.h,v 1.7 2007-05-22 13:03:23 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -54,6 +54,7 @@ const Int_t::value_type ALLONES = ~ZERO;
 const Int_t::value_type INT8_MASK = ALLONES << 8;
 const Int_t::value_type INT16_MASK = ALLONES << 16;
 const Int_t::value_type INT24_MASK = ALLONES << 24;
+const Int_t::value_type INT31_MASK = ALLONES << 31;
 const Int_t::value_type INT32_MASK = ALLONES << 32;
 const Int_t::value_type INT40_MASK = ALLONES << 40;
 const Int_t::value_type INT48_MASK = ALLONES << 48;

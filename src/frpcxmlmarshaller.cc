@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcxmlmarshaller.cc,v 1.5 2007-05-21 15:57:59 mirecta Exp $
+ * FILE          $Id: frpcxmlmarshaller.cc,v 1.6 2007-05-22 13:03:23 mirecta Exp $
  *
  * DESCRIPTION
  *
@@ -40,8 +40,14 @@
 namespace FRPC {
 
 
-XmlMarshaller_t::XmlMarshaller_t(Writer_t &writer)
-        :writer(writer),level(0) {
+XmlMarshaller_t::XmlMarshaller_t(Writer_t &writer,
+                                 const ProtocolVersion_t &protocolVersion)
+        :writer(writer),level(0),protocolVersion(protocolVersion) {
+
+    if (protocolVersion.versionMajor > FRPC_MAJOR_VERSION) {
+        throw Error_t("Not supported protocol version");
+    }
+
 }
 
 XmlMarshaller_t::~XmlMarshaller_t() {
@@ -237,7 +243,7 @@ void XmlMarshaller_t::packFault(int errNumber, const char* errMsg, unsigned int 
 }
 
 void XmlMarshaller_t::packInt(Int_t::value_type value) {
-    
+
     std::ostringstream buff;
     buff << value;
     //write correct spaces
@@ -249,12 +255,17 @@ void XmlMarshaller_t::packInt(Int_t::value_type value) {
 
     //write correct spaces
     packSpaces(level);
-    if ((value & INT32_MASK)) {
+
+    Int_t::value_type absValue = value < 0 ? -value :value;
+
+    if ((absValue & INT31_MASK)) {
+        if (protocolVersion.versionMajor < 2)
+            throw StreamError_t("Number is too big for protocol version 1.0");
+
         writer.write("<value><i8>",11);
         writer.write(buff.str().data(),buff.str().size());
         writer.write("</i8></value>\n",14);
-    }
-    else {
+    } else {
         writer.write("<value><i4>",11);
         writer.write(buff.str().data(),buff.str().size());
         writer.write("</i4></value>\n",14);
@@ -408,9 +419,15 @@ void XmlMarshaller_t::flush() {
 
 
 void XmlMarshaller_t::packMagic() {
-    char magic[]="<?xml version=\"1.0\"?>\n";
-    //write magic
-    writer.write(magic,strlen(magic));
+    if (protocolVersion.versionMajor < 2) {
+        char magic[]="<?xml version=\"1.0\"?>\n";
+        //write magic
+        writer.write(magic,strlen(magic));
+    } else {
+        char magic[]="<?xml version=\"1.0\" protocolVersion=\"2.0\"?>\n";
+        //write magic
+        writer.write(magic,strlen(magic));
+    }
 
 }
 

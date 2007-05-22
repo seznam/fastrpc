@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcxmlunmarshaller.h,v 1.4 2007-05-18 15:29:46 mirecta Exp $
+ * FILE          $Id: frpcxmlunmarshaller.h,v 1.5 2007-05-22 13:03:23 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -64,6 +64,7 @@ public:
 
     virtual void unMarshall(const char *data, unsigned int size, char type);
     virtual void finish();
+    virtual ProtocolVersion_t getProtocolVersion();
     //friend class CallbacksInit_t;
     enum {EXC_NONE = 0,EXC_UNKNOWN, EXC_BAD_ALLOC, EXC_STREAM
          };
@@ -89,7 +90,7 @@ private:
 
     xmlParserCtxtPtr parser;
     xmlSAXHandler callbacks;
-
+    ProtocolVersion_t protocolVersion;
 
 };
 

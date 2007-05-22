@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcbinmarshaller.cc,v 1.5 2007-05-21 15:10:12 mirecta Exp $
+ * FILE          $Id: frpcbinmarshaller.cc,v 1.6 2007-05-22 13:03:23 mirecta Exp $
  *
  * DESCRIPTION
  *
@@ -57,7 +57,7 @@ void BinMarshaller_t::packArray(unsigned int numOfItems) {
 
 
     //inr type 8,16,24 or 32
-    unsigned int numType = getNumberSize(numOfItems);
+    unsigned int numType = getNumberType(numOfItems);
 
     //union long and buffer
     Number_t number(numOfItems);
@@ -68,7 +68,7 @@ void BinMarshaller_t::packArray(unsigned int numOfItems) {
     //add DATATYPE to buffer
     writer.write(&type,1);
     //add number (current length)
-    writer.write((char*)number.data, numType);
+    writer.write((char*)number.data, getNumberSize(numType));
 
 }
 
@@ -76,17 +76,17 @@ void BinMarshaller_t::packBinary(const char* value, unsigned int size) {
 
 
     //inr type 8,16,24 or 32
-    unsigned int sizeNumType = getNumberSize(size);
+    unsigned int numType = getNumberType(size);
 
     Number_t dataSize(size);
 
     //pack dataType
-    char type = FRPC_DATA_TYPE(BINARY,sizeNumType);
+    char type = FRPC_DATA_TYPE(BINARY,numType);
 
     //add DATATYPE to buffer
     writer.write(&type,1);
 
-    writer.write((char*)dataSize.data,sizeNumType);
+    writer.write((char*)dataSize.data,getNumberSize(numType));
 
     writer.write(value,size);
 
@@ -168,33 +168,33 @@ void BinMarshaller_t::packInt(Int_t::value_type value) {
 
         if (value < 0) { // negative int8
             //obtain int size for compress
-            unsigned int numSize = getNumberSize(-value);
-            char type = FRPC_DATA_TYPE(INTN8,numSize);
+            unsigned int numType = getNumberType(-value);
+            char type = FRPC_DATA_TYPE(INTN8,numType);
             Number_t  number(-value);
             //write type
             writer.write(&type,1);
-            writer.write(number.data,numSize);
+            writer.write(number.data,getNumberSize(numType));
 
         } else { //positive int8
-            unsigned int numSize = getNumberSize(value);
-            char type = FRPC_DATA_TYPE(INTP8,numSize);
+            unsigned int numType = getNumberType(value);
+            char type = FRPC_DATA_TYPE(INTP8,numType);
             Number_t  number(value);
             //write type
             writer.write(&type,1);
-            writer.write(number.data,numSize);
+            writer.write(number.data,getNumberSize(numType));
 
         }
         
     } else {
-        unsigned int numSize = getNumberSize(value);
+        unsigned int numType = getNumberType(value);
         //pack type
-        char type = FRPC_DATA_TYPE(INT,numSize);
+        char type = FRPC_DATA_TYPE(INT,numType);
         //pack number value
         Number32_t  number(value);
 
         //write type
         writer.write(&type,1);
-        writer.write(number.data,numSize);
+        writer.write(number.data,getNumberSize(numType));
     }
 
 
@@ -222,32 +222,32 @@ void BinMarshaller_t::packMethodCall(const char* methodName, unsigned int  size)
 void BinMarshaller_t::packString(const char* value, unsigned int size) {
 
     //obtain size of number
-    int numSize = getNumberSize(size);
+    int numType = getNumberType(size);
     //pack type
-    char type = FRPC_DATA_TYPE(STRING,numSize);
+    char type = FRPC_DATA_TYPE(STRING,numType);
     //pack strSize
     Number_t number(size);
 
     //write type
     writer.write(&type, 1);
     //write packed strSize
-    writer.write(number.data, numSize);
+    writer.write(number.data, getNumberSize(numType));
     //write whole string
     writer.write(value, size);
 }
 
 void BinMarshaller_t::packStruct(unsigned int  numOfMembers) {
     //obtain size of number
-    int numSize = getNumberSize(numOfMembers);
+    unsigned int numType = getNumberType(numOfMembers);
     //pack type
-    char type = FRPC_DATA_TYPE(STRUCT, numSize);
+    char type = FRPC_DATA_TYPE(STRUCT, numType);
     //pack numOfMembers
     Number_t number(numOfMembers);
 
     //write type
     writer.write(&type, 1);
     //write packed numOfMembers
-    writer.write(number.data, numSize);
+    writer.write(number.data, getNumberSize(numType));
 
 
 }
