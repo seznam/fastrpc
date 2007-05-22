@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcxmlunmarshaller.cc,v 1.8 2007-05-22 13:30:59 mirecta Exp $
+ * FILE          $Id: frpcxmlunmarshaller.cc,v 1.9 2007-05-22 13:36:08 mirecta Exp $
  *
  * DESCRIPTION
  *
@@ -372,10 +372,11 @@ void XmlUnMarshaller_t::unMarshall( const char *data, unsigned int size, char ty
     int terminate = (size == 0)?1:0;
     wantType = type;
     //try obtain version from xml
-    std::string versionStr("protocolVersion=\"");
-    std::string buffer(data,80);
-    std::string::size_type idx = buffer.find(versionStr);
     if (size && versionCheck) {
+        std::string versionStr("protocolVersion=\"");
+        std::string buffer(data,80);
+        std::string::size_type idx = buffer.find(versionStr);
+
         if (idx != std::string::npos) {
             protocolVersion.versionMajor = buffer.at(idx
                                            + versionStr.size() ) - 0x30;
