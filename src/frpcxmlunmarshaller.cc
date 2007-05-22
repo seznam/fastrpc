@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcxmlunmarshaller.cc,v 1.7 2007-05-22 13:03:23 mirecta Exp $
+ * FILE          $Id: frpcxmlunmarshaller.cc,v 1.8 2007-05-22 13:30:59 mirecta Exp $
  *
  * DESCRIPTION
  *
@@ -327,7 +327,7 @@ const char *error_mapping[] = {
 }
 XmlUnMarshaller_t::XmlUnMarshaller_t(DataBuilder_t & dataBuilder)
         :exception(0),dataBuilder(dataBuilder),internalType(NONE)
-        , mainInternalType(NONE),internalValue(0) {
+        , mainInternalType(NONE),internalValue(0),versionCheck(true) {
 
 
     memset(&callbacks, 0, sizeof(xmlSAXHandler));
@@ -375,14 +375,16 @@ void XmlUnMarshaller_t::unMarshall( const char *data, unsigned int size, char ty
     std::string versionStr("protocolVersion=\"");
     std::string buffer(data,80);
     std::string::size_type idx = buffer.find(versionStr);
-
-    if (idx != std::string::npos) {
-        protocolVersion.versionMajor = buffer.at(idx
-                                       + versionStr.size() ) - 0x30;
-        protocolVersion.versionMinor = buffer.at(idx
-                                       + versionStr.size() + 2 ) - 0x30;
-    } else {
-        protocolVersion = ProtocolVersion_t(1,0);
+    if (size && versionCheck) {
+        if (idx != std::string::npos) {
+            protocolVersion.versionMajor = buffer.at(idx
+                                           + versionStr.size() ) - 0x30;
+            protocolVersion.versionMinor = buffer.at(idx
+                                           + versionStr.size() + 2 ) - 0x30;
+        } else {
+            protocolVersion = ProtocolVersion_t(1,0);
+        }
+        versionCheck = false;
     }
     //printf("%s",data);
     //fflush(stdout);
