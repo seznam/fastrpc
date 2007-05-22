@@ -21,8 +21,10 @@ int main(int argc, char *argv[])
 {
     Pool_t pool; //memory pool
     ServerProxy_t::Config_t config;
+    //config.useBinary=2;
     ServerProxy_t client("http://tom:9898/RPC2",config);
-
+    int64_t a = 1000000000;
+    a = a * 100;
     try
     {
         //Calling introspection method system.listMethods()
@@ -40,7 +42,7 @@ int main(int argc, char *argv[])
         printValue(client(pool,"system.methodSignature",
                           pool.String(String(Array(retVal1)[4]).getString())));
 
-        Struct_t &result = Struct(client(pool,"test2",pool.Int(100000000),pool.String("hello")));
+        Struct_t &result = Struct(client(pool,"test2",pool.Int(a),pool.String("hello")));
 
         printValue(result);
         printf("\nStatus is %lld\n",Int(result["status"]).getValue());

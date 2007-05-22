@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcserverproxy.h,v 1.10 2007-05-21 15:10:12 mirecta Exp $
+ * FILE          $Id: frpcserverproxy.h,v 1.11 2007-05-22 14:06:28 mirecta Exp $
  *
  * DESCRIPTION
  *
@@ -79,8 +79,9 @@ public:
             @param useHTTP10 - says that client must use HTTP/1.0 in all
                                conditions
         */
-        Config_t(long connectTimeout, long readTimeout, long writeTimeout,
-                 bool keepAlive, long useBinary, bool useHTTP10 = false):
+        Config_t(unsigned int connectTimeout, unsigned int readTimeout, 
+                 unsigned int writeTimeout,
+                 bool keepAlive, unsigned int useBinary, bool useHTTP10 = false):
                 connectTimeout(connectTimeout),readTimeout(readTimeout),writeTimeout(writeTimeout),
                 keepAlive(keepAlive), useBinary(useBinary), useHTTP10(useHTTP10) {}
         /**
@@ -96,15 +97,15 @@ public:
                 keepAlive(false), useBinary(ON_SUPPORT_ON_KEEP_ALIVE),
                 useHTTP10(false) {}
         ///@brief internal representation of connectTimeout value
-        long connectTimeout;
+        unsigned int connectTimeout;
         ///@brief internal representation of readTimeout value
-        long readTimeout;
+        unsigned int readTimeout;
         ///@brief internal representation of writeTimeout  value
-        long writeTimeout;
+        unsigned int writeTimeout;
         ///@brief internal representation of keepAlive value
         bool keepAlive;
         ///@brief internal representation of useBinary value
-        long useBinary;
+        unsigned int useBinary;
         ///@brief use HTTP protocol version 1.0
         bool useHTTP10;
 
@@ -468,13 +469,12 @@ private:
 
 
     URL_t url;
-    int socket_unused;
     HTTPIO_t io;
-    int connectTimeout;
+    unsigned int connectTimeout;
     bool keepAlive;
-    int rpcTransferMode;
+    unsigned int rpcTransferMode;
     bool useHTTP10;
-    unsigned long serverSupportedProtocols;
+    unsigned int serverSupportedProtocols;
 }
 ;
 }

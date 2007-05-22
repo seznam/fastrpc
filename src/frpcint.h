@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcint.h,v 1.5 2007-05-18 15:29:45 mirecta Exp $
+ * FILE          $Id: frpcint.h,v 1.6 2007-05-22 14:06:28 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -113,7 +113,7 @@ private:
     @param pool is a reference to Pool_t used for allocating
     @param number  is an  long value
     */
-    Int_t(Pool_t &pool, long number)
+    Int_t(Pool_t &pool, value_type number)
             :Value_t(pool),value(number)
     {}
 
