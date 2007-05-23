@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcserver.cc,v 1.11 2007-05-21 15:10:12 mirecta Exp $
+ * FILE          $Id: frpcserver.cc,v 1.12 2007-05-23 08:12:52 mirecta Exp $
  *
  * DESCRIPTION
  *
@@ -108,6 +108,7 @@ void Server_t::serve(int fd, struct sockaddr_in* addr )
 
         try
         {
+            methodRegistry.preReadCallback();
             readRequest(builder);
 
         }
@@ -144,7 +145,7 @@ void Server_t::serve(int fd, struct sockaddr_in* addr )
 
             if (head)
             {
-                long result = methodRegistry.headCall();
+                int result = methodRegistry.headCall();
                 if (result == 0)
                     flush();
                 else if (result < 0)

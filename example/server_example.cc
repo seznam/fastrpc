@@ -99,6 +99,8 @@ class Callbacks_t:public MethodRegistry_t::Callbacks_t
 
 
     }
+    virtual void preRead()
+    {}
 
 
 }

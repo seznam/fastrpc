@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcserverproxy.h,v 1.12 2007-05-23 07:31:49 mirecta Exp $
+ * FILE          $Id: frpcserverproxy.h,v 1.13 2007-05-23 08:12:52 mirecta Exp $
  *
  * DESCRIPTION
  *
@@ -108,9 +108,9 @@ public:
          */
         Config_t(unsigned int connectTimeout, unsigned int readTimeout,
                  unsigned int writeTimeout,
-                 bool keepAlive, unsigned int useBinary, bool useHTTP10 = false,
+                 bool keepAlive, unsigned int useBinary,
                 unsigned char protocolVersionMajor, 
-                unsigned char protocolVersionMinor):
+                unsigned char protocolVersionMinor, bool useHTTP10 = false):
                 connectTimeout(connectTimeout),readTimeout(readTimeout),
                 writeTimeout(writeTimeout),
                 keepAlive(keepAlive), useBinary(useBinary), useHTTP10(useHTTP10),

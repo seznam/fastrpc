@@ -20,15 +20,15 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcmethodregistry.h,v 1.6 2007-05-21 15:10:12 mirecta Exp $
+ * FILE          $Id: frpcmethodregistry.h,v 1.7 2007-05-23 08:12:52 mirecta Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #ifndef FRPCFRPCMETHODREGISTRY_H
 #define FRPCFRPCMETHODREGISTRY_H
@@ -40,8 +40,7 @@
 #include "frpcsocket.h"
 
 
-namespace FRPC
-{
+namespace FRPC {
 
 /**
 @brief MethodRegistry_t is used to register method on server side
@@ -56,8 +55,7 @@ class DefaultMethod_t;
 class HeadMethod_t;
 class Pool_t;
 
-class FRPC_DLLEXPORT MethodRegistry_t
-{
+class FRPC_DLLEXPORT MethodRegistry_t {
 public:
     enum {FRPC_INTERNAL_ERROR  = -500,
           FRPC_TYPE_ERROR = -501,
@@ -72,13 +70,10 @@ public:
           FRPC_INVALID_UTF8_ERROR = -510
          };
 
-    struct RegistryEntry_t
-    {
+    struct RegistryEntry_t {
         RegistryEntry_t(Method_t* method, const std::string &signature,const std::string &help)
-                :method(method),signature(signature),help(help)
-        {}
-        ~RegistryEntry_t()
-        {}
+                :method(method),signature(signature),help(help) {}
+        ~RegistryEntry_t() {}
 
         Method_t *method;
         std::string signature;
@@ -86,21 +81,16 @@ public:
     };
 
 
-    class Reader_t
-    {
+    class Reader_t {
     public:
-        Reader_t()
-        {}
+        Reader_t() {}
         virtual unsigned int read(char *data, unsigned int size) = 0;
-        virtual ~Reader_t()
-        {}
+        virtual ~Reader_t() {}
     }
     ;
 
-    struct TimeDiff_t
-    {
-        TimeDiff_t(unsigned int second, unsigned int usecond):second(second),usecond(usecond)
-        {}
+    struct TimeDiff_t {
+        TimeDiff_t(unsigned int second, unsigned int usecond):second(second),usecond(usecond) {}
         TimeDiff_t();
         TimeDiff_t diff();
 
@@ -112,13 +102,13 @@ public:
     @brief Callbacks_t is using to logging on server side
     @author Miroslav Talasek
     */
-    class Callbacks_t
-    {
+    class Callbacks_t {
     public :
-        Callbacks_t()
-        {}
-        
-        
+        Callbacks_t() {}
+        /**
+        @brief this method was called before rocket read 
+        */
+        virtual void preRead() = 0;
         /**
         @brief this method was called before method call 
         */
@@ -139,14 +129,13 @@ public:
                                  const Array_t &params,
                                  const Fault_t &fault, const TimeDiff_t &time) = 0 ;
 
-        
-        virtual ~Callbacks_t()
-        {}
-        
+
+        virtual ~Callbacks_t() {}
+
 //         /**
 //         @brief this method was called before reading from socket
 //         */
-        
+
 //         virtual void preRead(const std::string &clientIP, int requestCount)
 //         {}
     }
@@ -181,7 +170,7 @@ public:
     @return long 
     @li @b   0 -OK
     @li @b   1 - error
-    @li @b  -1 method not registered     
+    @li @b  -1 method not registered    
 
     */
     int headCall();
@@ -190,7 +179,7 @@ public:
     @brief call method  
     */
     int processCall(const std::string &clientIP, Reader_t &reader, unsigned int typeIn,
-                     Writer_t &writer, unsigned int typeOut);
+                    Writer_t &writer, unsigned int typeOut);
 
     int  processCall(const std::string &clientIP, const std::string &methodName,
                      Array_t &params, Writer_t &writer, unsigned int typeOut,
@@ -199,7 +188,7 @@ public:
     Value_t& processCall(const std::string &clientIP, const std::string &methodName,
                          Array_t &params, Pool_t &pool);
 
-    Value_t& processCall(const std::string &clientIP, Reader_t &reader, 
+    Value_t& processCall(const std::string &clientIP, Reader_t &reader,
                          unsigned int typeIn,Pool_t &pool);
 
     /**
@@ -211,6 +200,14 @@ public:
     */
     void registerHeadMethod(HeadMethod_t *headMethod);
     ~MethodRegistry_t();
+    /**
+    @brief 
+     */
+    void preReadCallback() {
+        if (callbacks) {
+            callbacks->preRead();
+        }
+    }
 
 
 private:

@@ -21,7 +21,7 @@
 # http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
 #
 #
-# $Id: Makefile.am,v 1.5 2007-05-15 09:48:11 vasek Exp $
+# $Id: Makefile.am,v 1.6 2007-05-23 08:12:52 mirecta Exp $
 #
 # DESCRIPTION
 # A Fast RPC library.
@@ -36,7 +36,7 @@
 
 
 # warn on all
-AM_CXXFLAGS = -Wall -g $(XML2_CFLAGS) -Wno-deprecated 
+AM_CXXFLAGS = -Wall -g $(XML2_CFLAGS)
 
 # extra compiler options
 AM_CPPFLAGS = -D_ISOC99_SOURCE -D__ENABLE_WSTRING=1
