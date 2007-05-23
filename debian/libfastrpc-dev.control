@@ -2,7 +2,7 @@ Package: @PACKAGE@
 Version: @VERSION@
 Architecture: @ARCHITECTURE@
 Depends: libxml2-dev, @EXTRA_DEPEND@
-Conflicts: libfastrpc0-dev
+Conflicts: libfastrpc0-dev, libfastrpc1-dev
 Maintainer: @MAINTAINER@
 Installed-Size: @SIZE@
 Description: Development files for fastrpc library
