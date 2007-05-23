@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcserverproxy.h,v 1.11 2007-05-22 14:06:28 mirecta Exp $
+ * FILE          $Id: frpcserverproxy.h,v 1.12 2007-05-23 07:31:49 mirecta Exp $
  *
  * DESCRIPTION
  *
@@ -79,18 +79,50 @@ public:
             @param useHTTP10 - says that client must use HTTP/1.0 in all
                                conditions
         */
-        Config_t(unsigned int connectTimeout, unsigned int readTimeout, 
+        Config_t(unsigned int connectTimeout, unsigned int readTimeout,
                  unsigned int writeTimeout,
                  bool keepAlive, unsigned int useBinary, bool useHTTP10 = false):
-                connectTimeout(connectTimeout),readTimeout(readTimeout),writeTimeout(writeTimeout),
+                connectTimeout(connectTimeout),readTimeout(readTimeout),
+                writeTimeout(writeTimeout),
                 keepAlive(keepAlive), useBinary(useBinary), useHTTP10(useHTTP10) {}
+
+                
+                
         /**
-            @brief Default constructor 
-            
-            Setting default values:
-            @n @b connectTimeout = 10000 ms
-            @n @b readTimeout = 10000 ms
-            @n @b writeTimeout = 1000 ms
+            @brief Constructor of config class
+            @param connectTimeout - it is connection timeout in miliseconds
+            used in connect to the RPC server
+            @param readTimeout - it is the read timeout in miliseconds
+            used in read data from the scoket
+            @param writeTimeout - it is the write timeout 
+            used in wite data to the socket
+            @param keepAlive -  it is keep alive connection parameter
+        
+            @param useBinary - says how client switching modes(XML, binary)
+
+            @param useHTTP10 - says that client must use HTTP/1.0 in all
+            conditions
+            @param protocolVersionMajor - major version of protocol
+            @param protocolVersionMinor - minor version of protocol
+                
+         */
+        Config_t(unsigned int connectTimeout, unsigned int readTimeout,
+                 unsigned int writeTimeout,
+                 bool keepAlive, unsigned int useBinary, bool useHTTP10 = false,
+                unsigned char protocolVersionMajor, 
+                unsigned char protocolVersionMinor):
+                connectTimeout(connectTimeout),readTimeout(readTimeout),
+                writeTimeout(writeTimeout),
+                keepAlive(keepAlive), useBinary(useBinary), useHTTP10(useHTTP10),
+                 protocolVersion(protocolVersionMajor,protocolVersionMinor){}
+
+        /**
+           @brief Default constructor 
+           
+           Setting default values:
+           @n @b connectTimeout = 10000 ms
+           @n @b readTimeout = 10000 ms
+           @n @b writeTimeout = 1000 ms
         */
         Config_t()
                 : connectTimeout(10000), readTimeout(10000), writeTimeout(1000),
@@ -111,6 +143,8 @@ public:
 
         ///@brief URL of proxy (empty if none)
         std::string proxyUrl;
+        ///@brief Protocol version
+        ProtocolVersion_t protocolVersion;
     };
     /**
         @brief Constructor
@@ -442,7 +476,7 @@ private:
             break;
         case Config_t::ON_SUPPORT_ON_KEEP_ALIVE:
         default: {
-            if ((serverSupportedProtocols & HTTPClient_t::XML_RPC) 
+            if ((serverSupportedProtocols & HTTPClient_t::XML_RPC)
                     || keepAlive == false
                     || io.socket() != -1) {
                 //using XML_RPC
