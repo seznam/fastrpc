@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: fastrpcmodule.cc,v 1.8 2007-04-02 15:42:58 vasek Exp $
+ * $Id: fastrpcmodule.cc,v 1.9 2007-05-23 09:31:43 mirecta Exp $
  * 
  * AUTHOR      Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
@@ -57,11 +57,13 @@
 #include <frpcstreamerror.h>
 #include <frpclenerror.h>
 #include <frpcresponseerror.h>
+#include <frpc.h>
 
 #include "fastrpcmodule.h"
 #include "pythonbuilder.h"
 #include "pythonfeeder.h"
 
+using FRPC::Int_t;
 using FRPC::Marshaller_t;
 using FRPC::UnMarshaller_t;
 using FRPC::Writer_t;
@@ -76,7 +78,7 @@ using FRPC::TypeError_t;
 using FRPC::EncodingError_t;
 using FRPC::LenError_t;
 using FRPC::ResponseError_t;
-
+using FRPC::ProtocolVersion_t;
 using namespace FRPC::Python;
 
 // support constants
@@ -899,7 +901,7 @@ public:
     {}
     ~OutBuffer_t()
     {}
-    virtual void write(const char *data, long size );
+    virtual void write(const char *data, unsigned int size );
     virtual void flush();
 
     inline const char* data()
@@ -907,7 +909,7 @@ public:
         return localBuffer.data();
     }
 
-    inline long size()
+    inline unsigned int size()
     {
         return localBuffer.size();
     }
@@ -926,7 +928,7 @@ private:
 
 }
 
-void OutBuffer_t::write(const char *data, long size )
+void OutBuffer_t::write(const char *data, unsigned int size )
 {
     localBuffer.append(data, size);
 }
@@ -949,13 +951,15 @@ public:
     Proxy_t(const std::string &serverUrl, int readTimeout,
             int writeTimeout, int connectTimeout, bool keepAlive,
             int rpcTransferMode, const std::string &encoding, bool useHTTP10,
-            const std::string &proxyVia, StringMode_t stringMode)
+            const std::string &proxyVia, StringMode_t stringMode,
+            const ProtocolVersion_t &protocolVersion)
         : url(serverUrl, proxyVia),
           io(-1, readTimeout, writeTimeout, -1, -1),
           connectTimeout(connectTimeout), keepAlive(keepAlive),
           rpcTransferMode(rpcTransferMode), encoding(encoding),
           serverSupportedProtocols(HTTPClient_t::XML_RPC),
-          useHTTP10(useHTTP10), stringMode(stringMode)
+          useHTTP10(useHTTP10), stringMode(stringMode), 
+                    protocolVersion(protocolVersion)
     {}
 
     ~Proxy_t()
@@ -990,11 +994,12 @@ private:
     std::string encoding;
 
     std::string path;
-    unsigned long serverSupportedProtocols;
+    unsigned int serverSupportedProtocols;
 
     bool useHTTP10;
     std::string lastCall;
     StringMode_t stringMode;
+    ProtocolVersion_t protocolVersion;
 };
 
 struct ServerProxyObject
@@ -1195,7 +1200,9 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *self, PyObject *args,
     static char *kwlist[] = {"serverUrl", "readTimeout", "writeTimeout",
                              "connectTimeout",
                              "keepAlive", "useBinary","encoding",
-                             "useHTTP10", "proxyVia", "stringMode", 0};
+                             "useHTTP10", "proxyVia", "stringMode",
+                             "protocolVersionMajor",
+                             "protocolVersionMinor",0};
 
     // parse arguments
     char *serverUrl;
@@ -1209,13 +1216,17 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *self, PyObject *args,
     char *encoding = "utf-8";
     int useHTTP10 = false;
     char *proxyVia = "";
+    unsigned char protocolVersionMajor = 2;
+    unsigned char protocolVersionMinor = 0;
+    
 
     if (!PyArg_ParseTupleAndKeywords(args, keywds,
-                                     "s#|iiiiisiss:ServerProxy.__init__", kwlist,
+                                     "s#|iiiiisissii:ServerProxy.__init__", kwlist,
                                      &serverUrl, &serverUrlLen, &readTimeout,
                                      &writeTimeout, &connectTimeout,
                                      &keepAlive,&mode, &encoding,
-                                     &useHTTP10, &proxyVia, &stringMode_))
+                                     &useHTTP10, &proxyVia, &stringMode_,
+                                     &protocolVersionMajor,&protocolVersionMinor))
         return 0;
 
     // create server proxy object
@@ -1234,7 +1245,9 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *self, PyObject *args,
         new (&proxy->proxy) Proxy_t(std::string(serverUrl, serverUrlLen),
                                     readTimeout, writeTimeout,
                                     connectTimeout, keepAlive,mode, encoding,
-                                    useHTTP10, proxyVia, stringMode);
+                                    useHTTP10, proxyVia, stringMode, 
+                                    ProtocolVersion_t(protocolVersionMajor,
+                                            protocolVersionMinor));
         proxy->proxyOk = true;
     }
     catch (const HTTPError_t &httpError)
@@ -1330,7 +1343,8 @@ PyObject* Proxy_t::operator()(MethodObject *methodObject, PyObject *args)
     switch(rpcTransferMode) {
     case BINARY_NEVER:
         //using XML_RPC
-        marshaller= Marshaller_t::create(Marshaller_t::XML_RPC,client);
+        marshaller= Marshaller_t::create(Marshaller_t::XML_RPC,client,
+                                         protocolVersion);
         client.prepare(HTTPClient_t::XML_RPC);
         break;
 
@@ -1338,18 +1352,21 @@ PyObject* Proxy_t::operator()(MethodObject *methodObject, PyObject *args)
         if(serverSupportedProtocols & HTTPClient_t::BINARY_RPC) {
             //using BINARY_RPC
             marshaller=
-                Marshaller_t::create(Marshaller_t::BINARY_RPC,client);
+                Marshaller_t::create(Marshaller_t::BINARY_RPC,client,
+                                     protocolVersion);
             client.prepare(HTTPClient_t::BINARY_RPC);
         } else {
             //using XML_RPC
-            marshaller= Marshaller_t::create(Marshaller_t::XML_RPC,client);
+            marshaller= Marshaller_t::create(Marshaller_t::XML_RPC,client,
+                                             protocolVersion);
             client.prepare(HTTPClient_t::XML_RPC);
         }
         break;
 
     case BINARY_ALWAYS:
         //using BINARY_RPC  always
-        marshaller= Marshaller_t::create(Marshaller_t::BINARY_RPC,client);
+        marshaller= Marshaller_t::create(Marshaller_t::BINARY_RPC,client,
+                                         protocolVersion);
         client.prepare(HTTPClient_t::BINARY_RPC);
         break;
 
@@ -1358,12 +1375,14 @@ PyObject* Proxy_t::operator()(MethodObject *methodObject, PyObject *args)
         if(serverSupportedProtocols & HTTPClient_t::XML_RPC || keepAlive ==
            false || io.socket() != -1) {
             //using XML_RPC
-            marshaller= Marshaller_t::create(Marshaller_t::XML_RPC,client);
+            marshaller= Marshaller_t::create(Marshaller_t::XML_RPC,client,
+                                             protocolVersion);
             client.prepare(HTTPClient_t::XML_RPC);
         } else {
             //using BINARY_RPC
             marshaller=
-                Marshaller_t::create(Marshaller_t::BINARY_RPC,client);
+                Marshaller_t::create(Marshaller_t::BINARY_RPC,client,
+                                     protocolVersion);
             client.prepare(HTTPClient_t::BINARY_RPC);
         }
         break;
@@ -1526,7 +1545,7 @@ namespace {
 
         virtual ~StringWriter_t() {}
 
-        virtual void write(const char *data, long int size) {
+        virtual void write(const char *data, unsigned  int size) {
             this->data.append(data, size);
         }
 
@@ -1547,7 +1566,9 @@ static char fastrpc_dumps__doc__[] =
 
 PyObject* fastrpc_dumps(PyObject *self, PyObject *args, PyObject *keywds) {
     static char *kwlist[] = {"params", "methodname", "methodresponse",
-                             "encoding", "useBinary",0};
+                             "encoding", "useBinary",
+                             "protocolVersionMajor",
+                             "protocolVersionMinor",0};
 
     // parse arguments
     PyObject *params;
@@ -1555,11 +1576,14 @@ PyObject* fastrpc_dumps(PyObject *self, PyObject *args, PyObject *keywds) {
     int methodresponse = false;
     char *encoding = "utf-8";
     int useBinary = false;
+    unsigned char protocolVersionMajor = 2;
+    unsigned char protocolVersionMinor = 0;
 
     if (!PyArg_ParseTupleAndKeywords(args, keywds,
-                                     "O|zisi:fastrpc.dumps", kwlist,
+                                     "O|zisiii:fastrpc.dumps", kwlist,
                                      &params, &methodname, &methodresponse,
-                                     &encoding, &useBinary))
+                                     &encoding, &useBinary,
+                                     &protocolVersionMajor,&protocolVersionMinor))
         return 0;
 
     // create writer
@@ -1570,7 +1594,8 @@ PyObject* fastrpc_dumps(PyObject *self, PyObject *args, PyObject *keywds) {
         (Marshaller_t::create((useBinary
                                ? Marshaller_t::BINARY_RPC
                                : Marshaller_t::XML_RPC),
-                              writer));
+                               writer,ProtocolVersion_t(protocolVersionMajor,
+                                                      protocolVersionMinor)));
 
     try {
         // normal data
@@ -1752,6 +1777,11 @@ int printPyFastRPCTree(PyObject *tree, std::ostringstream &out,
     if (PyInt_Check(tree)) {
         // integer
         out << PyInt_AS_LONG(tree);
+    } else if (PyLong_Check(tree)) {
+        Int_t::value_type i = PyLong_AsLongLong(tree);
+        // check for error
+        if (PyErr_Occurred()) return -1;
+        out << i;
     } else if (PyFloat_Check(tree)) {
         // float
         out << PyFloat_AS_DOUBLE(tree);

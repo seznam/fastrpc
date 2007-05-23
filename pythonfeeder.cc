@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: pythonfeeder.cc,v 1.3 2007-04-02 15:42:58 vasek Exp $
+ * $Id: pythonfeeder.cc,v 1.4 2007-05-23 09:31:43 mirecta Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -32,10 +32,11 @@
  *              Created
  */
 
-
+#include <frpcint.h>
 #include "pythonfeeder.h"
 #include "fastrpcmodule.h"
 
+using FRPC::Int_t;
 
 using namespace FRPC::Python;
 
@@ -52,7 +53,10 @@ void Feeder_t::feedValue(PyObject *value)
     if (PyInt_Check(value)) {
         marshaller->packInt(PyInt_AsLong(value));
     } else if(PyLong_Check(value)) {
-        marshaller->packInt(PyLong_AsLong(value));
+        Int_t::value_type i = PyLong_AsLongLong(value);
+        // check for error
+        if (PyErr_Occurred()) throw PyError_t();
+        marshaller->packInt(i);
     } else if (PyFloat_Check(value)) {
         marshaller->packDouble(PyFloat_AsDouble(value));
     } else if (PyDateTime_Check(value)) {

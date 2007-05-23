@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: pythonserver.cc,v 1.13 2007-04-19 15:53:43 vasek Exp $
+ * $Id: pythonserver.cc,v 1.14 2007-05-23 09:31:43 mirecta Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -60,11 +60,13 @@
 #include <frpcunmarshaller.h>
 #include <frpchttpclient.h>
 #include <frpcfault.h>
+#include <frpc.h>
 
 #include "fastrpcmodule.h"
 #include "pythonbuilder.h"
 #include "pythonfeeder.h"
 
+using FRPC::ProtocolVersion_t;
 using FRPC::Python::PyError_t;
 using FRPC::Python::PyObjectWrapper_t;
 using FRPC::Python::Fault;
@@ -235,6 +237,7 @@ namespace {
 
         PyObject *preProcess;
         PyObject *postProcess;
+        PyObject *preRead;
 
         MethodLookup_t *lookup;
         PyObject *defaultMethod;
@@ -445,7 +448,7 @@ namespace {
          * @param data pointer to data
          * @param size size of data
          */
-        virtual void write(const char* data, long size);
+        virtual void write(const char* data, unsigned int size);
 
         /**
          * @brief send response to client
@@ -474,6 +477,7 @@ namespace {
         bool  useChunks;
         bool headersSent;
         bool head;
+        ProtocolVersion_t protocolVersion;
     };
 }
 
@@ -528,6 +532,7 @@ extern "C" {
 static PyMemberDef MethodRegistryObject_members[] = {
     {"preProcess",           T_OBJECT,    OFF(preProcess),           0},
     {"postProcess",          T_OBJECT,    OFF(postProcess),          0},
+    {"preRead",              T_OBJECT,    OFF(preRead),              0},
     {"introspectionEnabled", T_INT,       OFF(introspectionEnabled), 0},
     {0}  // Sentinel
 };
@@ -680,6 +685,11 @@ PyObject* Server_t::serve(int fd, PyObjectWrapper_t addr) {
     headersSent = false;
     head = false;
 
+    // call exception
+    PyObjectWrapper_t type;
+    PyObjectWrapper_t value;
+    PyObjectWrapper_t traceback;
+    
     io.setSocket(fd);
 
     if (addr == Py_None) {
@@ -701,13 +711,25 @@ PyObject* Server_t::serve(int fd, PyObjectWrapper_t addr) {
         Builder_t builder(0, serverObject->stringMode);
 
         try {
+            // call preprocessor
+            if (serverObject->registry->preRead != Py_None) {
+                if (!PyObject_CallFunction(
+                     serverObject->registry->preRead, "()")) {
+            // exception thrown => fetch exception
+                         fetchException(type, value, traceback);
+                         makeFault("Unhandled exception in preread ",
+                                            type, value, traceback);
+                         return 0;
+                     }
+            }
+            
             readRequest(builder);
         } catch (const FRPC::StreamError_t &streamError) {
             std::auto_ptr<FRPC::Marshaller_t> marshaller
                 (FRPC::Marshaller_t::create
                  (((outType == FRPC::Server_t::BINARY_RPC)
                    ? FRPC::Marshaller_t::BINARY_RPC
-                   : FRPC::Marshaller_t::XML_RPC), *this));
+                   : FRPC::Marshaller_t::XML_RPC), *this,protocolVersion));
 
             marshaller->packFault(FRPC::MethodRegistry_t::FRPC_PARSE_ERROR,
                                   streamError.message().c_str());
@@ -759,7 +781,8 @@ PyObject* Server_t::serve(int fd, PyObjectWrapper_t addr) {
                     marshaller(FRPC::Marshaller_t::create
                                (((outType == FRPC::Server_t::BINARY_RPC)
                                 ? FRPC::Marshaller_t::BINARY_RPC
-                                : FRPC::Marshaller_t::XML_RPC), *this));
+                                : FRPC::Marshaller_t::XML_RPC), *this,
+                                protocolVersion));
                 Feeder_t feeder(marshaller.get(), "utf-8");
 
                 PyObjectWrapper_t result
@@ -949,7 +972,7 @@ void Server_t::readRequest(FRPC::DataBuilder_t &builder) {
         io.readContent(httpHead, data, true);
 
         unmarshaller->finish();
-
+        protocolVersion = unmarshaller->getProtocolVersion();
         std::string connection;
         httpHead.get("Connection", connection);
         std::transform(connection.begin(), connection.end(),
@@ -976,10 +999,10 @@ void Server_t::flush() {
     }
 }
 
-void Server_t::write(const char* data, long size) {
+void Server_t::write(const char* data, unsigned int size) {
     contentLength += size;
 
-    if (size > long(BUFFER_SIZE - queryStorage.back().size())) {
+    if (size > BUFFER_SIZE - queryStorage.back().size()) {
         if(useChunks)  {
             sendResponse();
             queryStorage.back().append(data, size);
@@ -1101,6 +1124,7 @@ void Server_t::sendHttpError(const FRPC::HTTPError_t &httpError) {
 void MethodRegistryObject_dealloc(MethodRegistryObject *self) {
     Py_XDECREF(self->preProcess);
     Py_XDECREF(self->postProcess);
+    Py_XDECREF(self->preRead);
     delete self->lookup;
     Py_XDECREF(self->defaultMethod);
     Py_XDECREF(self->defaultListMethods);
@@ -1146,6 +1170,7 @@ PyObject* MethodRegistryObject_new(PyTypeObject *type, PyObject *args,
     // fill defaults (what if __init__ doesn't get called
     self->preProcess = 0;
     self->postProcess = 0;
+    self->preRead = 0;
     self->defaultMethod = 0;
     self->defaultListMethods;
     self->defaultMethodHelp;
@@ -1153,13 +1178,14 @@ PyObject* MethodRegistryObject_new(PyTypeObject *type, PyObject *args,
 
     self->introspectionEnabled = true;
 
-    static char *kwlist[] = {"preProcess", "postProcess",
+    static char *kwlist[] = {"preProcess", "postProcess","preRead",
                              "introspectionEnabled", 0};
 
     // parse arguments
     if (!PyArg_ParseTupleAndKeywords(args, kwds,
-                                     "|OOi:fastrpc.MethodRegistry", kwlist,
+                                     "|OOOi:fastrpc.MethodRegistry", kwlist,
                                      &self->preProcess, &self->postProcess,
+                                     &self->preRead,
                                      &self->introspectionEnabled))
         return 0;
 
@@ -1169,6 +1195,11 @@ PyObject* MethodRegistryObject_new(PyTypeObject *type, PyObject *args,
         Py_XDECREF(self->preProcess);
         return 0;
     }
+    if (callableOrNone(self->preRead, "preRead")) {
+        Py_XDECREF(self->preProcess);
+        Py_XDECREF(self->postProcess);
+    }
+    
     // initialize method lookup
     self->lookup = new MethodLookup_t();
 
@@ -1812,6 +1843,10 @@ PyObject* ServerObject_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         if (PyObject *postProcess
             = PyDict_GetItemString(callbacks, "postProcess"))
             PyDict_SetItemString(registryKwds, "postProcess", postProcess);
+        
+        if (PyObject *preRead
+            = PyDict_GetItemString(callbacks, "preRead"))
+            PyDict_SetItemString(registryKwds, "preRead", preRead); 
     }
 
     // create registry

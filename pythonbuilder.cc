@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: pythonbuilder.cc,v 1.3 2007-04-02 15:42:58 vasek Exp $
+ * $Id: pythonbuilder.cc,v 1.4 2007-05-23 09:31:43 mirecta Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -38,7 +38,8 @@
 
 using namespace FRPC::Python;
 
-namespace FRPC { namespace Python {
+namespace FRPC {
+namespace Python {
 StringMode_t parseStringMode(const char *stringMode) {
     if (stringMode) {
         if (!strcmp(stringMode, "string")) {
@@ -56,123 +57,123 @@ StringMode_t parseStringMode(const char *stringMode) {
     return STRING_MODE_MIXED;
 }
 
-} } // namespace FRPC::Python
+}
+} // namespace FRPC::Python
 
-void Builder_t::buildMethodResponse()
-{}
-void Builder_t::buildBinary(const char* data, long size)
-{
-    if(isError())
+void Builder_t::buildMethodResponse() {}
+void Builder_t::buildBinary(const char* data, unsigned int size) {
+    if (isError())
         return;
     PyObject *binary = reinterpret_cast<PyObject*>(newBinary(data, size));
 
-    if(!binary)
+    if (!binary)
         setError();
-    
-    if(!isMember(binary))
+
+    if (!isMember(binary))
         isFirst(binary);
 
 }
-void Builder_t::buildBinary(const std::string &data)
-{
-    if(isError())
+void Builder_t::buildBinary(const std::string &data) {
+    if (isError())
         return;
     PyObject *binary = reinterpret_cast<PyObject*>(newBinary(data.data(),
                        data.size()));
-    if(!binary)
+    if (!binary)
         setError();
-                       
-    if(!isMember(binary))
+
+    if (!isMember(binary))
         isFirst(binary);
 }
-void Builder_t::buildBool(bool value)
-{
-    if(isError())
+void Builder_t::buildBool(bool value) {
+    if (isError())
         return;
     PyObject *boolean = reinterpret_cast<PyObject*>(newBoolean(value));
 
-    if(!boolean)
+    if (!boolean)
         setError();
-        
-    if(!isMember(boolean))
+
+    if (!isMember(boolean))
         isFirst(boolean);
 }
 void Builder_t::buildDateTime(short year, char month, char day,char hour, char
                               min, char sec,
-                              char weekDay, time_t unixTime, char timeZone)
-{
-    if(isError())
+                              char weekDay, time_t unixTime, char timeZone) {
+    if (isError())
         return;
-    
+
     PyObject *dateTime = reinterpret_cast<PyObject*>(newDateTime(year, month,
                          day, hour, min,
                          sec, weekDay, unixTime, timeZone) );
-    if(!dateTime)
+    if (!dateTime)
         setError();
-        
-    if(!isMember(dateTime))
+
+    if (!isMember(dateTime))
         isFirst(dateTime);
 }
-void Builder_t::buildDouble(double value)
-{
-    if(isError())
+void Builder_t::buildDouble(double value) {
+    if (isError())
         return;
     PyObject *doubleVal = PyFloat_FromDouble(value);
 
-    if(!doubleVal)
+    if (!doubleVal)
         setError();
-    
-    if(!isMember(doubleVal))
+
+    if (!isMember(doubleVal))
         isFirst(doubleVal);
 
 }
-void Builder_t::buildFault(long errNumber, const char* errMsg, long size)
-{
-    if(isError())
+void Builder_t::buildFault(int errNumber, const char* errMsg, unsigned int size) {
+    if (isError())
         return;
     PyObject *args =Py_BuildValue("iNO",errNumber,
                                   PyString_FromStringAndSize(errMsg,size),
                                   methodObject ? methodObject : Py_None);
     PyObject *fault = PyInstance_New(Fault, args, 0);
     //isFirst(fault);
-    
-    if(!fault)
+
+    if (!fault)
         setError();
-    
+
     Py_XDECREF(retValue);
     retValue = fault;
     first = true;
 
 }
-void Builder_t::buildFault(long errNumber, const std::string &errMsg)
-{
-    if(isError())
+void Builder_t::buildFault(int errNumber, const std::string &errMsg) {
+    if (isError())
         return;
     PyObject *args =Py_BuildValue("isO", errNumber, errMsg.c_str(),
                                   methodObject ? methodObject : Py_None);
     PyObject *fault = PyInstance_New(Fault, args, 0);
-        
-    if(!fault)
+
+    if (!fault)
         setError();
-        
+
     Py_XDECREF(retValue);
     retValue = fault;
     first = true;
 }
-void Builder_t::buildInt(long value)
-{
-    if(isError())
+void Builder_t::buildInt(Int_t::value_type value) {
+    if (isError())
         return;
-    PyObject *integer = PyInt_FromLong(value);
+    Int_t::value_type absValue = value < 0 ? -value :value;
+    PyObject *integer = 0;
+    
+    if ((absValue & INT31_MASK)) {
 
-    if(!integer)
+        integer = PyLong_FromLongLong(value);
+    }
+    else {
+        integer = PyInt_FromLong(int32_t(value));
+    }
+    if (!integer)
         setError();
-        
-    if(!isMember(integer))
+
+    if (!isMember(integer))
         isFirst(integer);
 
 }
-void Builder_t::buildMethodCall(const char* methodName1, long size) {
+void Builder_t::buildMethodCall(const char* methodName1, unsigned int size) {
     if (methodName) delete methodName;
     methodName = new std::string(methodName1, size);
 
@@ -186,7 +187,7 @@ void Builder_t::buildMethodCall(const char* methodName1, long size) {
 void Builder_t::buildMethodCall(const std::string &methodName1) {
     if (methodName) delete methodName;
     methodName = new std::string(methodName1);
-    
+
     PyObject *params = PyList_New(0);
     if (!params) setError();
 
@@ -194,16 +195,15 @@ void Builder_t::buildMethodCall(const std::string &methodName1) {
     entityStorage.push_back(TypeStorage_t(params, ARRAY));
 }
 
-void Builder_t::buildString(const char* data, long size)
-{
-    if(isError())
+void Builder_t::buildString(const char* data, unsigned int size) {
+    if (isError())
         return;
     bool utf8 = (stringMode == STRING_MODE_UNICODE);
 
     // check 8-bit string only iff mixed
     if (stringMode == STRING_MODE_MIXED) {
-        for(long i = 0; i < size; i++) {
-            if(data[i] & 0x80) {
+        for (long i = 0; i < size; i++) {
+            if (data[i] & 0x80) {
                 utf8 = true;
                 break;
             }
@@ -218,64 +218,58 @@ void Builder_t::buildString(const char* data, long size)
         stringVal = PyString_FromStringAndSize(const_cast<char*>(data), size);
     }
 
-    if(!stringVal)
+    if (!stringVal)
         setError();
 
-    if(!isMember(stringVal))
+    if (!isMember(stringVal))
         isFirst(stringVal);
 }
 
-void Builder_t::buildStructMember(const char *memberName, long size )
-{
-    if(isError())
+void Builder_t::buildStructMember(const char *memberName, unsigned int size ) {
+    if (isError())
         return;
     std::string buf(memberName,size);
     this->memberName =  buf;
 
 }
-void Builder_t::buildStructMember(const std::string &memberName)
-{
-    if(isError())
+void Builder_t::buildStructMember(const std::string &memberName) {
+    if (isError())
         return;
     this->memberName = memberName;
 }
-void Builder_t::closeArray()
-{
-    if(isError())
+void Builder_t::closeArray() {
+    if (isError())
         return;
     entityStorage.pop_back();
 }
-void Builder_t::closeStruct()
-{
-    if(isError())
+void Builder_t::closeStruct() {
+    if (isError())
         return;
     entityStorage.pop_back();
 }
-void Builder_t::openArray(long numOfItems)
-{
-    if(isError())
+void Builder_t::openArray(unsigned int numOfItems) {
+    if (isError())
         return;
     PyObject *array = PyList_New(0);
 
-    if(!array)
+    if (!array)
         setError();
-    
-    if(!isMember(array))
+
+    if (!isMember(array))
         isFirst(array);
 
     entityStorage.push_back(TypeStorage_t(array,ARRAY));
 }
-void Builder_t::openStruct(long numOfMembers)
-{
+void Builder_t::openStruct(unsigned int numOfMembers) {
 
-    if(isError())
+    if (isError())
         return;
     PyObject *structVal = PyDict_New();
 
-    if(!structVal)
+    if (!structVal)
         setError();
-    
-    if(!isMember(structVal))
+
+    if (!isMember(structVal))
         isFirst(structVal);
 
     entityStorage.push_back(TypeStorage_t(structVal,STRUCT));

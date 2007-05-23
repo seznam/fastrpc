@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: pythonbuilder.h,v 1.3 2007-04-02 15:42:58 vasek Exp $
+ * $Id: pythonbuilder.h,v 1.4 2007-05-23 09:31:43 mirecta Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -42,6 +42,7 @@
 #include <Python.h>
 
 #include <frpcdatabuilder.h>
+#include <frpcint.h>
 
 /***************************************************************************/
 /***Builder for unmarshaller                                             ***/
@@ -55,6 +56,9 @@ enum StringMode_t {
     STRING_MODE_UNICODE,
     STRING_MODE_STRING
 };
+const Int_t::value_type ZERO = 0;
+const Int_t::value_type ALLONES = ~ZERO;
+const Int_t::value_type INT31_MASK = ALLONES << 31;
 
 StringMode_t parseStringMode(const char *stringMode);
 
@@ -71,7 +75,7 @@ struct TypeStorage_t
 class Builder_t : public FRPC::DataBuilder_t
 {
 public:
-    enum{NONE=0, INT=1,BOOL,DOUBLE,STRING,DATETIME,BINARY,
+    enum{NONE=0, INT=1,BOOL,DOUBLE,STRING,DATETIME,BINARY,INTP8,INTN8,
          STRUCT=10,ARRAY,METHOD_CALL=13,METHOD_RESPONSE,FAULT,
          MEMBER_NAME = 100,METHOD_NAME,METHOD_NAME_LEN,MAGIC,MAIN };
 
@@ -88,28 +92,28 @@ public:
     }
 
     virtual void buildMethodResponse();
-    virtual void buildBinary(const char* data, long size);
+    virtual void buildBinary(const char* data, unsigned int size);
     virtual void buildBinary(const std::string &data);
     virtual void buildBool(bool value);
     virtual void buildDateTime(short year, char month, char day,char hour, char
                                min, char sec,
                                char weekDay, time_t unixTime, char timeZone);
     virtual void buildDouble(double value);
-    virtual void buildFault(long errNumber, const char* errMsg, long size );
-    virtual void buildFault(long errNumber, const std::string &errMsg);
-    virtual void buildInt(long value);
-    virtual void buildMethodCall(const char* methodName, long size );
+    virtual void buildFault(int errNumber, const char* errMsg, unsigned int size );
+    virtual void buildFault(int errNumber, const std::string &errMsg);
+    virtual void buildInt(Int_t::value_type value);
+    virtual void buildMethodCall(const char* methodName, unsigned int size );
     virtual void buildMethodCall(const std::string &methodName);
-    virtual void buildString(const char* data, long size );
+    virtual void buildString(const char* data, unsigned int size );
     virtual void buildString(const std::string &data) {
         return buildString(data.data(), data.size());
     }
-    virtual void buildStructMember(const char *memberName, long size );
+    virtual void buildStructMember(const char *memberName, unsigned int size );
     virtual void buildStructMember(const std::string &memberName);
     virtual void closeArray();
     virtual void closeStruct();
-    virtual void openArray(long numOfItems);
-    virtual void openStruct(long numOfMembers);
+    virtual void openArray(unsigned int numOfItems);
+    virtual void openStruct(unsigned int numOfMembers);
     inline  void setError()
     {
         Py_XDECREF(retValue);
