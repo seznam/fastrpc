@@ -53,10 +53,10 @@ public:
 ;
 Value_t& methodTest(Pool_t &pool, Array_t &params, int &data)
 {
-    params.checkItems("is");
+    
 
     return pool.Struct("status",pool.Int(200),"statusMessage",
-                       pool.String("OK"),"int",params[0],"string",params[1]);
+                       pool.String("OK"),"params",params);
 
 }
 
@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
 
     int sock = 0;
     struct sockaddr_in addr;
-    long port= 2424;
+    long port= 9898;
     socklen_t sinSize = sizeof( struct sockaddr_in );
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port);

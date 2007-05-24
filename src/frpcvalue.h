@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcvalue.h,v 1.4 2007-04-02 15:28:20 vasek Exp $
+ * FILE          $Id: frpcvalue.h,v 1.5 2007-05-24 11:28:29 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -53,7 +53,7 @@ public:
         @brief Default constructor
         @param pool is reference to Pool_t (memory pool)
     */
-    Value_t(Pool_t &pool):pool(pool)
+    Value_t()
     {}
     /**
         @brief  Destructor
@@ -89,24 +89,19 @@ public:
     */
     virtual const char* getTypeName() const = 0;
 
-    inline Value_t& clone() const
-    {
-        return this->clone(pool);
-    }
+   
     /**
        @brief Abstract virtual method to clone/copy Value_t 
        @param newPool is pointer of Pool_t which is used for allocate objects
        */
     virtual Value_t& clone(Pool_t &newPool) const = 0;
-protected:
-    Pool_t &pool;/// Memory pool
+
 
 private:
 
     /**
         @brief Default constructor is disabled
     */
-    Value_t();
 
     Value_t(const Value_t&);
 

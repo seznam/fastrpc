@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcdouble.h,v 1.4 2007-04-02 15:28:21 vasek Exp $
+ * FILE          $Id: frpcdouble.h,v 1.5 2007-05-24 11:28:29 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -94,7 +94,8 @@ public:
         @param newPool is reference of Pool_t which is used for allocate objects
     */
     virtual Value_t& clone(Pool_t &newPool) const;
-
+    ///static members
+    static Double_t &FRPC_ZERO;
 
 private:
     /**
@@ -106,7 +107,7 @@ private:
     @param pool is a reference to Pool_t used for allocating
     @param value  is a double value
     */
-    Double_t(Pool_t &pool, double value):Value_t(pool),value(value)
+    Double_t( double value):value(value)
     {}
 
     double value;/**  @brief Internal double value */

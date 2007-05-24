@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcstruct.h,v 1.4 2007-05-21 15:10:13 mirecta Exp $
+ * FILE          $Id: frpcstruct.h,v 1.5 2007-05-24 11:28:29 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -179,11 +179,18 @@ public:
     */
     Struct_t& append(const key_type &key, Value_t &value);
     /**
-        @brief Get poiter to value or sero if not exists
+        @brief Get poiter to value or zero if not exists
         @param key is reference to Struct_t::key_type
         @return Value_t* pointer or zero
     */
     Value_t* get(const key_type &key);
+    /**
+        @brief Get reference to value or defaultValue if not exists
+        @param key is reference to Struct_t::key_type
+        @param defaultValue reference to fefault value
+        @return Value_t* pointer or zero
+    */
+    Value_t& get(const key_type &key, Value_t &defaultValue);
     /**
         @brief operator []
         @return reference to Value_t or exeption KeyError_t if key isn't exist
@@ -195,30 +202,27 @@ public:
         @return reference to Value_t or exeption KeyError_t if key isn't exist
     */
     const Value_t& operator[] (const key_type &key) const;
-
+    ///static member
+    static Struct_t &FRPC_EMPTY;
 private:
-    /**
-        @brief Default constructor is disabled
-    */
-    Struct_t();
     /** 
         @brief Costructor empty Struct_t 
         @param pool is a reference to Pool_t used for allocating
     */
-    Struct_t(Pool_t &pool);
+    Struct_t();
     /**          1
         @brief Costructor of Struct_t with one item
         @param pool is a reference to Pool_t used for allocating
         @param key is reference to Struct_t::key_type
         @param value is reference to new Value_t 
     */
-    Struct_t(Pool_t &pool, const std::string &key, Value_t &value);
+    Struct_t(const std::string &key, Value_t &value);
     /** 
         @brief Costructor of Struct_t  with one item
         @param pool is a reference to Pool_t used for allocating
         @param value is new pair Struct_t::pair(std::string key, Value_t* value)
     */  
-    Struct_t(Pool_t &pool,pair value );
+    Struct_t(pair value);
     
     
     

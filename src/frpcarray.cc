@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcarray.cc,v 1.9 2007-05-21 15:10:12 mirecta Exp $
+ * FILE          $Id: frpcarray.cc,v 1.10 2007-05-24 11:28:28 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -65,13 +65,13 @@ Value_t& Array_t::clone(Pool_t& newPool) const
     return *newArray;
 }
 
-Array_t::Array_t(Pool_t &pool):Value_t(pool)
+Array_t::Array_t()
 {
     arrayData.reserve(ARRAY_RESERVED_SPACE);
 }
 
 
-Array_t::Array_t(Pool_t &pool, Value_t  &item ):Value_t(pool)
+Array_t::Array_t(Value_t  &item )
 {
     arrayData.reserve(ARRAY_RESERVED_SPACE);
     arrayData.push_back(&item);

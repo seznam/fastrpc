@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcint.h,v 1.6 2007-05-22 14:06:28 mirecta Exp $
+ * FILE          $Id: frpcint.h,v 1.7 2007-05-24 11:28:29 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -101,6 +101,10 @@ public:
         @param newPool is reference of Pool_t which is used for allocate objects
     */
     virtual Value_t& clone(Pool_t &newPool) const;
+    
+    ///staic 
+    static Int_t &FRPC_ZERO;
+    static Int_t &FRPC_MINUS_ONE;
 
     enum{ TYPE = 0x01 };
 private:
@@ -113,8 +117,8 @@ private:
     @param pool is a reference to Pool_t used for allocating
     @param number  is an  long value
     */
-    Int_t(Pool_t &pool, value_type number)
-            :Value_t(pool),value(number)
+    Int_t(value_type number)
+            :value(number)
     {}
 
 

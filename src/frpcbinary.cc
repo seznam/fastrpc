@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcbinary.cc,v 1.3 2007-04-02 15:28:21 vasek Exp $
+ * FILE          $Id: frpcbinary.cc,v 1.4 2007-05-24 11:28:28 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -42,12 +42,12 @@ namespace FRPC
 Binary_t::~Binary_t()
 {}
 
-Binary_t::Binary_t(Pool_t &pool,std::string::value_type *pData, std::string::size_type dataSize)
-        :Value_t(pool),value(pData,dataSize)
+Binary_t::Binary_t(std::string::value_type *pData, std::string::size_type dataSize)
+        :value(pData,dataSize)
 {}
 
-Binary_t::Binary_t(Pool_t &pool, const std::string &value)
-        :Value_t(pool),value(value)
+Binary_t::Binary_t(const std::string &value)
+        :value(value)
 {}
 
 std::string::size_type Binary_t::size() const

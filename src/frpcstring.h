@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcstring.h,v 1.4 2007-04-02 15:28:20 vasek Exp $
+ * FILE          $Id: frpcstring.h,v 1.5 2007-05-24 11:28:29 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -115,7 +115,8 @@ public:
         @brief operator const std::wstring
     */
     operator std::wstring () const;
-
+    ///static members
+    static String_t &FRPC_EMPTY;
 private:
     /**
         @brief Default constructor is disabled
@@ -127,19 +128,19 @@ private:
         @param pData - is a unsigned char pointer to data 
         @param dataSize - is a size of data in bytes
     */
-    String_t(Pool_t &pool, std::string::value_type *pData, std::string::size_type dataSize);
+    String_t(std::string::value_type *pData, std::string::size_type dataSize);
     /**
        @brief Constructor from std::string value
        @param pool  -  is a reference to Pool_t used for allocating
        @param value  - is a std::string of data
     */
-    String_t(Pool_t &pool, const std::string &value);
+    String_t(const std::string &value);
     /**
        @brief Constructor from std::wstring value
        @param pool  -  is a reference to Pool_t used for allocating
        @param value  - is a std::wstring of data
     */
-    String_t(Pool_t &pool, const std::wstring &value);
+    String_t(const std::wstring &value);
 
     std::string value;///internal storage
 };

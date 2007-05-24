@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcdatetime.h,v 1.4 2007-04-02 15:28:21 vasek Exp $
+ * FILE          $Id: frpcdatetime.h,v 1.5 2007-05-24 11:28:28 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -134,13 +134,16 @@ public:
         @return iso format string
     */
     std::string isoFormat() const;
+    ///static members
+    static DateTime_t &FRPC_EPOCH;
+    static DateTime_t &FRPC_NULL;
     
 private:
     /**
         @brief Constructor  from now time 
     @   param pool  -  is a reference to Pool_t used for allocating
     */
-    DateTime_t(Pool_t &pool);
+    DateTime_t();
     /**
         @brief Constructor.  Create specified date
         @param pool  -  is a reference to Pool_t used for allocating
@@ -155,7 +158,7 @@ private:
         @param unixTime
         @param timeZone
     */
-    DateTime_t(Pool_t &pool, short year, char month, char day,
+    DateTime_t(short year, char month, char day,
                      char hour, char min, char sec, char weekDay, time_t unixTime, char timeZone);
 
     /**
@@ -163,20 +166,20 @@ private:
         @param pool  -  is a reference to Pool_t used for allocating
         @param unixTime Number of secs from 1970-01-01 00:00:00 UTC.
     */
-    DateTime_t(Pool_t &pool, time_t unixTime);
+    DateTime_t(time_t unixTime);
     
      /**
         @brief Constructor from common unix time structure.
         @param pool  -  is a reference to Pool_t used for allocating
         @param dateTime unix date time structure.
     */
-    DateTime_t(Pool_t &pool, tm &dateTime);
+    DateTime_t(tm &dateTime);
      /**
         @brief Constructor from ISO format.
         @param pool  -  is a reference to Pool_t used for allocating
         @param isoFormat DateTime in iso format.
     */
-    DateTime_t(Pool_t &pool, const std::string &isoFormat);
+    DateTime_t(const std::string &isoFormat);
     
     
     short year;        ///year

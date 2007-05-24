@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpc.cc,v 1.9 2007-05-22 13:03:23 mirecta Exp $
+ * FILE          $Id: frpc.cc,v 1.10 2007-05-24 11:28:28 mirecta Exp $
  *
  * DESCRIPTION
  *
@@ -38,7 +38,7 @@
 #include <stdlib.h>
 #include <sstream>
 
-using namespace FRPC;
+
 
 /**
 * @brief dummy method for test in configure
@@ -508,3 +508,26 @@ ProtocolVersion_t::ProtocolVersion_t()
     return *this;
 }*/
 } // namespace FRPC
+
+//some constants
+
+namespace {
+   FRPC::Pool_t pool;
+}
+
+FRPC::Int_t &FRPC::Int_t::FRPC_ZERO = pool.Int(0);
+FRPC::Int_t &FRPC::Int_t::FRPC_MINUS_ONE = pool.Int(-1);
+FRPC::Double_t &FRPC::Double_t::FRPC_ZERO = pool.Double(0);
+FRPC::Bool_t &FRPC::Bool_t::FRPC_TRUE = pool.Bool(true);
+FRPC::Bool_t &FRPC::Bool_t::FRPC_FALSE = pool.Bool(false);
+FRPC::String_t &FRPC::String_t::FRPC_EMPTY = pool.String("");
+FRPC::Struct_t &FRPC::Struct_t::FRPC_EMPTY = pool.Struct();
+FRPC::Array_t &FRPC::Array_t::FRPC_EMPTY = pool.Array();
+FRPC::Binary_t &FRPC::Binary_t::FRPC_EMPTY = pool.Binary("");
+FRPC::DateTime_t &FRPC::DateTime_t::FRPC_EPOCH = pool.DateTime(0);
+FRPC::DateTime_t &FRPC::DateTime_t::FRPC_NULL = pool.DateTime(0,0,0,0,0,0,0,-1,0);
+
+
+
+
+

@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcstruct.cc,v 1.6 2007-05-21 15:10:12 mirecta Exp $
+ * FILE          $Id: frpcstruct.cc,v 1.7 2007-05-24 11:28:29 mirecta Exp $
  *
  * DESCRIPTION
  *
@@ -37,16 +37,16 @@
 
 namespace FRPC {
 
-Struct_t::Struct_t(Pool_t &pool):Value_t(pool) {}
+Struct_t::Struct_t() {}
 
 
 Struct_t::~Struct_t() {}
 
-Struct_t::Struct_t(Pool_t &pool, Struct_t::pair value):Value_t(pool) {
+Struct_t::Struct_t(Struct_t::pair value) {
     structData.insert(value);
 }
 
-Struct_t::Struct_t(Pool_t &pool, const std::string &key, Value_t &value):Value_t(pool) {
+Struct_t::Struct_t(const std::string &key, Value_t &value) {
     if (key.size() > 255) {
         throw LenError_t("Size of member name must be max 255 not %d.",key.size() );
     }
@@ -130,6 +130,16 @@ Value_t* Struct_t::get(const key_type &key) {
     if ((istructData = structData.find(key)) == structData.end())
         return 0;
     return istructData->second;
+
+}
+
+Value_t& Struct_t::get(const key_type &key, Value_t &defaultValue) {
+    iterator istructData;
+
+    if ((istructData = structData.find(key)) == structData.end())
+        return defaultValue;
+
+    return *(istructData->second);
 
 }
 

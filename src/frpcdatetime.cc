@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcdatetime.cc,v 1.6 2007-04-02 15:28:21 vasek Exp $
+ * FILE          $Id: frpcdatetime.cc,v 1.7 2007-05-24 11:28:28 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -43,9 +43,11 @@ namespace FRPC
 DateTime_t::~DateTime_t()
 {}
 
-DateTime_t::DateTime_t(Pool_t &pool, short year, char month, char day,
-                       char hour, char minute, char sec, char weekDay, time_t unixTime, char timeZone)
-        :Value_t(pool),year(year),month(month),day(day),hour(hour),minute(minute),sec(sec),weekDay(weekDay),
+DateTime_t::DateTime_t(short year, char month, char day,
+                       char hour, char minute, char sec, char weekDay, time_t unixTime,
+                       char timeZone)
+        :year(year),month(month),day(day),hour(hour),minute(minute),
+                 sec(sec),weekDay(weekDay),
         unixTime(unixTime),timeZone(timeZone)
 {
     struct tm time_tm;
@@ -57,7 +59,7 @@ DateTime_t::DateTime_t(Pool_t &pool, short year, char month, char day,
     time_tm.tm_min = minute;
     time_tm.tm_sec = sec;
     time_tm.tm_isdst = -1; // we do not know nothing about daylight savings time
-    long time_l = mktime(&time_tm);
+    time_t time_l = mktime(&time_tm);
     struct tm *timeValid = localtime(&time_l);
 
     this->unixTime =  time_l;
@@ -67,8 +69,7 @@ DateTime_t::DateTime_t(Pool_t &pool, short year, char month, char day,
 
 
 
-DateTime_t::DateTime_t(Pool_t &pool, time_t unixTime)
-        :Value_t(pool)
+DateTime_t::DateTime_t(time_t unixTime)
 {
     struct tm *time_tm = localtime(&unixTime);
     year = time_tm->tm_year + 1900;
@@ -83,16 +84,14 @@ DateTime_t::DateTime_t(Pool_t &pool, time_t unixTime)
 
 
 
-DateTime_t::DateTime_t(Pool_t &pool, tm &dateTime)
-        :Value_t(pool)
+DateTime_t::DateTime_t(tm &dateTime)
 {
     /// @todo implement me
 }
 
-DateTime_t::DateTime_t(Pool_t &pool)
-        :Value_t(pool)
+DateTime_t::DateTime_t()
 {
-    long unix_time =  time(0);
+    time_t unix_time =  time(0);
     struct tm *time_tm = localtime(&unix_time);
     year = time_tm->tm_year + 1900;
     month = time_tm->tm_mon + 1;
@@ -104,8 +103,7 @@ DateTime_t::DateTime_t(Pool_t &pool)
     this->unixTime = unixTime;
 }
 
-DateTime_t::DateTime_t(Pool_t &pool, const std::string &isoFormat)
-        :Value_t(pool)
+DateTime_t::DateTime_t(const std::string &isoFormat)
 {
     parseISODateTime(isoFormat.data(),isoFormat.size(),year,month,day,hour,minute,sec,timeZone);
     struct tm time_tm;
@@ -116,7 +114,7 @@ DateTime_t::DateTime_t(Pool_t &pool, const std::string &isoFormat)
     time_tm.tm_min = minute;
     time_tm.tm_sec = sec;
     time_tm.tm_isdst = -1; // we do not know nothing about daylight savings time
-    long time_l = mktime(&time_tm);
+    time_t time_l = mktime(&time_tm);
     struct tm *timeValid = localtime(&time_l);
 
     this->unixTime =  time_l;

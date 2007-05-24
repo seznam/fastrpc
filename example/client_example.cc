@@ -42,11 +42,11 @@ int main(int argc, char *argv[])
         printValue(client(pool,"system.methodSignature",
                           pool.String(String(Array(retVal1)[4]).getString())));
 
-        Struct_t &result = Struct(client(pool,"test2",pool.Int(a),pool.String("hello")));
-
+        Struct_t &result = Struct(client(pool,"test2",pool.Int(-1),pool.Int(1),pool.Int(a)));
+        
         printValue(result);
         printf("\nStatus is %lld\n",Int(result["status"]).getValue());
-
+        printf("\ncount is %lld\n",FRPC::Int(result.get("count",FRPC::Int_t::FRPC_MINUS_ONE)).getValue());
 
 
     }

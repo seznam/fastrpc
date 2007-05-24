@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcstring.cc,v 1.4 2007-04-02 15:28:20 vasek Exp $
+ * FILE          $Id: frpcstring.cc,v 1.5 2007-05-24 11:28:29 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -47,19 +47,18 @@ namespace FRPC
 String_t::~String_t()
 {}
 
-String_t::String_t(Pool_t &pool,std::string::value_type *pData, std::string::size_type dataSize)
-        :Value_t(pool),value(pData,dataSize)
+String_t::String_t(std::string::value_type *pData, std::string::size_type dataSize)
+        :value(pData,dataSize)
 {
 }
 
-String_t::String_t(Pool_t &pool, const std::string &value)
-        :Value_t(pool),value(value)
+String_t::String_t(const std::string &value)
+        :value(value)
 {
 }
 
 
-String_t::String_t(Pool_t &pool, const std::wstring &value_w)
-        :Value_t(pool)
+String_t::String_t(const std::wstring &value_w)
 
 {
 #ifdef WIN32

@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcarray.h,v 1.4 2007-04-02 15:28:21 vasek Exp $
+ * FILE          $Id: frpcarray.h,v 1.5 2007-05-24 11:28:28 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -189,23 +189,21 @@ public:
     */  
     void checkItems(const std::string &items) const;
     
-
+    ///static member
+    static Array_t &FRPC_EMPTY;
 private:
-    /**
-    @brief Default constructor is disabled
-    */
-    Array_t();
+    
     /**
         @brief Costructor empty Array_t 
         @param pool is a reference to Pool_t used for allocating
     */
-    Array_t(Pool_t &pool);
+    Array_t();
     /**
         @brief Costructor Array_t with one Value_t item
         @param pool is a reference to Pool_t used for allocating
         @param item  is a new item
     */
-    Array_t(Pool_t &pool, Value_t &item );
+    Array_t(Value_t &item );
 
 
     std::vector<Value_t*> arrayData;///Internal array data

@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcbool.h,v 1.4 2007-04-02 15:28:21 vasek Exp $
+ * FILE          $Id: frpcbool.h,v 1.5 2007-05-24 11:28:28 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -92,24 +92,27 @@ public:
         @param newPool is reference of Pool_t which is used for allocate objects
     */
     virtual Value_t& clone(Pool_t &newPool) const;
+    ///static members
+    static Bool_t &FRPC_TRUE;
+    static Bool_t &FRPC_FALSE;
 
 private :
     /**
-        @brief Default constructor is disabled
+        @brief Default constructor
     */
-    Bool_t(Pool_t &pool):Value_t(pool)
+    Bool_t()
     {}
-    Bool_t();
+   
     /**
         @brief Costructor from bool value
         @param pool is a reference to Pool_t used for allocating
         @param boolean  is a bool value
     */
-    Bool_t(Pool_t &pool, bool boolean):Value_t(pool),value(boolean)
+    Bool_t(bool boolean):value(boolean)
     {}
 
     bool value; /**  Internal bool value */
-    ;
+    
 
 };
 /**
