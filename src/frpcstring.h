@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcstring.h,v 1.5 2007-05-24 11:28:29 mirecta Exp $
+ * FILE          $Id: frpcstring.h,v 1.6 2007-05-24 12:42:24 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -116,7 +116,7 @@ public:
     */
     operator std::wstring () const;
     ///static members
-    static String_t &FRPC_EMPTY;
+    static const String_t &FRPC_EMPTY;
 private:
     /**
         @brief Default constructor is disabled

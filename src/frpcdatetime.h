@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcdatetime.h,v 1.5 2007-05-24 11:28:28 mirecta Exp $
+ * FILE          $Id: frpcdatetime.h,v 1.6 2007-05-24 12:42:24 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -135,8 +135,8 @@ public:
     */
     std::string isoFormat() const;
     ///static members
-    static DateTime_t &FRPC_EPOCH;
-    static DateTime_t &FRPC_NULL;
+    static const DateTime_t &FRPC_EPOCH;
+    static const DateTime_t &FRPC_NULL;
     
 private:
     /**

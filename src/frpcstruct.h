@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcstruct.h,v 1.5 2007-05-24 11:28:29 mirecta Exp $
+ * FILE          $Id: frpcstruct.h,v 1.6 2007-05-24 12:42:24 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -183,6 +183,7 @@ public:
         @param key is reference to Struct_t::key_type
         @return Value_t* pointer or zero
     */
+    const Value_t* get(const key_type &key) const;
     Value_t* get(const key_type &key);
     /**
         @brief Get reference to value or defaultValue if not exists
@@ -190,6 +191,7 @@ public:
         @param defaultValue reference to fefault value
         @return Value_t* pointer or zero
     */
+    const Value_t& get(const key_type &key, const Value_t &defaultValue) const;
     Value_t& get(const key_type &key, Value_t &defaultValue);
     /**
         @brief operator []
@@ -203,7 +205,7 @@ public:
     */
     const Value_t& operator[] (const key_type &key) const;
     ///static member
-    static Struct_t &FRPC_EMPTY;
+    static const Struct_t &FRPC_EMPTY;
 private:
     /** 
         @brief Costructor empty Struct_t 

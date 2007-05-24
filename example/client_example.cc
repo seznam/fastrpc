@@ -49,6 +49,7 @@ int main(int argc, char *argv[])
         printf("\ncount is %lld\n",FRPC::Int(result.get("count",FRPC::Int_t::FRPC_MINUS_ONE)).getValue());
 
 
+
     }
     catch (const Fault_t &f)
     {

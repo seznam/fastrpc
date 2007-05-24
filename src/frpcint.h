@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcint.h,v 1.7 2007-05-24 11:28:29 mirecta Exp $
+ * FILE          $Id: frpcint.h,v 1.8 2007-05-24 12:42:24 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -103,8 +103,8 @@ public:
     virtual Value_t& clone(Pool_t &newPool) const;
     
     ///staic 
-    static Int_t &FRPC_ZERO;
-    static Int_t &FRPC_MINUS_ONE;
+    static const Int_t &FRPC_ZERO;
+    static const Int_t &FRPC_MINUS_ONE;
 
     enum{ TYPE = 0x01 };
 private:

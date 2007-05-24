@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcstruct.cc,v 1.7 2007-05-24 11:28:29 mirecta Exp $
+ * FILE          $Id: frpcstruct.cc,v 1.8 2007-05-24 12:42:24 mirecta Exp $
  *
  * DESCRIPTION
  *
@@ -124,6 +124,15 @@ Struct_t& Struct_t::append(const Struct_t::key_type &key, Value_t &value) {
     return *this;
 }
 
+const Value_t* Struct_t::get(const key_type &key) const {
+    const_iterator istructData;
+
+    if ((istructData = structData.find(key)) == structData.end())
+        return 0;
+    return istructData->second;
+
+}
+
 Value_t* Struct_t::get(const key_type &key) {
     iterator istructData;
 
@@ -133,8 +142,20 @@ Value_t* Struct_t::get(const key_type &key) {
 
 }
 
-Value_t& Struct_t::get(const key_type &key, Value_t &defaultValue) {
+
+Value_t& Struct_t::get(const key_type &key, Value_t &defaultValue){
     iterator istructData;
+
+    if ((istructData = structData.find(key)) == structData.end())
+        return defaultValue;
+
+    return *(istructData->second);
+
+}
+
+const Value_t& Struct_t::get(const key_type &key,
+                             const Value_t &defaultValue) const{
+    const_iterator istructData;
 
     if ((istructData = structData.find(key)) == structData.end())
         return defaultValue;
