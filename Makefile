@@ -1,5 +1,5 @@
 #
-# FILE              $Id: Makefile,v 1.3 2006-06-27 12:04:06 vasek Exp $
+# FILE              $Id: Makefile,v 1.4 2007-05-25 15:31:22 vasek Exp $
 #
 # DESCRIPTION       A makefile for fastrpc python module.
 #
@@ -13,7 +13,7 @@
 #                   Created.
 #
 
-PYTHON_BINARIES = /usr/bin/python2.2
+PYTHON_BINARIES = /usr/bin/python
 
 
 
