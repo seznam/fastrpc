@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: fastrpcmodule.cc,v 1.9 2007-05-23 09:31:43 mirecta Exp $
+ * $Id: fastrpcmodule.cc,v 1.10 2007-05-25 11:11:11 mirecta Exp $
  * 
  * AUTHOR      Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
@@ -1216,8 +1216,8 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *self, PyObject *args,
     char *encoding = "utf-8";
     int useHTTP10 = false;
     char *proxyVia = "";
-    unsigned char protocolVersionMajor = 2;
-    unsigned char protocolVersionMinor = 0;
+    int protocolVersionMajor = 2;
+    int protocolVersionMinor = 0;
     
 
     if (!PyArg_ParseTupleAndKeywords(args, keywds,
@@ -1239,6 +1239,9 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *self, PyObject *args,
     StringMode_t stringMode = parseStringMode(stringMode_);
     if (stringMode == STRING_MODE_INVALID) return 0;
 
+    if (protocolVersionMajor < 1) protocolVersionMajor = 1;
+    if (protocolVersionMinor < 0) protocolVersionMajor = 0;
+    
     try
     {
         // initialize underlying proxy (inplace!)
@@ -1250,6 +1253,7 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *self, PyObject *args,
                                             protocolVersionMinor));
         proxy->proxyOk = true;
     }
+    
     catch (const HTTPError_t &httpError)
     {
         Py_DECREF(proxy);
