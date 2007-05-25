@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: pythonserver.cc,v 1.14 2007-05-23 09:31:43 mirecta Exp $
+ * $Id: pythonserver.cc,v 1.15 2007-05-25 15:31:42 vasek Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -1462,6 +1462,12 @@ PyObject* dispatchCall(MethodRegistryObject *self, const char *name,
             // make fault from unhandled exception
             result = makeFault("Unhandled exception ", type, value, traceback);
         }
+    } else {
+        // no postprocessor
+
+        // if exception is Fault => return fault value
+        if (PyErr_GivenExceptionMatches(type, Fault))
+            return value.inc();
     }
 
     // OK
