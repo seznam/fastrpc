@@ -21,7 +21,7 @@
 # http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
 #
 #
-# $Id: configure.in,v 1.21 2007-05-30 13:46:51 mirecta Exp $
+# $Id: configure.in,v 1.22 2007-05-31 14:07:26 vasek Exp $
 #
 # DESCRIPTION
 # configure template for fastrpc.
@@ -61,16 +61,26 @@ AC_LANG_CPLUSPLUS
 # check libxml2
 AC_CHECK_LIB(xml2,xmlParseChunk, ,
              AC_MSG_ERROR(Cannot find xml2 library!))
-             
+
 #AC_HAVE_LIBRARY(xml2,[],[echo "Error libxml not found" ;exit -1])
 
 XML2_CFLAGS=`xml2-config --cflags`
 XML2_LIBS=`xml2-config --libs`
- 
+
 AC_SUBST(XML2_CFLAGS)
 AC_SUBST(XML2_LIBS)
- 
- 
+
+
+dnl ------------------------------------------------------------------------
+# system dependant part
+
+# search for socket related libraries
+AC_SEARCH_LIBS(getnetbyname, socket, , )
+AC_SEARCH_LIBS(hstrerror, resolv, , )
+AC_SEARCH_LIBS(inet_ntoa, nsl, , )
+
+dnl ------------------------------------------------------------------------
+
 # This version number needs to be changed in several different ways for each
 # release. Please read the libtool documentation (info libtool 'Updating
 # version info') before touching this.

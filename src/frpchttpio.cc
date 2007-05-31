@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE             $Id: frpchttpio.cc,v 1.7 2007-05-18 15:29:45 mirecta Exp $
+ * FILE             $Id: frpchttpio.cc,v 1.8 2007-05-31 14:07:27 vasek Exp $
  *
  * DESCRIPTION      HTTP I/O
  *
@@ -49,6 +49,11 @@
 #include <frpcprotocolerror.h>
 #include <frpcresponseerror.h>
 #include <frpchttpclient.h>
+
+// check for MSG_NOSIGNAL
+#ifndef MSG_NOSIGNAL
+#    define MSG_NOSIGNAL 0
+#endif
 
 using namespace FRPC;
 
