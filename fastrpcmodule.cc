@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: fastrpcmodule.cc,v 1.10 2007-05-25 11:11:11 mirecta Exp $
+ * $Id: fastrpcmodule.cc,v 1.11 2007-05-31 10:10:02 vasek Exp $
  * 
  * AUTHOR      Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
@@ -1625,7 +1625,7 @@ PyObject* fastrpc_dumps(PyObject *self, PyObject *args, PyObject *keywds) {
                 // raw data
                 feeder.feedValue(params);
             }
-        } else if (PyObject_IsInstance(params, Fault)) {
+        } else if (PyObject_IsInstance(params, Fault) > 0) {
             PyObjectWrapper_t faultCode
                 (PyObject_GetAttrString(params, "faultCode"));
             if (!faultCode) return 0;

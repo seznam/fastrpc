@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: pythonserver.cc,v 1.16 2007-05-28 11:26:42 vasek Exp $
+ * $Id: pythonserver.cc,v 1.17 2007-05-31 10:10:02 vasek Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -791,7 +791,7 @@ PyObject* Server_t::serve(int fd, PyObjectWrapper_t addr) {
                                   addr, builder.getUnMarshaledData()));
 
                 try {
-                    if (PyObject_IsInstance(result, Fault)) {
+                    if (PyObject_IsInstance(result, Fault) > 0) {
                         PyObjectWrapper_t pyFaultCode
                             (PyObject_GetAttrString(result, "faultCode"));
                         if (!pyFaultCode) throw PyError_t();
@@ -1431,6 +1431,7 @@ PyObject* dispatchCall(MethodRegistryObject *self, const char *name,
             if (PyErr_GivenExceptionMatches(type, Fault))
                 fault = value;
         }
+
 
         FRPC::MethodRegistry_t::TimeDiff_t diff(timeD.diff());
 
