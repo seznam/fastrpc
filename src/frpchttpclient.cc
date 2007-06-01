@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpchttpclient.cc,v 1.6 2007-05-21 15:10:12 mirecta Exp $
+ * FILE          $Id: frpchttpclient.cc,v 1.7 2007-06-01 13:44:53 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -283,9 +283,10 @@ void connectSocket(int &fd, bool keepAlive, unsigned int connectTimeout,
                                   "Cannot connect socket: <%d, %s>.",
                                   status, STRERROR(status));
             }
-            // connect OK => do not close socket!
-            closer.doClose = false;
         }
+
+        // connect OK => do not close socket!
+        closer.doClose = false;
     }
 }
 
