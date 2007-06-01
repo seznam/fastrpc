@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcserverproxy.cc,v 1.6 2007-04-02 15:28:20 vasek Exp $
+ * FILE          $Id: frpcserverproxy.cc,v 1.7 2007-06-01 15:06:23 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -30,6 +30,9 @@
  * HISTORY
  *       
  */
+
+#include <stdarg.h>
+
 #include "frpcserverproxy.h"
 #include <frpc.h>
 #include <frpctreebuilder.h>
@@ -64,406 +67,25 @@ ServerProxy_t::~ServerProxy_t()
 {
 }
 
-Value_t& ServerProxy_t::operator() (Pool_t &pool, const std::string &methodName)
+Value_t& ServerProxy_t::call(Pool_t &pool, const std::string &methodName,
+                             const Array_t &params)
 {
-	HTTPClient_t client(io,url,connectTimeout,keepAlive, useHTTP10);
-    TreeBuilder_t builder(pool);
-    std::auto_ptr<Marshaller_t>marshaller(createMarshaller(client));
-
-    try
-    {
-        marshaller->packMethodCall(methodName.c_str());
-        marshaller->flush();
-    }
-    catch(const ResponseError_t &e)
-    {}
-
-    client.readResponse(builder);
-    serverSupportedProtocols = client.getSupportedProtocols();
-    if(&(builder.getUnMarshaledData()) == 0)
-        throw  Fault_t(builder.getUnMarshaledErrorNumber(),
-                       builder.getUnMarshaledErrorMessage());
-
-    return builder.getUnMarshaledData();
-
-}
-
-Value_t& ServerProxy_t::operator() (Pool_t &pool, const std::string &methodName, const Value_t &param1)
-{
-    HTTPClient_t client(io,url,connectTimeout,keepAlive, useHTTP10);
-    TreeBuilder_t builder(pool);
-    std::auto_ptr<Marshaller_t>marshaller(createMarshaller(client));
-    TreeFeeder_t feeder(*marshaller);
-    try
-    {
-        marshaller->packMethodCall(methodName.c_str());
-
-        feeder.feedValue(const_cast<Value_t&>(param1));
-        marshaller->flush();
-    }
-    catch(const ResponseError_t &e)
-    {}
-
-    client.readResponse(builder);
-    serverSupportedProtocols = client.getSupportedProtocols();
-    if(&(builder.getUnMarshaledData()) == 0)
-        throw  Fault_t(builder.getUnMarshaledErrorNumber(),
-                       builder.getUnMarshaledErrorMessage());
-
-    return builder.getUnMarshaledData();
-
-}
-Value_t& ServerProxy_t::operator() (Pool_t &pool, const std::string &methodName, const Value_t &param1,
-                                    const Value_t &param2)
-{
-    HTTPClient_t client(io,url,connectTimeout,keepAlive, useHTTP10);
+    HTTPClient_t client(io, url, connectTimeout,keepAlive, useHTTP10);
     TreeBuilder_t builder(pool);
     std::auto_ptr<Marshaller_t>marshaller(createMarshaller(client));
     TreeFeeder_t feeder(*marshaller);
 
-    try
-    {
+    try {
         marshaller->packMethodCall(methodName.c_str());
-
-        feeder.feedValue(const_cast<Value_t&>(param1));
-        feeder.feedValue(const_cast<Value_t&>(param2));
-
-        marshaller->flush();
-    }
-    catch(const ResponseError_t &e)
-    {}
-
-    client.readResponse(builder);
-    serverSupportedProtocols = client.getSupportedProtocols();
-    if(&(builder.getUnMarshaledData()) == 0)
-        throw  Fault_t(builder.getUnMarshaledErrorNumber(),
-                       builder.getUnMarshaledErrorMessage());
-
-    return builder.getUnMarshaledData();
-
-}
-
-Value_t& ServerProxy_t::operator() (Pool_t &pool, const std::string &methodName, const Value_t &param1,
-                                    const Value_t &param2,
-                                    const Value_t &param3)
-{
-    HTTPClient_t client(io,url,connectTimeout,keepAlive, useHTTP10);
-    TreeBuilder_t builder(pool);
-    std::auto_ptr<Marshaller_t>marshaller(createMarshaller(client));
-    TreeFeeder_t feeder(*marshaller);
-
-    try
-    {
-        marshaller->packMethodCall(methodName.c_str());
-
-        feeder.feedValue(const_cast<Value_t&>(param1));
-        feeder.feedValue(const_cast<Value_t&>(param2));
-        feeder.feedValue(const_cast<Value_t&>(param3));
-
-        marshaller->flush();
-    }
-    catch(const ResponseError_t &e)
-    {}
-
-
-    client.readResponse(builder);
-    serverSupportedProtocols = client.getSupportedProtocols();
-    if(&(builder.getUnMarshaledData()) == 0)
-        throw  Fault_t(builder.getUnMarshaledErrorNumber(),
-                       builder.getUnMarshaledErrorMessage());
-
-    return builder.getUnMarshaledData();
-
-}
-Value_t& ServerProxy_t::operator() (Pool_t &pool, const std::string &methodName, const Value_t &param1,
-                                    const Value_t &param2,
-                                    const Value_t &param3,
-                                    const Value_t &param4)
-{
-    HTTPClient_t client(io,url,connectTimeout,keepAlive, useHTTP10);
-    TreeBuilder_t builder(pool);
-    std::auto_ptr<Marshaller_t>marshaller(createMarshaller(client));
-    TreeFeeder_t feeder(*marshaller);
-
-    try
-    {
-        marshaller->packMethodCall(methodName.c_str());
-
-        feeder.feedValue(const_cast<Value_t&>(param1));
-        feeder.feedValue(const_cast<Value_t&>(param2));
-        feeder.feedValue(const_cast<Value_t&>(param3));
-        feeder.feedValue(const_cast<Value_t&>(param4));
-
-        marshaller->flush();
-    }
-    catch(const ResponseError_t &e)
-    {}
-
-    client.readResponse(builder);
-    serverSupportedProtocols = client.getSupportedProtocols();
-    if(&(builder.getUnMarshaledData()) == 0)
-        throw  Fault_t(builder.getUnMarshaledErrorNumber(),
-                       builder.getUnMarshaledErrorMessage());
-
-    return builder.getUnMarshaledData();
-
-
-}
-Value_t& ServerProxy_t::operator() (Pool_t &pool, const std::string &methodName, const Value_t &param1,
-                                    const Value_t &param2,
-                                    const Value_t &param3, const Value_t &param4,
-                                    const Value_t &param5)
-{
-    HTTPClient_t client(io,url,connectTimeout,keepAlive, useHTTP10);
-    TreeBuilder_t builder(pool);
-    std::auto_ptr<Marshaller_t>marshaller(createMarshaller(client));
-    TreeFeeder_t feeder(*marshaller);
-
-    try
-    {
-        marshaller->packMethodCall(methodName.c_str());
-
-        feeder.feedValue(const_cast<Value_t&>(param1));
-        feeder.feedValue(const_cast<Value_t&>(param2));
-        feeder.feedValue(const_cast<Value_t&>(param3));
-        feeder.feedValue(const_cast<Value_t&>(param4));
-        feeder.feedValue(const_cast<Value_t&>(param5));
-
-        marshaller->flush();
-
-    }
-    catch(const ResponseError_t &e)
-    {}
-
-    client.readResponse(builder);
-    serverSupportedProtocols = client.getSupportedProtocols();
-    if(&(builder.getUnMarshaledData()) == 0)
-        throw  Fault_t(builder.getUnMarshaledErrorNumber(),
-                       builder.getUnMarshaledErrorMessage());
-
-    return builder.getUnMarshaledData();
-
-
-}
-Value_t& ServerProxy_t::operator() (Pool_t &pool, const std::string &methodName, const Value_t &param1,
-                                    const Value_t &param2,
-                                    const Value_t &param3, const Value_t &param4,
-                                    const Value_t &param5, const Value_t &param6)
-
-{
-    HTTPClient_t client(io,url,connectTimeout,keepAlive, useHTTP10);
-    TreeBuilder_t builder(pool);
-    std::auto_ptr<Marshaller_t>marshaller(createMarshaller(client));
-    TreeFeeder_t feeder(*marshaller);
-
-    try
-    {
-        marshaller->packMethodCall(methodName.c_str());
-
-        feeder.feedValue(const_cast<Value_t&>(param1));
-        feeder.feedValue(const_cast<Value_t&>(param2));
-        feeder.feedValue(const_cast<Value_t&>(param3));
-        feeder.feedValue(const_cast<Value_t&>(param4));
-        feeder.feedValue(const_cast<Value_t&>(param5));
-        feeder.feedValue(const_cast<Value_t&>(param6));
-
-        marshaller->flush();
-    }
-    catch(const ResponseError_t &e)
-    {}
-
-    client.readResponse(builder);
-    serverSupportedProtocols = client.getSupportedProtocols();
-    if(&(builder.getUnMarshaledData()) == 0)
-        throw  Fault_t(builder.getUnMarshaledErrorNumber(),
-                       builder.getUnMarshaledErrorMessage());
-
-    return builder.getUnMarshaledData();
-
-
-}
-Value_t& ServerProxy_t::operator() (Pool_t &pool, const std::string &methodName, const Value_t &param1,
-                                    const Value_t &param2,
-                                    const Value_t &param3, const Value_t &param4,
-                                    const Value_t &param5, const Value_t &param6,
-                                    const Value_t &param7 )
-{
-    HTTPClient_t client(io,url,connectTimeout,keepAlive, useHTTP10);
-    TreeBuilder_t builder(pool);
-    std::auto_ptr<Marshaller_t>marshaller(createMarshaller(client));
-    TreeFeeder_t feeder(*marshaller);
-
-    try
-    {
-        marshaller->packMethodCall(methodName.c_str());
-
-        feeder.feedValue(const_cast<Value_t&>(param1));
-        feeder.feedValue(const_cast<Value_t&>(param2));
-        feeder.feedValue(const_cast<Value_t&>(param3));
-        feeder.feedValue(const_cast<Value_t&>(param4));
-        feeder.feedValue(const_cast<Value_t&>(param5));
-        feeder.feedValue(const_cast<Value_t&>(param6));
-        feeder.feedValue(const_cast<Value_t&>(param7));
-
-        marshaller->flush();
-
-    }
-    catch(const ResponseError_t &e)
-    {}
-
-    client.readResponse(builder);
-    serverSupportedProtocols = client.getSupportedProtocols();
-    if(&(builder.getUnMarshaledData()) == 0)
-        throw  Fault_t(builder.getUnMarshaledErrorNumber(),
-                       builder.getUnMarshaledErrorMessage());
-
-    return builder.getUnMarshaledData();
-
-
-}
-Value_t& ServerProxy_t::operator() (Pool_t &pool, const std::string &methodName, const Value_t &param1,
-                                    const Value_t &param2,
-                                    const Value_t &param3, const Value_t &param4,
-                                    const Value_t &param5, const Value_t &param6,
-                                    const Value_t &param7, const Value_t &param8 )
-{
-    HTTPClient_t client(io,url,connectTimeout,keepAlive, useHTTP10);
-    TreeBuilder_t builder(pool);
-    std::auto_ptr<Marshaller_t>marshaller(createMarshaller(client));
-    TreeFeeder_t feeder(*marshaller);
-
-    try
-    {
-        marshaller->packMethodCall(methodName.c_str());
-
-        feeder.feedValue(const_cast<Value_t&>(param1));
-        feeder.feedValue(const_cast<Value_t&>(param2));
-        feeder.feedValue(const_cast<Value_t&>(param3));
-        feeder.feedValue(const_cast<Value_t&>(param4));
-        feeder.feedValue(const_cast<Value_t&>(param5));
-        feeder.feedValue(const_cast<Value_t&>(param6));
-        feeder.feedValue(const_cast<Value_t&>(param7));
-        feeder.feedValue(const_cast<Value_t&>(param8));
-
-        marshaller->flush();
-    }
-    catch(const ResponseError_t &e)
-    {}
-
-    client.readResponse(builder);
-    serverSupportedProtocols = client.getSupportedProtocols();
-    if(&(builder.getUnMarshaledData()) == 0)
-        throw  Fault_t(builder.getUnMarshaledErrorNumber(),
-                       builder.getUnMarshaledErrorMessage());
-
-    return builder.getUnMarshaledData();
-
-
-
-}
-Value_t& ServerProxy_t::operator() (Pool_t &pool, const std::string &methodName, const Value_t &param1,
-                                    const Value_t &param2,
-                                    const Value_t &param3, const Value_t &param4,
-                                    const Value_t &param5, const Value_t &param6,
-                                    const Value_t &param7, const Value_t &param8,
-                                    const Value_t &param9 )
-{
-    HTTPClient_t client(io,url,connectTimeout,keepAlive, useHTTP10);
-    TreeBuilder_t builder(pool);
-    std::auto_ptr<Marshaller_t>marshaller(createMarshaller(client));
-    TreeFeeder_t feeder(*marshaller);
-    try
-    {
-        marshaller->packMethodCall(methodName.c_str());
-
-        feeder.feedValue(const_cast<Value_t&>(param1));
-        feeder.feedValue(const_cast<Value_t&>(param2));
-        feeder.feedValue(const_cast<Value_t&>(param3));
-        feeder.feedValue(const_cast<Value_t&>(param4));
-        feeder.feedValue(const_cast<Value_t&>(param5));
-        feeder.feedValue(const_cast<Value_t&>(param6));
-        feeder.feedValue(const_cast<Value_t&>(param7));
-        feeder.feedValue(const_cast<Value_t&>(param8));
-        feeder.feedValue(const_cast<Value_t&>(param9));
-
-        marshaller->flush();
-    }
-    catch(const ResponseError_t &e)
-    {}
-
-    client.readResponse(builder);
-    serverSupportedProtocols = client.getSupportedProtocols();
-    if(&(builder.getUnMarshaledData()) == 0)
-        throw  Fault_t(builder.getUnMarshaledErrorNumber(),
-                       builder.getUnMarshaledErrorMessage());
-
-    return builder.getUnMarshaledData();
-
-
-}
-Value_t& ServerProxy_t::operator() (Pool_t &pool, const std::string &methodName, const Value_t &param1,
-                                    const Value_t &param2,
-                                    const Value_t &param3, const Value_t &param4,
-                                    const Value_t &param5, const Value_t &param6,
-                                    const Value_t &param7, const Value_t &param8,
-                                    const Value_t &param9,const Value_t &param10)
-{
-    HTTPClient_t client(io,url,connectTimeout,keepAlive, useHTTP10);
-    TreeBuilder_t builder(pool);
-    std::auto_ptr<Marshaller_t>marshaller(createMarshaller(client));
-    TreeFeeder_t feeder(*marshaller);
-
-    try
-    {
-        marshaller->packMethodCall(methodName.c_str());
-
-        feeder.feedValue(const_cast<Value_t&>(param1));
-        feeder.feedValue(const_cast<Value_t&>(param2));
-        feeder.feedValue(const_cast<Value_t&>(param3));
-        feeder.feedValue(const_cast<Value_t&>(param4));
-        feeder.feedValue(const_cast<Value_t&>(param5));
-        feeder.feedValue(const_cast<Value_t&>(param6));
-        feeder.feedValue(const_cast<Value_t&>(param7));
-        feeder.feedValue(const_cast<Value_t&>(param8));
-        feeder.feedValue(const_cast<Value_t&>(param9));
-        feeder.feedValue(const_cast<Value_t&>(param10));
-
-        marshaller->flush();
-    }
-    catch(const ResponseError_t &e)
-    {}
-
-    client.readResponse(builder);
-    serverSupportedProtocols = client.getSupportedProtocols();
-    if(&(builder.getUnMarshaledData()) == 0)
-        throw  Fault_t(builder.getUnMarshaledErrorNumber(),
-                       builder.getUnMarshaledErrorMessage());
-
-    return builder.getUnMarshaledData();
-}
-
-
-Value_t& ServerProxy_t::call(Pool_t &pool, const std::string &methodName, Array_t &params)
-{
-
-    HTTPClient_t client(io,url,connectTimeout,keepAlive, useHTTP10);
-    TreeBuilder_t builder(pool);
-    std::auto_ptr<Marshaller_t>marshaller(createMarshaller(client));
-    TreeFeeder_t feeder(*marshaller);
-
-    try
-    {
-        marshaller->packMethodCall(methodName.c_str());
-
-        for(Array_t::iterator i = params.begin(); i != params.end(); ++i)
-        {
-            feeder.feedValue(**i);
+        for (Array_t::const_iterator
+                 iparams = params.begin(),
+                 eparams = params.end();
+             iparams != eparams; ++iparams) {
+            feeder.feedValue(**iparams);
         }
 
         marshaller->flush();
-    }
-    catch(const ResponseError_t &e)
-    {}
+    } catch (const ResponseError_t &e) {}
 
     client.readResponse(builder);
     serverSupportedProtocols = client.getSupportedProtocols();
@@ -471,11 +93,52 @@ Value_t& ServerProxy_t::call(Pool_t &pool, const std::string &methodName, Array_
         throw  Fault_t(builder.getUnMarshaledErrorNumber(),
                        builder.getUnMarshaledErrorMessage());
 
+    // OK, return unmarshalled data
     return builder.getUnMarshaledData();
-
 }
-const URL_t& ServerProxy_t::getURL()
-{
+
+namespace {
+    /** Hold va_list and destroy it (via va_end) on destruction.
+     */
+    struct VaListHolder_t {
+        VaListHolder_t(va_list &args) : args(args) {}
+        ~VaListHolder_t() { va_end(args); }
+        va_list &args;
+    };
+}
+
+Value_t& ServerProxy_t::call(Pool_t &pool, const char *methodName, ...) {
+    // get variadic arguments
+    va_list args;
+    va_start(args, methodName);
+    VaListHolder_t argsHolder(args);
+
+    HTTPClient_t client(io, url, connectTimeout, keepAlive, useHTTP10);
+    TreeBuilder_t builder(pool);
+    std::auto_ptr<Marshaller_t>marshaller(createMarshaller(client));
+    TreeFeeder_t feeder(*marshaller);
+
+    try {
+        marshaller->packMethodCall(methodName);
+
+        // marshall all passed values until null pointer
+        while (const Value_t *value = va_arg(args, Value_t*))
+            feeder.feedValue(*value);
+
+        marshaller->flush();
+    } catch (const ResponseError_t &e) {}
+
+    client.readResponse(builder);
+    serverSupportedProtocols = client.getSupportedProtocols();
+    if(&(builder.getUnMarshaledData()) == 0)
+        throw  Fault_t(builder.getUnMarshaledErrorNumber(),
+                       builder.getUnMarshaledErrorMessage());
+
+    // OK, return unmarshalled data
+    return builder.getUnMarshaledData();
+}
+
+const URL_t& ServerProxy_t::getURL() {
     return url;
 }
 

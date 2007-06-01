@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcserverproxy.h,v 1.13 2007-05-23 08:12:52 mirecta Exp $
+ * FILE          $Id: frpcserverproxy.h,v 1.14 2007-06-01 15:06:23 vasek Exp $
  *
  * DESCRIPTION
  *
@@ -56,8 +56,8 @@ Server proxy is FastRpc client which call method on remote server
 class FRPC_DLLEXPORT ServerProxy_t {
 public:
     /**
-        @brief ServerProxy_t configuartion class 
-        
+        @brief ServerProxy_t configuartion class
+
         Is used to setting parameters as connectTimeout, readTimeout,...
         @author Miroslav Talasek
     */
@@ -70,10 +70,10 @@ public:
                                     used in connect to the RPC server
             @param readTimeout - it is the read timeout in miliseconds
                                 used in read data from the scoket
-            @param writeTimeout - it is the write timeout 
+            @param writeTimeout - it is the write timeout
                                  used in wite data to the socket
             @param keepAlive -  it is keep alive connection parameter
-            
+
             @param useBinary - says how client switching modes(XML, binary)
 
             @param useHTTP10 - says that client must use HTTP/1.0 in all
@@ -86,30 +86,30 @@ public:
                 writeTimeout(writeTimeout),
                 keepAlive(keepAlive), useBinary(useBinary), useHTTP10(useHTTP10) {}
 
-                
-                
+
+
         /**
             @brief Constructor of config class
             @param connectTimeout - it is connection timeout in miliseconds
             used in connect to the RPC server
             @param readTimeout - it is the read timeout in miliseconds
             used in read data from the scoket
-            @param writeTimeout - it is the write timeout 
+            @param writeTimeout - it is the write timeout
             used in wite data to the socket
             @param keepAlive -  it is keep alive connection parameter
-        
+
             @param useBinary - says how client switching modes(XML, binary)
 
             @param useHTTP10 - says that client must use HTTP/1.0 in all
             conditions
             @param protocolVersionMajor - major version of protocol
             @param protocolVersionMinor - minor version of protocol
-                
+
          */
         Config_t(unsigned int connectTimeout, unsigned int readTimeout,
                  unsigned int writeTimeout,
                  bool keepAlive, unsigned int useBinary,
-                unsigned char protocolVersionMajor, 
+                unsigned char protocolVersionMajor,
                 unsigned char protocolVersionMinor, bool useHTTP10 = false):
                 connectTimeout(connectTimeout),readTimeout(readTimeout),
                 writeTimeout(writeTimeout),
@@ -117,8 +117,8 @@ public:
                  protocolVersion(protocolVersionMajor,protocolVersionMinor){}
 
         /**
-           @brief Default constructor 
-           
+           @brief Default constructor
+
            Setting default values:
            @n @b connectTimeout = 10000 ms
            @n @b readTimeout = 10000 ms
@@ -150,7 +150,7 @@ public:
         @brief Constructor
         @param server is string contain of address of FarstRpc server
                       @n Format of address is "http://machine:port/PRC2"
-                      @n @b Examles: 
+                      @n @b Examles:
                       @li "http://box:2600/RPC2"
                       @li "http://192.168.10.2:2800/RPC2"
         @param config is configuration structure ServerProxy_t::Config_t
@@ -168,77 +168,94 @@ public:
 
     /**
         @brief Calling method without parameters
-        
+
         This operator is used for calling method without parameters on remote server
          @param pool is reference to pool using to construct return values
         @param methodName is the remote method name
         @return return value from remote method Value_t
-        
+
         @n @b Example:   box is ServerProxy_t object and calling methot (getStatus) on remote server
-         likes:
+         like:
             @n
             @n ret = box(pool, "getStatus");
             @n
             @n Where ret is return Value_t from remote method
     */
-    Value_t& operator() (Pool_t &pool, const std::string &methodName);
+    Value_t& operator()(Pool_t &pool, const std::string &methodName) {
+        return call(pool, methodName.c_str(), 0x0);
+    }
+
     /**
        @brief Calling method one parameter
-       
+
        This operator is used for calling method with one parameter on remote server
        @param pool is reference to pool using to construct return values
        @param methodName is the remote method name
        @param param1 is Value_t parameter for the remote method
        @return return value from remote method Value_t
-       
+
        @n @b Example:   box is ServerProxy_t object and calling methot (getStatus) with one parameter
-        on remote server likes:
+        on remote server like:
            @n ret = box("getStatus",pool.String("System"));
            @n Where ret is return Value_t from remote method and pool is alocator
     */
-    Value_t& operator() (Pool_t &pool, const std::string &methodName, const Value_t &param1);
+
+    Value_t& operator()(Pool_t &pool, const std::string &methodName,
+                        const Value_t &param1)
+    {
+        return call(pool, methodName.c_str(), &param1, 0x0);
+    }
+
     /**
        @brief Calling method two parameters
-       
+
        This operator is used for calling method with two parameters on remote server
        @param pool is reference to pool using to construct return values
        @param methodName is the remote method name
        @param param1 is Value_t parameter nr.1 for the remote method
        @param param2 is Value_t parameter nr.2 for the remote method
        @return return value from remote method Value_t
-       
-       @n @b Example:   box is ServerProxy_t object and calling methot (getStatus) with two parameters 
-       on remote server likes:
+
+       @n @b Example:   box is ServerProxy_t object and calling methot (getStatus) with two parameters
+       on remote server like:
            @n
            @n ret = box("getStatus",pool.String("System"),pool.Bool(true));
            @n
            @n Where ret is return Value_t from remote method and pool is alocator
     */
-    Value_t& operator() (Pool_t &pool, const std::string &methodName, const Value_t &param1,
-                         const Value_t &param2);
+    Value_t& operator()(Pool_t &pool, const std::string &methodName,
+                        const Value_t &param1, const Value_t &param2)
+    {
+        return call(pool, methodName.c_str(), &param1, &param2, 0x0);
+    }
+
     /**
        @brief Calling method three parameters
-       
+
        This operator is used for calling method with three parameters on remote server
        @param pool is reference to pool using to construct return values
        @param methodName is the remote method name
        @return return value from remote method Value_t
        @param param1 is Value_t parameter nr.1 for the remote method
        @param param2 is Value_t parameter nr.2 for the remote method
-       @param param3 is Value_t parameter nr.3 for the remote method    
-       @n @b Example:   box is ServerProxy_t object and calling methot (getStatus) with three 
-       parameters on remote server likes:
+       @param param3 is Value_t parameter nr.3 for the remote method
+       @n @b Example:   box is ServerProxy_t object and calling methot (getStatus) with three
+       parameters on remote server like:
            @n
            @n ret = box("getStatus",pool.String("System"),pool.Bool(true), pool.Double(2.1));
            @n
            @n Where ret is return Value_t from remote method  and pool is alocator
     */
-    Value_t& operator() (Pool_t &pool, const std::string &methodName, const Value_t &param1,
-                         const Value_t &param2,
-                         const Value_t &param3);
+    Value_t& operator()(Pool_t &pool, const std::string &methodName,
+                        const Value_t &param1, const Value_t &param2,
+                        const Value_t &param3)
+    {
+        return call(pool, methodName.c_str(), &param1, &param2, &param3, 0x0);
+    }
+
     /**
         @brief Calling method four parameters
-       
+
         This operator is used for calling method with four parameters on remote server
         @param pool is reference to pool using to construct return values
         @param methodName is the remote method name
@@ -246,22 +263,26 @@ public:
         @param param1 is Value_t parameter nr.1 for the remote method
         @param param2 is Value_t parameter nr.2 for the remote method
         @param param3 is Value_t parameter nr.3 for the remote method
-        @param param4 is Value_t parameter nr.4 for the remote method 
-        @n @b Example:   box is ServerProxy_t object and calling methot (getStatus) with four 
-        parameters on remote server likes:
+        @param param4 is Value_t parameter nr.4 for the remote method
+        @n @b Example:   box is ServerProxy_t object and calling methot (getStatus) with four
+        parameters on remote server like:
            @n
            @n ret = box("getStatus",pool.String("System"),pool.Bool(true),
                    pool.Int(1000),pool.Binary("AbCd"));
            @n
            @n Where ret is return Value_t from remote method and pool is alocator
     */
-    Value_t& operator() (Pool_t &pool, const std::string &methodName, const Value_t &param1,
-                         const Value_t &param2,
-                         const Value_t &param3,
-                         const Value_t &param4);
+    Value_t& operator()(Pool_t &pool, const std::string &methodName,
+                        const Value_t &param1, const Value_t &param2,
+                        const Value_t &param3, const Value_t &param4)
+    {
+        return call(pool, methodName.c_str(), &param1, &param2, &param3,
+                    &param4, 0x0);
+    }
+
     /**
        @brief Calling method with five parameters
-       
+
        This operator is used for calling method with five parameters on remote server
         @param pool is reference to pool using to construct return values
         @param methodName is the remote method name
@@ -270,21 +291,27 @@ public:
         @param param2 is Value_t parameter nr.2 for the remote method
         @param param3 is Value_t parameter nr.3 for the remote method
         @param param4 is Value_t parameter nr.4 for the remote method
-        @param param5 is Value_t parameter nr.5 for the remote method 
+        @param param5 is Value_t parameter nr.5 for the remote method
         @n @b Example:   box is ServerProxy_t object and calling methot (getStatus) with five parameters
-     on remote server likes:
+     on remote server like:
            @n
            @n ret = box("getStatus",pool.String("System"),pool.Bool(true),
                    pool.Int(1000),pool.Binary("AbCd"),pool,Array(pool.Int(5)));
            @n
            @n Where ret is return Value_t from remote method and pool is alocator
     */
-    Value_t& operator() (Pool_t &pool, const std::string &methodName, const Value_t &param1,
-                         const Value_t &param2,
-                         const Value_t &param3, const Value_t &param4, const Value_t &param5);
+    Value_t& operator()(Pool_t &pool, const std::string &methodName,
+                        const Value_t &param1, const Value_t &param2,
+                        const Value_t &param3, const Value_t &param4,
+                        const Value_t &param5)
+    {
+        return call(pool, methodName.c_str(), &param1, &param2,
+                    &param3, &param4, &param5, 0x0);
+    }
+
     /**
        @brief Calling method with six parameters
-       
+
        This operator is used for calling method with six parameters on remote server
        @param pool is reference to pool using to construct return values
        @param methodName is the remote method name
@@ -294,23 +321,27 @@ public:
        @param param3 is Value_t parameter nr.3 for the remote method
        @param param4 is Value_t parameter nr.4 for the remote method
        @param param5 is Value_t parameter nr.5 for the remote method
-       @param param6 is Value_t parameter nr.6 for the remote method 
+       @param param6 is Value_t parameter nr.6 for the remote method
        @n @b Example:   box is ServerProxy_t object and calling methot (getStatus) with six parameters
-     on remote server likes:
+     on remote server like:
            @n
            @n ret = box("getStatus",pool.String("System"),pool.Bool(true),
                    pool.Int(1000),pool.Binary("AbCd"),pool,Array(pool.Int(5)),pool.Int(10));
            @n
            @n Where ret is return Value_t from remote method and pool is alocator
     */
-    Value_t& operator() (Pool_t &pool, const std::string &methodName, const Value_t &param1,
-                         const Value_t &param2,
-                         const Value_t &param3, const Value_t &param4, const Value_t &param5,
-                         const Value_t &param6);
+    Value_t& operator()(Pool_t &pool, const std::string &methodName,
+                        const Value_t &param1, const Value_t &param2,
+                        const Value_t &param3, const Value_t &param4,
+                        const Value_t &param5, const Value_t &param6)
+    {
+        return call(pool, methodName.c_str(), &param1, &param2, &param3,
+                    &param4, &param5, &param6, 0x0);
+    }
 
     /**
        @brief Calling method with seven parameters
-       
+
        This operator is used for calling method with seven parameters on remote server
        @param pool is reference to pool using to construct return values
        @param methodName is the remote method name
@@ -320,19 +351,25 @@ public:
        @param param4 is Value_t parameter nr.4 for the remote method
        @param param5 is Value_t parameter nr.5 for the remote method
        @param param6 is Value_t parameter nr.6 for the remote method
-       @param param7 is Value_t parameter nr.7 for the remote method 
+       @param param7 is Value_t parameter nr.7 for the remote method
        @return return value from remote method Value_t
-       
-       Using similar as other 
-        
+
+       Using similar as other
+
     */
-    Value_t& operator() (Pool_t &pool, const std::string &methodName, const Value_t &param1,
-                         const Value_t &param2,
-                         const Value_t &param3, const Value_t &param4, const Value_t &param5,
-                         const Value_t &param6, const Value_t &param7 );
+    Value_t& operator()(Pool_t &pool, const std::string &methodName,
+                        const Value_t &param1, const Value_t &param2,
+                        const Value_t &param3, const Value_t &param4,
+                        const Value_t &param5, const Value_t &param6,
+                        const Value_t &param7)
+    {
+        return call(pool, methodName.c_str(), &param1, &param2, &param3,
+                    &param4, &param5, &param6, &param7, 0x0);
+    }
+
     /**
        @brief Calling method with eight parameters
-       
+
        This operator is used for calling method with eight parameters on remote server
        @param pool is reference to pool using to construct return values
        @param methodName is the remote method name
@@ -341,21 +378,27 @@ public:
        @param param3 is Value_t parameter nr.3 for the remote method
        @param param4 is Value_t parameter nr.4 for the remote method
        @param param5 is Value_t parameter nr.5 for the remote method
-       @param param6 is Value_t parameter nr.6 for the remote method 
+       @param param6 is Value_t parameter nr.6 for the remote method
        @param param7 is Value_t parameter nr.7 for the remote method
        @param param8 is Value_t parameter nr.8 for the remote method
        @return return value from remote method Value_t
-       
-       Using similar as other 
-        
+
+       Using similar as other
+
     */
-    Value_t& operator() (Pool_t &pool, const std::string &methodName, const Value_t &param1,
-                         const Value_t &param2,
-                         const Value_t &param3, const Value_t &param4, const Value_t &param5,
-                         const Value_t &param6, const Value_t &param7, const Value_t &param8 );
+    Value_t& operator()(Pool_t &pool, const std::string &methodName,
+                        const Value_t &param1, const Value_t &param2,
+                        const Value_t &param3, const Value_t &param4,
+                        const Value_t &param5, const Value_t &param6,
+                        const Value_t &param7, const Value_t &param8)
+    {
+        return call(pool, methodName.c_str(), &param1, &param2, &param3,
+                    &param4, &param5, &param6, &param7, &param8, 0x0);
+    }
+
     /**
        @brief Calling method with nine parameters
-       
+
        This operator is used for calling method with nine parameters on remote server
        @param pool is reference to pool using to construct return values
        @param methodName is the remote method name
@@ -364,23 +407,29 @@ public:
        @param param3 is Value_t parameter nr.3 for the remote method
        @param param4 is Value_t parameter nr.4 for the remote method
        @param param5 is Value_t parameter nr.5 for the remote method
-       @param param6 is Value_t parameter nr.6 for the remote method 
+       @param param6 is Value_t parameter nr.6 for the remote method
        @param param7 is Value_t parameter nr.7 for the remote method
        @param param8 is Value_t parameter nr.8 for the remote method
        @param param9 is Value_t parameter nr.9 for the remote method
        @return return value from remote method Value_t
-       
-       Using similar as other 
-        
+
+       Using similar as other
+
     */
-    Value_t& operator() (Pool_t &pool, const std::string &methodName, const Value_t &param1,
-                         const Value_t &param2,
-                         const Value_t &param3, const Value_t &param4, const Value_t &param5,
-                         const Value_t &param6, const Value_t &param7, const Value_t &param8,
-                         const Value_t &param9 );
+    Value_t& operator()(Pool_t &pool, const std::string &methodName,
+                        const Value_t &param1, const Value_t &param2,
+                        const Value_t &param3, const Value_t &param4,
+                        const Value_t &param5, const Value_t &param6,
+                        const Value_t &param7, const Value_t &param8,
+                        const Value_t &param9)
+    {
+        return call(pool, methodName.c_str(), &param1, &param2, &param3,
+                    &param4, &param5, &param6, &param7, &param8, &param9, 0x0);
+    }
+
     /**
        @brief Calling method with ten parameters
-       
+
        This operator is used for calling method with ten parameters on remote server
        @param pool is reference to pool using to construct return values
        @param methodName is the remote method name
@@ -389,21 +438,28 @@ public:
        @param param3 is Value_t parameter nr.3 for the remote method
        @param param4 is Value_t parameter nr.4 for the remote method
        @param param5 is Value_t parameter nr.5 for the remote method
-       @param param6 is Value_t parameter nr.6 for the remote method 
+       @param param6 is Value_t parameter nr.6 for the remote method
        @param param7 is Value_t parameter nr.7 for the remote method
        @param param8 is Value_t parameter nr.8 for the remote method
        @param param9 is Value_t parameter nr.9 for the remote method
        @param param10 is Value_t parameter nr.10 for the remote method
        @return return value from remote method Value_t
-       
-       Using similar as other 
-        
+
+       Using similar as other
+
     */
-    Value_t& operator() (Pool_t &pool, const std::string &methodName, const Value_t &param1,
-                         const Value_t &param2,
-                         const Value_t &param3, const Value_t &param4, const Value_t &param5,
-                         const Value_t &param6, const Value_t &param7, const Value_t &param8,
-                         const Value_t &param9, const Value_t &param10  );
+    Value_t& operator()(Pool_t &pool, const std::string &methodName,
+                        const Value_t &param1, const Value_t &param2,
+                        const Value_t &param3, const Value_t &param4,
+                        const Value_t &param5, const Value_t &param6,
+                        const Value_t &param7, const Value_t &param8,
+                        const Value_t &param9, const Value_t &param10)
+    {
+        return call(pool, methodName.c_str(), &param1, &param2, &param3,
+                    &param4, &param5, &param6, &param7, &param8, &param9,
+                    &param10, 0x0);
+    }
+
 
     /**
         @brief  Calling method with many parameters
@@ -411,15 +467,36 @@ public:
         @param methodName is the remote method name
         @param params is Array_t. Is is an array of parameters
         @return return value from remote method Value_t
-        
-        @n @b Example:   box is ServerProxy_t object and calling methot (getStatus) with three 
-       parameters on remote server likes:
+
+        @n @b Example:   box is ServerProxy_t object and calling methot (getStatus) with three
+       parameters on remote server like:
            @n
            @n ret = box.call("getStatus",pool.Array(pool.String("System"),pool.Bool(true), pool.Double(2.1)));
            @n
            @n Where ret is return Value_t from remote method  and pool is alocator
     */
-    Value_t& call(Pool_t &pool, const std::string &methodName, Array_t &params);
+    Value_t& call(Pool_t &pool, const std::string &methodName,
+                  const Array_t &params);
+
+    /**
+        @brief  Calling method with many parameters
+        @param pool is reference to pool using to construct return values
+        @param methodName is the remote method name
+        @param ... any number of Value_t* parameters terminated by
+                   null-pointer (0).
+        @return return value from remote method Value_t
+
+        @n @b Example:   box is ServerProxy_t object and calling methot (getStatus) with three
+       parameters on remote server like:
+           @n
+           @n ret = box.call("getStatus", &pool.String("System"),
+                             &pool.Bool(true), &pool.Double(2.1));
+           @n
+           @n Where ret is return Value_t from remote method and pool is
+           alocator
+    */
+    Value_t& call(Pool_t &pool, const char *methodName, ...);
+
     /**
      *    @brief set new read timeout
     */
@@ -500,7 +577,6 @@ private:
     ServerProxy_t(const ServerProxy_t&);
 
     ServerProxy_t& operator=(const ServerProxy_t&);
-
 
     URL_t url;
     HTTPIO_t io;

@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpctreefeeder.h,v 1.2 2007-04-02 15:28:20 vasek Exp $
+ * FILE          $Id: frpctreefeeder.h,v 1.3 2007-06-01 15:06:23 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -50,7 +50,7 @@ public:
     TreeFeeder_t(Marshaller_t &marshaller):marshaller(marshaller)
     {}
     
-    void feedValue(Value_t &value);
+    void feedValue(const Value_t &value);
 
     
     

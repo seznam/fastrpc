@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpctreefeeder.cc,v 1.2 2007-04-02 15:28:20 vasek Exp $
+ * FILE          $Id: frpctreefeeder.cc,v 1.3 2007-06-01 15:06:23 vasek Exp $
  *
  * DESCRIPTION   
  *
@@ -36,10 +36,8 @@
 namespace FRPC
 {
 
-void TreeFeeder_t::feedValue(Value_t &value)
-{
-    switch(value.getType())
-    {
+void TreeFeeder_t::feedValue(const Value_t &value){
+    switch(value.getType()) {
     case Int_t::TYPE:
         {
             marshaller.packInt(Int(value).getValue());
@@ -60,7 +58,7 @@ void TreeFeeder_t::feedValue(Value_t &value)
 
     case String_t::TYPE:
         {
-            String_t &str = String(value);
+            const String_t &str = String(value);
 
             marshaller.packString(str.data(), str.size());
         }
@@ -68,7 +66,7 @@ void TreeFeeder_t::feedValue(Value_t &value)
 
     case Binary_t::TYPE:
         {
-            Binary_t &bin = Binary(value);
+            const Binary_t &bin = Binary(value);
 
             marshaller.packBinary(bin.data(), bin.size());
         }
@@ -76,7 +74,7 @@ void TreeFeeder_t::feedValue(Value_t &value)
 
     case DateTime_t::TYPE:
         {
-            DateTime_t &dt = DateTime(value);
+            const DateTime_t &dt = DateTime(value);
 
             marshaller.packDateTime(dt.getYear(), dt.getMonth(), dt.getDay(),
                                     dt.getHour(), dt.getMin(), dt.getSec(),
@@ -87,16 +85,18 @@ void TreeFeeder_t::feedValue(Value_t &value)
 
     case Struct_t::TYPE:
         {
-            Struct_t &structVal = Struct(value);
-
-
+            const Struct_t &structVal = Struct(value);
             marshaller.packStruct(structVal.size());
 
-            for(Struct_t::iterator i = structVal.begin(); i != structVal.end(); ++i)
+            for (Struct_t::const_iterator
+                     istructVal = structVal.begin(),
+                     estructVal = structVal.end(); istructVal != estructVal;
+                     ++istructVal)
             {
-                marshaller.packStructMember(i->first.data(), i->first.size());
+                marshaller.packStructMember(istructVal->first.data(),
+                                            istructVal->first.size());
 
-                feedValue(*(i->second));
+                feedValue(*(istructVal->second));
             }
 
         }
@@ -104,11 +104,13 @@ void TreeFeeder_t::feedValue(Value_t &value)
 
     case Array_t::TYPE:
         {
-            Array_t &array = Array(value);
+            const Array_t &array = Array(value);
             marshaller.packArray(array.size());
-            for(Array_t::iterator i = array.begin(); i != array.end(); ++i)
+            for (Array_t::const_iterator
+                     iarray = array.begin(),
+                     earray = array.end(); iarray != earray; ++iarray)
             {
-                feedValue(**i);
+                feedValue(**iarray);
             }
 
         }
