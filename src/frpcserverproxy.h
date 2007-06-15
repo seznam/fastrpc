@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcserverproxy.h,v 1.14 2007-06-01 15:06:23 vasek Exp $
+ * FILE          $Id: frpcserverproxy.h,v 1.15 2007-06-15 06:37:05 vasek Exp $
  *
  * DESCRIPTION
  *
@@ -182,7 +182,7 @@ public:
             @n Where ret is return Value_t from remote method
     */
     Value_t& operator()(Pool_t &pool, const std::string &methodName) {
-        return call(pool, methodName.c_str(), 0x0);
+        return call(pool, methodName.c_str(), static_cast<void*>(0x0));
     }
 
     /**
@@ -203,7 +203,8 @@ public:
     Value_t& operator()(Pool_t &pool, const std::string &methodName,
                         const Value_t &param1)
     {
-        return call(pool, methodName.c_str(), &param1, 0x0);
+        return call(pool, methodName.c_str(), &param1,
+                    static_cast<void*>(0x0));
     }
 
     /**
@@ -226,7 +227,8 @@ public:
     Value_t& operator()(Pool_t &pool, const std::string &methodName,
                         const Value_t &param1, const Value_t &param2)
     {
-        return call(pool, methodName.c_str(), &param1, &param2, 0x0);
+        return call(pool, methodName.c_str(), &param1, &param2,
+                    static_cast<void*>(0x0));
     }
 
     /**
@@ -250,7 +252,8 @@ public:
                         const Value_t &param1, const Value_t &param2,
                         const Value_t &param3)
     {
-        return call(pool, methodName.c_str(), &param1, &param2, &param3, 0x0);
+        return call(pool, methodName.c_str(), &param1, &param2, &param3,
+                    static_cast<void*>(0x0));
     }
 
     /**
@@ -277,7 +280,7 @@ public:
                         const Value_t &param3, const Value_t &param4)
     {
         return call(pool, methodName.c_str(), &param1, &param2, &param3,
-                    &param4, 0x0);
+                    &param4, static_cast<void*>(0x0));
     }
 
     /**
@@ -306,7 +309,7 @@ public:
                         const Value_t &param5)
     {
         return call(pool, methodName.c_str(), &param1, &param2,
-                    &param3, &param4, &param5, 0x0);
+                    &param3, &param4, &param5, static_cast<void*>(0x0));
     }
 
     /**
@@ -336,7 +339,7 @@ public:
                         const Value_t &param5, const Value_t &param6)
     {
         return call(pool, methodName.c_str(), &param1, &param2, &param3,
-                    &param4, &param5, &param6, 0x0);
+                    &param4, &param5, &param6, static_cast<void*>(0x0));
     }
 
     /**
@@ -364,7 +367,8 @@ public:
                         const Value_t &param7)
     {
         return call(pool, methodName.c_str(), &param1, &param2, &param3,
-                    &param4, &param5, &param6, &param7, 0x0);
+                    &param4, &param5, &param6, &param7,
+                    static_cast<void*>(0x0));
     }
 
     /**
@@ -393,7 +397,8 @@ public:
                         const Value_t &param7, const Value_t &param8)
     {
         return call(pool, methodName.c_str(), &param1, &param2, &param3,
-                    &param4, &param5, &param6, &param7, &param8, 0x0);
+                    &param4, &param5, &param6, &param7, &param8,
+                    static_cast<void*>(0x0));
     }
 
     /**
@@ -424,7 +429,8 @@ public:
                         const Value_t &param9)
     {
         return call(pool, methodName.c_str(), &param1, &param2, &param3,
-                    &param4, &param5, &param6, &param7, &param8, &param9, 0x0);
+                    &param4, &param5, &param6, &param7, &param8, &param9,
+                    static_cast<void*>(0x0));
     }
 
     /**
@@ -457,7 +463,7 @@ public:
     {
         return call(pool, methodName.c_str(), &param1, &param2, &param3,
                     &param4, &param5, &param6, &param7, &param8, &param9,
-                    &param10, 0x0);
+                    &param10, static_cast<void*>(0x0));
     }
 
 
