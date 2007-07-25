@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcserverproxy.h,v 1.15 2007-06-15 06:37:05 vasek Exp $
+ * FILE          $Id: frpcserverproxy.h,v 1.16 2007-07-25 10:50:03 mirecta Exp $
  *
  * DESCRIPTION
  *
@@ -109,8 +109,8 @@ public:
         Config_t(unsigned int connectTimeout, unsigned int readTimeout,
                  unsigned int writeTimeout,
                  bool keepAlive, unsigned int useBinary,
-                unsigned char protocolVersionMajor,
-                unsigned char protocolVersionMinor, bool useHTTP10 = false):
+                unsigned char protocolVersionMajor = 2,
+                unsigned char protocolVersionMinor = 1, bool useHTTP10 = false):
                 connectTimeout(connectTimeout),readTimeout(readTimeout),
                 writeTimeout(writeTimeout),
                 keepAlive(keepAlive), useBinary(useBinary), useHTTP10(useHTTP10),
@@ -527,7 +527,6 @@ public:
 private:
     inline Marshaller_t* createMarshaller(HTTPClient_t &client) {
         Marshaller_t *marshaller;
-        ProtocolVersion_t protocolVersion;
         switch (rpcTransferMode) {
         case Config_t::ON_SUPPORT: {
                 if (serverSupportedProtocols & HTTPClient_t::BINARY_RPC) {
@@ -591,6 +590,7 @@ private:
     unsigned int rpcTransferMode;
     bool useHTTP10;
     unsigned int serverSupportedProtocols;
+    ProtocolVersion_t protocolVersion;
 }
 ;
 }

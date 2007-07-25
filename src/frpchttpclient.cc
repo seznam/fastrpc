@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpchttpclient.cc,v 1.7 2007-06-01 13:44:53 vasek Exp $
+ * FILE          $Id: frpchttpclient.cc,v 1.8 2007-07-25 10:50:03 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -491,7 +491,7 @@ void HTTPClient_t::readResponse(DataBuilder_t &builder)
         httpIO.readContent(httpHead, data, false);
 
         unmarshaller->finish();
-
+        protocolVersion = unmarshaller->getProtocolVersion();
 
         std::string connection;
         httpHead.get("Connection", connection);

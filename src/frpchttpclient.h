@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpchttpclient.h,v 1.3 2007-05-21 15:10:12 mirecta Exp $
+ * FILE          $Id: frpchttpclient.h,v 1.4 2007-07-25 10:50:03 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -128,6 +128,14 @@ public:
     {
         return supportedProtocols;
     }
+     /**
+    * @brief getting server protocol version
+    * @return ProtocolVersion_t
+    */
+    inline ProtocolVersion_t getProtocolVersion()
+    {
+	return protocolVersion;
+    }
     /**
     * @brief says to HTTP client that all data was writed
     *
@@ -166,6 +174,7 @@ private:
     std::list<std::string> queryStorage;
     UnMarshaller_t *unmarshaller;
     bool useHTTP10;
+    ProtocolVersion_t protocolVersion;
 };
 
 };

@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcserverproxy.cc,v 1.7 2007-06-01 15:06:23 vasek Exp $
+ * FILE          $Id: frpcserverproxy.cc,v 1.8 2007-07-25 10:50:03 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -51,7 +51,8 @@ ServerProxy_t::ServerProxy_t(const std::string &server, const Config_t &config)
       connectTimeout(config.connectTimeout), keepAlive(config.keepAlive),
       rpcTransferMode(config.useBinary),
       useHTTP10(config.useHTTP10),
-      serverSupportedProtocols(HTTPClient_t::XML_RPC)
+      serverSupportedProtocols(HTTPClient_t::XML_RPC),
+      protocolVersion(config.protocolVersion)
 {}
 
 ServerProxy_t::ServerProxy_t(const std::string &server, Config_t &config)
@@ -60,7 +61,8 @@ ServerProxy_t::ServerProxy_t(const std::string &server, Config_t &config)
       connectTimeout(config.connectTimeout), keepAlive(config.keepAlive),
       rpcTransferMode(config.useBinary),
       useHTTP10(config.useHTTP10),
-      serverSupportedProtocols(HTTPClient_t::XML_RPC)
+      serverSupportedProtocols(HTTPClient_t::XML_RPC),
+      protocolVersion(config.protocolVersion)
 {}
 
 ServerProxy_t::~ServerProxy_t()
@@ -89,6 +91,7 @@ Value_t& ServerProxy_t::call(Pool_t &pool, const std::string &methodName,
 
     client.readResponse(builder);
     serverSupportedProtocols = client.getSupportedProtocols();
+    protocolVersion = client.getProtocolVersion();
     if(&(builder.getUnMarshaledData()) == 0)
         throw  Fault_t(builder.getUnMarshaledErrorNumber(),
                        builder.getUnMarshaledErrorMessage());
@@ -130,6 +133,7 @@ Value_t& ServerProxy_t::call(Pool_t &pool, const char *methodName, ...) {
 
     client.readResponse(builder);
     serverSupportedProtocols = client.getSupportedProtocols();
+    protocolVersion = client.getProtocolVersion();
     if(&(builder.getUnMarshaledData()) == 0)
         throw  Fault_t(builder.getUnMarshaledErrorNumber(),
                        builder.getUnMarshaledErrorMessage());
