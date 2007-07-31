@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: fastrpcmodule.cc,v 1.13 2007-07-31 13:03:37 vasek Exp $
+ * $Id: fastrpcmodule.cc,v 1.14 2007-07-31 14:11:47 vasek Exp $
  * 
  * AUTHOR      Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
@@ -958,12 +958,11 @@ public:
             const ProtocolVersion_t &protocolVersion)
         : url(serverUrl, proxyVia),
           io(-1, readTimeout, writeTimeout, -1, -1),
-          connectTimeout(connectTimeout), keepAlive(keepAlive),
           rpcTransferMode(rpcTransferMode), encoding(encoding),
           serverSupportedProtocols(HTTPClient_t::XML_RPC),
           useHTTP10(useHTTP10), stringMode(stringMode),
           protocolVersion(protocolVersion),
-          connector(new SimpleConnector_t(url))
+          connector(new SimpleConnector_t(url, connectTimeout, keepAlive))
     {}
 
     ~Proxy_t() {}
@@ -991,8 +990,6 @@ private:
     HTTPIO_t io;
     int readTimeout;
     int writeTimeout;
-    int connectTimeout;
-    bool keepAlive;
     int rpcTransferMode;
     std::string encoding;
 
@@ -1195,8 +1192,7 @@ PyObject* Method_call(MethodObject *self, PyObject *args, PyObject *keys)
 /**************************************************************************/
 
 static char ServerProxy_ServerProxy__doc__[] =
-    "Create new ServerProxy\n"
-    ;
+    "Create new ServerProxy\n";
 
 PyObject* ServerProxy_ServerProxy(ServerProxyObject *self, PyObject *args,
                                   PyObject *keywds)
@@ -1228,7 +1224,7 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *self, PyObject *args,
                                      "s#|iiiiisissii:ServerProxy.__init__", kwlist,
                                      &serverUrl, &serverUrlLen, &readTimeout,
                                      &writeTimeout, &connectTimeout,
-                                     &keepAlive,&mode, &encoding,
+                                     &keepAlive, &mode, &encoding,
                                      &useHTTP10, &proxyVia, &stringMode_,
                                      &protocolVersionMajor,&protocolVersionMinor))
         return 0;
@@ -1251,8 +1247,8 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *self, PyObject *args,
         // initialize underlying proxy (inplace!)
         new (&proxy->proxy) Proxy_t(std::string(serverUrl, serverUrlLen),
                                     readTimeout, writeTimeout,
-                                    connectTimeout, keepAlive,mode, encoding,
-                                    useHTTP10, proxyVia, stringMode, 
+                                    connectTimeout, keepAlive, mode, encoding,
+                                    useHTTP10, proxyVia, stringMode,
                                     ProtocolVersion_t(protocolVersionMajor,
                                             protocolVersionMinor));
         proxy->proxyOk = true;
@@ -1338,13 +1334,11 @@ PyObject* ServerProxy_getattr(ServerProxyObject *self, char *name)
     return newMethod(self, name);
 }
 
-PyObject* Proxy_t::operator()(MethodObject *methodObject, PyObject *args)
-{
+PyObject* Proxy_t::operator()(MethodObject *methodObject, PyObject *args) {
     // remember last method
     lastCall = methodObject->name;
 
-    HTTPClient_t client(io,url,connectTimeout, false,
-                        connector.get(), useHTTP10);
+    HTTPClient_t client(io, url, connector.get(), useHTTP10);
     Builder_t builder(reinterpret_cast<PyObject*>(methodObject),
                       stringMode);
     Marshaller_t *marshaller;
@@ -1381,8 +1375,8 @@ PyObject* Proxy_t::operator()(MethodObject *methodObject, PyObject *args)
 
     case BINARY_ON_SUPPORT_ON_KEEP_ALIVE:
     default:
-        if(serverSupportedProtocols & HTTPClient_t::XML_RPC || keepAlive ==
-           false || io.socket() != -1) {
+        if(serverSupportedProtocols & HTTPClient_t::XML_RPC
+           || connector->getKeepAlive() == false || io.socket() != -1) {
             //using XML_RPC
             marshaller= Marshaller_t::create(Marshaller_t::XML_RPC,client,
                                              protocolVersion);
