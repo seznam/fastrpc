@@ -20,12 +20,12 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcconnector.h,v 1.2 2007-07-31 14:05:45 vasek Exp $
+ * FILE          $Id: frpcconnector.h,v 1.3 2007-07-31 14:18:47 vasek Exp $
  *
  * DESCRIPTION
  *
  * AUTHOR
- *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
+ *              Vaclav Blazek <vaclav.blazek@firma.seznam.cz>
  *
  * HISTORY
  *
