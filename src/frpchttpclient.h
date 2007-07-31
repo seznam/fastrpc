@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpchttpclient.h,v 1.5 2007-07-31 13:01:18 vasek Exp $
+ * FILE          $Id: frpchttpclient.h,v 1.6 2007-07-31 14:05:45 vasek Exp $
  *
  * DESCRIPTION
  *
@@ -83,8 +83,7 @@ private:
 */
 class FRPC_DLLEXPORT HTTPClient_t : public Writer_t {
 public:
-    HTTPClient_t(HTTPIO_t &httpIO, URL_t &url, unsigned int connectTimeout,
-                 bool keepAlive, Connector_t *connector,
+    HTTPClient_t(HTTPIO_t &httpIO, URL_t &url, Connector_t *connector,
                  bool useHTTP10 = false);
 
 
@@ -159,9 +158,6 @@ private:
     HTTPIO_t &httpIO;
     URL_t &url;
     Connector_t *connector;
-    unsigned int connectTimeout;
-    bool keepAlive;
-
 
     bool headersSent;
     bool useChunks;

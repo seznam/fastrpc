@@ -20,12 +20,12 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcconnector.cc,v 1.1 2007-07-31 13:01:19 vasek Exp $
+ * FILE          $Id: frpcconnector.cc,v 1.2 2007-07-31 14:05:45 vasek Exp $
  *
  * DESCRIPTION
  *
  * AUTHOR
- *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
+ *              Vaclav Blazek <vaclav.blazek@firma.seznam.cz>
  *
  * HISTORY
  *
@@ -46,8 +46,9 @@
 
 using namespace FRPC;
 
-Connector_t::Connector_t(const URL_t &url)
-    : url(url)
+Connector_t::Connector_t(const URL_t &url, int connectTimeout,
+                         bool keepAlive)
+    : url(url), connectTimeout(connectTimeout), keepAlive(keepAlive)
 {}
 
 Connector_t::~Connector_t() {}
@@ -63,6 +64,10 @@ namespace {
                 ::close(fd);
                 fd = -1;
             }
+        }
+
+        void release() {
+            doClose = false;
         }
 
         int &fd;
@@ -91,8 +96,9 @@ namespace {
     }
 } // namespace
 
-SimpleConnector_t::SimpleConnector_t(const URL_t &url)
-    : Connector_t(url)
+SimpleConnector_t::SimpleConnector_t(const URL_t &url, int connectTimeout,
+                                     bool keepAlive)
+    : Connector_t(url, connectTimeout, keepAlive)
 {
     struct hostent *he = gethostbyname(url.host.c_str());
     if (!he) {
@@ -108,10 +114,8 @@ SimpleConnector_t::SimpleConnector_t(const URL_t &url)
 
 SimpleConnector_t::~SimpleConnector_t() {}
 
-void SimpleConnector_t::connectSocket(int &fd, bool keepAlive,
-                                      unsigned int connectTimeout)
-{
-    // zkontrolujeme socket a pøípadnì jej zavøeme
+void SimpleConnector_t::connectSocket(int &fd) {
+    // check socket
     if (!keepAlive && (fd > -1)) {
         ::close(fd);
         fd = -1;
@@ -120,11 +124,11 @@ void SimpleConnector_t::connectSocket(int &fd, bool keepAlive,
     // initialize closer (initially closes socket when valid)
     SocketCloser_t closer(fd);
 
-    // pokud je socket otevøený, zjistíme, jestli nám server nezavøel spojení
+    // check open socket whether the peer had not closed it
     if (fd > -1) {
-        closer.doClose = false;
+        closer.release();
 
-        // zjistíme, jestli se na socketu nìco nedìje
+        // check for activity on socket
         fd_set rfdset;
         FD_ZERO(&rfdset);
         FD_SET(fd, &rfdset);
@@ -136,13 +140,13 @@ void SimpleConnector_t::connectSocket(int &fd, bool keepAlive,
             break;
 
         case -1:
-            // chyba na socketu -> zavøeme jej
+            // some error on socket => close it
             close(fd);
             fd = -1;
             break;
 
         default:
-            // podíváme se, jestli jsou na socketu k dispozici nìjaká data
+            // check whether any data can be read from the socket
             char buff;
             switch (recv(fd, &buff, 1, MSG_PEEK)) {
             case -1:
@@ -159,7 +163,7 @@ void SimpleConnector_t::connectSocket(int &fd, bool keepAlive,
         }
     }
 
-    // pokud nemáme od minula otevøený socket
+    // if open socket is not availabe open new one
     if (fd < 0) {
         // otevøeme socket
         if ((fd = ::socket(PF_INET, SOCK_STREAM, 0)) < 0) {
@@ -183,8 +187,7 @@ void SimpleConnector_t::connectSocket(int &fd, bool keepAlive,
                               "<%d, %s>.", ERRNO, STRERROR(ERRNO));
         }
 
-        // nastavíme okam¾ité odesílání packetù po TCP
-        // disabluje Nagle algoritmus, zdrojáky Apache øíkají, ¾e je to OK
+        // set not-delayed IO (we are not telnet)
         int just_say_no = 1;
         if (::setsockopt(fd, IPPROTO_TCP, TCP_NODELAY,
                          (char*) &just_say_no, sizeof(int)) < 0)
@@ -194,26 +197,26 @@ void SimpleConnector_t::connectSocket(int &fd, bool keepAlive,
                               "<%d, %s>.", ERRNO, STRERROR(ERRNO));
         }
 
-        // adresa protìj¹í strany
+        // peer address
         struct sockaddr_in addr;
 
-        // inicializujeme adresu
+        // initialize it
         addr.sin_family = AF_INET;
         addr.sin_port = htons(url.port);
         addr.sin_addr = ipaddr;
         memset(addr.sin_zero, 0x0, 8);
 
-        // spojíme socket s protìj¹í stranou
+        // connect the socket
         if (::connect(fd, (struct sockaddr *) &addr,
                       sizeof(struct sockaddr)) < 0)
         {
             switch (ERRNO) {
             case EINPROGRESS:
-                // connect probíhá
+                // connection already in progress
             case EALREADY:
-                // connect jsme u¾ jednou zavolali
-                // tyto chyby nepova¾ujeme za chyby
+                // connection already in progress
             case EWOULDBLOCK:
+                // connection launched on the background
                 break;
 
             default:
@@ -222,18 +225,18 @@ void SimpleConnector_t::connectSocket(int &fd, bool keepAlive,
                                   ERRNO, STRERROR(ERRNO));
             }
 
-            // vyrobíme a inicializujeme mno¾inu deskriptorù
+            // create fd-set
             fd_set wfds;
             FD_ZERO(&wfds);
             FD_SET(fd, &wfds);
 
-            // vytvoøíme timeout
+            // and timeout
             struct timeval timeout = {
                 connectTimeout / 1000,
                 (connectTimeout % 1000) * 1000
             };
 
-            // zjistíme, jestli connect dobìhl
+            // wait for connect completion or timeout
             int ready = ::select(fd + 1, 0, &wfds, 0, (connectTimeout < 0)
                                  ? 0 : &timeout);
 
@@ -250,17 +253,15 @@ void SimpleConnector_t::connectSocket(int &fd, bool keepAlive,
                 }
             }
 
-            // zjistíme, jak dobìhl connect
+            // check for connect status
             socklen_t len = sizeof(int);
             int status;
 #ifdef WIN32
 
-            if (::getsockopt(fd, SOL_SOCKET, SO_ERROR,
-                             (char*)&status, &len))
+            if (::getsockopt(fd, SOL_SOCKET, SO_ERROR, (char*)&status, &len))
 #else //WIN32
 
-            if (::getsockopt(fd, SOL_SOCKET, SO_ERROR,
-                             &status, &len))
+            if (::getsockopt(fd, SOL_SOCKET, SO_ERROR, &status, &len))
 #endif //WIN32
 
             {
@@ -269,6 +270,7 @@ void SimpleConnector_t::connectSocket(int &fd, bool keepAlive,
                                   ERRNO, STRERROR(ERRNO));
             }
 
+            // check for error
             if (status) {
                 throw HTTPError_t(HTTP_SYSCALL,
                                   "Cannot connect socket: <%d, %s>.",
@@ -276,7 +278,7 @@ void SimpleConnector_t::connectSocket(int &fd, bool keepAlive,
             }
         }
 
-        // connect OK => do not close socket!
-        closer.doClose = false;
+        // connect OK => do not close the socket!
+        closer.release();
     }
 }

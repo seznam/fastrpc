@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcconnector.h,v 1.1 2007-07-31 13:01:18 vasek Exp $
+ * FILE          $Id: frpcconnector.h,v 1.2 2007-07-31 14:05:45 vasek Exp $
  *
  * DESCRIPTION
  *
@@ -43,7 +43,7 @@ namespace FRPC {
  */
 class FRPC_DLLEXPORT Connector_t {
 public:
-    Connector_t(const URL_t &url);
+    Connector_t(const URL_t &url, int connectTimeout, bool keepAlive);
 
     virtual ~Connector_t();
 
@@ -51,14 +51,21 @@ public:
      *  one.
      *
      * @param fd connected socket or -1 if not yet connected
-     * @param keepAlive if keep-alive is supported
-     * @param connectTimeout how long to wait for connection
      */
-    virtual void connectSocket(int &fd, bool keepAlive,
-                               unsigned int connectTimeout) = 0;
+    virtual void connectSocket(int &fd) = 0;
+
+    void setTimeout(int timeout) {
+        connectTimeout = timeout;
+    }
+
+    bool getKeepAlive() const {
+        return keepAlive;
+    }
 
 protected:
     URL_t url;
+    int connectTimeout;
+    bool keepAlive;
 
 private:
     Connector_t(const Connector_t&);
@@ -70,12 +77,12 @@ private:
  */
 class FRPC_DLLEXPORT SimpleConnector_t : public Connector_t {
 public:
-    SimpleConnector_t(const URL_t &url);
+    SimpleConnector_t(const URL_t &url, int connectTimeout, bool keepAlive);
 
     virtual ~SimpleConnector_t();
 
-    virtual void connectSocket(int &fd, bool keepAlive,
-                               unsigned int connectTimeout);
+    virtual void connectSocket(int &fd);
+
 private:
 
     /** Resolved IP address.

@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcserverproxy.cc,v 1.9 2007-07-31 13:01:18 vasek Exp $
+ * FILE          $Id: frpcserverproxy.cc,v 1.10 2007-07-31 14:05:44 vasek Exp $
  *
  * DESCRIPTION
  *
@@ -52,12 +52,20 @@
 
 namespace {
     FRPC::Pool_t localPool;
-    FRPC::Int_t &DEFAULT_READ_TIMEOUT(localPool.Int(10000));
-    FRPC::Int_t &DEFAULT_WRITE_TIMEOUT(localPool.Int(1000));
-    FRPC::Int_t &DEFAULT_CONNECT_TIMEOUT(localPool.Int(10000));
+
+    int getTimeout(const FRPC::Struct_t &config, const std::string &name,
+                   int defaultValue)
+    {
+        // get key from config and check for existence
+        const FRPC::Value_t *val(config.get(name));
+        if (!val) return defaultValue;
+
+        // OK
+        return FRPC::Int(*val);
+    }
 
     FRPC::ProtocolVersion_t parseProtocolVersion(const FRPC::Struct_t &config,
-                                                 const std::string name)
+                                                 const std::string &name)
     {
         std::string strver
             (FRPC::String(config.get(name, FRPC::String_t::FRPC_EMPTY)));
@@ -69,7 +77,6 @@ namespace {
         int major, minor;
         is >> major >> minor;
 
-
         // OK
         return FRPC::ProtocolVersion_t(major, minor);
     }
@@ -77,36 +84,32 @@ namespace {
 
 namespace FRPC {
 
-
 class ServerProxyImpl_t {
 public:
     ServerProxyImpl_t(const std::string &server,
                       const ServerProxy_t::Config_t &config)
         : url(server, config.proxyUrl),
           io(-1, config.readTimeout, config.writeTimeout, -1 ,-1),
-          connectTimeout(config.connectTimeout), keepAlive(config.keepAlive),
-          rpcTransferMode(config.useBinary),
-          useHTTP10(config.useHTTP10),
+          rpcTransferMode(config.useBinary), useHTTP10(config.useHTTP10),
           serverSupportedProtocols(HTTPClient_t::XML_RPC),
           protocolVersion(config.protocolVersion),
-          connector(new SimpleConnector_t(url))
+          connector(new SimpleConnector_t(url, config.connectTimeout,
+                                          config.keepAlive))
     {}
 
     ServerProxyImpl_t(const std::string &server, const Struct_t &config)
         : url(server,
               FRPC::String(config.get("proxyUrl", String_t::FRPC_EMPTY))),
-          io(-1,
-             FRPC::Int(config.get("readTimeout", DEFAULT_READ_TIMEOUT)),
-             FRPC::Int(config.get("writeTimeout", DEFAULT_WRITE_TIMEOUT)),
-             -1, -1),
-          connectTimeout(FRPC::Int(config.get("connectTimeout",
-                                              DEFAULT_CONNECT_TIMEOUT))),
-          keepAlive(FRPC::Bool(config.get("keepAlive", Bool_t::FRPC_FALSE))),
+          io(-1, getTimeout(config, "readTimeout", 10000),
+             getTimeout(config, "writeTimeout", 1000), -1, -1),
           rpcTransferMode(FRPC::Int(config.get("transferMode",
                                                Int_t::FRPC_ZERO))),
           useHTTP10(FRPC::Bool(config.get("useHTTP10", Bool_t::FRPC_FALSE))),
           serverSupportedProtocols(HTTPClient_t::XML_RPC),
-          protocolVersion(parseProtocolVersion(config, "protocolVersion"))
+          protocolVersion(parseProtocolVersion(config, "protocolVersion")),
+          connector(new SimpleConnector_t
+                    (url, getTimeout(config, "connectTimeout", 10000),
+                     FRPC::Bool(config.get("keepAlive", Bool_t::FRPC_FALSE))))
     {}
 
     /** Set new read timeout */
@@ -121,7 +124,7 @@ public:
 
     /** Set new connect timeout */
     void setConnectTimeout(int timeout) {
-        connectTimeout = timeout;
+        connector->setTimeout(timeout);
     }
 
     const URL_t& getURL() {
@@ -144,8 +147,6 @@ public:
 private:
     URL_t url;
     HTTPIO_t io;
-    unsigned int connectTimeout;
-    bool keepAlive;
     unsigned int rpcTransferMode;
     bool useHTTP10;
     unsigned int serverSupportedProtocols;
@@ -194,7 +195,7 @@ Marshaller_t* ServerProxyImpl_t::createMarshaller(HTTPClient_t &client) {
     default:
         {
             if ((serverSupportedProtocols & HTTPClient_t::XML_RPC)
-                || keepAlive == false
+                || connector->getKeepAlive() == false
                 || io.socket() != -1) {
                 //using XML_RPC
                 marshaller= Marshaller_t::create
@@ -231,8 +232,7 @@ ServerProxy_t::~ServerProxy_t() {
 Value_t& ServerProxyImpl_t::call(Pool_t &pool, const std::string &methodName,
                                  const Array_t &params)
 {
-    HTTPClient_t client(io, url, connectTimeout,keepAlive, connector.get(),
-                        useHTTP10);
+    HTTPClient_t client(io, url, connector.get(), useHTTP10);
     TreeBuilder_t builder(pool);
     std::auto_ptr<Marshaller_t>marshaller(createMarshaller(client));
     TreeFeeder_t feeder(*marshaller);
@@ -269,8 +269,7 @@ Value_t& ServerProxy_t::call(Pool_t &pool, const std::string &methodName,
 Value_t& ServerProxyImpl_t::call(Pool_t &pool, const char *methodName,
                                  va_list args)
 {
-    HTTPClient_t client(io, url, connectTimeout, keepAlive, connector.get(),
-                        useHTTP10);
+    HTTPClient_t client(io, url, connector.get(), useHTTP10);
     TreeBuilder_t builder(pool);
     std::auto_ptr<Marshaller_t>marshaller(createMarshaller(client));
     TreeFeeder_t feeder(*marshaller);

@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpchttpclient.cc,v 1.9 2007-07-31 13:01:18 vasek Exp $
+ * FILE          $Id: frpchttpclient.cc,v 1.10 2007-07-31 14:05:45 vasek Exp $
  *
  * DESCRIPTION
  *
@@ -103,10 +103,8 @@ struct SocketCloser_t {
 namespace FRPC {
 
 HTTPClient_t::HTTPClient_t(HTTPIO_t &httpIO, URL_t &url,
-                           unsigned int connectTimeout, bool keepAlive,
                            Connector_t *connector, bool useHTTP10)
     : httpIO(httpIO), url(url), connector(connector),
-      connectTimeout(connectTimeout), keepAlive(keepAlive),
       headersSent(false), useChunks(false), supportedProtocols(XML_RPC),
       useProtocol(XML_RPC), contentLenght(0), connectionMustClose(false),
       unmarshaller(0), useHTTP10(useHTTP10)
@@ -259,7 +257,7 @@ void HTTPClient_t::readResponse(DataBuilder_t &builder) {
     }
 
     // close socket
-    if (!((!keepAlive || closeConnection || connectionMustClose)
+    if (!((!connector->getKeepAlive() || closeConnection || connectionMustClose)
           && (httpIO.socket() > -1))) {
         closer.doClose = false;
     }
@@ -302,7 +300,7 @@ void HTTPClient_t::sendRequest() {
 
         //append connection header
         os.os << HTTP_HEADER_CONNECTION
-              << (keepAlive ? ": keep-alive" : ": close")
+              << (connector->getKeepAlive() ? ": keep-alive" : ": close")
         << "\r\n";
 
         // write content-length or content-transfer-encoding when we can send
@@ -329,7 +327,7 @@ void HTTPClient_t::sendRequest() {
         }
 
         //connect socket
-        connector->connectSocket(httpIO.socket(), keepAlive, connectTimeout);
+        connector->connectSocket(httpIO.socket());
 
         try {
             // send header
