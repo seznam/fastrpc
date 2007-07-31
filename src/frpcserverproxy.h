@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcserverproxy.h,v 1.16 2007-07-25 10:50:03 mirecta Exp $
+ * FILE          $Id: frpcserverproxy.h,v 1.17 2007-07-31 13:01:18 vasek Exp $
  *
  * DESCRIPTION
  *
@@ -45,6 +45,12 @@
 
 namespace FRPC {
 
+/** Server proxy implementation holder.
+ */
+class ServerProxyImpl_t;
+
+class Struct_t;
+
 /**
 @brief ServerProxy Object
 
@@ -63,7 +69,7 @@ public:
     */
     class Config_t {
     public:
-        enum{ON_SUPPORT_ON_KEEP_ALIVE = 0, ON_SUPPORT, ALWAYS,NEVER};
+        enum {ON_SUPPORT_ON_KEEP_ALIVE = 0, ON_SUPPORT, ALWAYS,NEVER};
         /**
             @brief Constructor of config class
             @param connectTimeout - it is connection timeout in miliseconds
@@ -81,12 +87,11 @@ public:
         */
         Config_t(unsigned int connectTimeout, unsigned int readTimeout,
                  unsigned int writeTimeout,
-                 bool keepAlive, unsigned int useBinary, bool useHTTP10 = false):
-                connectTimeout(connectTimeout),readTimeout(readTimeout),
-                writeTimeout(writeTimeout),
-                keepAlive(keepAlive), useBinary(useBinary), useHTTP10(useHTTP10) {}
-
-
+                 bool keepAlive, unsigned int useBinary, bool useHTTP10 = false)
+            : connectTimeout(connectTimeout),readTimeout(readTimeout),
+              writeTimeout(writeTimeout),
+              keepAlive(keepAlive), useBinary(useBinary), useHTTP10(useHTTP10)
+        {}
 
         /**
             @brief Constructor of config class
@@ -110,11 +115,12 @@ public:
                  unsigned int writeTimeout,
                  bool keepAlive, unsigned int useBinary,
                 unsigned char protocolVersionMajor = 2,
-                unsigned char protocolVersionMinor = 1, bool useHTTP10 = false):
-                connectTimeout(connectTimeout),readTimeout(readTimeout),
-                writeTimeout(writeTimeout),
-                keepAlive(keepAlive), useBinary(useBinary), useHTTP10(useHTTP10),
-                 protocolVersion(protocolVersionMajor,protocolVersionMinor){}
+                unsigned char protocolVersionMinor = 1, bool useHTTP10 = false)
+            : connectTimeout(connectTimeout),readTimeout(readTimeout),
+              writeTimeout(writeTimeout),
+              keepAlive(keepAlive), useBinary(useBinary), useHTTP10(useHTTP10),
+              protocolVersion(protocolVersionMajor,protocolVersionMinor)
+        {}
 
         /**
            @brief Default constructor
@@ -125,9 +131,11 @@ public:
            @n @b writeTimeout = 1000 ms
         */
         Config_t()
-                : connectTimeout(10000), readTimeout(10000), writeTimeout(1000),
-                keepAlive(false), useBinary(ON_SUPPORT_ON_KEEP_ALIVE),
-                useHTTP10(false) {}
+            : connectTimeout(10000), readTimeout(10000), writeTimeout(1000),
+              keepAlive(false), useBinary(ON_SUPPORT_ON_KEEP_ALIVE),
+              useHTTP10(false)
+        {}
+
         ///@brief internal representation of connectTimeout value
         unsigned int connectTimeout;
         ///@brief internal representation of readTimeout value
@@ -146,6 +154,7 @@ public:
         ///@brief Protocol version
         ProtocolVersion_t protocolVersion;
     };
+
     /**
         @brief Constructor
         @param server is string contain of address of FarstRpc server
@@ -157,9 +166,16 @@ public:
     */
     ServerProxy_t(const std::string &server, const Config_t &config);
 
-    /** Compatibility version...
-     */
-    ServerProxy_t(const std::string &server, Config_t &config);
+    /**
+        @brief Constructor
+        @param server string containing address of FarstRpc server
+                      @n Format of address is "http://machine:port/PRC2"
+                      @n @b Examles:
+                      @li "http://box:2600/RPC2"
+                      @li "http://192.168.10.2:2800/RPC2"
+        @param config generic configuration via FRPC::Struct_t
+    */
+    ServerProxy_t(const std::string &server, const Struct_t &config);
 
     /**
         @brief Default destructor
@@ -503,96 +519,25 @@ public:
     */
     Value_t& call(Pool_t &pool, const char *methodName, ...);
 
-    /**
-     *    @brief set new read timeout
-    */
-    inline void setReadTimeout(int timeout) {
-        io.setReadTimeout(timeout);
-    }
-    /**
-    *    @brief set new write timeout
-    */
-    inline void setWriteTimeout(int timeout) {
-        io.setWriteTimeout(timeout);
-    }
-    /**
-     *    @brief set new connect timeout
-     */
-    inline void setConnectTimeout(int timeout) {
-        connectTimeout = timeout;
-    }
+    /** @brief set new read timeout */
+    void setReadTimeout(int timeout);
+
+    /** @brief set new write timeout */
+    void setWriteTimeout(int timeout);
+
+    /** @brief set new connect timeout */
+    void setConnectTimeout(int timeout);
 
     const URL_t& getURL();
 
 private:
-    inline Marshaller_t* createMarshaller(HTTPClient_t &client) {
-        Marshaller_t *marshaller;
-        switch (rpcTransferMode) {
-        case Config_t::ON_SUPPORT: {
-                if (serverSupportedProtocols & HTTPClient_t::BINARY_RPC) {
-                    //using BINARY_RPC
-                    marshaller= Marshaller_t::create(Marshaller_t::BINARY_RPC,
-                                                     client,protocolVersion);
-                    client.prepare(HTTPClient_t::BINARY_RPC);
-                } else {
-                    //using XML_RPC
-                    marshaller= Marshaller_t::create(Marshaller_t::XML_RPC,client,
-                                                     protocolVersion);
-                    client.prepare(HTTPClient_t::XML_RPC);
-                }
-            }
-            break;
-        case Config_t::NEVER: {
-                //using BINARY_RPC  always
-                marshaller= Marshaller_t::create(Marshaller_t::XML_RPC,
-                                                 client,protocolVersion);
-                client.prepare(HTTPClient_t::XML_RPC);
-            }
-            break;
-        case Config_t::ALWAYS: {
-                //using BINARY_RPC  always
-                marshaller= Marshaller_t::create(Marshaller_t::BINARY_RPC,
-                                                 client,protocolVersion);
-                client.prepare(HTTPClient_t::BINARY_RPC);
-            }
-            break;
-        case Config_t::ON_SUPPORT_ON_KEEP_ALIVE:
-        default: {
-            if ((serverSupportedProtocols & HTTPClient_t::XML_RPC)
-                    || keepAlive == false
-                    || io.socket() != -1) {
-                //using XML_RPC
-                marshaller= Marshaller_t::create(Marshaller_t::XML_RPC,client,
-                                                 protocolVersion);
-                client.prepare(HTTPClient_t::XML_RPC);
-            } else {
-                //using BINARY_RPC
-                marshaller= Marshaller_t::create(Marshaller_t::BINARY_RPC,
-                                                 client,protocolVersion);
-                client.prepare(HTTPClient_t::BINARY_RPC);
-            }
-
-
-        }
-        break;
-        }
-        return marshaller;
-    }
-
     ServerProxy_t(const ServerProxy_t&);
 
     ServerProxy_t& operator=(const ServerProxy_t&);
 
-    URL_t url;
-    HTTPIO_t io;
-    unsigned int connectTimeout;
-    bool keepAlive;
-    unsigned int rpcTransferMode;
-    bool useHTTP10;
-    unsigned int serverSupportedProtocols;
-    ProtocolVersion_t protocolVersion;
-}
-;
-}
+    ServerProxyImpl_t *sp;
+};
+
+} // namespace FRPC
 
 #endif

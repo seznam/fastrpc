@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
-* FILE             $Id: frpchttp.cc,v 1.4 2007-05-18 15:29:45 mirecta Exp $
+* FILE             $Id: frpchttp.cc,v 1.5 2007-07-31 13:01:18 vasek Exp $
 *
 * DESCRIPTION      HTTP Base types
 *
@@ -176,47 +176,11 @@ std::ostream& FRPC::operator<<(std::ostream &os,
     return os;
 }
 
-namespace
-{
+namespace {
     const std::string HTTP_SCHEMA("http://");
 
-    inline bool nocaseCmp(char l, char r)
-    {
+    inline bool nocaseCmp(char l, char r) {
         return toupper(l) == toupper(r);
-    }
-
-    char* host_strerror(int num) {
-        switch (num) {
-        case HOST_NOT_FOUND:
-            return "The specified host is unknown";
-
-        case NO_ADDRESS:
-            return "The requested name is valid but does "
-                "not have an IP address.";
-
-        case NO_RECOVERY:
-            return "A non-recoverable name server error occurred.";
-
-        case TRY_AGAIN:
-            return "A temporary error occurred on an authoritative "
-                "name server.  Try again later.";
-
-        default:
-            return "Unknown DNS related error.";
-        }
-    }
-
-    void resolveHost(const std::string &host, in_addr &addr) {
-	struct hostent *he = gethostbyname(host.c_str());
-        if (!he) {
-            // oops
-            throw HTTPError_t(HTTP_DNS, "Cannot resolve host '%s': <%d, %s>.",
-                              host.c_str(), h_errno,
-                              host_strerror(h_errno));
-        }
-
-        // remember IP address
-        addr = *reinterpret_cast<in_addr*>(he->h_addr_list[0]);
     }
 }
 
@@ -266,18 +230,16 @@ void URL_t::parse(const std::string &url) {
 }
 
 URL_t::URL_t(const std::string &url, const std::string &proxyVia)
-    : usesProxy(!proxyVia.empty())
+    : usesProxy(!proxyVia.empty()), isSSL(false)
 {
     if (!usesProxy) {
         // parse URL and resolve host to IP
         parse(url);
-        resolveHost(host, addr);
         return;
     }
 
     // we have got proxy -> parse and resolve this URL
     parse(proxyVia);
-    resolveHost(host, addr);
 
     // force path part to hold host URL
     path = url;

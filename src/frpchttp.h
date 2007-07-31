@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE             $Id: frpchttp.h,v 1.3 2007-04-02 15:28:21 vasek Exp $
+ * FILE             $Id: frpchttp.h,v 1.4 2007-07-31 13:01:18 vasek Exp $
  *
  * DESCRIPTION      HTTP Base types
  *
@@ -150,7 +150,7 @@ namespace FRPC {
     
     struct FRPC_DLLEXPORT URL_t {
         URL_t(const std::string &url,
-              const std::string &proxyVia = std::string(""));
+              const std::string &proxyVia = std::string());
 
         std::string getUrl() const;
 
@@ -160,11 +160,10 @@ namespace FRPC {
 
         std::string path;
 
-        struct in_addr addr;
-
     private:
         void parse(const std::string &url);
         bool usesProxy;
+        bool isSSL;
     };
 
     enum ErrorCode_t {

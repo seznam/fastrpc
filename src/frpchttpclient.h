@@ -20,15 +20,15 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpchttpclient.h,v 1.4 2007-07-25 10:50:03 mirecta Exp $
+ * FILE          $Id: frpchttpclient.h,v 1.5 2007-07-31 13:01:18 vasek Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #ifndef FRPCFRPCHTTPCLIENT_H
 #define FRPCFRPCHTTPCLIENT_H
@@ -39,6 +39,7 @@
 #include <frpchttpio.h>
 #include <frpctypeerror.h>
 #include <frpcunmarshaller.h>
+#include <frpcconnector.h>
 #include <list>
 #include <frpc.h>
 
@@ -53,23 +54,21 @@ struct URL_t;
 class UnMarshaller_t;
 
 
-class FRPC_DLLEXPORT DataSink_t
-{
+class FRPC_DLLEXPORT DataSink_t {
 public:
     inline DataSink_t(UnMarshaller_t& um,
-                      unsigned int type = UnMarshaller_t::TYPE_METHOD_RESPONSE )
-                      :um(um),dataWritten(0), type(type)
+                      unsigned int type = UnMarshaller_t::TYPE_METHOD_RESPONSE)
+        : um(um),dataWritten(0), type(type)
     {}
 
-    inline ~DataSink_t()
-    {}
-    inline void write(const char *data, unsigned int size)
-    {
+    inline ~DataSink_t() {}
+
+    inline void write(const char *data, unsigned int size) {
         um.unMarshall(data, size, type);
         dataWritten += size;
     }
-    inline unsigned int written()
-    {
+
+    inline unsigned int written() {
         return dataWritten;
     }
 
@@ -82,18 +81,14 @@ private:
 /**
 @author Miroslav Talasek
 */
-class FRPC_DLLEXPORT HTTPClient_t : public Writer_t
-{
+class FRPC_DLLEXPORT HTTPClient_t : public Writer_t {
 public:
-    
     HTTPClient_t(HTTPIO_t &httpIO, URL_t &url, unsigned int connectTimeout,
-                 bool keepAlive);
-
-    HTTPClient_t(HTTPIO_t &httpIO, URL_t &url, unsigned int connectTimeout,
-                 bool keepAlive, bool useHTTP10);
+                 bool keepAlive, Connector_t *connector,
+                 bool useHTTP10 = false);
 
 
-    enum{XML_RPC = 0x01, BINARY_RPC = 0x02};
+    enum {XML_RPC = 0x01, BINARY_RPC = 0x02};
 
     virtual ~HTTPClient_t();
 
@@ -102,64 +97,68 @@ public:
     * @param contentType maybe  XML_RPC or BINARY_RPC
     */
 
-    inline void prepare(unsigned int contentType)
-    {
-        switch(contentType)
-        {
+    inline void prepare(unsigned int contentType) {
+        switch(contentType) {
         case XML_RPC:
             useProtocol = contentType;
             useChunks = false;
             break;
+
         case BINARY_RPC:
             useProtocol = contentType;
-			useChunks = useHTTP10 ? false : true;
+            useChunks = !useHTTP10;
             break;
+
         default:
             throw TypeError_t("Unknown ContentType");
             break;
         }
     }
+
     /**
     * @brief getting server support protocols from last response
     * @return maybe XML_RPC , BINARY_RPC or both
     */
-
-    inline unsigned int getSupportedProtocols()
-    {
+    inline unsigned int getSupportedProtocols() {
         return supportedProtocols;
     }
-     /**
+
+    /**
     * @brief getting server protocol version
     * @return ProtocolVersion_t
     */
-    inline ProtocolVersion_t getProtocolVersion()
-    {
-	return protocolVersion;
+    inline ProtocolVersion_t getProtocolVersion() {
+        return protocolVersion;
     }
+
     /**
     * @brief says to HTTP client that all data was writed
     *
     */
     virtual void flush();
+
     /**
     * @brief write data to HTTP client
-    * @param data pointer to data 
+    * @param data pointer to data
     * @param size size of data
     */
     virtual void write(const char* data, unsigned int size);
+
     /**
     *@brief read response from socket and unmarshaling
     *@param builder is a builder required for unmarshaller to build data tree
     */
     void readResponse(DataBuilder_t &builder);
 
-
 private:
     void sendRequest();
     HTTPClient_t();
+    HTTPClient_t(const HTTPClient_t&);
+    HTTPClient_t& operator=(const HTTPClient_t&);
 
     HTTPIO_t &httpIO;
-    URL_t    &url;
+    URL_t &url;
+    Connector_t *connector;
     unsigned int connectTimeout;
     bool keepAlive;
 
@@ -177,6 +176,6 @@ private:
     ProtocolVersion_t protocolVersion;
 };
 
-};
+} // namespace FRPC
 
 #endif
