@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: pythonbuilder.cc,v 1.4 2007-05-23 09:31:43 mirecta Exp $
+ * $Id: pythonbuilder.cc,v 1.5 2007-07-31 13:03:37 vasek Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -48,7 +48,7 @@ StringMode_t parseStringMode(const char *stringMode) {
             return STRING_MODE_UNICODE;
         } else if (strcmp(stringMode, "mixed")) {
             PyErr_Format(PyExc_ValueError,
-                         "Invalid valu '%s' of stringMode.", stringMode);
+                         "Invalid value '%s' of stringMode.", stringMode);
             return STRING_MODE_INVALID;
         }
     }

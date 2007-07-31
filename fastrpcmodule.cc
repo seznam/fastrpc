@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: fastrpcmodule.cc,v 1.12 2007-07-25 10:48:26 mirecta Exp $
+ * $Id: fastrpcmodule.cc,v 1.13 2007-07-31 13:03:37 vasek Exp $
  * 
  * AUTHOR      Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
@@ -79,6 +79,9 @@ using FRPC::EncodingError_t;
 using FRPC::LenError_t;
 using FRPC::ResponseError_t;
 using FRPC::ProtocolVersion_t;
+using FRPC::Connector_t;
+using FRPC::SimpleConnector_t;
+
 using namespace FRPC::Python;
 
 // support constants
@@ -958,12 +961,12 @@ public:
           connectTimeout(connectTimeout), keepAlive(keepAlive),
           rpcTransferMode(rpcTransferMode), encoding(encoding),
           serverSupportedProtocols(HTTPClient_t::XML_RPC),
-          useHTTP10(useHTTP10), stringMode(stringMode), 
-                    protocolVersion(protocolVersion)
+          useHTTP10(useHTTP10), stringMode(stringMode),
+          protocolVersion(protocolVersion),
+          connector(new SimpleConnector_t(url))
     {}
 
-    ~Proxy_t()
-    {}
+    ~Proxy_t() {}
 
     enum {
         BINARY_ON_SUPPORT_ON_KEEP_ALIVE = 0,
@@ -1000,6 +1003,7 @@ private:
     std::string lastCall;
     StringMode_t stringMode;
     ProtocolVersion_t protocolVersion;
+    std::auto_ptr<Connector_t> connector;
 };
 
 struct ServerProxyObject
@@ -1339,7 +1343,8 @@ PyObject* Proxy_t::operator()(MethodObject *methodObject, PyObject *args)
     // remember last method
     lastCall = methodObject->name;
 
-    HTTPClient_t client(io,url,connectTimeout,false, useHTTP10);
+    HTTPClient_t client(io,url,connectTimeout, false,
+                        connector.get(), useHTTP10);
     Builder_t builder(reinterpret_cast<PyObject*>(methodObject),
                       stringMode);
     Marshaller_t *marshaller;

@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: pyerrors.cc,v 1.3 2007-04-02 15:42:58 vasek Exp $
+ * $Id: pyerrors.cc,v 1.4 2007-07-31 13:03:37 vasek Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -270,7 +270,7 @@ PyObject* initException(PyObject *module, char *name,
 
         // turn the function into an unbound method
         PyObjectWrapper_t method(PyMethod_New(func, NULL, Exception));
-        if (!func)
+        if (!method)
             return 0;
         if (PyDict_SetItemString(Exception_dict, md->ml_name, method))
             return 0;

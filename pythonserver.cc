@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: pythonserver.cc,v 1.17 2007-05-31 10:10:02 vasek Exp $
+ * $Id: pythonserver.cc,v 1.18 2007-07-31 13:03:37 vasek Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -1198,6 +1198,7 @@ PyObject* MethodRegistryObject_new(PyTypeObject *type, PyObject *args,
     if (callableOrNone(self->preRead, "preRead")) {
         Py_XDECREF(self->preProcess);
         Py_XDECREF(self->postProcess);
+        return 0;
     }
     
     // initialize method lookup
@@ -1834,8 +1835,8 @@ PyObject* ServerObject_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
                                      &stringMode))
         return 0;
 
-    if (stringMode &&
-        !(self->stringMode = FRPC::Python::parseStringMode(stringMode)))
+    if ((self->stringMode = FRPC::Python::parseStringMode(stringMode))
+        == FRPC::Python::STRING_MODE_INVALID)
         return 0;
 
     PyObjectWrapper_t registryKwds(PyDict_New());
