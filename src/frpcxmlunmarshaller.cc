@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcxmlunmarshaller.cc,v 1.12 2007-07-25 10:50:03 mirecta Exp $
+ * FILE          $Id: frpcxmlunmarshaller.cc,v 1.13 2007-09-05 10:31:39 mirecta Exp $
  *
  * DESCRIPTION
  *
@@ -578,8 +578,10 @@ void XmlUnMarshaller_t::setValueType(const char *name) {
             dataBuilder.buildMethodResponse();
             mainInternalType = NONE;
         }
-        if (mainInternalType != TYPE_FAULT)
+        if (mainInternalType != TYPE_FAULT) {
             dataBuilder.openStruct(0);
+            internalType = NONE;
+        }
         break;
     case ARRAY:
         if (mainInternalType == TYPE_METHOD_RESPONSE) {
@@ -587,6 +589,7 @@ void XmlUnMarshaller_t::setValueType(const char *name) {
             mainInternalType = NONE;
         }
         dataBuilder.openArray(0);
+        internalType = NONE;
         break;
     case FAULT:
     case METHOD_CALL:
