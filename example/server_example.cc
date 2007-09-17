@@ -56,7 +56,7 @@ Value_t& methodTest(Pool_t &pool, Array_t &params, int &data)
     
 
     return pool.Struct("status",pool.Int(200),"statusMessage",
-                       pool.String("OK"),"params",params);
+                       pool.String("OK"),"params",params,"size",pool.Int(FRPC::Struct(params[0]).size()));
 
 }
 
@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
 
     int sock = 0;
     struct sockaddr_in addr;
-    long port= 9898;
+    int port= 9898;
     socklen_t sinSize = sizeof( struct sockaddr_in );
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port);
