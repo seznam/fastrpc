@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# FILE              $Id: make.sh,v 1.1 2005-07-19 13:02:55 vasek Exp $
+# FILE              $Id: make.sh,v 1.2 2007-09-17 11:21:36 vasek Exp $
 #
 # DESCRIPTION       Packager for python Fastrpc module.
 #
@@ -128,14 +128,20 @@ function make_packages {
         ########################################################################
 
         if [ "${DEFAULT}" = "no" ]; then
-                # Copy extra package files.
-                for FILE in postinst preinst conffiles prerm postrm; do
-                        test -f ${PROJECT_NAME}.${FILE} \
-                        && cp ${PROJECT_NAME}.${FILE} ${CONTROL_DIR}/${FILE}
-                done
+            # Copy extra package files.
+            for FILE in postinst preinst conffiles prerm postrm; do
+                test -f ${PROJECT_NAME}.${FILE} \
+                    && cp ${PROJECT_NAME}.${FILE} ${CONTROL_DIR}/${FILE}
+            done
 
-                # Remove any lost CVS entries in the package tree.
-                find ${DEBIAN_BASE} -path "*CVS*" -exec rm -Rf '{}' \; || exit 1
+            # Remove any lost CVS entries in the package tree.
+            find ${DEBIAN_BASE} -path "*CVS*" -exec rm -Rf '{}' \; || exit 1
+
+            # build extra depend
+            SH_DEPEND=$(dpkg-shlibdeps -O \
+                $(find ${INSTALL_DIR}/usr/lib -name '*.so' 2>/dev/null) | \
+                gawk '{match($0, /^.*Depends=(.*)$/, a); print a[1]}')
+            PYTHON_PACKAGE="${PYTHON_PACKAGE}, ${SH_DEPEND}"
         fi
 
         # Compute package's size.

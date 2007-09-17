@@ -1,7 +1,7 @@
 Package: <PACKAGE>
 Version: <VERSION>
 Architecture: <ARCHITECTURE>
-Depends: <PYTHON_PACKAGE>, libfastrpc2 (>=2.0.0)
+Depends: <PYTHON_PACKAGE>
 Maintainer: <MAINTAINER>
 Installed-Size: <SIZE>
 Description: Fastrpc -- RPC using XML and Binary protocol
