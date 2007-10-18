@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: fastrpcmodule.h,v 1.3 2007-04-02 15:42:58 vasek Exp $
+ * $Id: fastrpcmodule.h,v 1.4 2007-10-18 12:16:43 burlog Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -96,6 +96,9 @@ namespace FRPC { namespace Python {
     DateTimeObject* newDateTime(short year, char month, char day,
                                 char hour, char in, char sec, char weekDay,
                                 time_t unixTime, char timeZone);
+
+    extern PyObject *mxDateTime;
+    extern PyObject *dateTimeDateTime;
 
 #define PyDateTime_Check(op) PyObject_TypeCheck(op, &DateTimeObject_Type)
 #define PyDateTime_CheckExact(op) ((op)->ob_type == &DateTimeObject_Type)

@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: pythonfeeder.cc,v 1.4 2007-05-23 09:31:43 mirecta Exp $
+ * $Id: pythonfeeder.cc,v 1.5 2007-10-18 12:16:43 burlog Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -40,6 +40,20 @@ using FRPC::Int_t;
 
 using namespace FRPC::Python;
 
+namespace {
+
+long getLongAttr(PyObject *object, char *name) {
+    PyObjectWrapper_t attr(PyObject_GetAttrString(object, name));
+    if (!attr) throw PyError_t();
+
+    long value = PyInt_AsLong(attr);
+    if ((value = -1) && PyErr_Occurred()) throw PyError_t();
+
+    return value;
+}
+
+}
+
 void Feeder_t::feed(PyObject *args)
 {
     int argc = PyTuple_GET_SIZE(args);
@@ -50,6 +64,11 @@ void Feeder_t::feed(PyObject *args)
 
 void Feeder_t::feedValue(PyObject *value)
 {
+#if PYTHON_API_VERSION >= 1012
+    if (PyBool_Check(value)) {
+        marshaller->packBool(PyObject_IsTrue(value));
+    } else
+#endif
     if (PyInt_Check(value)) {
         marshaller->packInt(PyInt_AsLong(value));
     } else if(PyLong_Check(value)) {
@@ -67,7 +86,7 @@ void Feeder_t::feedValue(PyObject *value)
                                  dateTime->timeZone);
     } else if (PyBinary_Check(value)) {
         BinaryObject *bin = reinterpret_cast<BinaryObject*>(value);
-        
+
         char *str;
         int strLen;
         if (PyString_AsStringAndSize(bin->value, &str, &strLen))
@@ -85,42 +104,42 @@ void Feeder_t::feedValue(PyObject *value)
             int strLen;
             if (PyString_AsStringAndSize(value, &str, &strLen))
                 throw PyError_t();
-            
+
             marshaller->packString(str, strLen);
         } else {
             PyObjectWrapper_t unicode
                 (PyUnicode_FromEncodedObject(value, encoding.c_str(), "strict"));
             if (!unicode) throw PyError_t();
-            
+
             // convert unicode to utf-8
             PyObjectWrapper_t utf8(PyUnicode_AsUTF8String(unicode));
             if (!utf8) throw PyError_t();
-            
+
             // get string and marshall it
             char *str;
             int strLen;
             if (PyString_AsStringAndSize(utf8, &str, &strLen))
                 throw PyError_t();
-            
+
             marshaller->packString(str, strLen);
         }
     } else if (PyUnicode_Check(value)) {
         // convert unicode to utf-8
         PyObjectWrapper_t utf8(PyUnicode_AsUTF8String(value));
         if (!utf8) throw PyError_t();
-        
+
         // get string and marshall it
         char *str;
         int strLen;
         if (PyString_AsStringAndSize(utf8, &str, &strLen))
             throw PyError_t();
-        
+
         marshaller->packString(str, strLen);
     } else if (PyList_Check(value)) {
         int argc = PyList_GET_SIZE(value);
-        
+
         marshaller->packArray(argc);
-        
+
         for (int pos = 0; pos < argc; ++pos)
             feedValue(PyList_GET_ITEM(value, pos));
     } else if (PyTuple_Check(value)) {
@@ -152,8 +171,34 @@ void Feeder_t::feedValue(PyObject *value)
             marshaller->packStructMember(str, strLen);
             feedValue(member);
         }
+    } else if (mxDateTime && (PyObject_IsInstance(value, mxDateTime) == 1)) {
+
+        marshaller->packDateTime(getLongAttr(value, "year"),
+                                 getLongAttr(value, "month"),
+                                 getLongAttr(value, "day"),
+                                 getLongAttr(value, "hour"),
+                                 getLongAttr(value, "minute"),
+                                 getLongAttr(value, "second"), -1, -1, -1);
+
+    } else if (dateTimeDateTime
+            && (PyObject_IsInstance(value, dateTimeDateTime) == 1)) {
+
+        marshaller->packDateTime(getLongAttr(value, "year"),
+                                 getLongAttr(value, "month"),
+                                 getLongAttr(value, "day"),
+                                 getLongAttr(value, "hour"),
+                                 getLongAttr(value, "minute"),
+                                 getLongAttr(value, "second"), -1, -1, -1);
+
     } else {
-        PyErr_SetString(PyExc_TypeError,"Unknown type to marshall");
+
+        std::string objectRepr = "unknown";
+        if (PyObjectWrapper_t repr = PyObject_Repr(value)) {
+            objectRepr.assign(PyString_AsString(repr));
+        }
+
+        PyErr_Format(PyExc_TypeError, "Unknown type to marshall for object: %s",
+                                      objectRepr.c_str());
         throw PyError_t();
     }
 }

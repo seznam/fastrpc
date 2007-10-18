@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: fastrpcmodule.cc,v 1.14 2007-07-31 14:11:47 vasek Exp $
+ * $Id: fastrpcmodule.cc,v 1.15 2007-10-18 12:16:43 burlog Exp $
  * 
  * AUTHOR      Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
@@ -83,6 +83,9 @@ using FRPC::Connector_t;
 using FRPC::SimpleConnector_t;
 
 using namespace FRPC::Python;
+
+PyObject *FRPC::Python::mxDateTime = 0;
+PyObject *FRPC::Python::dateTimeDateTime = 0;
 
 // support constants
 static PyObject *emptyString = 0;
@@ -2070,8 +2073,24 @@ extern "C" DL_EXPORT(void) initfastrpc(void)
     else
         return;
 
+    // import datetime modules
+    PyObject *module = 0;
+    if (module = PyImport_ImportModule("mx.DateTime")) {
+        if (!(mxDateTime = PyObject_GetAttrString(module, "DateTimeType")))
+            PyErr_Clear();
+    } else {
+        PyErr_Clear();
+    }
+    if (module = PyImport_ImportModule("datetime")) {
+        if (!(dateTimeDateTime = PyObject_GetAttrString(module, "datetime")))
+            PyErr_Clear();
+    } else {
+        PyErr_Clear();
+    }
+
     // create empty string
     emptyString = PyString_FromString("");
     if (!emptyString)
         return;
 }
+
