@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: pythonfeeder.cc,v 1.5 2007-10-18 12:16:43 burlog Exp $
+ * $Id: pythonfeeder.cc,v 1.6 2007-10-23 08:22:52 burlog Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -47,7 +47,7 @@ long getLongAttr(PyObject *object, char *name) {
     if (!attr) throw PyError_t();
 
     long value = PyInt_AsLong(attr);
-    if ((value = -1) && PyErr_Occurred()) throw PyError_t();
+    if ((value == -1) && PyErr_Occurred()) throw PyError_t();
 
     return value;
 }
