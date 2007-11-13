@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcxmlmarshaller.cc,v 1.7 2007-05-22 13:12:52 mirecta Exp $
+ * FILE          $Id: frpcxmlmarshaller.cc,v 1.8 2007-11-13 11:35:35 vasek Exp $
  *
  * DESCRIPTION
  *
@@ -127,7 +127,7 @@ void XmlMarshaller_t::packBinary(const char* value, unsigned int size) {
 
 void XmlMarshaller_t::packBool(bool value) {
 
-    char boolean = (value==true)?'1':'0';
+    char boolean = (value ? '1' : '0');
     //write correct spaces
     packSpaces(level);
     if (entityStorage.empty()) {

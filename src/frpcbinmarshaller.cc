@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcbinmarshaller.cc,v 1.6 2007-05-22 13:03:23 mirecta Exp $
+ * FILE          $Id: frpcbinmarshaller.cc,v 1.7 2007-11-13 11:35:35 vasek Exp $
  *
  * DESCRIPTION
  *
@@ -95,10 +95,10 @@ void BinMarshaller_t::packBinary(const char* value, unsigned int size) {
 void BinMarshaller_t::packBool(bool value) {
     //buffer
 
-    unsigned char boolean = (value==true)?1:0;
+    unsigned char boolean = (value ? 1 : 0);
 
     //pack dataType
-    char type = FRPC_DATA_TYPE(BOOL,boolean);
+    char type = FRPC_DATA_TYPE(BOOL, boolean);
 
     //add DATATYPE to buffer
     writer.write(&type,1);
