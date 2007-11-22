@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: pythonserver.cc,v 1.18 2007-07-31 13:03:37 vasek Exp $
+ * $Id: pythonserver.cc,v 1.19 2007-11-22 11:09:01 vasek Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -1893,10 +1893,8 @@ static DECL_METHOD(ServerObject, serve) {
 namespace {
     Method_t::Method_t(const std::string &name, PyObject *callback,
                        PyObject *signature, PyObject *help, PyObject *context)
-        : name(name), callback
-        (callback, !PyObject_TypeCheck(callback, &MethodRegistryObject_Type)),
-          signature(signature, true), help(help, true),
-          context(context, true)
+        : name(name), callback(callback, true), signature(signature, true),
+          help(help, true), context(context, true)
     {
         if (PyString_Check(signature)) {
             char *sig;
@@ -1912,9 +1910,8 @@ namespace {
     Method_t::Method_t(const std::string &name, PyObject *callback,
                        const std::string &signature, const std::string &help,
                        PyObject *context)
-        : name(name), callback
-        (callback, !PyObject_TypeCheck(callback, &MethodRegistryObject_Type)),
-          signature(), help(), context(context, true)
+        : name(name), callback(callback, true), signature(), help(),
+          context(context, true)
     {
         if (!(this->help = PyString_FromStringAndSize
               (help.data(), help.size())))
