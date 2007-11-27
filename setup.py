@@ -45,9 +45,19 @@ old_init_posix = distutils.sysconfig._init_posix
 
 def _init_posix():
     old_init_posix()
-    distutils.sysconfig._config_vars['CFLAGS'] = '-fexceptions -g'
-    distutils.sysconfig._config_vars['OPT'] = '-fexceptions -g'
-    distutils.sysconfig._config_vars['LDSHARED'] = 'g++ -shared -fexceptions -g'
+
+    if distutils.sysconfig._config_vars["MACHDEP"].startswith("sun"):
+        # Sun needs forced gcc/g++ compilation
+        distutils.sysconfig._config_vars['CC'] = 'gcc'
+        distutils.sysconfig._config_vars['CXX'] = 'g++'
+    else:
+        # Non-Sun needs linkage with g++
+        distutils.sysconfig._config_vars['LDSHARED'] = 'g++ -shared -g'
+    #endif
+
+    distutils.sysconfig._config_vars['CFLAGS'] = '-g'
+    distutils.sysconfig._config_vars['OPT'] = '-g'
+#enddef
 
 distutils.sysconfig._init_posix = _init_posix
 ########################################################################
