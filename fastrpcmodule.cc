@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: fastrpcmodule.cc,v 1.15 2007-10-18 12:16:43 burlog Exp $
+ * $Id: fastrpcmodule.cc,v 1.16 2008-01-09 13:47:46 mirecta Exp $
  * 
  * AUTHOR      Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
@@ -1243,7 +1243,7 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *self, PyObject *args,
     if (stringMode == STRING_MODE_INVALID) return 0;
 
     if (protocolVersionMajor < 1) protocolVersionMajor = 1;
-    if (protocolVersionMinor < 0) protocolVersionMajor = 0;
+    if (protocolVersionMinor < 0) protocolVersionMinor = 0;
     
     try
     {
