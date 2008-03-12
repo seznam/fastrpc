@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcinternals.h,v 1.7 2007-05-22 13:03:23 mirecta Exp $
+ * FILE          $Id: frpcinternals.h,v 1.8 2008-03-12 12:49:37 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -179,9 +179,16 @@ struct DateTimeData_t
 
     void pack()
     {
-        
+        Int_t::value_type  unixTimeAbs = (dateTime.unixTime > 0)? dateTime.unixTime: -dateTime.unixTime;
+	int32_t unixTime;
         data[0] = dateTime.timeZone;
-        memcpy(&data[1],reinterpret_cast<char*>(&dateTime.unixTime),4) ;
+	
+	if (unixTimeAbs & INT32_MASK)
+	    unixTime = -1;
+	else
+	    unixTime = dateTime.unixTime;
+	    
+        memcpy(&data[1],reinterpret_cast<char*>(&unixTime),4) ;
         data[5] = (dateTime.sec & 0x1f) << 3 | (dateTime.weekDay & 0x07);
         data[6] = ((dateTime.minute & 0x3f) << 1) | ((dateTime.sec & 0x20) >> 5) |
                 ((dateTime.hour & 0x01) << 7);
@@ -192,6 +199,7 @@ struct DateTimeData_t
     }
     void unpack()
     {
+	int32_t unixTime;
         dateTime.year  = (data[9] << 3) | ((data[8] & 0xe0) >> 5);
         dateTime.month = (data[8] & 0x1e) >> 1;
         dateTime.day = ((data[8] & 0x01) << 4) |(((data[7] & 0xf0) >> 4)); 
@@ -199,7 +207,8 @@ struct DateTimeData_t
         dateTime.minute = ((data[6] & 0x7e) >> 1);
         dateTime.sec = ((data[6] & 0x01) << 5) | ((data[5] & 0xf8) >> 3);
         dateTime.weekDay = (data[5] & 0x07);
-        memcpy(reinterpret_cast<char*>(&dateTime.unixTime),&data[1], 4 );
+	memcpy(reinterpret_cast<char*>(&unixTime),&data[1], 4 );
+	dateTime.unixTime = unixTime;
         dateTime.timeZone = data[0];
     }
 };
