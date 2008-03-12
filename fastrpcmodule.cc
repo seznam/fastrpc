@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: fastrpcmodule.cc,v 1.16 2008-01-09 13:47:46 mirecta Exp $
+ * $Id: fastrpcmodule.cc,v 1.17 2008-03-12 12:43:38 mirecta Exp $
  * 
  * AUTHOR      Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
@@ -841,7 +841,7 @@ int BooleanObject_setattr(BooleanObject *self, char *name, PyObject* value)
  */
 int BooleanObject_cmp(BooleanObject *self, BooleanObject *other)
 {
-    if (self == other)
+    if (self->value == other->value)
         return 0;
 
 
@@ -1611,7 +1611,7 @@ PyObject* fastrpc_dumps(PyObject *self, PyObject *args, PyObject *keywds) {
             if (methodname) {
                 marshaller->packMethodCall(methodname);
                 feeder.feed(params);
-            } else if (methodresponse) {
+            } else  {// now is default method response  if (methodresponse) {
                 marshaller->packMethodResponse();
                 PyObject *firstParam = 0;
                 if (PyTuple_Check(params)) {
@@ -1624,10 +1624,10 @@ PyObject* fastrpc_dumps(PyObject *self, PyObject *args, PyObject *keywds) {
                                   : 0);
                 }
                 if (firstParam) feeder.feedValue(firstParam);
-            } else {
+            } //else {
                 // raw data
-                feeder.feedValue(params);
-            }
+                //feeder.feedValue(params);
+           // }
         } else if (PyObject_IsInstance(params, Fault) > 0) {
             PyObjectWrapper_t faultCode
                 (PyObject_GetAttrString(params, "faultCode"));
