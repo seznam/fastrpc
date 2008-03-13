@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcbinmarshaller.cc,v 1.7 2007-11-13 11:35:35 vasek Exp $
+ * FILE          $Id: frpcbinmarshaller.cc,v 1.8 2008-03-13 16:52:13 mirecta Exp $
  *
  * DESCRIPTION
  *
@@ -139,7 +139,20 @@ void BinMarshaller_t::packDouble(double value) {
     //write type
     writer.write(&type,1);
     //write data
-    writer.write((char*)&value, 8);
+    char data[8];
+    memset(data, 0, 8);
+    memcpy(data, (char*)&value, 8);
+
+#ifdef BIG_ENDIAN
+    //swap it
+    SWAP_BYTE(data[7],data[0]);
+    SWAP_BYTE(data[6],data[1]);
+    SWAP_BYTE(data[5],data[2]);
+    SWAP_BYTE(data[4],data[3]);
+#endif
+
+
+    writer.write(data, 8);
 
 
 
@@ -207,15 +220,15 @@ void BinMarshaller_t::packMethodCall(const char* methodName, unsigned int  size)
     //check conditions
     if ( size > 255 || size == 0)
         throw LenError_t("Lenght of method name is %d not in interval (1-255)",size);
-
+    int8_t realSize = int8_t(size);
     //magic
     packMagic();
     //write type
     writer.write(&type, 1);
     //write  nameSize
-    writer.write(reinterpret_cast<char*>(&size), 1);
+    writer.write(reinterpret_cast<char*>(&realSize), 1);
     //write method name
-    writer.write(methodName, size);
+    writer.write(methodName, realSize);
 
 }
 
@@ -259,9 +272,10 @@ void BinMarshaller_t::packStructMember(const char* memberName, unsigned int size
         throw LenError_t("Lenght of member name is %d not in interval (1-255)",size);
 
     //write member name
-    writer.write(reinterpret_cast<char *>(&size), 1);
+    int8_t realSize = int8_t(size);
+    writer.write(reinterpret_cast<char *>(&realSize), 1);
     //write whole memberName
-    writer.write(memberName, size);
+    writer.write(memberName, realSize);
 
 }
 

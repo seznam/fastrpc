@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcbinunmarshaller.cc,v 1.6 2007-05-18 15:29:45 mirecta Exp $
+ * FILE          $Id: frpcbinunmarshaller.cc,v 1.7 2008-03-13 16:52:13 mirecta Exp $
  *
  * DESCRIPTION
  *
@@ -351,7 +351,20 @@ void BinUnMarshaller_t::unMarshall(const char *data, unsigned int size, char typ
 
         case DOUBLE: {
             double value;
-            memcpy((char*)&value,mainBuff.data(),8);
+             //write data
+            char data[8];
+            memset(data, 0, 8);
+            memcpy(data, mainBuff.data(), 8);
+
+#ifdef BIG_ENDIAN
+           //swap it
+           SWAP_BYTE(data[7],data[0]);
+           SWAP_BYTE(data[6],data[1]);
+           SWAP_BYTE(data[5],data[2]);
+           SWAP_BYTE(data[4],data[3]);
+#endif
+
+            memcpy((char*)&value,data,8);
 
             //call builder
             dataBuilder.buildDouble(value);

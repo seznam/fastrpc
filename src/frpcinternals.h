@@ -12,7 +12,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
+:q * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcinternals.h,v 1.8 2008-03-12 12:49:37 mirecta Exp $
+ * FILE          $Id: frpcinternals.h,v 1.9 2008-03-13 16:52:13 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -39,6 +39,11 @@
 #define FRPC_MAJOR_VERSION 2
 #define FRPC_MINOR_VERSION 0
 #define FRPC_LITTLE_ENDIAN(data)
+#define SWAP_BYTE(byte1,byte2) \
+         byte1 =   byte1 ^ byte2; \
+         byte2 = byte1 ^ byte2;\
+         byte1 = byte1 ^ byte2;
+ 
 namespace FRPC
 {
 
@@ -67,18 +72,35 @@ const int32_t OLD_INT16_MASK = OLD_ALLONES << 16;
 const int32_t OLD_INT24_MASK = OLD_ALLONES << 24;
 const int32_t OLD_INT32_MASK = OLD_ZERO;
 
+
+
+
+
 union Number_t
 {
     Number_t(Int_t::value_type number):number(number)
     {
-        FRPC_LITTLE_ENDIAN(data);
+#ifdef BIG_ENDIAN
+        //swap it 
+        SWAP_BYTE(data[7],data[0]);
+        SWAP_BYTE(data[6],data[1]);
+	SWAP_BYTE(data[5],data[2]);
+        SWAP_BYTE(data[4],data[3]);
+#endif
     }
     Number_t(const char *number, char size)
     {
         memset(data, 0, 8);
         memcpy(data, number, size);
 
-        FRPC_LITTLE_ENDIAN(data);
+#ifdef BIG_ENDIAN
+        //swap it
+        SWAP_BYTE(data[7],data[0]);
+        SWAP_BYTE(data[6],data[1]);
+        SWAP_BYTE(data[5],data[2]);
+        SWAP_BYTE(data[4],data[3]);
+#endif
+
     }
     char data[8];
     Int_t::value_type number;
@@ -88,14 +110,26 @@ union Number32_t
 {
     Number32_t(long number):number(number)
     {
-        FRPC_LITTLE_ENDIAN(data);
+
+#ifdef BIG_ENDIAN
+        //swap it
+        SWAP_BYTE(data[3],data[0]);
+        SWAP_BYTE(data[2],data[1]);
+#endif
+
+
     }
     Number32_t(const char *number, char size)
     {
         memset(data, 0, 4);
         memcpy(data, number, size);
 
-        FRPC_LITTLE_ENDIAN(data);
+#ifdef BIG_ENDIAN
+        //swap it
+        SWAP_BYTE(data[3],data[0]);
+        SWAP_BYTE(data[2],data[1]);
+#endif
+
     }
     char data[4];
     int32_t number;
