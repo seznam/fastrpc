@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcinternals.h,v 1.9 2008-03-13 16:52:13 mirecta Exp $
+ * FILE          $Id: frpcinternals.h,v 1.10 2008-03-14 10:29:14 mirecta Exp $
  *
  * DESCRIPTION   
  *
@@ -36,12 +36,24 @@
 #include <sstream>
 #include <frpcint.h>
 
+#include <sys/param.h>
+
+#ifdef __BYTE_ORDER
+   #if __BYTE_ORDER == __BIG_ENDIAN
+      #define FRPC_BIG_ENDIAN
+      #warning "BIG ENDIAN detectet ! Using it."
+   #endif
+#else
+  #warning "ENDIAN not defined ! Using default LITTLE ENDIAN"
+#endif /* __BYTE_ORDER */
+
+
 #define FRPC_MAJOR_VERSION 2
 #define FRPC_MINOR_VERSION 0
-#define FRPC_LITTLE_ENDIAN(data)
-#define SWAP_BYTE(byte1,byte2) \
-         byte1 =   byte1 ^ byte2; \
-         byte2 = byte1 ^ byte2;\
+
+#define SWAP_BYTE(byte1,byte2)  \
+         byte1 = byte1 ^ byte2; \
+         byte2 = byte1 ^ byte2; \
          byte1 = byte1 ^ byte2;
  
 namespace FRPC
@@ -80,7 +92,7 @@ union Number_t
 {
     Number_t(Int_t::value_type number):number(number)
     {
-#ifdef BIG_ENDIAN
+#ifdef FRPC_BIG_ENDIAN
         //swap it 
         SWAP_BYTE(data[7],data[0]);
         SWAP_BYTE(data[6],data[1]);
@@ -93,7 +105,7 @@ union Number_t
         memset(data, 0, 8);
         memcpy(data, number, size);
 
-#ifdef BIG_ENDIAN
+#ifdef FRPC_BIG_ENDIAN
         //swap it
         SWAP_BYTE(data[7],data[0]);
         SWAP_BYTE(data[6],data[1]);
@@ -111,7 +123,7 @@ union Number32_t
     Number32_t(long number):number(number)
     {
 
-#ifdef BIG_ENDIAN
+#ifdef FRPC_BIG_ENDIAN
         //swap it
         SWAP_BYTE(data[3],data[0]);
         SWAP_BYTE(data[2],data[1]);
@@ -124,7 +136,7 @@ union Number32_t
         memset(data, 0, 4);
         memcpy(data, number, size);
 
-#ifdef BIG_ENDIAN
+#ifdef FRPC_BIG_ENDIAN
         //swap it
         SWAP_BYTE(data[3],data[0]);
         SWAP_BYTE(data[2],data[1]);

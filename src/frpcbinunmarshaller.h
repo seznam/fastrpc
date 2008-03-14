@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcbinunmarshaller.h,v 1.3 2007-05-18 15:29:45 mirecta Exp $
+ * FILE          $Id: frpcbinunmarshaller.h,v 1.4 2008-03-14 10:29:14 mirecta Exp $
  *
  * DESCRIPTION
  *
@@ -35,7 +35,7 @@
 
 #include <frpcunmarshaller.h>
 #include <frpcdatabuilder.h>
-#include <frpcinternals.h>
+#include "frpcinternals.h"
 #include <frpc.h>
 #include <vector>
 #include <string>
