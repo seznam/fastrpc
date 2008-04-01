@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpc.cc,v 1.12 2007-05-30 13:38:09 mirecta Exp $
+ * FILE          $Id: frpc.cc,v 1.13 2008-04-01 13:19:03 burlog Exp $
  *
  * DESCRIPTION
  *
@@ -57,21 +57,12 @@ namespace FRPC {
 */
 std::string getISODateTime(short year, char month,
                            char day, char hour,
-                           char minute, char sec, char timeZone) {
+                           char minute, char sec, int timeZone) {
     char dateTime[50];
-
-
-    if (timeZone > 0) {
-        sprintf(dateTime,"%04d%02d%02dT%02d:%02d:%02d+%02d%02d",year
-                ,month ,
-                day ,hour,minute,sec,
-                (timeZone*15)/60,(timeZone*15)%60);
-    } else {
-        sprintf(dateTime,"%04d%02d%02dT%02d:%02d:%02d-%02d%02d",year
-                ,month ,
-                day, hour ,minute ,sec,
-                abs((timeZone*15))/60,abs((timeZone*15)%60));
-    }
+    sprintf(dateTime, "%04d%02d%02dT%02d:%02d:%02d%c%02d%02d",
+            year, month, day, hour, minute, sec,
+            ((timeZone <= 0)? '+': '-'),
+            abs(timeZone / 60 / 60), abs(timeZone / 60 % 60));
 
     return std::string(dateTime);
 }
@@ -82,8 +73,8 @@ and fill parameters
 */
 
 void parseISODateTime(const char *data, long len, short &year, char &month,
-                      char &day, char &hour,
-                      char &minute, char &sec, char &timeZone) {
+                      char &day, char &hour, char &minute, char &sec,
+                      int &timeZone) {
 
     year = month = day = hour = minute = sec = timeZone = 0;
     // iterators
@@ -249,24 +240,20 @@ void parseISODateTime(const char *data, long len, short &year, char &month,
         return;
     //throw StreamError_t("Bad DATE format"); //error, extra characters on line
 
-    int sign = (tzsign == '+')?1:-1;
-
-    timeZone = (tzhour * 60 + tzmin)/15 * sign;
+    timeZone = (tzhour * 60 + tzmin) * ((tzsign == '+')? -60: 60);
 
 }
 
 /**
 @brief method render fastrpc Value_t to string with level level
-@param value1  - fast rpc value
+@param value  - fast rpc value
 @param outstr - out string
 @param level - level of render
 @return always zero
 */
-int dumpFastrpcTree(const Value_t &value1,
-                    std::string &outstr, int level) {
+int dumpFastrpcTree(const Value_t &value, std::string &outstr, int level) {
 
     std::ostringstream out;
-    Value_t &value = const_cast<Value_t&>(value1);
 
     switch (value.getType()) {
     case Int_t::TYPE: {
@@ -311,32 +298,29 @@ int dumpFastrpcTree(const Value_t &value1,
         break;
 
     case DateTime_t::TYPE: {
-            DateTime_t &dt = DateTime(value);
+            const DateTime_t &dt = DateTime(value);
             char buff[50];
-            if (dt.getTimeZone() > 0)
-                sprintf(buff,"%04d%02d%02dT%02d:%02d:%02d+%02d%02d",dt.getYear(),
-                        dt.getMonth(), dt.getDay(),
-                        dt.getHour(), dt.getMin(), dt.getSec(),
-                        (dt.getTimeZone()*15)/60,
-                        (dt.getTimeZone()*15)%60);
-            else
-                sprintf(buff,"%04d%02d%02dT%02d:%02d:%02d-%02d%02d",dt.getYear(),
-                        dt.getMonth(), dt.getDay(),
-                        dt.getHour(), dt.getMin(), dt.getSec(),
-                        abs((dt.getTimeZone()*15)/60),
-                        abs((dt.getTimeZone()*15)%60));
+            sprintf(buff, "%04d%02d%02dT%02d:%02d:%02d%c%02d%02d",
+                    dt.getYear(), dt.getMonth(), dt.getDay(), dt.getHour(),
+                    dt.getMin(), dt.getSec(),
+                    ((dt.getTimeZone() <= 0)? '+': '-'),
+                    abs(dt.getTimeZone() / 60 / 60),
+                    abs(dt.getTimeZone() / 60 % 60));
+
             out << buff;
 
         }
         break;
 
     case Struct_t::TYPE: {
-            Struct_t &structVal = Struct(value);
+            const Struct_t &structVal = Struct(value);
             bool first = true;
             out << '{';
 
             if (level) {
-                for (Struct_t::iterator i = structVal.begin(); i != structVal.end(); ++i) {
+                for (Struct_t::const_iterator
+                        i = structVal.begin();
+                        i != structVal.end(); ++i) {
 
                     if (i->second && first != true)
                         out << ", ";
@@ -357,12 +341,14 @@ int dumpFastrpcTree(const Value_t &value1,
         break;
 
     case Array_t::TYPE: {
-            Array_t &array = Array(value);
+            const Array_t &array = Array(value);
             bool first = true;
             out << '(';
             if (level) {
 
-                for (Array_t::iterator i = array.begin(); i != array.end(); ++i) {
+                for (Array_t::const_iterator
+                        i = array.begin();
+                        i != array.end(); ++i) {
                     if (*i && first != true)
                         out << ", ";
                     else
@@ -372,7 +358,7 @@ int dumpFastrpcTree(const Value_t &value1,
                     dumpFastrpcTree(**i, str, level - 1);
                     out << str;
                 }
-            } else 
+            } else
                 out << "...";
             out << ')';
 
@@ -404,7 +390,7 @@ void printSpaces(long spaces) {
 @param spaces from left border of screen (for recursive)
 use for debug
 */
-void printValue(Value_t &value, long spaces ) {
+void printValue(const Value_t &value, long spaces ) {
     switch (value.getType()) {
     case Int_t::TYPE: {
             std::ostringstream os;
@@ -438,30 +424,26 @@ void printValue(Value_t &value, long spaces ) {
         break;
 
     case DateTime_t::TYPE: {
-            DateTime_t &dt = DateTime(value);
-            if (dt.getTimeZone() > 0)
-                printf("%04d%02d%02dT%02d:%02d:%02d+%02d%02d\n",dt.getYear(),
-                       dt.getMonth(), dt.getDay(),
-                       dt.getHour(), dt.getMin(), dt.getSec(),
-                       (dt.getTimeZone()*15)/60,
-                       (dt.getTimeZone()*15)%60);
-            else
-                printf("%04d%02d%02dT%02d:%02d:%02d-%02d%02d\n",dt.getYear(),
-                       dt.getMonth(), dt.getDay(),
-                       dt.getHour(), dt.getMin(), dt.getSec(),
-                       abs((dt.getTimeZone()*15)/60),
-                       abs((dt.getTimeZone()*15)%60));
+            const DateTime_t &dt = DateTime(value);
+            printf("%04d%02d%02dT%02d:%02d:%02d%c%02d%02d\n",
+                    dt.getYear(), dt.getMonth(), dt.getDay(),
+                    dt.getHour(), dt.getMin(), dt.getSec(),
+                    ((dt.getTimeZone() <= 0)? '+': '-'),
+                    abs(dt.getTimeZone() / 60 / 60),
+                    abs(dt.getTimeZone() * 60 % 60));
 
         }
         break;
 
     case Struct_t::TYPE: {
-            Struct_t &structVal = Struct(value);
+            const Struct_t &structVal = Struct(value);
 
 
             printf("{\n");
             spaces ++;
-            for (Struct_t::iterator i = structVal.begin(); i != structVal.end(); ++i) {
+            for (Struct_t::const_iterator
+                    i = structVal.begin();
+                    i != structVal.end(); ++i) {
                 //printf(" ");
 
                 printSpaces(spaces);
@@ -477,10 +459,12 @@ void printValue(Value_t &value, long spaces ) {
         break;
 
     case Array_t::TYPE: {
-            Array_t &array = Array(value);
+            const Array_t &array = Array(value);
             printf("(\n");
             spaces ++;
-            for (Array_t::iterator i = array.begin(); i != array.end(); ++i) {
+            for (Array_t::const_iterator
+                    i = array.begin();
+                    i != array.end(); ++i) {
                 printSpaces(spaces);
                 printValue(**(i),spaces);
             }
@@ -522,10 +506,7 @@ const FRPC::String_t &FRPC::String_t::FRPC_EMPTY = pool.String("");
 const FRPC::Struct_t &FRPC::Struct_t::FRPC_EMPTY = pool.Struct();
 const FRPC::Array_t &FRPC::Array_t::FRPC_EMPTY = pool.Array();
 const FRPC::Binary_t &FRPC::Binary_t::FRPC_EMPTY = pool.Binary("");
-const FRPC::DateTime_t &FRPC::DateTime_t::FRPC_EPOCH = pool.DateTime(0);
-const FRPC::DateTime_t &FRPC::DateTime_t::FRPC_NULL = pool.DateTime(0,0,0,0,0,0,0,-1,0);
-
-
-
-
+const FRPC::DateTime_t &FRPC::DateTime_t::FRPC_EPOCH = pool.DateTime(0, 0);
+const FRPC::DateTime_t &
+    FRPC::DateTime_t::FRPC_NULL = pool.DateTime(0, 0, 0, 0, 0, 0, 0, -1, 0);
 

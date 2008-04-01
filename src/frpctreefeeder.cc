@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpctreefeeder.cc,v 1.3 2007-06-01 15:06:23 vasek Exp $
+ * FILE          $Id: frpctreefeeder.cc,v 1.4 2008-04-01 13:19:07 burlog Exp $
  *
  * DESCRIPTION   
  *
@@ -30,11 +30,10 @@
  * HISTORY
  *       
  */
-#include "frpctreefeeder.h"
-//#include "frpcinternals.h"
 
-namespace FRPC
-{
+#include "frpctreefeeder.h"
+
+namespace FRPC {
 
 void TreeFeeder_t::feedValue(const Value_t &value){
     switch(value.getType()) {
@@ -78,7 +77,8 @@ void TreeFeeder_t::feedValue(const Value_t &value){
 
             marshaller.packDateTime(dt.getYear(), dt.getMonth(), dt.getDay(),
                                     dt.getHour(), dt.getMin(), dt.getSec(),
-                                    dt.getDayOfWeek(), dt.getUnixTime(), dt.getTimeZone());
+                                    dt.getDayOfWeek(), dt.getUnixTime(),
+                                    dt.getTimeZone());
 
         }
         break;
@@ -121,10 +121,7 @@ void TreeFeeder_t::feedValue(const Value_t &value){
 
 }
 
-
 TreeFeeder_t::~TreeFeeder_t()
 {}
 
-
 }
-;

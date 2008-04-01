@@ -20,15 +20,15 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcpool.cc,v 1.5 2007-05-24 11:28:29 mirecta Exp $
+ * FILE          $Id: frpcpool.cc,v 1.6 2008-04-01 13:19:06 burlog Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #include <frpc.h>
 //remove
@@ -47,23 +47,25 @@ Pool_t::~Pool_t()
 {
 
     //deleting all pointers
-    
-    for(std::vector< Value_t* >::iterator ipointerStorage = pointerStorage.begin();
+
+    for(std::vector<Value_t *>::iterator
+            ipointerStorage = pointerStorage.begin();
             ipointerStorage != pointerStorage.end(); ++ipointerStorage)
     {
        // printf(" mazem pointer %p\n",*ipointerStorage);
        delete *ipointerStorage ;
     }
-    
+
     pointerStorage.clear();
     //pointerStorage.reserve(0);
-    
+
 }
 
 void Pool_t::free()
 {
     //deleting all pointers
-    for(std::vector< Value_t* >::iterator ipointerStorage = pointerStorage.begin();
+    for (std::vector<Value_t *>::iterator
+            ipointerStorage = pointerStorage.begin();
             ipointerStorage != pointerStorage.end(); ++ipointerStorage)
     {
         delete  *ipointerStorage ;
@@ -82,6 +84,7 @@ Int_t&  Pool_t::Int(Int_t::value_type value)
     return *newValue;
 }
 
+
 Bool_t& Pool_t::Bool(bool value)
 {
     Bool_t* newValue =  new Bool_t(value);
@@ -92,8 +95,6 @@ Bool_t& Pool_t::Bool(bool value)
 
 }
 
-
-
 Double_t& Pool_t::Double(double value)
 {
     Double_t* newValue =  new Double_t(value);
@@ -103,8 +104,8 @@ Double_t& Pool_t::Double(double value)
     return *newValue;
 }
 
-
-Binary_t& Pool_t::Binary(std::string::value_type *data, std::string::size_type dataSize)
+Binary_t& Pool_t::Binary(std::string::value_type *data,
+                         std::string::size_type dataSize)
 {
     Binary_t *newValue = new Binary_t(data, dataSize);
 
@@ -123,31 +124,19 @@ Binary_t& Pool_t::Binary(const std::string &value)
 }
 
 DateTime_t&  Pool_t::DateTime(short year, char month, char day,
-                              char hour, char minute, char sec, char weekDay, time_t unixTime,
-                              char timeZone)
+                              char hour, char minute, char sec, char weekDay,
+                              time_t unixTime, int timeZone)
 {
-    DateTime_t *newValue =  new DateTime_t(year, month, day, hour, minute, sec, weekDay, unixTime,
-                                           timeZone);
+    DateTime_t *newValue =  new DateTime_t(year, month, day, hour, minute, sec,
+                                           weekDay, unixTime, timeZone);
 
     pointerStorage.push_back(newValue);
 
     return *newValue;
 }
 
-DateTime_t&  Pool_t::DateTime(short year, char month, char day,
-                              char hour, char minute, char sec)
-{
-    DateTime_t *newValue =  new DateTime_t(year, month, day, hour, minute, sec,-1,-1,0);
-
-    pointerStorage.push_back(newValue);
-
-    return *newValue;
-
-}
-
-DateTime_t&  Pool_t::DateTime(time_t timestamp)
-{
-    DateTime_t *newValue =  new DateTime_t(timestamp);
+DateTime_t&  Pool_t::DateTime(time_t timestamp, int timeZone) {
+    DateTime_t *newValue =  new DateTime_t(timestamp, timeZone);
 
     pointerStorage.push_back(newValue);
 
@@ -156,22 +145,67 @@ DateTime_t&  Pool_t::DateTime(time_t timestamp)
 
 DateTime_t&  Pool_t::DateTime(const std::string &isoFormat)
 {
-    DateTime_t *newValue =  new DateTime_t(isoFormat);
+    DateTime_t *newValue = new DateTime_t(isoFormat);
 
     pointerStorage.push_back(newValue);
 
     return *newValue;
 }
 
-DateTime_t&  Pool_t::DateTime()
+DateTime_t&  Pool_t::LocalTime(short year, char month, char day,
+                               char hour, char minute, char sec)
 {
-    DateTime_t *newValue =  new DateTime_t();
+    DateTime_t *newValue =  new DateTime_t(year, month, day, hour, minute, sec);
+
+    pointerStorage.push_back(newValue);
+
+    return *newValue;
+
+}
+
+DateTime_t&  Pool_t::LocalTime(time_t timestamp) {
+    DateTime_t *newValue = new DateTime_t(timestamp);
 
     pointerStorage.push_back(newValue);
 
     return *newValue;
 }
 
+DateTime_t&  Pool_t::LocalTime() {
+    DateTime_t *newValue = new DateTime_t(time(0));
+
+    pointerStorage.push_back(newValue);
+
+    return *newValue;
+}
+
+DateTime_t&  Pool_t::UTCTime(short year, char month, char day,
+                             char hour, char minute, char sec)
+{
+    DateTime_t *newValue =  new DateTime_t(year, month, day, hour, minute, sec,
+                                           -1, -1, 0);
+
+    pointerStorage.push_back(newValue);
+
+    return *newValue;
+
+}
+
+DateTime_t&  Pool_t::UTCTime(time_t timestamp) {
+    DateTime_t *newValue = new DateTime_t(timestamp, 0);
+
+    pointerStorage.push_back(newValue);
+
+    return *newValue;
+}
+
+DateTime_t&  Pool_t::UTCTime() {
+    DateTime_t *newValue = new DateTime_t(time(0), 0);
+
+    pointerStorage.push_back(newValue);
+
+    return *newValue;
+}
 
 
 String_t&  Pool_t::String(const std::string &value)
@@ -193,7 +227,8 @@ String_t&  Pool_t::String(const std::wstring &value)
 }
 
 
-String_t& Pool_t::String(std::string::value_type *data, std::string::size_type dataSize)
+String_t& Pool_t::String(std::string::value_type *data,
+                         std::string::size_type dataSize)
 {
     String_t *newValue = new String_t(data, dataSize);
 
@@ -254,7 +289,8 @@ Array_t& Pool_t::Array(Value_t& item1, Value_t& item2, Value_t& item3)
 
 
 
-Array_t& Pool_t::Array(Value_t& item1, Value_t& item2, Value_t& item3,Value_t& item4)
+Array_t& Pool_t::Array(Value_t& item1, Value_t& item2, Value_t& item3,
+                       Value_t& item4)
 {
     Array_t *newValue =  new Array_t(item1);
 
@@ -269,7 +305,8 @@ Array_t& Pool_t::Array(Value_t& item1, Value_t& item2, Value_t& item3,Value_t& i
 
 
 
-Array_t& Pool_t::Array(Value_t& item1, Value_t& item2, Value_t& item3,Value_t& item4, Value_t& item5)
+Array_t& Pool_t::Array(Value_t& item1, Value_t& item2, Value_t& item3,
+                       Value_t& item4, Value_t& item5)
 {
     Array_t *newValue =  new Array_t(item1);
 
@@ -301,8 +338,8 @@ Struct_t& Pool_t::Struct(const std::string &key1, Value_t &item1)
     return *newValue;
 }
 
-Struct_t& Pool_t::Struct(const std::string &key1, Value_t &item1, const std::string &key2,
-                         Value_t &item2)
+Struct_t& Pool_t::Struct(const std::string &key1, Value_t &item1,
+                         const std::string &key2, Value_t &item2)
 {
     Struct_t *newValue = new Struct_t();
 
@@ -314,8 +351,9 @@ Struct_t& Pool_t::Struct(const std::string &key1, Value_t &item1, const std::str
     return *newValue;
 }
 
-Struct_t& Pool_t::Struct(const std::string &key1, Value_t &item1, const std::string &key2,
-                         Value_t &item2, const std::string &key3, Value_t &item3)
+Struct_t& Pool_t::Struct(const std::string &key1, Value_t &item1,
+                         const std::string &key2, Value_t &item2,
+                         const std::string &key3, Value_t &item3)
 {
     Struct_t *newValue = new Struct_t();
 
@@ -328,8 +366,8 @@ Struct_t& Pool_t::Struct(const std::string &key1, Value_t &item1, const std::str
     return *newValue;
 }
 
-Struct_t& Pool_t::Struct(const std::string &key1, Value_t &item1, const std::string &key2,
-                         Value_t &item2,
+Struct_t& Pool_t::Struct(const std::string &key1, Value_t &item1,
+                         const std::string &key2, Value_t &item2,
                          const std::string &key3, Value_t &item3,
                          const std::string &key4, Value_t &item4)
 {
@@ -345,8 +383,8 @@ Struct_t& Pool_t::Struct(const std::string &key1, Value_t &item1, const std::str
     return *newValue;
 }
 
-Struct_t& Pool_t::Struct(const std::string &key1, Value_t &item1, const std::string &key2,
-                         Value_t &item2,
+Struct_t& Pool_t::Struct(const std::string &key1, Value_t &item1,
+                         const std::string &key2, Value_t &item2,
                          const std::string &key3, Value_t &item3,
                          const std::string &key4, Value_t &item4,
                          const std::string &key5, Value_t &item5)

@@ -21,7 +21,7 @@
 # http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
 #
 #
-# $Id: configure.in,v 1.30 2008-03-14 10:35:40 mirecta Exp $
+# $Id: configure.in,v 1.31 2008-04-01 13:19:01 burlog Exp $
 #
 # DESCRIPTION
 # configure template for fastrpc.
@@ -36,7 +36,7 @@
 
 
 # initialize autoconf
-AC_INIT(fastrpc, 2.0.8, fastrpc@firma.seznam.cz)
+AC_INIT(fastrpc, 3.0.8, fastrpc@firma.seznam.cz)
 # initialize automake(use AC_INIT's arguments)
 AM_INIT_AUTOMAKE(AC_PACKAGE_NAME, AC_PACKAGE_VERSION)
 

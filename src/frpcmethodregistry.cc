@@ -20,15 +20,15 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcmethodregistry.cc,v 1.9 2007-05-21 15:10:12 mirecta Exp $
+ * FILE          $Id: frpcmethodregistry.cc,v 1.10 2008-04-01 13:19:05 burlog Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 
 #include "frpcmethodregistry.h"
@@ -62,10 +62,10 @@ MethodRegistry_t::TimeDiff_t::TimeDiff_t()
 {
     // get current time
 #ifdef WIN32
-	FILETIME ft;
-	GetSystemTimeAsFileTime(&ft);
-	time(&second);
-	usecond = (ft.dwLowDateTime / 10) % 1000000;
+        FILETIME ft;
+        GetSystemTimeAsFileTime(&ft);
+        time(&second);
+        usecond = (ft.dwLowDateTime / 10) % 1000000;
 
 #else //WIN32
 
@@ -227,7 +227,7 @@ int MethodRegistry_t::processCall(const std::string &clientIP, const std::string
     return 0;
 }
 
-Value_t& MethodRegistry_t::processCall(const std::string &clientIP, 
+Value_t& MethodRegistry_t::processCall(const std::string &clientIP,
                                        const std::string &methodName,
                                        Array_t &params,
                                        Pool_t &pool)
@@ -317,14 +317,14 @@ Value_t& MethodRegistry_t::processCall(const std::string &clientIP, Reader_t &re
 }
 
 int MethodRegistry_t::processCall(const std::string &clientIP, Reader_t &reader,
-                                   unsigned int typeIn, Writer_t &writer, 
+                                   unsigned int typeIn, Writer_t &writer,
                                    unsigned int typeOut)
 {
     Pool_t pool;
     TreeBuilder_t builder(pool);
     std::auto_ptr<UnMarshaller_t> unmarshaller(UnMarshaller_t::create(typeIn, builder));
     Value_t *retValue;
-    
+
 
     char buffer[BUFFER_SIZE];
     unsigned int readed;

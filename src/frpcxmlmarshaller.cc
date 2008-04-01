@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcxmlmarshaller.cc,v 1.8 2007-11-13 11:35:35 vasek Exp $
+ * FILE          $Id: frpcxmlmarshaller.cc,v 1.9 2008-04-01 13:19:07 burlog Exp $
  *
  * DESCRIPTION
  *
@@ -151,9 +151,11 @@ void XmlMarshaller_t::packBool(bool value) {
 
 }
 
-void XmlMarshaller_t::packDateTime(short year, char month, char day, char hour, char minute, char sec,
-                                   char weekDay, time_t unixTime, char timeZone) {
-    std::string data = getISODateTime(year,month,day,hour,minute,sec,timeZone);
+void XmlMarshaller_t::packDateTime(short year, char month, char day, char hour,
+                                   char minute, char sec, char weekDay,
+                                   time_t unixTime, int timeZone) {
+    std::string data = getISODateTime(year, month, day, hour, minute,
+                                      sec, timeZone);
 
     //write correct spaces
     packSpaces(level);

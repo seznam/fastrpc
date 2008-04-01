@@ -20,16 +20,17 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcxmlmarshaller.h,v 1.4 2007-05-22 13:03:23 mirecta Exp $
+ * FILE          $Id: frpcxmlmarshaller.h,v 1.5 2008-04-01 13:19:08 burlog Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
+
 #ifndef FRPCFRPCXMLMARSHALLER_H
 #define FRPCFRPCXMLMARSHALLER_H
 
@@ -39,12 +40,10 @@
 #include <frpcinternals.h>
 #include <frpcint.h>
 #include <frpc.h>
+
 //#define XML_HUMAN_FORMAT
-namespace FRPC
-{
 
-
-
+namespace FRPC {
 
 /**
 @author Miroslav Talasek
@@ -61,9 +60,11 @@ public:
     virtual void packBinary(const char* value, unsigned int size);
     virtual void packBool(bool value);
     virtual void packDateTime(short year, char month, char day, char hour,
-                              char min, char sec, char weekDay, time_t unixTime, char timeZone);
+                              char min, char sec, char weekDay, time_t unixTime,
+                              int timeZone);
     virtual void packDouble(double value);
-    virtual void packFault(int errNumber, const char* errMsg, unsigned int size);
+    virtual void packFault(int errNumber, const char* errMsg,
+                           unsigned int size);
     virtual void packInt(Int_t::value_type value);
     virtual void packMethodCall(const char* methodName, unsigned int size);
     virtual void packMethodResponse();
@@ -71,7 +72,7 @@ public:
     virtual void packStruct(unsigned int numOfMembers);
     virtual void packStructMember(const char* memberName, unsigned int size);
     virtual void flush();
-    
+
 private:
     XmlMarshaller_t();
     void writeEncodeBase64(const char *data, unsigned int len);
@@ -100,7 +101,7 @@ private:
             //is value last item ?
             if(entityStorage.back().numOfItems == 0)
             {
-                
+
                 //close tag
                 packSpaces(level-1);
                 switch(entityStorage.back().type)
@@ -115,7 +116,7 @@ private:
                     writer.write("</value>\n",9);
                     break;
                 case STRUCT:
-                    
+
                     writer.write("</struct>\n",10);
                     level--;
                     packSpaces(level-1);
@@ -124,7 +125,7 @@ private:
                 }
                 level--;
                 entityStorage.pop_back();
-                
+
                 if(entityStorage.empty())
                 {
                     packSpaces(level-1);

@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcbinunmarshaller.cc,v 1.8 2008-03-14 10:29:14 mirecta Exp $
+ * FILE          $Id: frpcbinunmarshaller.cc,v 1.9 2008-04-01 13:19:04 burlog Exp $
  *
  * DESCRIPTION
  *
@@ -378,27 +378,34 @@ void BinUnMarshaller_t::unMarshall(const char *data, unsigned int size, char typ
         case DATETIME: {
             DateTimeData_t dateTime;
 
-            memcpy(dateTime.data,mainBuff.data(),10);
+            memcpy(dateTime.data, mainBuff.data(), 10);
             //unpack
             dateTime.unpack();
 
-            if (dateTime.dateTime.year || dateTime.dateTime.month || dateTime.dateTime.day
-                    || dateTime.dateTime.hour || dateTime.dateTime.minute 
-                || dateTime.dateTime.sec) {
+            if (dateTime.dateTime.year || dateTime.dateTime.month
+                    || dateTime.dateTime.day || dateTime.dateTime.hour
+                    || dateTime.dateTime.minute || dateTime.dateTime.sec) {
+
                 //call builder
-                dataBuilder.buildDateTime(dateTime.dateTime.year + 1600, dateTime.dateTime.month,
-                                          dateTime.dateTime.day, dateTime.dateTime.hour,
-                                          dateTime.dateTime.minute,dateTime.dateTime.sec,
+                dataBuilder.buildDateTime(dateTime.dateTime.year + 1600,
+                                          dateTime.dateTime.month,
+                                          dateTime.dateTime.day,
+                                          dateTime.dateTime.hour,
+                                          dateTime.dateTime.minute,
+                                          dateTime.dateTime.sec,
                                           dateTime.dateTime.weekDay,
                                           dateTime.dateTime.unixTime,
-                                          dateTime.dateTime.timeZone);
+                                          dateTime.dateTime.timeZone * 15 * 60);
             } else {
-                dataBuilder.buildDateTime(dateTime.dateTime.year, dateTime.dateTime.month,
-                                          dateTime.dateTime.day, dateTime.dateTime.hour,
-                                          dateTime.dateTime.minute,dateTime.dateTime.sec,
+                dataBuilder.buildDateTime(dateTime.dateTime.year,
+                                          dateTime.dateTime.month,
+                                          dateTime.dateTime.day,
+                                          dateTime.dateTime.hour,
+                                          dateTime.dateTime.minute,
+                                          dateTime.dateTime.sec,
                                           dateTime.dateTime.weekDay,
                                           dateTime.dateTime.unixTime,
-                                          dateTime.dateTime.timeZone);
+                                          dateTime.dateTime.timeZone * 15 * 60);
             }
             internalType = NONE;
             dataWanted = 1;

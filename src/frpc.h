@@ -20,15 +20,15 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpc.h,v 1.8 2007-05-21 15:10:12 mirecta Exp $
+ * FILE          $Id: frpc.h,v 1.9 2008-04-01 13:19:03 burlog Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 
 
@@ -64,24 +64,24 @@ namespace FRPC {
 
 void parseISODateTime(const char *data, long len, short &year, char &month,
                       char &day, char &hour,
-                      char &minute, char &sec, char &timeZone);
+                      char &minute, char &sec, int &timeZone);
 
 std::string getISODateTime(short year, char month,
                            char day, char hour,
-                           char minute, char sec, char timeZone);
+                           char minute, char sec, int timeZone);
 
 int FRPC_DLLEXPORT dumpFastrpcTree(const Value_t &value,
                     std::string &outstr, int level);
 
-void printValue(Value_t &value, long spaces = 0);
+void printValue(const Value_t &value, long spaces = 0);
 
 struct ProtocolVersion_t{
     ProtocolVersion_t(unsigned char versionMajor, unsigned char versionMinor);
-    
+
     ProtocolVersion_t();
-    
+
     //ProtocolVersion_t operator=(const ProtocolVersion_t& other );
-    
+
     unsigned char versionMajor;
     unsigned char versionMinor;
 };

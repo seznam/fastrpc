@@ -20,25 +20,23 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcdatetime.h,v 1.6 2007-05-24 12:42:24 mirecta Exp $
+ * FILE          $Id: frpcdatetime.h,v 1.7 2008-04-01 13:19:05 burlog Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #ifndef FRPCDATETIME_H
 #define FRPCDATETIME_H
 
-#include <frpcvalue.h>
 #include <time.h>
 #include <string>
 
-
-
+#include <frpcvalue.h>
 
 namespace FRPC
 {
@@ -51,7 +49,7 @@ class Pool_t;
 class FRPC_DLLEXPORT DateTime_t : public Value_t
 {
     friend class Pool_t;
-    
+
 public:
     enum{ TYPE = 0x05 };
     /**
@@ -60,8 +58,8 @@ public:
     virtual ~DateTime_t();
     /**
         @brief Getting type of value
-        @return  @b unsigned @b short always 
-        @li @b DateTime_t::TYPE - identificator of datetime value 
+        @return  @b unsigned @b short always
+        @li @b DateTime_t::TYPE - identificator of datetime value
     */
     virtual unsigned short getType() const
     {
@@ -82,7 +80,7 @@ public:
     short getDay() const;
     /**
         @brief Get localtime hours.
-        @return Hour (0-23). 
+        @return Hour (0-23).
     */
     short getHour() const;
     /**
@@ -108,7 +106,7 @@ public:
         For example Central European Time (CET=GMT+0100) would have +3600.
         @return Localtime offset to GMT in secs.
     */
-    short getTimeZone() const;
+    int getTimeZone() const;
     /**
         @brief Get localtime year number.
         @return Year (1600-3647).
@@ -125,7 +123,13 @@ public:
     */
     short getDayOfWeek() const;
     /**
-        @brief Method to clone/copy DateTime_t 
+        @brief  Return true if datetime have save light day.
+        @return true if datetime have is save light day.
+    */
+    bool isSaveLightDay() const;
+
+    /**
+        @brief Method to clone/copy DateTime_t
         @param newPool is reference of Pool_t which is used for allocate objects
     */
     virtual Value_t& clone(Pool_t &newPool) const;
@@ -137,17 +141,16 @@ public:
     ///static members
     static const DateTime_t &FRPC_EPOCH;
     static const DateTime_t &FRPC_NULL;
-    
+
 private:
     /**
-        @brief Constructor  from now time 
-    @   param pool  -  is a reference to Pool_t used for allocating
+        @brief Constructor  from now time
     */
     DateTime_t();
+
     /**
         @brief Constructor.  Create specified date
-        @param pool  -  is a reference to Pool_t used for allocating
-        @param year - Year is offset (0 - 2047) to zero-year 1600 
+        @param year - Year is offset (0 - 2047) to zero-year 1600
         (0=1600, ... 370 = 1970, ...)
         @param month - Month is 1 - 12
         @param day -   Day is 1 - 31
@@ -156,45 +159,65 @@ private:
         @param sec -   Second is 0 - 59
         @param weekDay
         @param unixTime
-        @param timeZone
+        @param timeZone as difference between UTC and localtime in seconds
     */
     DateTime_t(short year, char month, char day,
-                     char hour, char min, char sec, char weekDay, time_t unixTime, char timeZone);
+               char hour, char min, char sec, char weekDay,
+               time_t unixTime, int timeZone);
+
+    /**
+        @brief Constructor.  Create specified date
+        @param year - Year is offset (0 - 2047) to zero-year 1600
+        (0=1600, ... 370 = 1970, ...)
+        @param month - Month is 1 - 12
+        @param day -   Day is 1 - 31
+        @param hour -  Hour is 0 - 23
+        @param min -   Minute is 0 - 59
+        @param sec -   Second is 0 - 59
+    */
+    DateTime_t(short year, char month, char day,
+               char hour, char min, char sec);
 
     /**
         @brief Constructor from common unix time number.
-        @param pool  -  is a reference to Pool_t used for allocating
         @param unixTime Number of secs from 1970-01-01 00:00:00 UTC.
     */
     DateTime_t(time_t unixTime);
-    
+
+    /**
+        @brief Constructor from common unix time number.
+        @param unixTime Number of secs from 1970-01-01 00:00:00 UTC.
+        @param timeZone as difference between UTC and localtime in seconds.
+    */
+    DateTime_t(time_t unixTime, int timeZone);
+
      /**
         @brief Constructor from common unix time structure.
-        @param pool  -  is a reference to Pool_t used for allocating
         @param dateTime unix date time structure.
     */
-    DateTime_t(tm &dateTime);
+    DateTime_t(struct tm &tm);
+
      /**
         @brief Constructor from ISO format.
-        @param pool  -  is a reference to Pool_t used for allocating
         @param isoFormat DateTime in iso format.
     */
     DateTime_t(const std::string &isoFormat);
-    
-    
-    short year;        ///year
-    char month;        ///month
-    char day;          ///day
-    char hour;         ///hour
-    char minute;          ///minute
+
+
+    short year;        /// year
+    char month;        /// month
+    char day;          /// day
+    char hour;         /// hour
+    char minute;       /// minute
     char sec;          /// second
-    char weekDay;      ///day of week
-    time_t        unixTime;     ///long unix time
-    char          timeZone;     ///time zone  
+    char weekDay;      /// day of week
+    time_t unixTime;   /// long unix time
+    int timeZone;      /// as difference between UTC and localtime in seconds
 };
+
 /**
     @brief Inline method
-    
+
     Used to retype Value_t to DateTime_t
     @return  If Value_t  can  retype to DateTime_t return reference to DateTime_t
     @n If Value_t can't retype to DateTime_t throw exception TypeError_t
@@ -205,13 +228,13 @@ inline FRPC_DLLEXPORT DateTime_t& DateTime(Value_t &value)
 
     if(!dateTime)
         throw TypeError_t("Type is %s but not dateTime",value.getTypeName());
-    
+
     return *dateTime;
 }
 
 /**
     @brief Inline method
-    
+
     Used to retype Value_t to DateTime_t
     @return  If Value_t  can  retype to DateTime_t return reference to DateTime_t
     @n If Value_t can't retype to DateTime_t throw exception TypeError_t
@@ -222,7 +245,7 @@ inline FRPC_DLLEXPORT const DateTime_t& DateTime(const Value_t &value)
 
     if(!dateTime)
         throw TypeError_t("Type is %s but not dateTime",value.getTypeName());
-    
+
     return *dateTime;
 }
 

@@ -20,29 +20,24 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpctreebuilder.cc,v 1.4 2007-05-18 15:29:46 mirecta Exp $
+ * FILE          $Id: frpctreebuilder.cc,v 1.5 2008-04-01 13:19:06 burlog Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
+
 #include "frpctreebuilder.h"
 #include <frpcpool.h>
-namespace FRPC
-{
 
-
-
+namespace FRPC {
 
 TreeBuilder_t::~TreeBuilder_t()
-{
-    
-}
-
+{}
 
 void TreeBuilder_t::buildBinary(const char* data, unsigned int size)
 {
@@ -67,13 +62,14 @@ void TreeBuilder_t::buildBool(bool value)
 
 }
 
-void TreeBuilder_t::buildDateTime(short year, char month, char day, char hour, char minute, char sec, char weekDay, time_t unixTime, char timeZone)
+void TreeBuilder_t::buildDateTime(short year, char month, char day, char hour,
+                                  char minute, char sec, char weekDay,
+                                  time_t unixTime, int timeZone)
 {
     Value_t &dateTime = pool.DateTime(year, month, day, hour, minute, sec,
                                       weekDay, unixTime, timeZone);
     if(!isMember(dateTime))
         isFirst(dateTime);
-
 }
 
 void TreeBuilder_t::buildDouble(double value)
@@ -84,7 +80,8 @@ void TreeBuilder_t::buildDouble(double value)
         isFirst(doubleVal);
 }
 
-void TreeBuilder_t::buildFault(int errNumber, const char* errMsg, unsigned int size)
+void TreeBuilder_t::buildFault(int errNumber, const char* errMsg,
+                               unsigned int size)
 {
     this->errNum = errNumber;
     this->errMsg.erase();
@@ -194,13 +191,12 @@ void TreeBuilder_t::openArray(unsigned int numOfItems)
 void TreeBuilder_t::openStruct(unsigned int numOfMembers)
 {
     Value_t &structVal = pool.Struct();
-    
+
     if(!isMember(structVal))
         isFirst(structVal);
-        
+
     entityStorage.push_back(ValueTypeStorage_t(&structVal,STRUCT));
 
 }
 
 }
-;

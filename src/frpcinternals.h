@@ -20,15 +20,15 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcinternals.h,v 1.10 2008-03-14 10:29:14 mirecta Exp $
+ * FILE          $Id: frpcinternals.h,v 1.11 2008-04-01 13:19:05 burlog Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #ifndef FRPCINTERNALS_H
 #define FRPCINTERNALS_H
@@ -55,7 +55,7 @@
          byte1 = byte1 ^ byte2; \
          byte2 = byte1 ^ byte2; \
          byte1 = byte1 ^ byte2;
- 
+
 namespace FRPC
 {
 
@@ -93,10 +93,10 @@ union Number_t
     Number_t(Int_t::value_type number):number(number)
     {
 #ifdef FRPC_BIG_ENDIAN
-        //swap it 
+        //swap it
         SWAP_BYTE(data[7],data[0]);
         SWAP_BYTE(data[6],data[1]);
-	SWAP_BYTE(data[5],data[2]);
+        SWAP_BYTE(data[5],data[2]);
         SWAP_BYTE(data[4],data[3]);
 #endif
     }
@@ -157,7 +157,7 @@ struct StreamHolder_t
 
     ~StreamHolder_t()
     {
-        
+
     }
 
     std::ostringstream os;
@@ -166,18 +166,18 @@ struct StreamHolder_t
 
 
 /**
-@brief Structure to store data type and member count 
- 
+@brief Structure to store data type and member count
+
 requiered in marshall and unmarshall
 */
 struct TypeStorage_t
 {
     /**
-        @brief Simple constructor 
+        @brief Simple constructor
         @param type is data type  STRUCT or ARRAY
         @param numOfItems says how many items(ARRAY) or members(STRUCT) has
     */
-    TypeStorage_t(char type, 
+    TypeStorage_t(char type,
                   unsigned int numOfItems)
              :type(type),numOfItems(numOfItems),member(false)
     {}
@@ -199,10 +199,10 @@ struct TypeStorage_t
 struct DateTimeInternal_t
 {
     DateTimeInternal_t()
-    :timeZone(0),unixTime(0),weekDay(0),sec(0),
-     minute(0),hour(0),day(0),month(0),year(0)
+    :timeZone(0), unixTime(0), weekDay(0), sec(0),
+     minute(0), hour(0), day(0), month(0), year(0)
     {}
-    unsigned char timeZone;
+    char timeZone;
     time_t unixTime;
     unsigned char weekDay;
     unsigned char sec;
@@ -225,36 +225,39 @@ struct DateTimeData_t
 
     void pack()
     {
-        Int_t::value_type  unixTimeAbs = (dateTime.unixTime > 0)? dateTime.unixTime: -dateTime.unixTime;
-	int32_t unixTime;
+        Int_t::value_type  unixTimeAbs = (dateTime.unixTime > 0)?
+                                         dateTime.unixTime:
+                                         -dateTime.unixTime;
+        int32_t unixTime;
         data[0] = dateTime.timeZone;
-	
-	if (unixTimeAbs & INT32_MASK)
-	    unixTime = -1;
-	else
-	    unixTime = dateTime.unixTime;
-	    
+
+        if (unixTimeAbs & INT32_MASK)
+            unixTime = -1;
+        else
+            unixTime = dateTime.unixTime;
+
         memcpy(&data[1],reinterpret_cast<char*>(&unixTime),4) ;
         data[5] = (dateTime.sec & 0x1f) << 3 | (dateTime.weekDay & 0x07);
-        data[6] = ((dateTime.minute & 0x3f) << 1) | ((dateTime.sec & 0x20) >> 5) |
-                ((dateTime.hour & 0x01) << 7);
+        data[6] = ((dateTime.minute & 0x3f) << 1) | ((dateTime.sec & 0x20) >> 5)
+                  | ((dateTime.hour & 0x01) << 7);
         data[7] = ((dateTime.hour & 0x1e) >> 1) | ((dateTime.day & 0x0f) << 4);
-        data[8] = ((dateTime.day & 0x1f) >> 4) | ((dateTime.month & 0x0f) << 1) |
-                  ((dateTime.year & 0x07) << 5);
+        data[8] = ((dateTime.day & 0x1f) >> 4) | ((dateTime.month & 0x0f) << 1)
+                  | ((dateTime.year & 0x07) << 5);
         data[9] = ((dateTime.year & 0x07f8) >> 3);
     }
+
     void unpack()
     {
-	int32_t unixTime;
+        int32_t unixTime;
         dateTime.year  = (data[9] << 3) | ((data[8] & 0xe0) >> 5);
         dateTime.month = (data[8] & 0x1e) >> 1;
-        dateTime.day = ((data[8] & 0x01) << 4) |(((data[7] & 0xf0) >> 4)); 
+        dateTime.day = ((data[8] & 0x01) << 4) |(((data[7] & 0xf0) >> 4));
         dateTime.hour = ((data[7] & 0x0f) << 1) | ((data[6] & 0x80) >> 7);
         dateTime.minute = ((data[6] & 0x7e) >> 1);
         dateTime.sec = ((data[6] & 0x01) << 5) | ((data[5] & 0xf8) >> 3);
         dateTime.weekDay = (data[5] & 0x07);
-	memcpy(reinterpret_cast<char*>(&unixTime),&data[1], 4 );
-	dateTime.unixTime = unixTime;
+        memcpy(reinterpret_cast<char*>(&unixTime),&data[1], 4 );
+        dateTime.unixTime = unixTime;
         dateTime.timeZone = data[0];
     }
 };

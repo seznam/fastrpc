@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpctreebuilder.h,v 1.3 2007-05-18 15:29:46 mirecta Exp $
+ * FILE          $Id: frpctreebuilder.h,v 1.4 2008-04-01 13:19:07 burlog Exp $
  *
  * DESCRIPTION   
  *
@@ -71,7 +71,7 @@ public:
     virtual void buildBool(bool value);
     virtual void buildDateTime(short year, char month, char day, 
                                char hour, char min, char sec, char weekDay,
-                                time_t unixTime, char timeZone);
+                                time_t unixTime, int timeZone);
     virtual void buildDouble(double value);
     virtual void buildFault(int errNumber, const char* errMsg, unsigned int size);
     virtual void buildFault(int errNumber, const std::string& errMsg);

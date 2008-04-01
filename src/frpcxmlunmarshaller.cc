@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcxmlunmarshaller.cc,v 1.13 2007-09-05 10:31:39 mirecta Exp $
+ * FILE          $Id: frpcxmlunmarshaller.cc,v 1.14 2008-04-01 13:19:08 burlog Exp $
  *
  * DESCRIPTION
  *
@@ -39,8 +39,6 @@
 #include <stdint.h>
 #include <errno.h>
 using namespace FRPC;
-
-
 
 extern "C" {
 
@@ -732,11 +730,13 @@ void XmlUnMarshaller_t::setValueData(const char *data, unsigned int len) {
 
         // date vars
         short year;
-        char timeZone, month, day, hour, minute, sec;
+        char month, day, hour, minute, sec;
+        int timeZone;
 
-        parseISODateTime(data, len, year, month, day, hour, minute, sec, timeZone);
+        parseISODateTime(data, len, year, month, day, hour, minute, sec,
+                         timeZone);
 
-        dataBuilder.buildDateTime(year,month,day,hour,minute,sec,-1,-1,
+        dataBuilder.buildDateTime(year, month, day, hour, minute, sec, -1, -1,
                                   timeZone);
         internalType = NONE;
     }

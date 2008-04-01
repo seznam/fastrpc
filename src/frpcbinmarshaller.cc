@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcbinmarshaller.cc,v 1.9 2008-03-14 10:29:14 mirecta Exp $
+ * FILE          $Id: frpcbinmarshaller.cc,v 1.10 2008-04-01 13:19:03 burlog Exp $
  *
  * DESCRIPTION
  *
@@ -106,7 +106,9 @@ void BinMarshaller_t::packBool(bool value) {
 
 }
 
-void BinMarshaller_t::packDateTime(short year, char month, char day, char hour, char minute, char sec, char weekDay, time_t unixTime, char timeZone) {
+void BinMarshaller_t::packDateTime(short year, char month, char day, char hour,
+                                   char minute, char sec, char weekDay,
+                                   time_t unixTime, int timeZone) {
     DateTimeData_t dateTime;
     //pack type
     char type = FRPC_DATA_TYPE(DATETIME,0);
@@ -125,7 +127,7 @@ void BinMarshaller_t::packDateTime(short year, char month, char day, char hour, 
 
     dateTime.dateTime.weekDay = weekDay & 0x07;
     dateTime.dateTime.unixTime = unixTime;
-    dateTime.dateTime.timeZone = timeZone;
+    dateTime.dateTime.timeZone = (timeZone / 60 / 15);
     dateTime.pack();
     //write type
     writer.write(&type,1);
@@ -158,7 +160,8 @@ void BinMarshaller_t::packDouble(double value) {
 
 }
 
-void BinMarshaller_t::packFault(int errNumber, const char* errMsg, unsigned int size) {
+void BinMarshaller_t::packFault(int errNumber, const char* errMsg,
+                                unsigned int size) {
     //pact type
     char type = FRPC_DATA_TYPE(FAULT, 0);
 
@@ -175,7 +178,7 @@ void BinMarshaller_t::packFault(int errNumber, const char* errMsg, unsigned int 
 }
 
 void BinMarshaller_t::packInt(Int_t::value_type value) {
-    
+
 
     if (protocolVersion.versionMajor > 1) {
 
@@ -197,7 +200,7 @@ void BinMarshaller_t::packInt(Int_t::value_type value) {
             writer.write(number.data,getNumberSize(numType));
 
         }
-        
+
     } else {
         unsigned int numType = getNumberType(value);
         //pack type
@@ -213,13 +216,15 @@ void BinMarshaller_t::packInt(Int_t::value_type value) {
 
 }
 
-void BinMarshaller_t::packMethodCall(const char* methodName, unsigned int  size) {
+void BinMarshaller_t::packMethodCall(const char* methodName,
+                                     unsigned int  size) {
 
     //pack type
     char type = FRPC_DATA_TYPE(METHOD_CALL,0);
     //check conditions
     if ( size > 255 || size == 0)
-        throw LenError_t("Lenght of method name is %d not in interval (1-255)",size);
+        throw LenError_t("Lenght of method name is %d not in interval (1-255)",
+                         size);
     int8_t realSize = int8_t(size);
     //magic
     packMagic();
@@ -265,11 +270,13 @@ void BinMarshaller_t::packStruct(unsigned int  numOfMembers) {
 
 }
 
-void BinMarshaller_t::packStructMember(const char* memberName, unsigned int size) {
+void BinMarshaller_t::packStructMember(const char* memberName,
+                                       unsigned int size) {
 
 
     if (size > 255 || size == 0)
-        throw LenError_t("Lenght of member name is %d not in interval (1-255)",size);
+        throw LenError_t("Lenght of member name is %d not in interval (1-255)",
+                         size);
 
     //write member name
     int8_t realSize = int8_t(size);
@@ -291,7 +298,7 @@ void BinMarshaller_t::packMethodResponse() {
 }
 
 void BinMarshaller_t::packMagic() {
-    
+
     char magic[]={0xCA,0x11,0x00,0x00};
     magic[2] = protocolVersion.versionMajor;
     magic[3] = protocolVersion.versionMinor;

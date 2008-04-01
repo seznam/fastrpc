@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcbinmarshaller.h,v 1.7 2007-05-22 13:03:23 mirecta Exp $
+ * FILE          $Id: frpcbinmarshaller.h,v 1.8 2008-04-01 13:19:04 burlog Exp $
  *
  * DESCRIPTION
  *
@@ -43,9 +43,6 @@
 
 namespace FRPC {
 
-
-
-
 /**
 @brief Binary Marshaller (FastRPC)
 @author Miroslav Talasek
@@ -61,10 +58,11 @@ public:
     virtual void packBinary(const char* value, unsigned int size);
     virtual void packBool(bool value);
     virtual void packDateTime(short year, char month, char day, char hour,
-                              char minute, char sec,
-                              char weekDay, time_t unixTime, char timeZone);
+                              char minute, char sec, char weekDay,
+                              time_t unixTime, int timeZone);
     virtual void packDouble(double value);
-    virtual void packFault(int errNumber, const char* errMsg, unsigned int size);
+    virtual void packFault(int errNumber, const char* errMsg,
+                           unsigned int size);
     virtual void packInt(Int_t::value_type value);
     virtual void packMethodCall(const char* methodName, unsigned int size);
     virtual void packString(const char* value, unsigned int size);
@@ -76,13 +74,13 @@ public:
 private:
 
     BinMarshaller_t();
-    
+
     inline unsigned int getNumberSize(unsigned int size){
         if (protocolVersion.versionMajor < 2)
             return size;
         return size + 1;
     }
-    
+
     inline unsigned int getNumberType(Int_t::value_type number) {
 
         if (protocolVersion.versionMajor < 2) {
