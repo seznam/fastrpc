@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: pythonbuilder.cc,v 1.5 2007-07-31 13:03:37 vasek Exp $
+ * $Id: pythonbuilder.cc,v 1.6 2008-04-01 13:19:10 burlog Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -97,7 +97,7 @@ void Builder_t::buildBool(bool value) {
 }
 void Builder_t::buildDateTime(short year, char month, char day,char hour, char
                               min, char sec,
-                              char weekDay, time_t unixTime, char timeZone) {
+                              char weekDay, time_t unixTime, int timeZone) {
     if (isError())
         return;
 

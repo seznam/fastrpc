@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: pythonbuilder.h,v 1.4 2007-05-23 09:31:43 mirecta Exp $
+ * $Id: pythonbuilder.h,v 1.5 2008-04-01 13:19:10 burlog Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -97,7 +97,7 @@ public:
     virtual void buildBool(bool value);
     virtual void buildDateTime(short year, char month, char day,char hour, char
                                min, char sec,
-                               char weekDay, time_t unixTime, char timeZone);
+                               char weekDay, time_t unixTime, int timeZone);
     virtual void buildDouble(double value);
     virtual void buildFault(int errNumber, const char* errMsg, unsigned int size );
     virtual void buildFault(int errNumber, const std::string &errMsg);

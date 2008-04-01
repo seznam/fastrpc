@@ -20,8 +20,8 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: fastrpcmodule.cc,v 1.17 2008-03-12 12:43:38 mirecta Exp $
- * 
+ * $Id: fastrpcmodule.cc,v 1.18 2008-04-01 13:19:09 burlog Exp $
+ *
  * AUTHOR      Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
@@ -100,6 +100,10 @@ extern "C"
                                         PyObject *kwds);
     static int DateTimeObject_init(DateTimeObject *self, PyObject *args,
                                    PyObject *kwds);
+    static int LocalTimeObject_init(DateTimeObject *self, PyObject *args,
+                                   PyObject *kwds);
+    static int UTCTimeObject_init(DateTimeObject *self, PyObject *args,
+                                   PyObject *kwds);
     static void DateTimeObject_dealloc(DateTimeObject *self);
     //static int DateTimeObject_cmp(BooleanObject *self, BooleanObject *other);
     static PyObject* DateTimeObject_repr(DateTimeObject *self);
@@ -157,6 +161,96 @@ PyTypeObject DateTimeObject_Type =
         _PyObject_Del                           /* tp_free */
     };
 
+PyTypeObject LocalTimeObject_Type =
+    {
+        PyObject_HEAD_INIT(&PyType_Type)
+        0,
+        "LocalTime",
+        sizeof(DateTimeObject),
+        0,
+        (destructor)DateTimeObject_dealloc,       /* tp_dealloc */
+        0,                                      /* tp_print */
+        (getattrfunc)DateTimeObject_getattr,      /* tp_getattr */
+        (setattrfunc)DateTimeObject_setattr,      /* tp_setattr */
+        0,                                      /* tp_compare */
+        (reprfunc)DateTimeObject_repr,            /* tp_repr */
+        0,                                      /* tp_as_newDateTime->weekDay
+                                                                =number */
+        0,                                      /* tp_as_sequence */
+        0,                                      /* tp_as_mapping */
+        0,                                      /* tp_hash */
+        0,                                      /* tp_call */
+        0,                                      /* tp_str */
+        0,                                      /* tp_getattro */
+        0,                                      /* tp_setattro */
+        0,                                      /* tp_as_buffer */
+        Py_TPFLAGS_DEFAULT,                     /* tp_flags */
+        0,                                      /* tp_doc */
+        0,                                      /* tp_traverse */
+        0,                                      /* tp_clear */
+        0,                                      /* tp_richcompare */
+        0,                                      /* tp_weaklistoffset */
+        0,                                      /* tp_iter */
+        0,                                      /* tp_iternext */
+        0,                                      /* tp_methods */
+        0,                                      /* tp_members */
+        0,                                      /* tp_getset */
+        0,                                      /* tp_base */
+        0,                                      /* tp_dict */
+        0,                                      /* tp_descr_get */
+        0,                                      /* tp_descr_set */
+        0,                                      /* tp_dictoffset */
+        (initproc)LocalTimeObject_init,         /* tp_init */
+        PyType_GenericAlloc,                    /* tp_alloc */
+        DateTimeObject_new,                     /* tp_new */
+        _PyObject_Del                           /* tp_free */
+    };
+
+PyTypeObject UTCTimeObject_Type =
+    {
+        PyObject_HEAD_INIT(&PyType_Type)
+        0,
+        "UTCTime",
+        sizeof(DateTimeObject),
+        0,
+        (destructor)DateTimeObject_dealloc,       /* tp_dealloc */
+        0,                                      /* tp_print */
+        (getattrfunc)DateTimeObject_getattr,      /* tp_getattr */
+        (setattrfunc)DateTimeObject_setattr,      /* tp_setattr */
+        0,                                      /* tp_compare */
+        (reprfunc)DateTimeObject_repr,            /* tp_repr */
+        0,                                      /* tp_as_newDateTime->weekDay
+                                                                =number */
+        0,                                      /* tp_as_sequence */
+        0,                                      /* tp_as_mapping */
+        0,                                      /* tp_hash */
+        0,                                      /* tp_call */
+        0,                                      /* tp_str */
+        0,                                      /* tp_getattro */
+        0,                                      /* tp_setattro */
+        0,                                      /* tp_as_buffer */
+        Py_TPFLAGS_DEFAULT,                     /* tp_flags */
+        0,                                      /* tp_doc */
+        0,                                      /* tp_traverse */
+        0,                                      /* tp_clear */
+        0,                                      /* tp_richcompare */
+        0,                                      /* tp_weaklistoffset */
+        0,                                      /* tp_iter */
+        0,                                      /* tp_iternext */
+        0,                                      /* tp_methods */
+        0,                                      /* tp_members */
+        0,                                      /* tp_getset */
+        0,                                      /* tp_base */
+        0,                                      /* tp_dict */
+        0,                                      /* tp_descr_get */
+        0,                                      /* tp_descr_set */
+        0,                                      /* tp_dictoffset */
+        (initproc)UTCTimeObject_init,           /* tp_init */
+        PyType_GenericAlloc,                    /* tp_alloc */
+        DateTimeObject_new,                     /* tp_new */
+        _PyObject_Del                           /* tp_free */
+    };
+
 
 } } // namespace FRPC::Python
 
@@ -173,109 +267,182 @@ PyObject* DateTimeObject_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     self->year = 0;
     self->unixTime = 0;
     self->month = self->day = self->hour = self->min = self->sec
-                                           = self->weekDay = self->timeZone = 0;
+                = self->weekDay = self->timeZone = 0;
 
     return reinterpret_cast<PyObject*>(self);
+}
+
+int TimeObject_init_getNow(DateTimeObject *self, bool nowShift) {
+    self->unixTime = time(0);
+
+    tm *time_tm = localtime(&self->unixTime);
+
+    if (nowShift) {
+#ifdef HAVE_ALTZONE
+        self->unixTime += (time_tm->tm_isdst > 0)?
+            ::altzone: ::timezone;
+#else
+        self->unixTime += (time_tm->tm_isdst > 0)?
+            ::timezone - 3600: ::timezone;
+#endif
+        time_tm = localtime(&self->unixTime);
+    }
+
+    self->year = time_tm->tm_year + 1900;
+    self->month = time_tm->tm_mon + 1;
+    self->day = time_tm->tm_mday;
+    self->hour = time_tm->tm_hour;
+    self->min = time_tm->tm_min;
+    self->sec = time_tm->tm_sec;
+    self->weekDay = time_tm->tm_wday;
+
+    return 0;
+}
+
+int TimeObject_init_parseInt(DateTimeObject *self, PyObject *pyValue) {
+    self->unixTime = PyInt_AsLong(pyValue);
+
+    tm *time_tm = localtime(&self->unixTime);
+
+    self->year = time_tm->tm_year + 1900;
+    self->month = time_tm->tm_mon + 1;
+    self->day = time_tm->tm_mday;
+    self->hour = time_tm->tm_hour ;
+    self->min = time_tm->tm_min;
+    self->sec = time_tm->tm_sec;
+    self->weekDay = time_tm->tm_wday;
+
+    return 0;
+}
+
+int TimeObject_init_parseString(DateTimeObject *self, PyObject *pyValue) {
+    self->timeZone = 0;
+    self->weekDay = -1;
+
+    // date vars
+    short year;
+    int timeZone;
+    char month, day, hour, min, sec;
+    long len = PyString_Size(pyValue);
+    char *data = PyString_AsString(pyValue);
+
+    try {
+
+        FRPC::parseISODateTime(data, len, year, month, day, hour,
+                               min, sec, timeZone);
+
+    } catch(const StreamError_t &e) {
+        PyErr_Format(PyExc_Exception,e.message().c_str());
+        return -1;
+    }
+    //error, extra characters on line
+
+    self->year = year;
+    self->month = month;
+    self->day = day;
+    self->hour = hour;
+    self->min = min;
+    self->sec = sec;
+    self->timeZone = timeZone;
+
+    tm time_tm;
+    memset(reinterpret_cast<void*>(&time_tm), 0, sizeof(tm));
+    time_tm.tm_year = year - 1900;
+    time_tm.tm_mon  = month -1;
+    time_tm.tm_mday = day;
+    time_tm.tm_hour = hour;
+    time_tm.tm_min = min;
+    time_tm.tm_sec = sec;
+    time_tm.tm_isdst = -1;
+    self->unixTime = mktime(&time_tm);
+
+    if(self->unixTime != -1) {
+        tm *ntime_tm = localtime(&(self->unixTime));
+        self->weekDay = ntime_tm->tm_wday;
+
+    } else
+        self->weekDay = -1;
+
+    return 0;
 }
 
 int DateTimeObject_init(DateTimeObject *self, PyObject *args, PyObject *kwds)
 {
     PyObject *pyValue = 0;
-    DateTimeObject  *newDateTime;
-    time_t  locTime;
+    int timeZone = 0;
 
-    if(!PyArg_ParseTuple(args, "|O", &pyValue))
+    // probably int and timezone
+    if (PyArg_ParseTuple(args, "Oi", &pyValue, &timeZone)) {
+        int result = TimeObject_init_parseInt(self, pyValue);
+        self->timeZone = timeZone;
+        return result;
+    }
+
+    // clear error and try parse single object
+    PyErr_Clear();
+    if (!PyArg_ParseTuple(args, "O", &pyValue))
         return -1;
 
-    if(pyValue == 0)
-    {
-        locTime = time(0);
-        self->unixTime = locTime;
+    if (PyString_Check(pyValue)) {
+        return TimeObject_init_parseString(self, pyValue);
 
-        tm *time_tm = localtime(&locTime);
-        self->year = time_tm->tm_year + 1900;
-        self->month = time_tm->tm_mon + 1;
-        self->day = time_tm->tm_mday;
-        self->hour = time_tm->tm_hour;
-        self->min = time_tm->tm_min;
-        self->sec = time_tm->tm_sec;
-        self->weekDay = time_tm->tm_wday;
-        self->timeZone = 0;
-
-    }
-    else if(PyInt_Check(pyValue))
-    {
-        locTime = PyInt_AsLong(pyValue);
-        tm *time_tm = localtime(&locTime);
-        self->unixTime = locTime;
-        self->year = time_tm->tm_year + 1900;
-        self->month = time_tm->tm_mon + 1;
-        self->day = time_tm->tm_mday;
-        self->hour = time_tm->tm_hour ;
-        self->min = time_tm->tm_min;
-        self->sec = time_tm->tm_sec;
-        self->weekDay = time_tm->tm_wday;
-        self->timeZone = 0;
-
-    }
-    else if(PyString_Check(pyValue))
-    {
-        self->timeZone = 0;
-        self->weekDay = -1;
-        // date vars
-        short year;
-        char timeZone, month, day, hour, min, sec;
-        long len = PyString_Size(pyValue);
-        char *data = PyString_AsString(pyValue);
-        try
-        {
-		FRPC::parseISODateTime(data, len, year, month,
-                             day, hour,
-                             min, sec, timeZone);
-        }
-        catch(const StreamError_t &e)
-        {
-            PyErr_Format(PyExc_Exception,e.message().c_str());
-            return -1;
-        }
-        //error, extra characters on line
-
-
-
-        self->year = year;
-        self->month = month;
-        self->day = day;
-        self->hour = hour;
-        self->min = min;
-        self->sec = sec;
-        self->timeZone = timeZone;
-        tm time_tm;
-        memset(reinterpret_cast<void*>(&time_tm), 0, sizeof(tm));
-        time_tm.tm_year = year - 1900;
-        time_tm.tm_mon  = month -1;
-        time_tm.tm_mday = day;
-        time_tm.tm_hour = hour;
-        time_tm.tm_min = min;
-        time_tm.tm_sec = sec;
-        time_tm.tm_isdst = -1;
-        self->unixTime = mktime(&time_tm);
-
-        if(self->unixTime != -1)
-        {
-            tm *ntime_tm = localtime(&(self->unixTime));
-            self->weekDay = ntime_tm->tm_wday;
-        }
-        else
-            self->weekDay = -1;
-
-    }
-    else
-    {
+    } else {
         PyErr_Format(PyExc_TypeError, "Argument must be string");
         return -1;
     }
 
     return 0;
+}
+
+int LocalTimeObject_init(DateTimeObject *self, PyObject *args, PyObject *kwds)
+{
+    PyObject *pyValue = 0;
+    if(!PyArg_ParseTuple(args, "|O", &pyValue))
+        return -1;
+
+    int result = 0;
+    if (!pyValue) {
+        result = TimeObject_init_getNow(self, false);
+
+    } else if (PyInt_Check(pyValue)) {
+        result = TimeObject_init_parseInt(self, pyValue);
+
+    } else {
+        PyErr_Format(PyExc_TypeError, "Argument must be timestamp");
+        return -1;
+    }
+
+    // get local timezone
+    struct tm *time_tm = localtime(&self->unixTime);
+#ifdef HAVE_ALTZONE
+    self->timeZone = (time_tm->tm_isdst > 0)? ::altzone: ::timezone;
+#else
+    self->timeZone = (time_tm->tm_isdst > 0)? ::timezone - 3600: ::timezone;
+#endif
+    return result;
+}
+
+int UTCTimeObject_init(DateTimeObject *self, PyObject *args, PyObject *kwds)
+{
+    PyObject *pyValue = 0;
+    if(!PyArg_ParseTuple(args, "|O", &pyValue))
+        return -1;
+
+    int result = 0;
+    if (!pyValue) {
+        result = TimeObject_init_getNow(self, true);
+
+    } else if (PyInt_Check(pyValue)) {
+        result = TimeObject_init_parseInt(self, pyValue);
+
+    } else {
+        PyErr_Format(PyExc_TypeError, "Argument must be timestamp");
+        return -1;
+    }
+
+    // set UTC timezone
+    self->timeZone = 0;
+    return result;
 }
 
 void DateTimeObject_dealloc(DateTimeObject *self)
@@ -285,10 +452,9 @@ void DateTimeObject_dealloc(DateTimeObject *self)
 
 PyObject* DateTimeObject_repr(DateTimeObject *self)
 {
-    std::string  dateTime = FRPC::getISODateTime(self->year
-                                           ,self->month ,
-                                           self->day ,self->hour,self->min,self->sec,
-                                           self->timeZone);
+    std::string  dateTime = FRPC::getISODateTime(self->year, self->month,
+                                           self->day, self->hour, self->min,
+                                           self->sec, self->timeZone);
 
     return PyString_FromString(dateTime.c_str());
 
@@ -422,7 +588,7 @@ namespace FRPC { namespace Python {
 
 DateTimeObject* newDateTime(short year, char month, char day, char hour, char
                             min, char sec,
-                            char weekDay, time_t unixTime, char timeZone)
+                            char weekDay, time_t unixTime, int timeZone)
 {
     DateTimeObject *self = PyObject_NEW(DateTimeObject, &DateTimeObject_Type);
     if (self == NULL)
@@ -1221,7 +1387,7 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *self, PyObject *args,
     char *proxyVia = "";
     int protocolVersionMajor = 2;
     int protocolVersionMinor = 0;
-    
+
 
     if (!PyArg_ParseTupleAndKeywords(args, keywds,
                                      "s#|iiiiisissii:ServerProxy.__init__", kwlist,
@@ -1244,7 +1410,7 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *self, PyObject *args,
 
     if (protocolVersionMajor < 1) protocolVersionMajor = 1;
     if (protocolVersionMinor < 0) protocolVersionMinor = 0;
-    
+
     try
     {
         // initialize underlying proxy (inplace!)
@@ -1256,7 +1422,7 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *self, PyObject *args,
                                             protocolVersionMinor));
         proxy->proxyOk = true;
     }
-    
+
     catch (const HTTPError_t &httpError)
     {
         Py_DECREF(proxy);
@@ -1641,7 +1807,7 @@ PyObject* fastrpc_dumps(PyObject *self, PyObject *args, PyObject *keywds) {
                                 "Fault.faultCode is not an int");
                 return 0;
             }
-            
+
             char *str;
             int strSize;
             if (PyString_AsStringAndSize(faultString.get(), &str, &strSize))
@@ -1948,7 +2114,7 @@ namespace FRPC { namespace Python {
 
         PyObjectWrapper_t formatString;
         PyObjectWrapper_t formatArgs;
-    
+
         // build format string and arguments
         if (!method || (method == Py_None)) {
             // no method
@@ -1959,10 +2125,10 @@ namespace FRPC { namespace Python {
 
             formatArgs =
                 (status
-                 ? Py_BuildValue("(sNN)", name.c_str(), 
+                 ? Py_BuildValue("(sNN)", name.c_str(),
                                  PyObject_GetAttrString(self, status),
                                  PyObject_GetAttrString(self, statusMessage))
-                 : Py_BuildValue("(sN)", name.c_str(), 
+                 : Py_BuildValue("(sN)", name.c_str(),
                                  PyObject_GetAttrString(self, statusMessage)));
             if (!formatArgs) return 0;
         } else {
@@ -2015,6 +2181,14 @@ extern "C" DL_EXPORT(void) initfastrpc(void)
     Py_INCREF(&DateTimeObject_Type);
     if (PyModule_AddObject(fastrpc_module, "DateTime",
                            reinterpret_cast<PyObject*>(&DateTimeObject_Type)))
+        return;
+    Py_INCREF(&LocalTimeObject_Type);
+    if (PyModule_AddObject(fastrpc_module, "LocalTime",
+                           reinterpret_cast<PyObject*>(&LocalTimeObject_Type)))
+        return;
+    Py_INCREF(&UTCTimeObject_Type);
+    if (PyModule_AddObject(fastrpc_module, "UTCTime",
+                           reinterpret_cast<PyObject*>(&UTCTimeObject_Type)))
         return;
     Py_INCREF(&BinaryObject_Type);
     if (PyModule_AddObject(fastrpc_module, "Binary",
