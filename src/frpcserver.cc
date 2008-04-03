@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcserver.cc,v 1.12 2007-05-23 08:12:52 mirecta Exp $
+ * FILE          $Id: frpcserver.cc,v 1.13 2008-04-03 08:22:10 burlog Exp $
  *
  * DESCRIPTION
  *
@@ -95,12 +95,12 @@ void Server_t::serve(int fd, struct sockaddr_in* addr )
 
     do
     {
-        
+
 //         if (callbacks)
 //         {
 //            callbacks->preRead(clientIP, requestCount);
 //         }
-        
+
         Pool_t pool;
         TreeBuilder_t builder(pool);
 
@@ -225,20 +225,20 @@ void Server_t::readRequest(DataBuilder_t &builder)
                                   "Bad HTTP protocol version or type: '%s'.",
                                   header[2].c_str());
             }
-             
+
             uriPath = header[1];
-              
+
 //             if (!path.empty())
 //             {
 //                if (uriPath != path)
 //                {
 //                   throw HTTPError_t(HTTP_NOT_FOUND,
 //                                   "Uri not found '%s'.",
-//                                   header[1].c_str()); 
+//                                   header[1].c_str());
 //                }
-            
+
 //             }
-            
+
             transferMethod =  header[0];
 
 
@@ -276,53 +276,45 @@ void Server_t::readRequest(DataBuilder_t &builder)
         httpHead.get(HTTP_HEADER_CONTENT_TYPE, contentType );
         //create unmarshaller and datasink
 
-        //ake typy podporuje server ?
+        // what types is supported by client
         outType = XML_RPC;
         useChunks = false;
 
         std::string accept("");
-        if( httpHead.get(HTTP_HEADER_ACCEPT, accept) == 0)
-        {
+        if (httpHead.get(HTTP_HEADER_ACCEPT, accept) == 0) {
 
-
-            if(accept.find("text/xml") != std::string::npos)
-            {
+            /* xmlrpc is default
+            if (accept.find("text/xml") != std::string::npos) {
                 outType = XML_RPC;
                 useChunks = false;
+            } */
+
+            if (accept.find("application/x-frpc") != std::string::npos) {
+                if (useBinary) {
+                    outType = BINARY_RPC;
+                    useChunks = true;
+                }
             }
-
-            if(accept.find("application/x-frpc") != std::string::npos)
-            {
-                outType = BINARY_RPC;
-                useChunks = true;
-            }
         }
 
+        // what type is request
+        if (contentType.find("application/x-frpc") != std::string::npos) {
+            unmarshaller = std::auto_ptr<UnMarshaller_t>(
+                    UnMarshaller_t::create(
+                            UnMarshaller_t::BINARY_RPC,
+                            builder));
 
+        } else if (contentType.find("text/xml") != std::string::npos) {
+            unmarshaller = std::auto_ptr<UnMarshaller_t>(
+                    UnMarshaller_t::create(
+                            UnMarshaller_t::XML_RPC,
+                            builder));
 
-        if(contentType.find("text/xml") != std::string::npos )
-        {
-            std::auto_ptr<UnMarshaller_t> ptr(
-                UnMarshaller_t::create(UnMarshaller_t::XML_RPC, builder));
-            unmarshaller = ptr;
-        }
-        else if (contentType.find("application/x-frpc")!= std::string::npos )
-        {
-            std::auto_ptr<UnMarshaller_t> ptr(
-                UnMarshaller_t::create(UnMarshaller_t::BINARY_RPC, builder));
-            unmarshaller = ptr;
-        }
-
-        else
-        {
+        } else {
             throw StreamError_t("Unknown ContentType");
         }
 
-
-
         DataSink_t data(*unmarshaller, UnMarshaller_t::TYPE_METHOD_CALL);
-
-
 
         // read body of request
         io.readContent(httpHead, data, true);
@@ -461,7 +453,11 @@ void Server_t::sendResponse()
 
         }
 
-        os.os  << HTTP_HEADER_ACCEPT << ": " << "text/xml, application/x-frpc"<< "\r\n";
+        os.os << HTTP_HEADER_ACCEPT
+              << ": " << "text/xml";
+        if (useBinary)
+            os.os << ", application/x-frpc";
+        os.os << "\r\n";
 
         //append connection header
         os.os << HTTP_HEADER_CONNECTION << (keepAlive ? ": keep-alive" : ": close")

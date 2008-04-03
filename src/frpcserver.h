@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcserver.h,v 1.6 2007-05-21 15:10:12 mirecta Exp $
+ * FILE          $Id: frpcserver.h,v 1.7 2008-04-03 08:22:11 burlog Exp $
  *
  * DESCRIPTION
  *
@@ -61,43 +61,73 @@ public:
     public:
 
         /**
-            @brief Constructor of config class
+            @brief Constructor of config class - compatible constructor.
             @param readTimeout - it is the read timeout in miliseconds
                                 used in read data from the scoket
-            @param writeTimeout - it is the write timeout 
+            @param writeTimeout - it is the write timeout
                                  used in wite data to the socket
-            @param keepAlive -  it is keep alive connection parameter 
+            @param keepAlive -  it is keep alive connection parameter
+            @param useBinary - allow or disallow binary protocol
             @param maxKeepalive - mas request on keep alive
             @param introspectionEnabled see MethodRegistry_t
             @param callbacks pointer to callback class for logging
             @param path uri path
         */
         Config_t(unsigned int readTimeout, unsigned int writeTimeout,
-                 bool keepAlive, unsigned int maxKeepalive, bool introspectionEnabled,
-                 MethodRegistry_t::Callbacks_t *callbacks //, const std::string path
-                )
-                :readTimeout(readTimeout),writeTimeout(writeTimeout),
-                keepAlive(keepAlive),maxKeepalive(maxKeepalive),
-                introspectionEnabled(introspectionEnabled),
-                callbacks(callbacks)
+                 bool keepAlive, unsigned int maxKeepalive,
+                 bool introspectionEnabled,
+                 MethodRegistry_t::Callbacks_t *callbacks
+                /*, const std::string path*/)
+            : readTimeout(readTimeout), writeTimeout(writeTimeout),
+              keepAlive(keepAlive), useBinary(true),
+              maxKeepalive(maxKeepalive),
+              introspectionEnabled(introspectionEnabled), callbacks(callbacks)
+                //,path(path)
+        {}
+
+        /**
+            @brief Constructor of config class
+            @param readTimeout - it is the read timeout in miliseconds
+                                used in read data from the scoket
+            @param writeTimeout - it is the write timeout
+                                 used in wite data to the socket
+            @param keepAlive -  it is keep alive connection parameter
+            @param useBinary - allow or disallow binary protocol
+            @param maxKeepalive - mas request on keep alive
+            @param introspectionEnabled see MethodRegistry_t
+            @param callbacks pointer to callback class for logging
+            @param path uri path
+        */
+        Config_t(unsigned int readTimeout, unsigned int writeTimeout,
+                 bool keepAlive, bool useBinary, unsigned int maxKeepalive,
+                 bool introspectionEnabled,
+                 MethodRegistry_t::Callbacks_t *callbacks
+                /*, const std::string path*/)
+            : readTimeout(readTimeout), writeTimeout(writeTimeout),
+              keepAlive(keepAlive), useBinary(useBinary),
+              maxKeepalive(maxKeepalive),
+              introspectionEnabled(introspectionEnabled), callbacks(callbacks)
                 //,path(path)
         {}
         /**
-            @brief Default constructor 
-            
+            @brief Default constructor
+
             Setting default values:
-            
+
             @n @b readTimeout = 10000 ms
             @n @b writeTimeout = 1000 ms
             @n @b keepAlive = false
+            @n @b useBinary = true
             @n @b maxKeepalive = 0
             @n @b introspectionEnabled = true
             @n @b callbacks = 0
-            
+
         */
-        Config_t():readTimeout(10000),writeTimeout(1000),keepAlive(false),maxKeepalive(0),
-                introspectionEnabled(true),
-                callbacks(0) {}
+        Config_t()
+            : readTimeout(10000), writeTimeout(1000), keepAlive(false),
+              useBinary(true), maxKeepalive(0), introspectionEnabled(true),
+              callbacks(0)
+        {}
 
         ///@brief internal representation of readTimeout value
         unsigned int readTimeout;
@@ -105,6 +135,9 @@ public:
         unsigned int writeTimeout;
         ///@brief internal representation of keepAlive value
         bool keepAlive;
+
+        ///@brief allow or disallow binary protocol
+        bool useBinary;
 
         unsigned int maxKeepalive;
 
@@ -117,13 +150,14 @@ public:
     };
 
     Server_t(Config_t &config)
-            :Writer_t(), methodRegistry(config.callbacks, config.introspectionEnabled),
-            io(0,config.readTimeout, config.writeTimeout, -1 ,-1),
-            keepAlive(config.keepAlive),maxKeepalive(config.maxKeepalive),
-            callbacks(config.callbacks),//path(config.path),
-            outType(XML_RPC), closeConnection(true),
-            contentLength(0),useChunks(false),headersSent(false),head(false)
-            {}
+        : Writer_t(),
+          methodRegistry(config.callbacks, config.introspectionEnabled),
+          io(0,config.readTimeout, config.writeTimeout, -1, -1),
+          keepAlive(config.keepAlive), useBinary(config.useBinary),
+          maxKeepalive(config.maxKeepalive), callbacks(config.callbacks),
+          /*path(config.path), */outType(XML_RPC), closeConnection(true),
+          contentLength(0), useChunks(false), headersSent(false), head(false)
+    {}
 
     void serve(int fd, struct sockaddr_in* addr = 0);
 
@@ -143,7 +177,7 @@ private:
     virtual void flush();
     /**
     * @brief write data to server
-    * @param data pointer to data 
+    * @param data pointer to data
     * @param size size of data
     */
     virtual void write(const char* data, unsigned int size);
@@ -163,6 +197,7 @@ private:
     MethodRegistry_t methodRegistry;
     HTTPIO_t io;
     bool keepAlive;
+    bool useBinary;                              //!< allow or disallow binary
     unsigned int maxKeepalive;
     MethodRegistry_t::Callbacks_t *callbacks;
 //     std::string path;
