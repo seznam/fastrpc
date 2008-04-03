@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: pythonserver.cc,v 1.19 2007-11-22 11:09:01 vasek Exp $
+ * $Id: pythonserver.cc,v 1.20 2008-04-03 08:22:12 burlog Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -261,6 +261,7 @@ namespace {
         int writeTimeout;
         int keepAlive;
         int maxKeepalive;
+        int useBinary;
 
         MethodRegistryObject *registry;
 
@@ -427,7 +428,7 @@ namespace {
                  -1 ,-1),
               outType(FRPC::Server_t::XML_RPC), closeConnection(true),
               contentLength(0), useChunks(false), headersSent(false),
-              head(false)
+              head(false), useBinary(serverObject->useBinary)
         {}
 
         ~Server_t() {}
@@ -478,6 +479,7 @@ namespace {
         bool headersSent;
         bool head;
         ProtocolVersion_t protocolVersion;
+        bool useBinary;
     };
 }
 
@@ -689,7 +691,7 @@ PyObject* Server_t::serve(int fd, PyObjectWrapper_t addr) {
     PyObjectWrapper_t type;
     PyObjectWrapper_t value;
     PyObjectWrapper_t traceback;
-    
+
     io.setSocket(fd);
 
     if (addr == Py_None) {
@@ -722,7 +724,7 @@ PyObject* Server_t::serve(int fd, PyObjectWrapper_t addr) {
                          return 0;
                      }
             }
-            
+
             readRequest(builder);
         } catch (const FRPC::StreamError_t &streamError) {
             std::auto_ptr<FRPC::Marshaller_t> marshaller
@@ -933,34 +935,42 @@ void Server_t::readRequest(FRPC::DataBuilder_t &builder) {
 
         //create unmarshaller and datasink
 
-        // what types we accept
+        // what is supported by client
         outType = FRPC::Server_t::XML_RPC;
         useChunks = false;
 
+        // what type client send
         std::string accept;
         if (!httpHead.get(FRPC::HTTP_HEADER_ACCEPT, accept)) {
+
+            /* this is default
             if (accept.find("text/xml") != std::string::npos) {
                 outType = FRPC::Server_t::XML_RPC;
                 useChunks = false;
             }
+            */
 
             if (accept.find("application/x-frpc") != std::string::npos) {
-                outType = FRPC::Server_t::BINARY_RPC;
-                useChunks = true;
+                if (useBinary) {
+                    outType = FRPC::Server_t::BINARY_RPC;
+                    useChunks = true;
+                }
             }
         }
 
-        if (contentType.find("text/xml") != std::string::npos) {
-            std::auto_ptr<FRPC::UnMarshaller_t>
-                ptr(FRPC::UnMarshaller_t::create(FRPC::UnMarshaller_t::XML_RPC,
-                                                 builder));
-            unmarshaller = ptr;
-        } else if (contentType.find("application/x-frpc")
-                   != std::string::npos) {
-            std::auto_ptr<FRPC::UnMarshaller_t> ptr
-                (FRPC::UnMarshaller_t::create(FRPC::UnMarshaller_t::BINARY_RPC,
-                                              builder));
-            unmarshaller = ptr;
+        // what type is request
+        if (contentType.find("application/x-frpc") != std::string::npos) {
+           unmarshaller = std::auto_ptr<FRPC::UnMarshaller_t>(
+                    FRPC::UnMarshaller_t::create(
+                        FRPC::UnMarshaller_t::BINARY_RPC,
+                        builder));
+
+        } else if (contentType.find("text/xml") != std::string::npos) {
+           unmarshaller = std::auto_ptr<FRPC::UnMarshaller_t>(
+                    FRPC::UnMarshaller_t::create(
+                        FRPC::UnMarshaller_t::XML_RPC,
+                        builder));
+
         } else {
             throw FRPC::StreamError_t("Unknown ContentType");
         }
@@ -1043,9 +1053,10 @@ void Server_t::sendResponse() {
             break;
         }
 
-        os << FRPC::HTTP_HEADER_ACCEPT << ": "
-           << "text/xml, application/x-frpc"
-           << "\r\n";
+        os << FRPC::HTTP_HEADER_ACCEPT << ": text/xml";
+        if (useBinary)
+            os << ", application/x-frpc";
+        os << "\r\n";
 
         //append connection header
         os << FRPC::HTTP_HEADER_CONNECTION
@@ -1200,7 +1211,7 @@ PyObject* MethodRegistryObject_new(PyTypeObject *type, PyObject *args,
         Py_XDECREF(self->postProcess);
         return 0;
     }
-    
+
     // initialize method lookup
     self->lookup = new MethodLookup_t();
 
@@ -1730,6 +1741,7 @@ static PyMemberDef ServerObject_members[] = {
     {"writeTimeout",         T_INT,       OFF(writeTimeout),         RO},
     {"keepAlive",            T_INT,       OFF(keepAlive),            RO},
     {"maxKeepalive",         T_INT,       OFF(maxKeepalive),         RO},
+    {"useBinary",            T_INT,       OFF(useBinary),            RO},
 
     {0}  // Sentinel
 };
@@ -1812,7 +1824,7 @@ PyObject* ServerObject_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
     static char *kwlist[] = { "readTimeout", "writeTimeout", "keepAlive",
                               "maxKeepalive", "introspectionEnabled",
-                              "callbacks", "stringMode", 0 };
+                              "callbacks", "stringMode", "useBinary", 0 };
 
     // set defaults
     self->readTimeout = 10000;
@@ -1820,20 +1832,25 @@ PyObject* ServerObject_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     self->keepAlive = false;
     self->maxKeepalive = 0;
     self->stringMode = FRPC::Python::STRING_MODE_MIXED;
+    self->useBinary = true;
 
     PyObject *callbacks = 0;
     PyObject *introspectionEnabled = 0;
+    PyObject *useBinary = 0;
 
     char *stringMode = 0;
 
     // parse arguments
     if (!PyArg_ParseTupleAndKeywords(args, kwds,
-                                     "|iiiiOOs::fastrpc.Server", kwlist,
+                                     "|iiiiOOsO::fastrpc.Server", kwlist,
                                      &self->readTimeout, &self->writeTimeout,
                                      &self->keepAlive, &self->maxKeepalive,
                                      &introspectionEnabled, &callbacks,
-                                     &stringMode))
+                                     &stringMode, &useBinary))
         return 0;
+
+    if (useBinary)
+        self->useBinary = PyObject_IsTrue(useBinary);
 
     if ((self->stringMode = FRPC::Python::parseStringMode(stringMode))
         == FRPC::Python::STRING_MODE_INVALID)
@@ -1851,10 +1868,10 @@ PyObject* ServerObject_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         if (PyObject *postProcess
             = PyDict_GetItemString(callbacks, "postProcess"))
             PyDict_SetItemString(registryKwds, "postProcess", postProcess);
-        
+
         if (PyObject *preRead
             = PyDict_GetItemString(callbacks, "preRead"))
-            PyDict_SetItemString(registryKwds, "preRead", preRead); 
+            PyDict_SetItemString(registryKwds, "preRead", preRead);
     }
 
     // create registry
