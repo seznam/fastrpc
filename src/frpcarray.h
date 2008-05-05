@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcarray.h,v 1.6 2007-05-24 12:42:24 mirecta Exp $
+ * FILE          $Id: frpcarray.h,v 1.7 2008-05-05 12:52:00 burlog Exp $
  *
  * DESCRIPTION   
  *
@@ -63,6 +63,10 @@ public:
       @brief Array_t size_type
     */
     typedef std::vector<Value_t*>::size_type size_type;
+
+    // value types
+    typedef Value_t &reference;
+    typedef const Value_t &const_reference;
 
     enum{TYPE = 0x0B};
     /**
@@ -164,14 +168,14 @@ public:
         @brief append Value_t to end of Array_t
         @param value is new Value_t 
     */
-    void push_back(Value_t &value);
+    void push_back(const Value_t &value);
     
     /**
         @brief append Value_t to end of Array_t
         @param value is new Value_t
         @return Array_t& reference with apended value 
     */
-    Array_t& append(Value_t &value);
+    Array_t& append(const Value_t &value);
     /**
         @brief check array for items
         @param items is std::string contains  signatures as
@@ -203,7 +207,7 @@ private:
         @param pool is a reference to Pool_t used for allocating
         @param item  is a new item
     */
-    Array_t(Value_t &item );
+    explicit Array_t(const Value_t &item);
 
 
     std::vector<Value_t*> arrayData;///Internal array data

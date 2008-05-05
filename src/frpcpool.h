@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcpool.h,v 1.5 2008-04-01 13:19:06 burlog Exp $
+ * FILE          $Id: frpcpool.h,v 1.6 2008-05-05 12:52:00 burlog Exp $
  *
  * DESCRIPTION   
  *
@@ -77,19 +77,19 @@ public:
         @param value is a long number
         @return reference to Int_t
     */
-    Int_t&  Int(Int_t::value_type value);
+    Int_t&  Int(const Int_t::value_type &value);
     /**
         @brief Create new Bool_t object from bool value
         @param value is a bool value
         @return reference to Bool_t
     */
-    Bool_t& Bool(bool value);
+    Bool_t& Bool(const bool &value);
     /**
         @brief Create new Double_t object from double number
         @param value is a double number
         @return reference to Double_t
     */
-    Double_t& Double(double value);
+    Double_t& Double(const double &value);
     /**
         @brief Create new Binary_t object from pointer and size of data
         @param data is a  pointer to binary data
@@ -158,7 +158,7 @@ public:
         @param timestamp unix timestamp
         @return reference to DateTime_t
     */
-    DateTime_t&  LocalTime(time_t timestamp);
+    DateTime_t&  LocalTime(const time_t &timestamp);
     /**
         @brief Create new DateTime_t object from now and local timezone
         @return reference to DateTime_t
@@ -182,7 +182,7 @@ public:
         @param timestamp unix timestamp
         @return reference to DateTime_t
     */
-    DateTime_t&  UTCTime(time_t timestamp);
+    DateTime_t&  UTCTime(const time_t &timestamp);
     /**
         @brief Create new DateTime_t object from now and UTC timezone
         @return reference to DateTime_t
@@ -220,14 +220,14 @@ public:
         @param item1 is a Value_t reference
         @return reference to Array_t
     */
-    Array_t& Array(Value_t &item1);
+    Array_t& Array(const Value_t &item1);
     /**
         @brief Create new  Array_t with two items 
         @param item1 is a Value_t reference
         @param item2 is a Value_t reference
         @return reference to Array_t
     */
-    Array_t& Array(Value_t &item1, Value_t &item2);
+    Array_t& Array(const Value_t &item1, const Value_t &item2);
     /**
         @brief Create new  Array_t with three items 
         @param item1 is a Value_t reference
@@ -235,7 +235,8 @@ public:
         @param item3 is a Value_t reference
         @return reference to Array_t
     */
-    Array_t& Array(Value_t &item1, Value_t &item2, Value_t &item3);
+    Array_t& Array(const Value_t &item1, const Value_t &item2,
+                   const Value_t &item3);
     /**
         @brief Create new  Array_t with four items 
         @param item1 is a Value_t reference
@@ -244,8 +245,8 @@ public:
         @param item4 is a Value_t reference
         @return reference to Array_t
     */
-    Array_t& Array(Value_t &item1, Value_t &item2, Value_t &item3,
-                   Value_t &item4);
+    Array_t& Array(const Value_t &item1, const Value_t &item2,
+                   const Value_t &item3, const Value_t &item4);
     /**
         @brief Create new  Array_t with five items 
         @param item1 is a Value_t reference
@@ -255,8 +256,9 @@ public:
         @param item5 is a Value_t reference
         @return reference to Array_t
     */
-    Array_t& Array(Value_t &item1, Value_t &item2, Value_t &item3,
-                   Value_t &item4, Value_t &item5);
+    Array_t& Array(const Value_t &item1, const Value_t &item2,
+                   const Value_t &item3, const Value_t &item4,
+                   const Value_t &item5);
     /**
     @brief Create new empty Struct_t
     @return reference to Struct_t
@@ -269,7 +271,7 @@ public:
         @param item1 is a Value_t reference
         @return reference to Struct_t
     */
-    Struct_t& Struct(const std::string &key1, Value_t &item1);
+    Struct_t& Struct(const std::string &key1, const Value_t &item1);
     /**
         @brief Create new  Struct_t with five items 
         @param key1  is a const std::string reference
@@ -278,8 +280,8 @@ public:
         @param item2 is a Value_t reference
         @return reference to Struct_t
     */
-    Struct_t& Struct(const std::string &key1, Value_t &item1,
-                     const std::string &key2, Value_t &item2);
+    Struct_t& Struct(const std::string &key1, const Value_t &item1,
+                     const std::string &key2, const Value_t &item2);
     /**
         @brief Create new  Struct_t with five items 
         @param key1  is a const std::string reference
@@ -290,9 +292,9 @@ public:
         @param item3 is a Value_t reference
         @return reference to Struct_t
     */
-    Struct_t& Struct(const std::string &key1, Value_t &item1,
-                     const std::string &key2, Value_t &item2,
-                     const std::string &key3, Value_t &item3);
+    Struct_t& Struct(const std::string &key1, const Value_t &item1,
+                     const std::string &key2, const Value_t &item2,
+                     const std::string &key3, const Value_t &item3);
     /**
         @brief Create new  Struct_t with five items 
         @param key1  is a const std::string reference
@@ -305,10 +307,10 @@ public:
         @param item4 is a Value_t reference
         @return reference to Struct_t
     */
-    Struct_t& Struct(const std::string &key1, Value_t &item1,
-                     const std::string &key2, Value_t &item2,
-                     const std::string &key3, Value_t &item3,
-                     const std::string &key4, Value_t &item4);
+    Struct_t& Struct(const std::string &key1, const Value_t &item1,
+                     const std::string &key2, const Value_t &item2,
+                     const std::string &key3, const Value_t &item3,
+                     const std::string &key4, const Value_t &item4);
     /**
         @brief Create new  Struct_t with five items 
         @param key1  is a const std::string reference
@@ -323,11 +325,11 @@ public:
         @param item5 is a Value_t reference
         @return reference to Struct_t
     */
-    Struct_t& Struct(const std::string &key1, Value_t &item1,
-                     const std::string &key2, Value_t &item2,
-                     const std::string &key3, Value_t &item3,
-                     const std::string &key4, Value_t &item4,
-                     const std::string &key5, Value_t &item5);
+    Struct_t& Struct(const std::string &key1, const Value_t &item1,
+                     const std::string &key2, const Value_t &item2,
+                     const std::string &key3, const Value_t &item3,
+                     const std::string &key4, const Value_t &item4,
+                     const std::string &key5, const Value_t &item5);
 
     //private:
     std::vector< Value_t* > pointerStorage; ///@brief pointer storage of pool

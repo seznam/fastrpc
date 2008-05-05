@@ -20,15 +20,15 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcbool.h,v 1.6 2007-05-24 12:42:24 mirecta Exp $
+ * FILE          $Id: frpcbool.h,v 1.7 2008-05-05 12:52:00 burlog Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #ifndef FRPCBOOL_H
 #define FRPCBOOL_H
@@ -54,7 +54,7 @@ public:
     virtual ~Bool_t();
     /**
         @brief Getting type of value
-        @return @b unsigned @b short always 
+        @return @b unsigned @b short always
         @li @b Bool_t::TYPE - identificator of boolean value
     */
     virtual unsigned short getType() const
@@ -72,7 +72,7 @@ public:
     }
     /**
         @brief Getting internal boolean value
-        @return  @b bool - internal value 
+        @return  @b bool - internal value
     */
     bool getValue() const
     {
@@ -82,13 +82,13 @@ public:
     /**
         @brief Operator bool const
     */
-    inline operator bool() const 
+    inline operator bool() const
     {
         return value;
     }
 
     /**
-        @brief Method to clone/copy Bool_t 
+        @brief Method to clone/copy Bool_t
         @param newPool is reference of Pool_t which is used for allocate objects
     */
     virtual Value_t& clone(Pool_t &newPool) const;
@@ -100,25 +100,24 @@ private :
     /**
         @brief Default constructor
     */
-    Bool_t()
-    {}
-   
+    Bool_t() {}
+
     /**
         @brief Costructor from bool value
         @param pool is a reference to Pool_t used for allocating
         @param boolean  is a bool value
     */
-    Bool_t(bool boolean):value(boolean)
+    explicit Bool_t(const bool &boolean)
+        :value(boolean)
     {}
 
     bool value; /**  Internal bool value */
-    
-
 };
+
 /**
     @brief Inline method
-    
-    Used to retype Value_t to Bool_t 
+
+    Used to retype Value_t to Bool_t
     @return  If Value_t  can  retype to Bool_t return reference to Bool_t
     @n If Value_t can't retype to Bool_t throw exception TypeError_t
 */
@@ -128,7 +127,7 @@ inline FRPC_DLLEXPORT Bool_t& Bool(Value_t &value)
 
     if(!boolean)
         throw TypeError_t("Type is %s but not bool",value.getTypeName());
-        
+
     return *boolean;
 }
 
@@ -138,7 +137,7 @@ inline FRPC_DLLEXPORT const Bool_t& Bool(const Value_t &value)
 
     if(!boolean)
         throw TypeError_t("Type is %s but not bool",value.getTypeName());
-        
+
     return *boolean;
 }
 };

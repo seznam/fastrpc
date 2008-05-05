@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcstruct.h,v 1.6 2007-05-24 12:42:24 mirecta Exp $
+ * FILE          $Id: frpcstruct.h,v 1.7 2008-05-05 12:52:00 burlog Exp $
  *
  * DESCRIPTION   
  *
@@ -74,7 +74,11 @@ public:
     /**
         @brief Struct_t pair
     */
-    typedef std::pair<std::string,Value_t*>                 pair;
+    typedef std::pair<std::string, Value_t*>                 pair;
+
+    // value types
+    typedef const value_type &const_reference;
+    typedef value_type &reference;
 
 
     enum{TYPE = 0x0A};
@@ -119,13 +123,20 @@ public:
         @param value is reference to new Value_t 
         @return  std::pair<iterator, bool> as std::map<>::insert(..)
     */
-    std::pair<iterator, bool> insert(const key_type &key, Value_t &value);
+    std::pair<iterator, bool> insert(const key_type &key, const Value_t &value);
     /**
         @brief Inserting a new item with key
         @param value is new pair Struct_t::pair(std::string key, Value_t* value)
         @return  std::pair <iterator, bool> as std::map<>::insert(..)
     */
-    std::pair<iterator, bool> insert(pair value);
+    std::pair<iterator, bool> insert(const pair &value);
+    /**
+        @brief Inserting a new item with key
+        @param iterator where value should go.
+        @param value is new pair Struct_t::pair(std::string key, Value_t* value)
+        @return  std::pair <iterator, bool> as std::map<>::insert(..)
+    */
+    iterator insert(iterator iter, const pair &value);
     /**
         @brief Delete all items in Struct_t
     */
@@ -170,14 +181,14 @@ public:
         @param value is is new pair Struct_t::pair(std::string key, Value_t* value)
         @return Struct_t& reference with apended value 
     */
-    Struct_t& append(pair value);
+    Struct_t& append(const pair &value);
     /**
         @brief Insert Value_t to Struct_t with key
         @param key is reference to Struct_t::key_type
         @param value is reference to new Value_t 
         @return Struct_t& reference with apended value
     */
-    Struct_t& append(const key_type &key, Value_t &value);
+    Struct_t& append(const key_type &key, const Value_t &value);
     /**
         @brief Get poiter to value or zero if not exists
         @param key is reference to Struct_t::key_type
@@ -218,13 +229,13 @@ private:
         @param key is reference to Struct_t::key_type
         @param value is reference to new Value_t 
     */
-    Struct_t(const std::string &key, Value_t &value);
+    Struct_t(const std::string &key, const Value_t &value);
     /** 
         @brief Costructor of Struct_t  with one item
         @param pool is a reference to Pool_t used for allocating
         @param value is new pair Struct_t::pair(std::string key, Value_t* value)
     */  
-    Struct_t(pair value);
+    explicit Struct_t(const pair &value);
     
     
     

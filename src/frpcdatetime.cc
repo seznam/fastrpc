@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcdatetime.cc,v 1.8 2008-04-01 13:19:04 burlog Exp $
+ * FILE          $Id: frpcdatetime.cc,v 1.9 2008-05-05 12:52:00 burlog Exp $
  *
  * DESCRIPTION   
  *
@@ -87,7 +87,7 @@ DateTime_t::DateTime_t(short year, char month, char day,
 #endif
 }
 
-DateTime_t::DateTime_t(time_t unixTime)
+DateTime_t::DateTime_t(const time_t &unixTime)
 {
     struct tm *time_tm = localtime(&unixTime);
     year = time_tm->tm_year + 1900;
@@ -120,7 +120,7 @@ DateTime_t::DateTime_t(time_t unixTime, int timeZone)
     this->unixTime = unixTime;
 }
 
-DateTime_t::DateTime_t(struct tm &tm)
+DateTime_t::DateTime_t(const struct tm &tm)
     : timeZone(0)
 {
     year = tm.tm_year + 1900;
@@ -130,7 +130,7 @@ DateTime_t::DateTime_t(struct tm &tm)
     minute = tm.tm_min;
     sec =  tm.tm_sec;
     weekDay = tm.tm_wday;
-    this->unixTime = mktime(&tm);
+    this->unixTime = mktime(const_cast<struct tm *>(&tm));
 }
 
 DateTime_t::DateTime_t()

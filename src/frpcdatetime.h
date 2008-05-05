@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcdatetime.h,v 1.7 2008-04-01 13:19:05 burlog Exp $
+ * FILE          $Id: frpcdatetime.h,v 1.8 2008-05-05 12:52:00 burlog Exp $
  *
  * DESCRIPTION
  *
@@ -182,7 +182,7 @@ private:
         @brief Constructor from common unix time number.
         @param unixTime Number of secs from 1970-01-01 00:00:00 UTC.
     */
-    DateTime_t(time_t unixTime);
+    explicit DateTime_t(const time_t &unixTime);
 
     /**
         @brief Constructor from common unix time number.
@@ -195,13 +195,13 @@ private:
         @brief Constructor from common unix time structure.
         @param dateTime unix date time structure.
     */
-    DateTime_t(struct tm &tm);
+    explicit DateTime_t(const struct tm &tm);
 
      /**
         @brief Constructor from ISO format.
         @param isoFormat DateTime in iso format.
     */
-    DateTime_t(const std::string &isoFormat);
+    explicit DateTime_t(const std::string &isoFormat);
 
 
     short year;        /// year

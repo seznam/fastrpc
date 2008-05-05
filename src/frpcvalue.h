@@ -20,15 +20,15 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcvalue.h,v 1.5 2007-05-24 11:28:29 mirecta Exp $
+ * FILE          $Id: frpcvalue.h,v 1.6 2008-05-05 12:52:00 burlog Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #ifndef FRPCVALUE_H
 #define FRPCVALUE_H
@@ -62,36 +62,36 @@ public:
     /**
         @brief Abstract virtual method to getting type of value
         @return @b unsigned  @b short type of value
-        @li @b  Int_t::TYPE         - inteeger value type  
-        @li @b  Bool_t::TYPE        - boolean value type  
-        @li @b  Double_t::TYPE      - double value type   
-        @li @b  String_t::TYPE      - string value type   
-        @li @b  DateTime_t::TYPE    - date time value type 
-        @li @b  Binary_t::TYPE      - binary value type    
-                                              
-        @li @b  Struct_t::TYPE      - struct value type    
-        @li @b  Arry_t::TYPE        - array value type     
+        @li @b  Int_t::TYPE         - inteeger value type
+        @li @b  Bool_t::TYPE        - boolean value type
+        @li @b  Double_t::TYPE      - double value type
+        @li @b  String_t::TYPE      - string value type
+        @li @b  DateTime_t::TYPE    - date time value type
+        @li @b  Binary_t::TYPE      - binary value type
+
+        @li @b  Struct_t::TYPE      - struct value type
+        @li @b  Arry_t::TYPE        - array value type
     */
     virtual unsigned short getType() const = 0;
-    
+
     /**
         @brief Abstract virtual method to getting typename of value
         @return @b const @b char* typename of value
-        @li @b  "Int"           - inteeger value typename  
-        @li @b  "Bool"          - boolean value typename  
-        @li @b  "Double"        - double value typename   
-        @li @b  "String"        - string value typename   
-        @li @b  "DateTime"      - date time value typename 
-        @li @b  "Binary"        - binary value typename    
-                                              
-        @li @b  "Struct"        - struct value typename    
+        @li @b  "Int"           - inteeger value typename
+        @li @b  "Bool"          - boolean value typename
+        @li @b  "Double"        - double value typename
+        @li @b  "String"        - string value typename
+        @li @b  "DateTime"      - date time value typename
+        @li @b  "Binary"        - binary value typename
+
+        @li @b  "Struct"        - struct value typename
         @li @b  "Array"         - array value typename
     */
     virtual const char* getTypeName() const = 0;
 
-   
+
     /**
-       @brief Abstract virtual method to clone/copy Value_t 
+       @brief Abstract virtual method to clone/copy Value_t
        @param newPool is pointer of Pool_t which is used for allocate objects
        */
     virtual Value_t& clone(Pool_t &newPool) const = 0;
@@ -102,8 +102,7 @@ private:
     /**
         @brief Default constructor is disabled
     */
-
-    Value_t(const Value_t&);
+    explicit Value_t(const Value_t&);
 
     Value_t& operator=(const Value_t&);
 };

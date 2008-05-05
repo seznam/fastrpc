@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcdouble.h,v 1.6 2007-05-24 12:42:24 mirecta Exp $
+ * FILE          $Id: frpcdouble.h,v 1.7 2008-05-05 12:52:00 burlog Exp $
  *
  * DESCRIPTION   
  *
@@ -107,12 +107,13 @@ private:
     @param pool is a reference to Pool_t used for allocating
     @param value  is a double value
     */
-    Double_t( double value):value(value)
+    explicit Double_t(const double &value)
+        :value(value)
     {}
 
     double value;/**  @brief Internal double value */
-
 };
+
 /**
     @brief Inline method
     

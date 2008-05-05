@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcstruct.cc,v 1.8 2007-05-24 12:42:24 mirecta Exp $
+ * FILE          $Id: frpcstruct.cc,v 1.9 2008-05-05 12:52:00 burlog Exp $
  *
  * DESCRIPTION
  *
@@ -42,23 +42,26 @@ Struct_t::Struct_t() {}
 
 Struct_t::~Struct_t() {}
 
-Struct_t::Struct_t(Struct_t::pair value) {
+Struct_t::Struct_t(const Struct_t::pair &value) {
     structData.insert(value);
 }
 
-Struct_t::Struct_t(const std::string &key, Value_t &value) {
+Struct_t::Struct_t(const std::string &key, const Value_t &value) {
     if (key.size() > 255) {
-        throw LenError_t("Size of member name must be max 255 not %d.",key.size() );
+        throw LenError_t("Size of member name must be max 255 not %d.",
+                         key.size() );
     }
-    structData.insert(value_type(key,&value));
+    structData.insert(value_type(key,const_cast<Value_t *>(&value)));
 }
 
 Value_t& Struct_t::clone(Pool_t& newPool) const {
     Struct_t *newStruct = &newPool.Struct();
 
-    for (std::map<std::string,Value_t*>::const_iterator istructData = structData.begin();
+    for (std::map<std::string,Value_t*>::const_iterator
+            istructData = structData.begin();
             istructData != structData.end(); ++istructData) {
-        newStruct->insert(value_type(istructData->first,&(istructData->second)->clone(newPool)));
+        newStruct->insert(value_type(istructData->first,
+                                     &(istructData->second)->clone(newPool)));
     }
 
     return  *newStruct;
@@ -71,13 +74,19 @@ bool Struct_t::has_key(const Struct_t::key_type &key) const {
 }
 
 std::pair<Struct_t::iterator, bool> Struct_t::insert(
-    const Struct_t::key_type &key, Value_t &value) {
+    const Struct_t::key_type &key, const Value_t &value) {
 
-    return  structData.insert(value_type(key,&value));
+    return  structData.insert(value_type(key,const_cast<Value_t *>(&value)));
 }
 
-std::pair<Struct_t::iterator, bool> Struct_t::insert(Struct_t::pair value) {
+std::pair<Struct_t::iterator, bool>
+Struct_t::insert(const Struct_t::pair &value) {
     return structData.insert(value);
+}
+
+Struct_t::iterator Struct_t::insert(Struct_t::iterator iter, const pair &value)
+{
+    return structData.insert(iter, value);
 }
 
 Struct_t::iterator Struct_t::begin() {
@@ -104,7 +113,7 @@ Struct_t::size_type Struct_t::size() const {
     return structData.size();
 }
 
-Struct_t& Struct_t::append(Struct_t::pair value) {
+Struct_t& Struct_t::append(const Struct_t::pair &value) {
     std::pair<Struct_t::iterator, bool> res = structData.insert(value);
     if (!res.second) {
         res.first->second = value.second;
@@ -112,14 +121,17 @@ Struct_t& Struct_t::append(Struct_t::pair value) {
     return *this;
 }
 
-Struct_t& Struct_t::append(const Struct_t::key_type &key, Value_t &value) {
+Struct_t& Struct_t::append(const Struct_t::key_type &key,
+                           const Value_t &value) {
     if (key.size() > 255) {
-        throw LenError_t("Size of member name must be max 255 not %d.",key.size() );
+        throw LenError_t("Size of member name must be max 255 not %d.",
+                         key.size() );
     }
 
-    std::pair<Struct_t::iterator, bool> res = structData.insert(value_type(key,&value));
+    std::pair<Struct_t::iterator, bool>
+        res = structData.insert(value_type(key, const_cast<Value_t *>(&value)));
     if (!res.second) {
-        res.first->second = &value;
+        res.first->second = const_cast<Value_t *>(&value);
     }
     return *this;
 }

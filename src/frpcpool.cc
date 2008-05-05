@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcpool.cc,v 1.6 2008-04-01 13:19:06 burlog Exp $
+ * FILE          $Id: frpcpool.cc,v 1.7 2008-05-05 12:52:00 burlog Exp $
  *
  * DESCRIPTION
  *
@@ -74,7 +74,7 @@ void Pool_t::free()
 
 }
 
-Int_t&  Pool_t::Int(Int_t::value_type value)
+Int_t&  Pool_t::Int(const Int_t::value_type &value)
 {
     Int_t* newValue =  new Int_t(value);
 
@@ -85,7 +85,7 @@ Int_t&  Pool_t::Int(Int_t::value_type value)
 }
 
 
-Bool_t& Pool_t::Bool(bool value)
+Bool_t& Pool_t::Bool(const bool &value)
 {
     Bool_t* newValue =  new Bool_t(value);
 
@@ -95,7 +95,7 @@ Bool_t& Pool_t::Bool(bool value)
 
 }
 
-Double_t& Pool_t::Double(double value)
+Double_t& Pool_t::Double(const double &value)
 {
     Double_t* newValue =  new Double_t(value);
 
@@ -163,7 +163,7 @@ DateTime_t&  Pool_t::LocalTime(short year, char month, char day,
 
 }
 
-DateTime_t&  Pool_t::LocalTime(time_t timestamp) {
+DateTime_t&  Pool_t::LocalTime(const time_t &timestamp) {
     DateTime_t *newValue = new DateTime_t(timestamp);
 
     pointerStorage.push_back(newValue);
@@ -191,7 +191,7 @@ DateTime_t&  Pool_t::UTCTime(short year, char month, char day,
 
 }
 
-DateTime_t&  Pool_t::UTCTime(time_t timestamp) {
+DateTime_t&  Pool_t::UTCTime(const time_t &timestamp) {
     DateTime_t *newValue = new DateTime_t(timestamp, 0);
 
     pointerStorage.push_back(newValue);
@@ -250,7 +250,7 @@ Array_t& Pool_t::Array()
 
 
 
-Array_t& Pool_t::Array(Value_t & item1)
+Array_t& Pool_t::Array(const Value_t & item1)
 {
     Array_t *newValue =  new Array_t(item1);
 
@@ -261,7 +261,7 @@ Array_t& Pool_t::Array(Value_t & item1)
 
 
 
-Array_t& Pool_t::Array(Value_t& item1, Value_t& item2)
+Array_t& Pool_t::Array(const Value_t& item1, const Value_t& item2)
 {
     Array_t *newValue =  new Array_t(item1);
 
@@ -275,7 +275,8 @@ Array_t& Pool_t::Array(Value_t& item1, Value_t& item2)
 
 
 
-Array_t& Pool_t::Array(Value_t& item1, Value_t& item2, Value_t& item3)
+Array_t& Pool_t::Array(const Value_t& item1, const Value_t& item2,
+                       const Value_t& item3)
 {
     Array_t *newValue =  new Array_t(item1);
 
@@ -289,8 +290,8 @@ Array_t& Pool_t::Array(Value_t& item1, Value_t& item2, Value_t& item3)
 
 
 
-Array_t& Pool_t::Array(Value_t& item1, Value_t& item2, Value_t& item3,
-                       Value_t& item4)
+Array_t& Pool_t::Array(const Value_t& item1, const Value_t& item2,
+                       const Value_t& item3, const Value_t& item4)
 {
     Array_t *newValue =  new Array_t(item1);
 
@@ -305,8 +306,9 @@ Array_t& Pool_t::Array(Value_t& item1, Value_t& item2, Value_t& item3,
 
 
 
-Array_t& Pool_t::Array(Value_t& item1, Value_t& item2, Value_t& item3,
-                       Value_t& item4, Value_t& item5)
+Array_t& Pool_t::Array(const Value_t& item1, const Value_t& item2,
+                       const Value_t& item3, const Value_t& item4,
+                       const Value_t& item5)
 {
     Array_t *newValue =  new Array_t(item1);
 
@@ -328,7 +330,7 @@ Struct_t& Pool_t::Struct()
     return *newValue;
 }
 
-Struct_t& Pool_t::Struct(const std::string &key1, Value_t &item1)
+Struct_t& Pool_t::Struct(const std::string &key1, const Value_t &item1)
 {
     Struct_t *newValue = new Struct_t();
 
@@ -338,8 +340,8 @@ Struct_t& Pool_t::Struct(const std::string &key1, Value_t &item1)
     return *newValue;
 }
 
-Struct_t& Pool_t::Struct(const std::string &key1, Value_t &item1,
-                         const std::string &key2, Value_t &item2)
+Struct_t& Pool_t::Struct(const std::string &key1, const Value_t &item1,
+                         const std::string &key2, const Value_t &item2)
 {
     Struct_t *newValue = new Struct_t();
 
@@ -351,9 +353,9 @@ Struct_t& Pool_t::Struct(const std::string &key1, Value_t &item1,
     return *newValue;
 }
 
-Struct_t& Pool_t::Struct(const std::string &key1, Value_t &item1,
-                         const std::string &key2, Value_t &item2,
-                         const std::string &key3, Value_t &item3)
+Struct_t& Pool_t::Struct(const std::string &key1, const Value_t &item1,
+                         const std::string &key2, const Value_t &item2,
+                         const std::string &key3, const Value_t &item3)
 {
     Struct_t *newValue = new Struct_t();
 
@@ -366,10 +368,10 @@ Struct_t& Pool_t::Struct(const std::string &key1, Value_t &item1,
     return *newValue;
 }
 
-Struct_t& Pool_t::Struct(const std::string &key1, Value_t &item1,
-                         const std::string &key2, Value_t &item2,
-                         const std::string &key3, Value_t &item3,
-                         const std::string &key4, Value_t &item4)
+Struct_t& Pool_t::Struct(const std::string &key1, const Value_t &item1,
+                         const std::string &key2, const Value_t &item2,
+                         const std::string &key3, const Value_t &item3,
+                         const std::string &key4, const Value_t &item4)
 {
     Struct_t *newValue = new Struct_t();
 
@@ -383,11 +385,11 @@ Struct_t& Pool_t::Struct(const std::string &key1, Value_t &item1,
     return *newValue;
 }
 
-Struct_t& Pool_t::Struct(const std::string &key1, Value_t &item1,
-                         const std::string &key2, Value_t &item2,
-                         const std::string &key3, Value_t &item3,
-                         const std::string &key4, Value_t &item4,
-                         const std::string &key5, Value_t &item5)
+Struct_t& Pool_t::Struct(const std::string &key1, const Value_t &item1,
+                         const std::string &key2, const Value_t &item2,
+                         const std::string &key3, const Value_t &item3,
+                         const std::string &key4, const Value_t &item4,
+                         const std::string &key5, const Value_t &item5)
 {
     Struct_t *newValue = new Struct_t();
 
