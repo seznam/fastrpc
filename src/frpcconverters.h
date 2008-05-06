@@ -19,7 +19,7 @@
  * Seznam.cz, a.s.
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
- * FILE             $Id: frpcconverters.h,v 1.1 2008-05-05 12:52:00 burlog Exp $
+ * FILE             $Id: frpcconverters.h,v 1.2 2008-05-06 19:18:48 burlog Exp $
  *
  * DESCRIPTION      Templated converters.
  *
@@ -238,6 +238,16 @@ public:
 };
 
 /** 
+ * @short Shortcut for base_array_cnvt.
+ * @param cnvt array value convertor.
+ * @return new base_array_cnvt.
+ */
+template <class BaseConv_t>
+inline base_array_cnvt<BaseConv_t> array_cnvt(const BaseConv_t &cnvt) {
+    return base_array_cnvt<BaseConv_t>(cnvt);
+}
+
+/** 
  * @short Convert pair - member of associative containers to FastRPC value.
  */
 template <class Converter_t>
@@ -271,6 +281,16 @@ public:
 public:
     const Converter_t &converter; //!< value converter
 };
+
+/** 
+ * @short Shortcut for base_pair_cnvt.
+ * @param cnvt pair value convertor.
+ * @return new base_pair_cnvt.
+ */
+template <class BaseConv_t>
+inline base_pair_cnvt<BaseConv_t> pair_cnvt(const BaseConv_t &cnvt) {
+    return base_pair_cnvt<BaseConv_t>(cnvt);
+}
 
 /** 
  * @short Base class for aplication struct a class converters.
