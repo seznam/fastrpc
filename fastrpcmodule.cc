@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: fastrpcmodule.cc,v 1.18 2008-04-01 13:19:09 burlog Exp $
+ * $Id: fastrpcmodule.cc,v 1.19 2008-05-17 16:16:32 burlog Exp $
  *
  * AUTHOR      Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
@@ -1320,7 +1320,8 @@ PyObject* Method_getattr(MethodObject *self, char *name)
             if (!dict) return 0;
 
             PyObjectWrapper_t methodName
-                (PyString_FromStringAndSize(self->name.data(), self->name.size()));
+                (PyString_FromStringAndSize(self->name.data(),
+                                            self->name.size()));
             if (!methodName) return 0;
             if (PyDict_SetItemString(dict, "method_name", methodName))
                 return 0;
@@ -1390,12 +1391,14 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *self, PyObject *args,
 
 
     if (!PyArg_ParseTupleAndKeywords(args, keywds,
-                                     "s#|iiiiisissii:ServerProxy.__init__", kwlist,
+                                     "s#|iiiiisissii:ServerProxy.__init__",
+                                     kwlist,
                                      &serverUrl, &serverUrlLen, &readTimeout,
                                      &writeTimeout, &connectTimeout,
                                      &keepAlive, &mode, &encoding,
                                      &useHTTP10, &proxyVia, &stringMode_,
-                                     &protocolVersionMajor,&protocolVersionMinor))
+                                     &protocolVersionMajor,
+                                     &protocolVersionMinor))
         return 0;
 
     // create server proxy object
@@ -1756,7 +1759,8 @@ PyObject* fastrpc_dumps(PyObject *self, PyObject *args, PyObject *keywds) {
                                      "O|zisiii:fastrpc.dumps", kwlist,
                                      &params, &methodname, &methodresponse,
                                      &encoding, &useBinary,
-                                     &protocolVersionMajor,&protocolVersionMinor))
+                                     &protocolVersionMajor,
+                                     &protocolVersionMinor))
         return 0;
 
     // create writer

@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: fastrpcmodule.h,v 1.5 2008-04-01 13:19:09 burlog Exp $
+ * $Id: fastrpcmodule.h,v 1.6 2008-05-17 16:16:32 burlog Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -79,6 +79,8 @@ namespace FRPC { namespace Python {
 
 
     extern PyTypeObject DateTimeObject_Type;
+    extern PyTypeObject LocalTimeObject_Type;
+    extern PyTypeObject UTCTimeObject_Type;
 
     struct DateTimeObject {
         PyObject_HEAD                   /* python standard */
@@ -100,7 +102,9 @@ namespace FRPC { namespace Python {
     extern PyObject *mxDateTime;
     extern PyObject *dateTimeDateTime;
 
-#define PyDateTime_Check(op) PyObject_TypeCheck(op, &DateTimeObject_Type)
+#define PyDateTime_Check(op) (PyObject_TypeCheck(op, &DateTimeObject_Type) \
+                           || PyObject_TypeCheck(op, &LocalTimeObject_Type) \
+                           || PyObject_TypeCheck(op, &UTCTimeObject_Type))
 #define PyDateTime_CheckExact(op) ((op)->ob_type == &DateTimeObject_Type)
 #define PyBinary_Check(op) PyObject_TypeCheck(op, &BinaryObject_Type)
 #define PyBinary_CheckExact(op) ((op)->ob_type == &BinaryObject_Type)
