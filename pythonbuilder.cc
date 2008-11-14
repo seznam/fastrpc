@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: pythonbuilder.cc,v 1.6 2008-04-01 13:19:10 burlog Exp $
+ * $Id: pythonbuilder.cc,v 1.7 2008-11-14 10:18:22 burlog Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -247,7 +247,7 @@ void Builder_t::closeStruct() {
         return;
     entityStorage.pop_back();
 }
-void Builder_t::openArray(unsigned int numOfItems) {
+void Builder_t::openArray(unsigned int) {
     if (isError())
         return;
     PyObject *array = PyList_New(0);
@@ -260,7 +260,7 @@ void Builder_t::openArray(unsigned int numOfItems) {
 
     entityStorage.push_back(TypeStorage_t(array,ARRAY));
 }
-void Builder_t::openStruct(unsigned int numOfMembers) {
+void Builder_t::openStruct(unsigned int) {
 
     if (isError())
         return;

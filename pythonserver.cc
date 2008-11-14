@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: pythonserver.cc,v 1.20 2008-04-03 08:22:12 burlog Exp $
+ * $Id: pythonserver.cc,v 1.21 2008-11-14 10:18:22 burlog Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -65,6 +65,10 @@
 #include "fastrpcmodule.h"
 #include "pythonbuilder.h"
 #include "pythonfeeder.h"
+
+#if PY_VERSION_HEX < 0x02050000
+typedef int Py_ssize_t;
+#endif
 
 using FRPC::ProtocolVersion_t;
 using FRPC::Python::PyError_t;
@@ -149,7 +153,7 @@ namespace {
                     PyErr_Format
                         (PyExc_ValueError,
                          "Return value separator should be second character "
-                         " in signature part at position %d in signature "
+                         " in signature part at position %zd in signature "
                          "\"%s\".",
                          (isignature - signature.begin()), signature.c_str());
                     return 0;
@@ -161,7 +165,7 @@ namespace {
                 if (currentIndex < 2) {
                     PyErr_Format
                         (PyExc_ValueError,
-                         "Premature end of signature part at position %d "
+                         "Premature end of signature part at position %zd "
                          "in signature \"%s\".",
                          (isignature - signature.begin()), signature.c_str());
                     return 0;
@@ -177,7 +181,7 @@ namespace {
 
             default:
                 PyErr_Format(PyExc_ValueError,
-                             "Invalid character '%c' at position %d"
+                             "Invalid character '%c' at position %zd"
                              " in signature \"%s\".",
                              *isignature, (isignature - signature.begin()),
                              signature.c_str());
@@ -189,7 +193,7 @@ namespace {
                 PyErr_Format
                     (PyExc_ValueError,
                      "Second character in signature part should be ':' "
-                     "not '%c' at position %d in signature \"%s\".",
+                     "not '%c' at position %zd in signature \"%s\".",
                      *isignature, (isignature - signature.begin()),
                      signature.c_str());
                 return 0;
@@ -206,7 +210,7 @@ namespace {
     }
 
     PyObject *stringToSignature(PyObject *signature) {
-        int size;
+        Py_ssize_t size;
         char *buffer;
         if (PyString_AsStringAndSize(signature, &buffer, &size) == -1)
             return 0;
@@ -285,7 +289,7 @@ namespace {
         if (!traceback) traceback = None;
     }
 
-    PyObject* makeFault(int faultCode, char *faultMessage, ...) {
+    PyObject* makeFault(int faultCode, const char *faultMessage, ...) {
         char buf[512];
         va_list valist;
         va_start(valist, faultMessage);
@@ -299,7 +303,7 @@ namespace {
     }
 
     PyObject* makeFault(const std::string &msg, PyObjectWrapper_t type,
-                        PyObjectWrapper_t value, PyObjectWrapper_t traceback)
+                        PyObjectWrapper_t value, PyObjectWrapper_t)
     {
         if (PyErr_GivenExceptionMatches(type, Fault)) {
             // we've got Fault => do not touch it
@@ -334,7 +338,7 @@ namespace {
         return makeFault(msg, type, value, traceback);
     }
 
-    PyObject* makeFaultStruct(int faultCode, char *faultMessage, ...) {
+    PyObject* makeFaultStruct(int faultCode, const char *faultMessage, ...) {
         char buf[512];
         va_list valist;
         va_start(valist, faultMessage);
@@ -362,7 +366,7 @@ namespace {
 
     PyObject* makeFaultStruct(const std::string &msg, PyObjectWrapper_t type,
                               PyObjectWrapper_t value,
-                              PyObjectWrapper_t traceback)
+                              PyObjectWrapper_t)
     {
         if (PyErr_GivenExceptionMatches(type, Fault))
             return faultToStruct(value);
@@ -388,7 +392,7 @@ namespace {
                                const std::string &msg,
                                PyObjectWrapper_t type,
                                PyObjectWrapper_t value,
-                               PyObjectWrapper_t traceback)
+                               PyObjectWrapper_t)
     {
         // create message string
         PyObjectWrapper_t formatArgs =
@@ -401,7 +405,7 @@ namespace {
             PyString_Format(Fault_message_format, formatArgs);
 
         char *faultStgring;
-        int faultStringSize;
+        Py_ssize_t faultStringSize;
         if (PyString_AsStringAndSize(pyMessage, &faultStgring,
                                      &faultStringSize))
             throw PyError_t();
@@ -532,10 +536,10 @@ extern "C" {
 #define OFF(x) offsetof(MethodRegistryObject, x)
 
 static PyMemberDef MethodRegistryObject_members[] = {
-    {"preProcess",           T_OBJECT,    OFF(preProcess),           0},
-    {"postProcess",          T_OBJECT,    OFF(postProcess),          0},
-    {"preRead",              T_OBJECT,    OFF(preRead),              0},
-    {"introspectionEnabled", T_INT,       OFF(introspectionEnabled), 0},
+    {(char *)"preProcess",           T_OBJECT,    OFF(preProcess),           0},
+    {(char *)"postProcess",          T_OBJECT,    OFF(postProcess),          0},
+    {(char *)"preRead",              T_OBJECT,    OFF(preRead),              0},
+    {(char *)"introspectionEnabled", T_INT,       OFF(introspectionEnabled), 0},
     {0}  // Sentinel
 };
 
@@ -668,7 +672,7 @@ namespace {
         }
 
         // fetch string as C string
-        int size;
+        Py_ssize_t size;
         char *buf;
         PyString_AsStringAndSize(message, &buf, &size);
 
@@ -716,7 +720,7 @@ PyObject* Server_t::serve(int fd, PyObjectWrapper_t addr) {
             // call preprocessor
             if (serverObject->registry->preRead != Py_None) {
                 if (!PyObject_CallFunction(
-                     serverObject->registry->preRead, "()")) {
+                     serverObject->registry->preRead, (char *)"()")) {
             // exception thrown => fetch exception
                          fetchException(type, value, traceback);
                          makeFault("Unhandled exception in preread ",
@@ -806,7 +810,7 @@ PyObject* Server_t::serve(int fd, PyObjectWrapper_t addr) {
                             (PyObject_GetAttrString(result, "faultString"));
                         if (!pyFaultString) throw PyError_t();
                         char *faultString;
-                        int faultStringSize;
+                        Py_ssize_t faultStringSize;
                         if (PyString_AsStringAndSize(pyFaultString,
                                                      &faultString,
                                                      &faultStringSize))
@@ -1183,18 +1187,19 @@ PyObject* MethodRegistryObject_new(PyTypeObject *type, PyObject *args,
     self->postProcess = 0;
     self->preRead = 0;
     self->defaultMethod = 0;
-    self->defaultListMethods;
-    self->defaultMethodHelp;
-    self->defaultMethodSignature;
+    self->defaultListMethods = 0;
+    self->defaultMethodHelp = 0;
+    self->defaultMethodSignature = 0;
 
     self->introspectionEnabled = true;
 
-    static char *kwlist[] = {"preProcess", "postProcess","preRead",
-                             "introspectionEnabled", 0};
+    static const char *kwlist[] = {"preProcess", "postProcess","preRead",
+                                   "introspectionEnabled", 0};
 
     // parse arguments
     if (!PyArg_ParseTupleAndKeywords(args, kwds,
-                                     "|OOOi:fastrpc.MethodRegistry", kwlist,
+                                     "|OOOi:fastrpc.MethodRegistry",
+                                     (char **)kwlist,
                                      &self->preProcess, &self->postProcess,
                                      &self->preRead,
                                      &self->introspectionEnabled))
@@ -1248,8 +1253,8 @@ PyObject* MethodRegistryObject_new(PyTypeObject *type, PyObject *args,
 
 DECL_METHOD_KWD(MethodRegistryObject, register) {
     // keyword list
-    static char *kwlist[] = { "name", "method", "signature", "doc",
-                              "context", 0 };
+    static const char *kwlist[] = { "name", "method", "signature", "doc",
+                                    "context", 0 };
 
     char *name;
     PyObject *callback;
@@ -1258,7 +1263,7 @@ DECL_METHOD_KWD(MethodRegistryObject, register) {
     PyObject *context = 0;
 
     // parse arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "sO|OSO", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "sO|OSO", (char **)kwlist,
                                      &name, &callback, &signature,
                                      &help, &context))
         return 0;
@@ -1294,18 +1299,19 @@ DECL_METHOD_KWD(MethodRegistryObject, registerDefault) {
     };
 
     Callback_t callbacks[] = {
-        { "default method callback",  &self->defaultMethod},
-        { "default method list callback", &self->defaultListMethods },
-        { "default method help callback", &self->defaultMethodHelp},
-        { "default method signature callback", &self->defaultMethodSignature },
+        { (char *)"default method callback",  &self->defaultMethod},
+        { (char *)"default method list callback", &self->defaultListMethods },
+        { (char *)"default method help callback", &self->defaultMethodHelp},
+        { (char *)"default method signature callback",
+                                                &self->defaultMethodSignature },
         {}
     };
 
-    static char *kwlist[] = {"method", "listMethods", "methodHelp",
-                             "methodSignature", 0};
+    static const char *kwlist[] = {"method", "listMethods", "methodHelp",
+                                   "methodSignature", 0};
 
     // parse arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|OOO", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|OOO", (char **)kwlist,
                                      &callbacks[0].callback,
                                      &callbacks[1].callback,
                                      &callbacks[2].callback,
@@ -1395,7 +1401,7 @@ PyObject* dispatchCall(MethodRegistryObject *self, const char *name,
 
     // call preprocessor
     if (self->preProcess != Py_None) {
-        if (!PyObject_CallFunction(self->preProcess, "(sOO)",
+        if (!PyObject_CallFunction(self->preProcess, (char *)"(sOO)",
                                    name, clientIP, params)) {
             // exception thrown => fetch exception
             fetchException(type, value, traceback);
@@ -1420,7 +1426,7 @@ PyObject* dispatchCall(MethodRegistryObject *self, const char *name,
         // something to call :) call method or default method
         result = (method
                   ? (*method)(clientIP, params)
-                  : PyObject_CallFunction(self->defaultMethod, "(sO)",
+                  : PyObject_CallFunction(self->defaultMethod, (char *)"(sO)",
                                           name, params));
 
         if (!result) {
@@ -1504,7 +1510,8 @@ DECL_METHOD(MethodRegistryObject, system_listMethods) {
 
     if (self->defaultListMethods) {
         // we have some default method lister
-        result = (PyObject_CallFunction(self->defaultListMethods, "()"));
+        result = (PyObject_CallFunction(self->defaultListMethods,
+                                       (char *)"()"));
         if (!result) return 0;
         defaultSize = PyList_Size(result);
         if (defaultSize == -1) return 0;
@@ -1565,7 +1572,7 @@ DECL_METHOD(MethodRegistryObject, system_methodSignature) {
             // method not found but default fallback found
             PyObjectWrapper_t signature
                 (PyObject_CallFunction(self->defaultMethodSignature,
-                                       "(s)", name));
+                                       (char *)"(s)", name));
             // check for error or non-string signature
             if (!signature || !PyString_Check(signature))
                 return signature.inc();
@@ -1607,7 +1614,7 @@ DECL_METHOD(MethodRegistryObject, system_methodHelp) {
         if (self->defaultMethodHelp) {
             // method not found but default fallback found
             return PyObject_CallFunction(self->defaultMethodHelp,
-                                         "(s)", name);
+                                         (char *)"(s)", name);
         }
         return makeFault(FRPC::MethodRegistry_t::FRPC_INDEX_ERROR,
                          "Method '%s' not found.", name);
@@ -1736,12 +1743,12 @@ DECL_METHOD(MethodRegistryObject, system_multicall) {
 #define OFF(x) offsetof(ServerObject, x)
 
 static PyMemberDef ServerObject_members[] = {
-    {"registry",             T_OBJECT,    OFF(registry),             RO},
-    {"readTimeout",          T_INT,       OFF(readTimeout),          RO},
-    {"writeTimeout",         T_INT,       OFF(writeTimeout),         RO},
-    {"keepAlive",            T_INT,       OFF(keepAlive),            RO},
-    {"maxKeepalive",         T_INT,       OFF(maxKeepalive),         RO},
-    {"useBinary",            T_INT,       OFF(useBinary),            RO},
+    {(char *)"registry",             T_OBJECT,    OFF(registry),       RO},
+    {(char *)"readTimeout",          T_INT,       OFF(readTimeout),    RO},
+    {(char *)"writeTimeout",         T_INT,       OFF(writeTimeout),   RO},
+    {(char *)"keepAlive",            T_INT,       OFF(keepAlive),      RO},
+    {(char *)"maxKeepalive",         T_INT,       OFF(maxKeepalive),   RO},
+    {(char *)"useBinary",            T_INT,       OFF(useBinary),      RO},
 
     {0}  // Sentinel
 };
@@ -1822,9 +1829,9 @@ PyObject* ServerObject_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
     PyObjectWrapper_t selfHolder(asObject(self));
 
-    static char *kwlist[] = { "readTimeout", "writeTimeout", "keepAlive",
-                              "maxKeepalive", "introspectionEnabled",
-                              "callbacks", "stringMode", "useBinary", 0 };
+    static const char *kwlist[] = { "readTimeout", "writeTimeout", "keepAlive",
+                                    "maxKeepalive", "introspectionEnabled",
+                                    "callbacks", "stringMode", "useBinary", 0 };
 
     // set defaults
     self->readTimeout = 10000;
@@ -1842,7 +1849,8 @@ PyObject* ServerObject_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
     // parse arguments
     if (!PyArg_ParseTupleAndKeywords(args, kwds,
-                                     "|iiiiOOsO::fastrpc.Server", kwlist,
+                                     "|iiiiOOsO::fastrpc.Server",
+                                     (char **)kwlist,
                                      &self->readTimeout, &self->writeTimeout,
                                      &self->keepAlive, &self->maxKeepalive,
                                      &introspectionEnabled, &callbacks,
@@ -1915,7 +1923,7 @@ namespace {
     {
         if (PyString_Check(signature)) {
             char *sig;
-            int sigSize;
+            Py_ssize_t sigSize;
             if (PyString_AsStringAndSize(signature, &sig, &sigSize))
                 throw PyError_t();
             if (!(this->signature =
@@ -1946,7 +1954,7 @@ namespace {
             std::string method("__" + name);
             char *c_method = const_cast<char*>(method.c_str());
             return PyObject_CallMethod
-                (callback.object, c_method, "(OO)", runtime, args);
+                (callback.object, c_method, (char *)"(OO)", runtime, args);
         } else {
             // callback is realy something callback
 

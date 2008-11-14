@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: fastrpcmodule.cc,v 1.19 2008-05-17 16:16:32 burlog Exp $
+ * $Id: fastrpcmodule.cc,v 1.20 2008-11-14 10:18:22 burlog Exp $
  *
  * AUTHOR      Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
@@ -62,6 +62,10 @@
 #include "fastrpcmodule.h"
 #include "pythonbuilder.h"
 #include "pythonfeeder.h"
+
+#if PY_VERSION_HEX < 0x02050000
+typedef int Py_ssize_t;
+#endif
 
 using FRPC::Int_t;
 using FRPC::Marshaller_t;
@@ -254,7 +258,7 @@ PyTypeObject UTCTimeObject_Type =
 
 } } // namespace FRPC::Python
 
-PyObject* DateTimeObject_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+PyObject* DateTimeObject_new(PyTypeObject *type, PyObject *, PyObject *)
 {
     // allocate memory
     assert(type && type->tp_alloc);
@@ -366,7 +370,7 @@ int TimeObject_init_parseString(DateTimeObject *self, PyObject *pyValue) {
     return 0;
 }
 
-int DateTimeObject_init(DateTimeObject *self, PyObject *args, PyObject *kwds)
+int DateTimeObject_init(DateTimeObject *self, PyObject *args, PyObject *)
 {
     PyObject *pyValue = 0;
     int timeZone = 0;
@@ -394,7 +398,7 @@ int DateTimeObject_init(DateTimeObject *self, PyObject *args, PyObject *kwds)
     return 0;
 }
 
-int LocalTimeObject_init(DateTimeObject *self, PyObject *args, PyObject *kwds)
+int LocalTimeObject_init(DateTimeObject *self, PyObject *args, PyObject *)
 {
     PyObject *pyValue = 0;
     if(!PyArg_ParseTuple(args, "|O", &pyValue))
@@ -422,7 +426,7 @@ int LocalTimeObject_init(DateTimeObject *self, PyObject *args, PyObject *kwds)
     return result;
 }
 
-int UTCTimeObject_init(DateTimeObject *self, PyObject *args, PyObject *kwds)
+int UTCTimeObject_init(DateTimeObject *self, PyObject *args, PyObject *)
 {
     PyObject *pyValue = 0;
     if(!PyArg_ParseTuple(args, "|O", &pyValue))
@@ -694,7 +698,7 @@ PyTypeObject BinaryObject_Type =
 
 } } // namespace FRPC::Python
 
-PyObject* BinaryObject_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+PyObject* BinaryObject_new(PyTypeObject *type, PyObject *, PyObject *)
 {
     // allocate memory
     assert(type && type->tp_alloc);
@@ -709,7 +713,7 @@ PyObject* BinaryObject_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     return reinterpret_cast<PyObject*>(self);
 }
 
-int BinaryObject_init(BinaryObject *self, PyObject *args, PyObject *kwds)
+int BinaryObject_init(BinaryObject *self, PyObject *args, PyObject *)
 {
     PyObject *pyValue = 0;
 
@@ -924,7 +928,7 @@ void BooleanObject_dealloc(BooleanObject *self)
     self->ob_type->tp_free(reinterpret_cast<PyObject *>(self));
 }
 
-PyObject* BooleanObject_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+PyObject* BooleanObject_new(PyTypeObject *type, PyObject *, PyObject *)
 {
     // allocate memory
     assert(type && type->tp_alloc);
@@ -939,7 +943,7 @@ PyObject* BooleanObject_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     return reinterpret_cast<PyObject*>(self);
 }
 
-int BooleanObject_init(BooleanObject *self, PyObject *args, PyObject *kwds)
+int BooleanObject_init(BooleanObject *self, PyObject *args, PyObject *)
 {
     // parse arguments
     PyObject *pyvalue = 0;
@@ -1364,15 +1368,15 @@ PyObject* Method_call(MethodObject *self, PyObject *args, PyObject *keys)
 static char ServerProxy_ServerProxy__doc__[] =
     "Create new ServerProxy\n";
 
-PyObject* ServerProxy_ServerProxy(ServerProxyObject *self, PyObject *args,
+PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
                                   PyObject *keywds)
 {
-    static char *kwlist[] = {"serverUrl", "readTimeout", "writeTimeout",
-                             "connectTimeout",
-                             "keepAlive", "useBinary","encoding",
-                             "useHTTP10", "proxyVia", "stringMode",
-                             "protocolVersionMajor",
-                             "protocolVersionMinor",0};
+    static const char *kwlist[] = {"serverUrl", "readTimeout", "writeTimeout",
+                                   "connectTimeout",
+                                   "keepAlive", "useBinary","encoding",
+                                   "useHTTP10", "proxyVia", "stringMode",
+                                   "protocolVersionMajor",
+                                   "protocolVersionMinor",0};
 
     // parse arguments
     char *serverUrl;
@@ -1383,16 +1387,16 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *self, PyObject *args,
     int keepAlive = 0;
     int mode = Proxy_t::BINARY_ON_SUPPORT_ON_KEEP_ALIVE;
     char *stringMode_ = 0;
-    char *encoding = "utf-8";
+    const char *encoding = "utf-8";
     int useHTTP10 = false;
-    char *proxyVia = "";
+    const char *proxyVia = "";
     int protocolVersionMajor = 2;
     int protocolVersionMinor = 0;
 
 
     if (!PyArg_ParseTupleAndKeywords(args, keywds,
                                      "s#|iiiiisissii:ServerProxy.__init__",
-                                     kwlist,
+                                     (char **)kwlist,
                                      &serverUrl, &serverUrlLen, &readTimeout,
                                      &writeTimeout, &connectTimeout,
                                      &keepAlive, &mode, &encoding,
@@ -1659,8 +1663,6 @@ extern "C"
     static PyObject* fastrpc_boolean(PyObject *self, PyObject *args,
                                      PyObject *keywds);
 
-    static PyObject* fastrpc_datetime(PyObject *self, PyObject *args);
-
     static PyObject* fastrpc_dumps(PyObject *self, PyObject *args,
                                    PyObject *keywds);
 
@@ -1670,15 +1672,15 @@ extern "C"
 static char fastrpc_boolean__doc__[] =
     "Convert any Python value to FastRPC 'boolean'.\n";
 
-PyObject* fastrpc_boolean(PyObject *self, PyObject *args, PyObject *keywds) {
-    static char *kwlist[] = {"value", "truefalse", 0};
+PyObject* fastrpc_boolean(PyObject *, PyObject *args, PyObject *keywds) {
+    static const char *kwlist[] = {"value", "truefalse", 0};
 
     // parse arguments
     PyObject *value;
     PyObject *truefalse = 0;
 
     if (!PyArg_ParseTupleAndKeywords(args, keywds,
-                                     "O|O:fastrpc.boolean", kwlist,
+                                     "O|O:fastrpc.boolean", (char **)kwlist,
                                      &value, &truefalse))
         return 0;
 
@@ -1740,23 +1742,23 @@ static char fastrpc_dumps__doc__[] =
     "Convert an argument tuple or a Fault instance to an XML-RPC\n"
     "request (or response, if the methodresponse option is used).\n";
 
-PyObject* fastrpc_dumps(PyObject *self, PyObject *args, PyObject *keywds) {
-    static char *kwlist[] = {"params", "methodname", "methodresponse",
-                             "encoding", "useBinary",
-                             "protocolVersionMajor",
-                             "protocolVersionMinor",0};
+PyObject* fastrpc_dumps(PyObject *, PyObject *args, PyObject *keywds) {
+    static const char *kwlist[] = {"params", "methodname", "methodresponse",
+                                   "encoding", "useBinary",
+                                   "protocolVersionMajor",
+                                   "protocolVersionMinor",0};
 
     // parse arguments
     PyObject *params;
     char *methodname = 0;
     int methodresponse = false;
-    char *encoding = "utf-8";
+    const char *encoding = "utf-8";
     int useBinary = false;
     unsigned char protocolVersionMajor = 2;
     unsigned char protocolVersionMinor = 0;
 
     if (!PyArg_ParseTupleAndKeywords(args, keywds,
-                                     "O|zisiii:fastrpc.dumps", kwlist,
+                                     "O|zisiii:fastrpc.dumps", (char **)kwlist,
                                      &params, &methodname, &methodresponse,
                                      &encoding, &useBinary,
                                      &protocolVersionMajor,
@@ -1813,7 +1815,7 @@ PyObject* fastrpc_dumps(PyObject *self, PyObject *args, PyObject *keywds) {
             }
 
             char *str;
-            int strSize;
+            Py_ssize_t strSize;
             if (PyString_AsStringAndSize(faultString.get(), &str, &strSize))
                 return 0;
 
@@ -1855,7 +1857,7 @@ static char fastrpc_loads__doc__[] =
     "Convert an XML-RPC packet to unmarshalled data plus a method\n"
     "name (None if not present).\n";
 
-PyObject* fastrpc_loads(PyObject *self, PyObject *args) {
+PyObject* fastrpc_loads(PyObject *, PyObject *args) {
     // parse arguments
     PyObject *data;
     char *stringMode_ = 0;
@@ -1867,7 +1869,7 @@ PyObject* fastrpc_loads(PyObject *self, PyObject *args) {
     if (stringMode == STRING_MODE_INVALID) return 0;
 
     char *dataStr;
-    int dataSize;
+    Py_ssize_t dataSize;
     if (PyString_AsStringAndSize(data, &dataStr, &dataSize))
         return 0;
 
@@ -1928,7 +1930,7 @@ inline int printString(std::ostringstream &out, PyObject *obj,
 {
     // 7bit string
     char *str;
-    int len;
+    Py_ssize_t len;
     if (PyString_AsStringAndSize(obj, &str, &len)) {
         // oops, cannot get string
         out << err;
@@ -1949,8 +1951,6 @@ inline int printString(std::ostringstream &out, PyObject *obj,
 int printPyFastRPCTree(PyObject *tree, std::ostringstream &out,
                        int level = 1)
 {
-    int ret = 0;
-
     if (PyInt_Check(tree)) {
         // integer
         out << PyInt_AS_LONG(tree);
@@ -2007,7 +2007,7 @@ int printPyFastRPCTree(PyObject *tree, std::ostringstream &out,
             bool other = false;
 
             // iterate over dict
-            for (int pos = 0; PyDict_Next(tree, &pos, &key, &value); ) {
+            for (Py_ssize_t pos = 0; PyDict_Next(tree, &pos, &key, &value); ) {
                 if (other) out << ", ";
                 else other = true;
 
@@ -2056,7 +2056,7 @@ int printPyFastRPCTree(PyObject *tree, std::ostringstream &out,
 }
 }
 
-PyObject* fastrpc_dumpTree(PyObject *self, PyObject *args) {
+PyObject* fastrpc_dumpTree(PyObject *, PyObject *args) {
     PyObject *value;
     int level = 1;
     if (!PyArg_ParseTuple(args, "O|i:fastrpc.dumpTree", &value, &level))
@@ -2110,10 +2110,11 @@ static PyMethodDef frpc_methods[] =
 
 namespace FRPC { namespace Python {
     PyObject* errorRepr(PyObject *self, const std::string &name,
-                        char *status, char *statusMessage)
+                        const char *status, const char *statusMessage)
     {
         // get method and ingore non-existence
-        PyObjectWrapper_t method(PyObject_GetAttrString(self, "method"));
+        PyObjectWrapper_t method(PyObject_GetAttrString(self,
+                                                        (char *)"method"));
         if (!method) PyErr_Clear();
 
         PyObjectWrapper_t formatString;
@@ -2130,10 +2131,12 @@ namespace FRPC { namespace Python {
             formatArgs =
                 (status
                  ? Py_BuildValue("(sNN)", name.c_str(),
-                                 PyObject_GetAttrString(self, status),
-                                 PyObject_GetAttrString(self, statusMessage))
+                                 PyObject_GetAttrString(self, (char *)status),
+                                 PyObject_GetAttrString(self,
+                                     (char *)statusMessage))
                  : Py_BuildValue("(sN)", name.c_str(),
-                                 PyObject_GetAttrString(self, statusMessage)));
+                                 PyObject_GetAttrString(self,
+                                     (char *)statusMessage)));
             if (!formatArgs) return 0;
         } else {
             // method!
@@ -2152,13 +2155,15 @@ namespace FRPC { namespace Python {
             formatArgs =
                 (status
                  ? Py_BuildValue("(sNNs#s#)", name.c_str(),
-                                 PyObject_GetAttrString(self, status),
-                                 PyObject_GetAttrString(self, statusMessage),
+                                 PyObject_GetAttrString(self, (char *)status),
+                                 PyObject_GetAttrString(self,
+                                                        (char *)statusMessage),
                                  methodObject.name.data(),
                                  methodObject.name.size(),
                                  url.data(), url.size())
                  : Py_BuildValue("(sNs#s#)", name.c_str(),
-                                 PyObject_GetAttrString(self, statusMessage),
+                                 PyObject_GetAttrString(self,
+                                                        (char *)statusMessage),
                                  methodObject.name.data(),
                                  methodObject.name.size(),
                                  url.data(), url.size()));
@@ -2253,13 +2258,13 @@ extern "C" DL_EXPORT(void) initfastrpc(void)
 
     // import datetime modules
     PyObject *module = 0;
-    if (module = PyImport_ImportModule("mx.DateTime")) {
+    if ((module = PyImport_ImportModule("mx.DateTime"))) {
         if (!(mxDateTime = PyObject_GetAttrString(module, "DateTimeType")))
             PyErr_Clear();
     } else {
         PyErr_Clear();
     }
-    if (module = PyImport_ImportModule("datetime")) {
+    if ((module = PyImport_ImportModule("datetime"))) {
         if (!(dateTimeDateTime = PyObject_GetAttrString(module, "datetime")))
             PyErr_Clear();
     } else {

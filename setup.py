@@ -52,11 +52,11 @@ def _init_posix():
         distutils.sysconfig._config_vars['CXX'] = 'g++'
     else:
         # Non-Sun needs linkage with g++
-        distutils.sysconfig._config_vars['LDSHARED'] = 'g++ -shared -g'
+        distutils.sysconfig._config_vars['LDSHARED'] = 'g++ -shared -g -W -Wall -Wno-deprecated'
     #endif
 
-    distutils.sysconfig._config_vars['CFLAGS'] = '-g'
-    distutils.sysconfig._config_vars['OPT'] = '-g'
+    distutils.sysconfig._config_vars['CFLAGS'] = '-g -W -Wall -Wno-deprecated'
+    distutils.sysconfig._config_vars['OPT'] = '-g -W -Wall -Wno-deprecated'
 #enddef
 
 distutils.sysconfig._init_posix = _init_posix

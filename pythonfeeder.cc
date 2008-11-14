@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: pythonfeeder.cc,v 1.7 2008-03-12 12:43:38 mirecta Exp $
+ * $Id: pythonfeeder.cc,v 1.8 2008-11-14 10:18:22 burlog Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -35,6 +35,10 @@
 #include <frpcint.h>
 #include "pythonfeeder.h"
 #include "fastrpcmodule.h"
+
+#if PY_VERSION_HEX < 0x02050000
+typedef int Py_ssize_t;
+#endif
 
 using FRPC::Int_t;
 
@@ -99,7 +103,7 @@ void Feeder_t::feedValue(PyObject *value)
         BinaryObject *bin = reinterpret_cast<BinaryObject*>(value);
 
         char *str;
-        int strLen;
+        Py_ssize_t strLen;
         if (PyString_AsStringAndSize(bin->value, &str, &strLen))
             throw PyError_t();
 
@@ -112,7 +116,7 @@ void Feeder_t::feedValue(PyObject *value)
         if (encoding == "utf-8")  {
             // get string and marshall it
             char *str;
-            int strLen;
+            Py_ssize_t strLen;
             if (PyString_AsStringAndSize(value, &str, &strLen))
                 throw PyError_t();
 
@@ -128,7 +132,7 @@ void Feeder_t::feedValue(PyObject *value)
 
             // get string and marshall it
             char *str;
-            int strLen;
+            Py_ssize_t strLen;
             if (PyString_AsStringAndSize(utf8, &str, &strLen))
                 throw PyError_t();
 
@@ -141,7 +145,7 @@ void Feeder_t::feedValue(PyObject *value)
 
         // get string and marshall it
         char *str;
-        int strLen;
+        Py_ssize_t strLen;
         if (PyString_AsStringAndSize(utf8, &str, &strLen))
             throw PyError_t();
 
@@ -161,8 +165,8 @@ void Feeder_t::feedValue(PyObject *value)
         for (int pos = 0; pos < argc; ++pos)
             feedValue(PyTuple_GET_ITEM(value, pos));
     } else if (PyDict_Check(value)) {
-        int argc = PyDict_Size(value);
-        int pos = 0;
+        Py_ssize_t argc = PyDict_Size(value);
+        Py_ssize_t pos = 0;
         PyObject *key, *member;
 
         marshaller->packStruct(argc);
@@ -175,7 +179,7 @@ void Feeder_t::feedValue(PyObject *value)
             }
 
             char *str;
-            int strLen;
+            Py_ssize_t strLen;
             if (PyString_AsStringAndSize(key, &str, &strLen))
                 throw PyError_t();
 
@@ -184,22 +188,24 @@ void Feeder_t::feedValue(PyObject *value)
         }
     } else if (mxDateTime && (PyObject_IsInstance(value, mxDateTime) == 1)) {
 
-        marshaller->packDateTime(getLongAttr(value, "year"),
-                                 getLongAttr(value, "month"),
-                                 getLongAttr(value, "day"),
-                                 getLongAttr(value, "hour"),
-                                 getLongAttr(value, "minute"),
-                                 getLongAttr(value, "second"), -1, -1, -1);
+        marshaller->packDateTime(getLongAttr(value, (char *)"year"),
+                                 getLongAttr(value, (char *)"month"),
+                                 getLongAttr(value, (char *)"day"),
+                                 getLongAttr(value, (char *)"hour"),
+                                 getLongAttr(value, (char *)"minute"),
+                                 getLongAttr(value, (char *)"second"),
+                                 -1, -1, -1);
 
     } else if (dateTimeDateTime
             && (PyObject_IsInstance(value, dateTimeDateTime) == 1)) {
 
-        marshaller->packDateTime(getLongAttr(value, "year"),
-                                 getLongAttr(value, "month"),
-                                 getLongAttr(value, "day"),
-                                 getLongAttr(value, "hour"),
-                                 getLongAttr(value, "minute"),
-                                 getLongAttr(value, "second"), -1, -1, -1);
+        marshaller->packDateTime(getLongAttr(value, (char *)"year"),
+                                 getLongAttr(value, (char *)"month"),
+                                 getLongAttr(value, (char *)"day"),
+                                 getLongAttr(value, (char *)"hour"),
+                                 getLongAttr(value, (char *)"minute"),
+                                 getLongAttr(value, (char *)"second"),
+                                 -1, -1, -1);
 
     } else {
 

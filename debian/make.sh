@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# FILE              $Id: make.sh,v 1.2 2007-09-17 11:21:36 vasek Exp $
+# FILE              $Id: make.sh,v 1.3 2008-11-14 10:18:22 burlog Exp $
 #
 # DESCRIPTION       Packager for python Fastrpc module.
 #
@@ -138,9 +138,12 @@ function make_packages {
             find ${DEBIAN_BASE} -path "*CVS*" -exec rm -Rf '{}' \; || exit 1
 
             # build extra depend
-            SH_DEPEND=$(dpkg-shlibdeps -O \
-                $(find ${INSTALL_DIR}/usr/lib -name '*.so' 2>/dev/null) | \
-                gawk '{match($0, /^.*Depends=(.*)$/, a); print a[1]}')
+            if grep -q "use Dpkg::Control" "`which dpkg-shlibdeps`" ; then
+                SH_DEPEND=$(buildDepends $(find ${INSTALL_DIR} -name "*.so"))
+            else
+                SH_DEPEND=$(dpkg-shlibdeps -O $(find ${INSTALL_DIR} -name "*.so") | \
+                    gawk '{match($0, /^.*Depends=(.*)$/, a); print a[1]}')
+            fi
             PYTHON_PACKAGE="${PYTHON_PACKAGE}, ${SH_DEPEND}"
         fi
 
@@ -179,6 +182,35 @@ function make_packages {
         # Get rid of temporary build directory.
         rm -r ${BUILD_DIR}
 }
+
+function buildDepends() {
+
+    function listPackages() {
+        (
+            for x in $*; do
+                for a in `ldd "$x" | cut -f 2- -d"/" | cut -f 1 -d"("`; do
+                    echo "$(dpkg -S "`readlink -f "/$a"`" | cut -f 1 -d:)"
+                done
+            done
+        ) | sort -u
+    }
+
+    function depends() {
+        (
+            for a in `listPackages $*`; do
+                if [ -f "/var/lib/dpkg/info/$a.shlibs" ]; then
+                    cat "/var/lib/dpkg/info/$a.shlibs" | grep " $a " \
+                        | cut -f 3- -d" " | sed "s/\(.*\)/\1, /g"
+                fi
+            done
+        ) | sort -u
+    }
+
+    depends $* | tr -d "\n" | sed "s/,\s*$//g"
+    echo
+}
+
+
 # determine operation
 if test "${MODE}" = "pkg"; then
     

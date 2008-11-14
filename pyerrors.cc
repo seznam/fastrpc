@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: pyerrors.cc,v 1.4 2007-07-31 13:03:37 vasek Exp $
+ * $Id: pyerrors.cc,v 1.5 2008-11-14 10:18:22 burlog Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -45,13 +45,13 @@ using namespace FRPC::Python;
 extern "C"
 {
 
-    static PyObject* Error__init__(PyObject *self, PyObject *args)
+    static PyObject* Error__init__(PyObject *, PyObject *)
     {
         Py_INCREF(Py_None);
         return Py_None;
     }
 
-    static PyObject* Error__repr__(PyObject *self, PyObject *args)
+    static PyObject* Error__repr__(PyObject *, PyObject *)
     {
         return PyString_FromString("<fastrpc.Error>");
     }
@@ -250,13 +250,13 @@ extern "C"
 } // extern "C"
 
 namespace {
-PyObject* initException(PyObject *module, char *name,
-                        char *niceName, PyObject *base,
+PyObject* initException(PyObject *module, const char *name,
+                        const char *niceName, PyObject *base,
                         PyMethodDef *methodDef)
 {
     PyObjectWrapper_t Exception_dict(PyDict_New());
     // create runtime error
-    PyObject *Exception = PyErr_NewException(niceName, base,
+    PyObject *Exception = PyErr_NewException((char *)niceName, base,
                           Exception_dict);
     if (!Exception)
         return 0;
@@ -277,7 +277,7 @@ PyObject* initException(PyObject *module, char *name,
     }
 
     // add this exception into the xmlrpcserver module
-    if (PyModule_AddObject(module, name, Exception))
+    if (PyModule_AddObject(module, (char *)name, Exception))
         return 0;
 
     // OK
@@ -298,7 +298,7 @@ namespace FRPC { namespace Python {
         /**************************************************************/
         Error = initException(fastrpc_module, "Error", "fastrpc.Error",
                               PyExc_Exception, ErrorMethod_methods);
-        if (!Error) -1;
+        if (!Error) return -1;
 
         /********************************************************************/
         //ProtocolError

@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: fastrpcmodule.h,v 1.6 2008-05-17 16:16:32 burlog Exp $
+ * $Id: fastrpcmodule.h,v 1.7 2008-11-14 10:18:22 burlog Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -50,7 +50,7 @@ namespace FRPC { namespace Python {
     int initServer(PyObject *fastrpc_module);
 
     PyObject* errorRepr(PyObject *self, const std::string &name,
-                        char *status, char *statusMessage);
+                        const char *status, const char *statusMessage);
 
     class PyError_t {
     public:
