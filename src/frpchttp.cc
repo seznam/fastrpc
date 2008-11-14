@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
-* FILE             $Id: frpchttp.cc,v 1.5 2007-07-31 13:01:18 vasek Exp $
+* FILE             $Id: frpchttp.cc,v 1.6 2008-11-14 08:26:52 burlog Exp $
 *
 * DESCRIPTION      HTTP Base types
 *
@@ -163,8 +163,9 @@ void HTTPHeader_t::appendValue(const std::string &value)
     header.back().second.append(value);
 }
 
-std::ostream& FRPC::operator<<(std::ostream &os,
-                                      const HTTPHeader_t &header)
+namespace FRPC {
+
+std::ostream& operator<<(std::ostream &os, const HTTPHeader_t &header)
 {
     // serialize header
     for (HTTPHeader_t::HeaderMap_t::const_iterator
@@ -175,6 +176,8 @@ std::ostream& FRPC::operator<<(std::ostream &os,
     // pass stream
     return os;
 }
+
+} // namespace FRPC
 
 namespace {
     const std::string HTTP_SCHEMA("http://");

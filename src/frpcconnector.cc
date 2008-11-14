@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcconnector.cc,v 1.2 2007-07-31 14:05:45 vasek Exp $
+ * FILE          $Id: frpcconnector.cc,v 1.3 2008-11-14 08:26:52 burlog Exp $
  *
  * DESCRIPTION
  *
@@ -74,7 +74,7 @@ namespace {
         bool doClose;
     };
 
-    char* host_strerror(int num) {
+    const char *host_strerror(int num) {
         switch (num) {
         case HOST_NOT_FOUND:
             return "The specified host is unknown";

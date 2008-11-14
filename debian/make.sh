@@ -22,7 +22,7 @@
 # http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
 #
 #
-# $Id: make.sh,v 1.4 2007-05-15 09:43:40 vasek Exp $
+# $Id: make.sh,v 1.5 2008-11-14 08:26:52 burlog Exp $
 #
 # DESCRIPTION
 # Packager for Fastrpc library.
@@ -101,7 +101,7 @@ function make_dirs {
         # libfastrpc-dev
         name=`echo ${PROJECT_NAME} | cut -f1 -d'-'`
         suff=`echo ${PROJECT_NAME} | cut -f2- -d'-'`
-        PACKAGE_NAME=${name}${LIBRARY_VERSION}-${suff}
+        PACKAGE_NAME=${name}-${suff}
     fi
 
     # Create package destination directory.
@@ -132,6 +132,33 @@ function replace_vars {
         -e "s/@SH_DEPEND@/${SH_DEPEND}/" \
         -e "s/@SO_VERSION@/${LIBRARY_VERSION}/" \
         $1 > $2 || exit -1
+}
+
+function buildDepends() {
+
+    function listPackages() {
+        (
+            for x in $*; do
+                for a in `ldd "$x" | cut -f 2- -d"/" | cut -f 1 -d"("`; do
+                    echo "$(dpkg -S "`readlink -f "/$a"`" | cut -f 1 -d:)"
+                done
+            done
+        ) | sort -u
+    }
+
+    function depends() {
+        (
+            for a in `listPackages $*`; do
+                if [ -f "/var/lib/dpkg/info/$a.shlibs" ]; then
+                    cat "/var/lib/dpkg/info/$a.shlibs" | grep " $a " \
+                        | cut -f 3- -d" " | sed "s/\(.*\)/\1, /g"
+                fi
+            done
+        ) | sort -u
+    }
+
+    depends $* | tr -d "\n" | sed "s/,\s*$//g"
+    echo
 }
 
 function build_package {
@@ -193,8 +220,13 @@ if test "${MODE}" = "binary"; then
 #    cp -vR ${INSTALL_DIR}/usr/share/info ${DEBIAN_BASE}/usr/share || exit 1
 
     # build extra depend
-    SH_DEPEND=$(dpkg-shlibdeps -O ${INSTALL_DIR}/usr/lib/libfastrpc.so.*.* | \
-        gawk '{match($0, /^.*Depends=(.*)$/, a); print a[1]}')
+    # build extra depend
+    if grep -q "use Dpkg::Control" "`which dpkg-shlibdeps`" ; then
+        SH_DEPEND=$(buildDepends $(find ${INSTALL_DIR} -name "*.so"))
+    else
+        SH_DEPEND=$(dpkg-shlibdeps -O $(find ${INSTALL_DIR} -name "*.so") | \
+            gawk '{match($0, /^.*Depends=(.*)$/, a); print a[1]}')
+    fi
 
     # Build the package
     build_package

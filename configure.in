@@ -21,7 +21,7 @@
 # http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
 #
 #
-# $Id: configure.in,v 1.31 2008-04-01 13:19:01 burlog Exp $
+# $Id: configure.in,v 1.32 2008-11-14 08:26:51 burlog Exp $
 #
 # DESCRIPTION
 # configure template for fastrpc.
@@ -36,7 +36,7 @@
 
 
 # initialize autoconf
-AC_INIT(fastrpc, 3.0.8, fastrpc@firma.seznam.cz)
+AC_INIT(fastrpc, 3.0.0, fastrpc@firma.seznam.cz)
 # initialize automake(use AC_INIT's arguments)
 AM_INIT_AUTOMAKE(AC_PACKAGE_NAME, AC_PACKAGE_VERSION)
 
@@ -84,7 +84,7 @@ dnl ------------------------------------------------------------------------
 # This version number needs to be changed in several different ways for each
 # release. Please read the libtool documentation (info libtool 'Updating
 # version info') before touching this.
-FASTRPC_MAJOR=2
+FASTRPC_MAJOR=3
 FASTRPC_MINOR=0
 VERSION_INFO="-version-info $FASTRPC_MAJOR:$FASTRPC_MINOR:0"
 AC_SUBST(FASTRPC_MAJOR)
