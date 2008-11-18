@@ -22,7 +22,7 @@
 # http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
 #
 #
-# $Id: make.sh,v 1.5 2008-11-14 08:26:52 burlog Exp $
+# $Id: make.sh,v 1.6 2008-11-18 13:23:17 burlog Exp $
 #
 # DESCRIPTION
 # Packager for Fastrpc library.
@@ -150,7 +150,7 @@ function buildDepends() {
         (
             for a in `listPackages $*`; do
                 if [ -f "/var/lib/dpkg/info/$a.shlibs" ]; then
-                    cat "/var/lib/dpkg/info/$a.shlibs" | grep " $a " \
+                    cat "/var/lib/dpkg/info/$a.shlibs" | grep -v "^[^:]*: " | grep " $a " \
                         | cut -f 3- -d" " | sed "s/\(.*\)/\1, /g"
                 fi
             done
