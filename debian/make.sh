@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# FILE              $Id: make.sh,v 1.3 2008-11-14 10:18:22 burlog Exp $
+# FILE              $Id: make.sh,v 1.4 2008-11-18 13:23:18 burlog Exp $
 #
 # DESCRIPTION       Packager for python Fastrpc module.
 #
@@ -199,7 +199,7 @@ function buildDepends() {
         (
             for a in `listPackages $*`; do
                 if [ -f "/var/lib/dpkg/info/$a.shlibs" ]; then
-                    cat "/var/lib/dpkg/info/$a.shlibs" | grep " $a " \
+                    cat "/var/lib/dpkg/info/$a.shlibs" | grep -v "^[^:]*: " | grep " $a " \
                         | cut -f 3- -d" " | sed "s/\(.*\)/\1, /g"
                 fi
             done

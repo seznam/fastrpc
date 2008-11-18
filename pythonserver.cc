@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: pythonserver.cc,v 1.21 2008-11-14 10:18:22 burlog Exp $
+ * $Id: pythonserver.cc,v 1.22 2008-11-18 13:23:18 burlog Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -66,8 +66,10 @@
 #include "pythonbuilder.h"
 #include "pythonfeeder.h"
 
-#if PY_VERSION_HEX < 0x02050000
+#if PY_VERSION_HEX < 0x02050000 && !defined(PY_SSIZE_T_MIN)
 typedef int Py_ssize_t;
+#define PY_SSIZE_T_MAX INT_MAX
+#define PY_SSIZE_T_MIN INT_MIN
 #endif
 
 using FRPC::ProtocolVersion_t;
