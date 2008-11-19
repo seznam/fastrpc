@@ -19,7 +19,7 @@
  * Seznam.cz, a.s.
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
- * FILE             $Id: frpcconverters.h,v 1.2 2008-05-06 19:18:48 burlog Exp $
+ * FILE             $Id: frpcconverters.h,v 1.3 2008-11-19 08:09:09 burlog Exp $
  *
  * DESCRIPTION      Templated converters.
  *
@@ -378,22 +378,7 @@ Value_t &to_struct(const Container_t &container,
 
 
 /// int64_t converter typedef
-typedef base_int_cnvt<int64_t> int64_cnvt;
-/// int32_t converter typedef
-typedef base_int_cnvt<int32_t> int32_cnvt;
-/// int16_t converter typedef
-typedef base_int_cnvt<int16_t> int16_cnvt;
-/// int8_t converter typedef
-typedef base_int_cnvt<int8_t> int8_cnvt;
-
-/// uint64_t converter typedef
-typedef base_int_cnvt<uint64_t> uint64_cnvt;
-/// uint32_t converter typedef
-typedef base_int_cnvt<uint32_t> uint32_cnvt;
-/// uint16_t converter typedef
-typedef base_int_cnvt<uint16_t> uint16_cnvt;
-/// uint8_t converter typedef
-typedef base_int_cnvt<uint8_t> uint8_cnvt;
+typedef base_int_cnvt<int64_t> int_cnvt;
 
 /// double converter typedef
 typedef base_double_cnvt<double> double_cnvt;
