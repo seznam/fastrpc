@@ -19,7 +19,7 @@
  * Seznam.cz, a.s.
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
- * FILE             $Id: frpcconverters.h,v 1.3 2008-11-19 08:09:09 burlog Exp $
+ * FILE             $Id: frpcconverters.h,v 1.4 2008-11-19 08:27:20 burlog Exp $
  *
  * DESCRIPTION      Templated converters.
  *
@@ -353,7 +353,7 @@ inline Value_t &to_array(const Container_t &container,
  * @return FastRPC array.
  */
 template <class ForwardIterator_t, class Converter_t>
-Value_t &to_struct(const ForwardIterator_t &begin,
+inline Value_t &to_struct(const ForwardIterator_t &begin,
                    const ForwardIterator_t &end,
                    const Converter_t &converter) {
 
@@ -371,7 +371,7 @@ Value_t &to_struct(const ForwardIterator_t &begin,
  * @return FastRPC array.
  */
 template <class Container_t, class Converter_t>
-Value_t &to_struct(const Container_t &container,
+inline Value_t &to_struct(const Container_t &container,
                    const Converter_t &converter) {
     return to_struct(container.begin(), container.end(), converter);
 }
