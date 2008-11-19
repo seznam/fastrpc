@@ -19,7 +19,7 @@
  * Seznam.cz, a.s.
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
- * FILE             $Id: frpcconverters.h,v 1.4 2008-11-19 08:27:20 burlog Exp $
+ * FILE             $Id: frpcconverters.h,v 1.5 2008-11-19 08:37:34 burlog Exp $
  *
  * DESCRIPTION      Templated converters.
  *
@@ -360,7 +360,7 @@ inline Value_t &to_struct(const ForwardIterator_t &begin,
     Struct_t &structure = converter.allocator()->Struct();
     std::transform(begin, end,
                    std::inserter(structure, structure.begin()),
-                   converter);
+                   pair_cnvt(converter));
     return structure;
 }
 
