@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: fastrpcmodule.cc,v 1.21 2008-11-18 13:23:18 burlog Exp $
+ * $Id: fastrpcmodule.cc,v 1.22 2008-11-20 12:23:47 burlog Exp $
  *
  * AUTHOR      Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
@@ -313,7 +313,7 @@ int TimeObject_init_parseInt(DateTimeObject *self, PyObject *pyValue) {
     self->year = time_tm->tm_year + 1900;
     self->month = time_tm->tm_mon + 1;
     self->day = time_tm->tm_mday;
-    self->hour = time_tm->tm_hour ;
+    self->hour = time_tm->tm_hour;
     self->min = time_tm->tm_min;
     self->sec = time_tm->tm_sec;
     self->weekDay = time_tm->tm_wday;
@@ -386,11 +386,23 @@ int DateTimeObject_init(DateTimeObject *self, PyObject *args, PyObject *)
 
     // clear error and try parse single object
     PyErr_Clear();
-    if (!PyArg_ParseTuple(args, "O", &pyValue))
+    if (!PyArg_ParseTuple(args, "|O", &pyValue))
         return -1;
 
-    if (PyString_Check(pyValue)) {
+    if (!pyValue) {
+#warning remove in this possibility in next major revision of fastrpc
+        PyErr_WarnEx(PyExc_DeprecationWarning,
+               "Deprecated call use LocaTime() or UTCtime() instead.", 1);
+        return LocalTimeObject_init(self, args, NULL);
+
+    } else if (PyString_Check(pyValue)) {
         return TimeObject_init_parseString(self, pyValue);
+
+    } else if (PyInt_Check(pyValue)) {
+#warning remove in this possibility in next major revision of fastrpc
+        PyErr_WarnEx(PyExc_DeprecationWarning,
+               "Deprecated call use LocaTime(int) or UTCtime(int) instead.", 1);
+        return LocalTimeObject_init(self, args, NULL);
 
     } else {
         PyErr_Format(PyExc_TypeError, "Argument must be string");

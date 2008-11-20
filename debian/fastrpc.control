@@ -3,7 +3,6 @@ Version: <VERSION>
 Architecture: <ARCHITECTURE>
 Depends: <PYTHON_PACKAGE>
 Maintainer: <MAINTAINER>
-Conflicts: <CONFLICTS>
 Installed-Size: <SIZE>
 Description: Fastrpc -- RPC using XML and Binary protocol
  Fastrpc is a powerful and easy to making distributed applications.
