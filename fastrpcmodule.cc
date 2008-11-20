@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: fastrpcmodule.cc,v 1.22 2008-11-20 12:23:47 burlog Exp $
+ * $Id: fastrpcmodule.cc,v 1.23 2008-11-20 12:26:52 burlog Exp $
  *
  * AUTHOR      Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
@@ -67,6 +67,7 @@
 typedef int Py_ssize_t;
 #define PY_SSIZE_T_MAX INT_MAX
 #define PY_SSIZE_T_MIN INT_MIN
+#define PyErr_WarnEx(A, B, C) PyErr_Warn(A, B)
 #endif
 
 using FRPC::Int_t;
@@ -390,7 +391,7 @@ int DateTimeObject_init(DateTimeObject *self, PyObject *args, PyObject *)
         return -1;
 
     if (!pyValue) {
-#warning remove in this possibility in next major revision of fastrpc
+#warning remove this possibility in next major revision of fastrpc
         PyErr_WarnEx(PyExc_DeprecationWarning,
                "Deprecated call use LocaTime() or UTCtime() instead.", 1);
         return LocalTimeObject_init(self, args, NULL);
@@ -399,7 +400,7 @@ int DateTimeObject_init(DateTimeObject *self, PyObject *args, PyObject *)
         return TimeObject_init_parseString(self, pyValue);
 
     } else if (PyInt_Check(pyValue)) {
-#warning remove in this possibility in next major revision of fastrpc
+#warning remove this possibility in next major revision of fastrpc
         PyErr_WarnEx(PyExc_DeprecationWarning,
                "Deprecated call use LocaTime(int) or UTCtime(int) instead.", 1);
         return LocalTimeObject_init(self, args, NULL);
