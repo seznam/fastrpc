@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# FILE              $Id: make.sh,v 1.4 2008-11-18 13:23:18 burlog Exp $
+# FILE              $Id: make.sh,v 1.5 2008-11-20 10:41:05 burlog Exp $
 #
 # DESCRIPTION       Packager for python Fastrpc module.
 #
@@ -113,7 +113,6 @@ function make_packages {
         mkdir -p ${CONTROL_DIR}
         chmod 0755 ${CONTROL_DIR}
 
-
         ########################################################################
         # Copy all files                                                       #
         ########################################################################
@@ -152,7 +151,10 @@ function make_packages {
         SIZEDIR=$(find ${DEBIAN_BASE} -type d | wc | awk '{print $1}') || exit 1
         SIZE=$[ $SIZEDU - $SIZEDIR ] || exit 1
 
-        VERSION=$(< ${PROJECT_NAME}'.version')
+        CONFLICTS=""
+        for v in "" `seq 1 $((API_VERSION - 1))`; do
+            CONFLICTS="${CONFLICTS}`echo ${PACKAGE_NAME} | sed "s/${API_VERSION}$/$v/g"`, "
+        done
 
         # Process control file -- all <tags> will be replaced with
         # appropriate data.
@@ -161,6 +163,7 @@ function make_packages {
                 -e "s/<MAINTAINER>/${MAINTAINER}/" \
                 -e "s/<ARCHITECTURE>/$(dpkg --print-architecture)/" \
                 -e "s/<SIZE>/$SIZE/" \
+                -e "s/<CONFLICTS>/`echo $CONFLICTS | sed 's/, *$//g'`/" \
                 -e "s/<PYTHON_PACKAGE>/${PYTHON_PACKAGE}/" \
                 ${PROJECT_NAME}.control > build/${PACKAGE_NAME}/DEBIAN/control || exit 1
 
@@ -225,6 +228,8 @@ fi
 # Retrieve information from the Python packages setup.py.              #
 ########################################################################
 
+source ${PROJECT_NAME}.version
+
 # Run Python interpreter to obtain its version and construct
 # package name from it.
 PYTHON_VERSION=$(${PYTHON} <<EOF
@@ -241,14 +246,14 @@ minor = int(sys.version[2])
 print "%d.%d" % (major, minor + 1)
 EOF) || exit 1
 
-    PACKAGE_NAME="python-${PROJECT_NAME}"
+    PACKAGE_NAME="python-${PROJECT_NAME}${API_VERSION}"
     PYTHON_PACKAGE="python (>= ${PYTHON_VERSION}), python (<< ${NEXT_PYTHON_VERSION})"
     PYTHON_PACKAGE="${PYTHON_PACKAGE}, python${PYTHON_VERSION}-${PROJECT_NAME}"
 
     # Inform about package name.
     echo "Building empty package (${PACKAGE_NAME}) for default python. Python interpreter reset to python."
 else
-    PACKAGE_NAME="python${PYTHON_VERSION}-${PROJECT_NAME}"
+    PACKAGE_NAME="python${PYTHON_VERSION}-${PROJECT_NAME}${API_VERSION}"
     PYTHON_PACKAGE="python${PYTHON_VERSION}"
 
     # Inform about package name.
@@ -289,6 +294,9 @@ export PACKAGE_NAME
 export PYTHON_PACKAGE
 export DEFAULT
 export DEBUG
+export VERSION
+export API_VERSION
+export PYTHON_VERSION
 
 # Call packager under fakeroot.
 fakeroot ./make.sh --make-pkg
