@@ -21,7 +21,7 @@
 # http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
 #
 #
-# $Id: configure.in,v 1.33 2008-11-21 10:31:27 burlog Exp $
+# $Id: configure.in,v 1.34 2008-11-21 10:34:14 burlog Exp $
 #
 # DESCRIPTION
 # configure template for fastrpc.
@@ -85,7 +85,7 @@ dnl ------------------------------------------------------------------------
 # release. Please read the libtool documentation (info libtool 'Updating
 # version info') before touching this.
 FASTRPC_MAJOR=3
-FASTRPC_MINOR=0
+FASTRPC_MINOR=1
 VERSION_INFO="-version-info $FASTRPC_MAJOR:$FASTRPC_MINOR:0"
 AC_SUBST(FASTRPC_MAJOR)
 AC_SUBST(FASTRPC_MINOR)
