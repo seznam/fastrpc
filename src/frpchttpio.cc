@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE             $Id: frpchttpio.cc,v 1.9 2008-11-14 08:26:52 burlog Exp $
+ * FILE             $Id: frpchttpio.cc,v 1.10 2008-11-21 10:25:03 burlog Exp $
  *
  * DESCRIPTION      HTTP I/O
  *
@@ -60,7 +60,8 @@ using namespace FRPC;
 
 HTTPIO_t::~HTTPIO_t() {
     // check whether socket is valid fd and close it
-    if (fd > -1) close(fd);
+    if ((fd > -1) && (TEMP_FAILURE_RETRY(close(fd))))
+        LOG(WARN4, "Cannot close fd: <%d, %s>", errno, strerror(errno));
 }
 
 std::vector<std::string>
@@ -177,8 +178,9 @@ std::string HTTPIO_t::readLine(bool checkLimit)
                 readTimeout / 1000,
                 (readTimeout % 1000) * 1000
             };
-        int ready = select(fd + 1, &rfdset, NULL, NULL,
-                           (readTimeout < 0) ? NULL : &timeout);
+        int ready = TEMP_FAILURE_RETRY(
+                select(fd + 1, &rfdset, NULL, NULL,
+                           (readTimeout < 0) ? NULL : &timeout));
         switch (ready)
         {
         case 0:
@@ -191,12 +193,14 @@ std::string HTTPIO_t::readLine(bool checkLimit)
         }
 
         // pøeèteme data ze socketu, ale neostraníme je z receive bufferu
-        int bytes = recv(fd, buff, HTTP_BUFF_LENGTH, MSG_PEEK | MSG_NOSIGNAL);
+        int bytes = TEMP_FAILURE_RETRY(
+                recv(fd, buff, HTTP_BUFF_LENGTH, MSG_PEEK | MSG_NOSIGNAL));
         switch (bytes)
         {
         case 0:
             // protìjsí strana zavøela spojení
-            throw ProtocolError_t(HTTP_CLOSED, "Connection closed by foreign host");
+            throw ProtocolError_t(HTTP_CLOSED,
+                                  "Connection closed by foreign host");
 
         case -1:
             // other error
@@ -222,7 +226,7 @@ std::string HTTPIO_t::readLine(bool checkLimit)
                  lineSizeLimit);
             }
 
-            bytes = recv(fd, buff, toRead, MSG_NOSIGNAL);
+            bytes = TEMP_FAILURE_RETRY(recv(fd, buff, toRead, MSG_NOSIGNAL));
             switch (bytes)
             {
             case 0:
@@ -267,7 +271,7 @@ std::string HTTPIO_t::readLine(bool checkLimit)
                  lineSizeLimit);
             }
 
-            bytes = recv(fd, buff, toRead, MSG_NOSIGNAL);
+            bytes = TEMP_FAILURE_RETRY(recv(fd, buff, toRead, MSG_NOSIGNAL));
             switch (bytes)
             {
             case 0:
@@ -317,9 +321,10 @@ void HTTPIO_t::sendData(const char *data, size_t length, bool watchForResponse)
                 writeTimeout / 1000,
                 (writeTimeout % 1000) * 1000
             };
-        int ready = select(fd + 1,watchForResponse ? &rfdset : 0
+        int ready = TEMP_FAILURE_RETRY(
+                select(fd + 1,watchForResponse ? &rfdset : 0
                            , &wfdset, 0,
-                           (writeTimeout < 0) ? 0 : &timeout);
+                           (writeTimeout < 0) ? 0 : &timeout));
         switch (ready)
         {
         case 0:
@@ -337,7 +342,7 @@ void HTTPIO_t::sendData(const char *data, size_t length, bool watchForResponse)
 
         int toWrite = (length > HTTP_BUFF_LENGTH)
                       ? HTTP_BUFF_LENGTH : length;
-        int bytes = send(fd, data, toWrite, MSG_NOSIGNAL);
+        int bytes = TEMP_FAILURE_RETRY(send(fd, data, toWrite, MSG_NOSIGNAL));
         switch (bytes)
         {
         case 0:
@@ -399,8 +404,9 @@ void HTTPIO_t::readBlock(long int contentLength_, DataSink_t &data)
                 readTimeout / 1000,
                 (readTimeout % 1000) * 1000
             };
-        int ready = select(fd + 1, &rfdset, NULL, NULL,
-                           (readTimeout < 0) ? NULL : &timeout);
+        int ready = TEMP_FAILURE_RETRY(
+                select(fd + 1, &rfdset, NULL, NULL,
+                           (readTimeout < 0) ? NULL : &timeout));
         switch (ready)
         {
         case 0:
@@ -415,14 +421,15 @@ void HTTPIO_t::readBlock(long int contentLength_, DataSink_t &data)
         // pøeèteme data ze socketu
         int toRead = (contentLength_ < 0 || contentLength > HTTP_BUFF_LENGTH)
                      ? HTTP_BUFF_LENGTH : contentLength;
-        int bytes = recv(fd, buff, toRead, MSG_NOSIGNAL);
+        int bytes = TEMP_FAILURE_RETRY(recv(fd, buff, toRead, MSG_NOSIGNAL));
         switch (bytes)
         {
         case 0:
             // protìjsí strana zavøela spojení
             if (contentLength_ < 0)
                 return; //done
-            throw ProtocolError_t(HTTP_CLOSED, "Connection closed by foreign host");
+            throw ProtocolError_t(HTTP_CLOSED,
+                                  "Connection closed by foreign host");
 
         case -1:
             // other error

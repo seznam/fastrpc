@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcconnector.cc,v 1.3 2008-11-14 08:26:52 burlog Exp $
+ * FILE          $Id: frpcconnector.cc,v 1.4 2008-11-21 10:25:03 burlog Exp $
  *
  * DESCRIPTION
  *
@@ -61,7 +61,10 @@ namespace {
 
         ~SocketCloser_t() {
             if (doClose && (fd > -1)) {
-                ::close(fd);
+                if (TEMP_FAILURE_RETRY(::close(fd))) {
+                    LOG(WARN4, "Cannot close fd: <%d, %s>",
+                               errno, strerror(errno));
+                }
                 fd = -1;
             }
         }
@@ -117,7 +120,8 @@ SimpleConnector_t::~SimpleConnector_t() {}
 void SimpleConnector_t::connectSocket(int &fd) {
     // check socket
     if (!keepAlive && (fd > -1)) {
-        ::close(fd);
+        if (TEMP_FAILURE_RETRY(::close(fd)))
+            LOG(WARN4, "Cannot close fd: <%d, %s>", errno, strerror(errno));
         fd = -1;
     }
 
@@ -134,25 +138,29 @@ void SimpleConnector_t::connectSocket(int &fd) {
         FD_SET(fd, &rfdset);
         // okam¾itý timeout
         struct timeval timeout = { 0, 0 };
-        switch (::select(fd + 1, &rfdset, 0, 0, &timeout)) {
+        switch (TEMP_FAILURE_RETRY(::select(fd + 1, &rfdset, 0, 0, &timeout))) {
         case 0:
             // OK
             break;
 
         case -1:
             // some error on socket => close it
-            close(fd);
+            if (TEMP_FAILURE_RETRY(::close(fd)))
+                LOG(WARN4, "Cannot close fd: <%d, %s>", errno, strerror(errno));
             fd = -1;
             break;
 
         default:
             // check whether any data can be read from the socket
             char buff;
-            switch (recv(fd, &buff, 1, MSG_PEEK)) {
+            switch (TEMP_FAILURE_RETRY(recv(fd, &buff, 1, MSG_PEEK))) {
             case -1:
             case 0:
                 // zavøeme socket
-                close(fd);
+                if (TEMP_FAILURE_RETRY(::close(fd))) {
+                    LOG(WARN4, "Cannot close fd: <%d, %s>",
+                               errno, strerror(errno));
+                }
                 fd = -1;
                 break;
 
@@ -207,8 +215,8 @@ void SimpleConnector_t::connectSocket(int &fd) {
         memset(addr.sin_zero, 0x0, 8);
 
         // connect the socket
-        if (::connect(fd, (struct sockaddr *) &addr,
-                      sizeof(struct sockaddr)) < 0)
+        if (TEMP_FAILURE_RETRY(::connect(fd, (struct sockaddr *)&addr,
+                               sizeof(struct sockaddr))) < 0)
         {
             switch (ERRNO) {
             case EINPROGRESS:
@@ -237,8 +245,9 @@ void SimpleConnector_t::connectSocket(int &fd) {
             };
 
             // wait for connect completion or timeout
-            int ready = ::select(fd + 1, 0, &wfds, 0, (connectTimeout < 0)
-                                 ? 0 : &timeout);
+            int ready = TEMP_FAILURE_RETRY(
+                    ::select(fd + 1, 0, &wfds, 0, (connectTimeout < 0)
+                                 ? 0 : &timeout));
 
             if (ready <= 0) {
                 switch (ready) {

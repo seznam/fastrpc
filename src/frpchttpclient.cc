@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpchttpclient.cc,v 1.10 2007-07-31 14:05:45 vasek Exp $
+ * FILE          $Id: frpchttpclient.cc,v 1.11 2008-11-21 10:25:03 burlog Exp $
  *
  * DESCRIPTION
  *
@@ -89,7 +89,8 @@ struct SocketCloser_t {
 
     ~SocketCloser_t() {
         if (doClose && (fd > -1)) {
-            ::close(fd);
+            if (TEMP_FAILURE_RETRY(::close(fd)))
+                LOG(WARN4, "Cannot close fd: <%d, %s>", errno, strerror(errno));
             fd = -1;
         }
     }
@@ -319,7 +320,10 @@ void HTTPClient_t::sendRequest() {
 
         if (connectionMustClose) {
             if (httpIO.socket() > -1) {
-                close(httpIO.socket());
+                if (TEMP_FAILURE_RETRY(close(httpIO.socket()))) {
+                        LOG(WARN4, "Cannot close fd: <%d, %s>",
+                                   errno, strerror(errno));
+                }
                 httpIO.socket() = -1;
             }
 
