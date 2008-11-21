@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcconnector.cc,v 1.4 2008-11-21 10:25:03 burlog Exp $
+ * FILE          $Id: frpcconnector.cc,v 1.5 2008-11-21 10:31:27 burlog Exp $
  *
  * DESCRIPTION
  *
@@ -61,10 +61,7 @@ namespace {
 
         ~SocketCloser_t() {
             if (doClose && (fd > -1)) {
-                if (TEMP_FAILURE_RETRY(::close(fd))) {
-                    LOG(WARN4, "Cannot close fd: <%d, %s>",
-                               errno, strerror(errno));
-                }
+                TEMP_FAILURE_RETRY(::close(fd));
                 fd = -1;
             }
         }
@@ -120,8 +117,7 @@ SimpleConnector_t::~SimpleConnector_t() {}
 void SimpleConnector_t::connectSocket(int &fd) {
     // check socket
     if (!keepAlive && (fd > -1)) {
-        if (TEMP_FAILURE_RETRY(::close(fd)))
-            LOG(WARN4, "Cannot close fd: <%d, %s>", errno, strerror(errno));
+        TEMP_FAILURE_RETRY(::close(fd));
         fd = -1;
     }
 
@@ -145,8 +141,7 @@ void SimpleConnector_t::connectSocket(int &fd) {
 
         case -1:
             // some error on socket => close it
-            if (TEMP_FAILURE_RETRY(::close(fd)))
-                LOG(WARN4, "Cannot close fd: <%d, %s>", errno, strerror(errno));
+            TEMP_FAILURE_RETRY(::close(fd));
             fd = -1;
             break;
 
@@ -157,10 +152,7 @@ void SimpleConnector_t::connectSocket(int &fd) {
             case -1:
             case 0:
                 // zavøeme socket
-                if (TEMP_FAILURE_RETRY(::close(fd))) {
-                    LOG(WARN4, "Cannot close fd: <%d, %s>",
-                               errno, strerror(errno));
-                }
+                TEMP_FAILURE_RETRY(::close(fd));
                 fd = -1;
                 break;
 

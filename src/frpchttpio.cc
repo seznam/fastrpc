@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE             $Id: frpchttpio.cc,v 1.10 2008-11-21 10:25:03 burlog Exp $
+ * FILE             $Id: frpchttpio.cc,v 1.11 2008-11-21 10:31:27 burlog Exp $
  *
  * DESCRIPTION      HTTP I/O
  *
@@ -60,8 +60,7 @@ using namespace FRPC;
 
 HTTPIO_t::~HTTPIO_t() {
     // check whether socket is valid fd and close it
-    if ((fd > -1) && (TEMP_FAILURE_RETRY(close(fd))))
-        LOG(WARN4, "Cannot close fd: <%d, %s>", errno, strerror(errno));
+    if (fd > -1) TEMP_FAILURE_RETRY(close(fd));
 }
 
 std::vector<std::string>
