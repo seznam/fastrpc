@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: pythonserver.cc,v 1.22 2008-11-18 13:23:18 burlog Exp $
+ * $Id: pythonserver.cc,v 1.23 2008-12-08 12:15:34 burlog Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -1914,7 +1914,7 @@ static DECL_METHOD(ServerObject, serve) {
         return 0;
 
     // handle the connection
-    return self->server->serve(fd, clientIP);
+    return self->server->serve(fd, PyObjectWrapper_t(clientIP, true));
 }
 
 namespace {
