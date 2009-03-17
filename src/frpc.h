@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpc.h,v 1.9 2008-04-01 13:19:03 burlog Exp $
+ * FILE          $Id: frpc.h,v 1.10 2009-03-17 11:27:37 burlog Exp $
  *
  * DESCRIPTION
  *
@@ -58,6 +58,8 @@
 #include <frpcversion.h>
 
 #include <string>
+#include <bitset>
+#include <set>
 
 
 namespace FRPC {
@@ -70,8 +72,22 @@ std::string getISODateTime(short year, char month,
                            char day, char hour,
                            char minute, char sec, int timeZone);
 
-int FRPC_DLLEXPORT dumpFastrpcTree(const Value_t &value,
-                    std::string &outstr, int level);
+/**
+ * @short Dump FastRPC tree to string.
+ * @param value FastRPC value.
+ * @param outstr dump storage string.
+ * @param level dump only to this level.
+ * @param names mask all struct members with this names
+ * @param pos mask all array members at these positions in top level array.
+ * @return zero
+ */
+int FRPC_DLLEXPORT dumpFastrpcTree(const Value_t &value, std::string &outstr,
+                                   int level, std::set<std::string> names,
+                                   std::bitset<sizeof(unsigned long)> pos);
+
+/// old fashion dump without masks
+int FRPC_DLLEXPORT dumpFastrpcTree(const Value_t &value, std::string &outstr,
+                                   int level);
 
 void printValue(const Value_t &value, long spaces = 0);
 

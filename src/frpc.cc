@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpc.cc,v 1.13 2008-04-01 13:19:03 burlog Exp $
+ * FILE          $Id: frpc.cc,v 1.14 2009-03-17 11:27:37 burlog Exp $
  *
  * DESCRIPTION
  *
@@ -34,9 +34,10 @@
 
 #include <frpc.h>
 #include <frpcinternals.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <sstream>
+#include <algorithm>
 
 
 
@@ -48,6 +49,27 @@ extern "C" {
         return 0;
     }
 }
+
+namespace {
+
+struct HexWriter_t
+    : std::iterator<std::output_iterator_tag, void, void, void, void>
+{
+    HexWriter_t(std::ostream &os): os(os), space() {}
+    HexWriter_t &operator*() { return *this;}
+    HexWriter_t &operator++() { return *this;}
+    HexWriter_t &operator=(const unsigned char &ch) {
+        char x[4];
+        snprintf(x, 4, "%02x", ch);
+        os << space << x;
+        space = " ";
+        return *this;
+    }
+    std::ostream &os;
+    std::string space;
+};
+
+} // namespace
 
 namespace FRPC {
 
@@ -245,20 +267,22 @@ void parseISODateTime(const char *data, long len, short &year, char &month,
 }
 
 /**
-@brief method render fastrpc Value_t to string with level level
-@param value  - fast rpc value
-@param outstr - out string
-@param level - level of render
-@return always zero
-*/
-int dumpFastrpcTree(const Value_t &value, std::string &outstr, int level) {
-
+ * @short Dump FastRPC tree to string.
+ * @param value FastRPC value.
+ * @param outstr dump storage string.
+ * @param level dump only to this level.
+ * @param names mask all struct members with this names
+ * @param pos mask all array members at these positions in top level array.
+ * @return zero
+ */
+int FRPC_DLLEXPORT dumpFastrpcTree(const Value_t &value, std::string &outstr,
+                                   int level, std::set<std::string> names,
+                                   std::bitset<sizeof(unsigned long)> pos) {
     std::ostringstream out;
 
     switch (value.getType()) {
     case Int_t::TYPE: {
             out << Int(value).getValue();
-
         }
         break;
 
@@ -288,12 +312,21 @@ int dumpFastrpcTree(const Value_t &value, std::string &outstr, int level) {
     case Binary_t::TYPE: {
 
             out << "b\"";
-            if (Binary(value).size() > MAX_LEN)
-                out << Binary(value).getString().substr(0,MAX_LEN) << "...";
-            else
-                out << Binary(value).getString();
-            out << '"';
 
+            // get data
+            std::string binary;
+            if (Binary(value).size() > MAX_LEN)
+                binary = Binary(value).getString().substr(0, MAX_LEN);
+            else
+                binary = Binary(value).getString();
+
+            // copy in hex
+            HexWriter_t hexWriter(out);
+            std::copy(binary.begin(), binary.end(), hexWriter);
+            if (Binary(value).size() > MAX_LEN)
+                out << "...";
+
+            out << '"';
         }
         break;
 
@@ -327,9 +360,15 @@ int dumpFastrpcTree(const Value_t &value, std::string &outstr, int level) {
                     else
                         first = false;
 
-                    std::string val_str;
-                    dumpFastrpcTree(*(i->second), val_str, level - 1);
-                    out << i->first << ": " << val_str;
+                    if (names.find(i->first) != names.end()) {
+                        out << i->first << ": " << "-hidden-";
+
+                    } else {
+                        std::string val_str;
+                        dumpFastrpcTree(*(i->second), val_str, level - 1,
+                                        names, 0);
+                        out << i->first << ": " << val_str;
+                    }
 
                 }
             } else
@@ -347,32 +386,44 @@ int dumpFastrpcTree(const Value_t &value, std::string &outstr, int level) {
             if (level) {
 
                 for (Array_t::const_iterator
-                        i = array.begin();
-                        i != array.end(); ++i) {
+                        i = array.begin(), e = array.end(), b = array.begin();
+                        i != e; ++i) {
                     if (*i && first != true)
                         out << ", ";
                     else
                         first = false;
 
-                    std::string str;
-                    dumpFastrpcTree(**i, str, level - 1);
-                    out << str;
+                    if (pos.test(i - b)) {
+                        out << "-hidden-";
+
+                    } else {
+                        std::string str;
+                        dumpFastrpcTree(**i, str, level - 1, names, 0);
+                        out << str;
+                    }
                 }
-            } else
+            } else {
                 out << "...";
+            }
             out << ')';
-
-
-
         }
         break;
-
-
     }
     // vytvori vystupny retezec
     outstr = out.str();
 
     return 0;
+}
+
+/**
+@brief method render fastrpc Value_t to string with level level
+@param value  - fast rpc value
+@param outstr - out string
+@param level - level of render
+@return always zero
+*/
+int dumpFastrpcTree(const Value_t &value, std::string &outstr, int level) {
+    return dumpFastrpcTree(value, outstr, level, std::set<std::string>(), 0);
 }
 
 

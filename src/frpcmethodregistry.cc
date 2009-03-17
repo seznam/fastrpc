@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcmethodregistry.cc,v 1.10 2008-04-01 13:19:05 burlog Exp $
+ * FILE          $Id: frpcmethodregistry.cc,v 1.11 2009-03-17 11:27:37 burlog Exp $
  *
  * DESCRIPTION
  *
@@ -257,6 +257,9 @@ Value_t& MethodRegistry_t::processCall(const std::string &clientIP,
                 callbacks->preProcess(methodName, clientIP, params);
 
             result = &(pos->second.method->call(pool, params));
+
+            // prepare deprecated warning
+
             if(callbacks)
                 callbacks->postProcess(methodName, clientIP, params, *result,
                                        timeD.diff());
@@ -305,7 +308,7 @@ Value_t& MethodRegistry_t::processCall(const std::string &clientIP, Reader_t &re
         }
 
 
-        result = &(processCall(builder.getUnMarshaledMethodName(), clientIP,
+        result = &(processCall(clientIP, builder.getUnMarshaledMethodName(),
                                Array(builder.getUnMarshaledData()),pool));
     }
     catch(const StreamError_t &streamError)
@@ -342,7 +345,7 @@ int MethodRegistry_t::processCall(const std::string &clientIP, Reader_t &reader,
                                                unmarshaller->getProtocolVersion()));
         TreeFeeder_t feeder(*marshaller);
 
-        retValue = &(processCall(builder.getUnMarshaledMethodName(), clientIP,
+        retValue = &(processCall(clientIP, builder.getUnMarshaledMethodName(),
                                  Array(builder.getUnMarshaledData()),pool));
 
         marshaller->packMethodResponse();
