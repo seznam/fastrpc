@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: fastrpcmodule.cc,v 1.24 2009-03-18 12:45:19 burlog Exp $
+ * $Id: fastrpcmodule.cc,v 1.25 2009-03-18 12:55:57 burlog Exp $
  *
  * AUTHOR      Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
@@ -1959,7 +1959,7 @@ inline int printString(std::ostringstream &out, PyObject *obj,
                        const char *prefix = "\"",
                        const char *suffix = "\"",
                        const char *err = "<STRING>",
-                       int limit = 10, bool binary = false)
+                       Py_ssize_t limit = 10, bool binary = false)
 {
     // 7bit string
     char *str;
