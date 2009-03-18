@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: fastrpcmodule.cc,v 1.23 2008-11-20 12:26:52 burlog Exp $
+ * $Id: fastrpcmodule.cc,v 1.24 2009-03-18 12:45:19 burlog Exp $
  *
  * AUTHOR      Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
@@ -1937,11 +1937,29 @@ static char fastrpc_dumpTree__doc__[] =
     "Dump value as RPC data tree.\n";
 
 namespace {
+
+struct HexWriter_t
+    : std::iterator<std::output_iterator_tag, void, void, void, void>
+{
+    HexWriter_t(std::ostream &os): os(os), space() {}
+    HexWriter_t &operator*() { return *this;}
+    HexWriter_t &operator++() { return *this;}
+    HexWriter_t &operator=(const unsigned char &ch) {
+        char x[4];
+        snprintf(x, 4, "%02x", ch);
+        os << space << x;
+        space = " ";
+        return *this;
+    }
+    std::ostream &os;
+    std::string space;
+};
+
 inline int printString(std::ostringstream &out, PyObject *obj,
                        const char *prefix = "\"",
                        const char *suffix = "\"",
                        const char *err = "<STRING>",
-                       int limit = 10)
+                       int limit = 10, bool binary = false)
 {
     // 7bit string
     char *str;
@@ -1953,10 +1971,19 @@ inline int printString(std::ostringstream &out, PyObject *obj,
     } else {
         // ok, put at most MAX_STRING_LENGTH chars
         out << prefix;
-        if ((limit < 0) || (len < limit)) {
-            out << std::string(str, len);
+
+        if (binary) {
+            HexWriter_t hexWriter(out);
+            std::copy(str, str + std::min(len, limit), hexWriter);
+            if ((limit < 0) || (len < limit)) out << "...";
+
         } else {
-            out << std::string(str, limit) << "...";
+
+            if ((limit < 0) || (len < limit)) {
+                out << std::string(str, len);
+            } else {
+                out << std::string(str, limit) << "...";
+            }
         }
         out << suffix;
     }
@@ -1964,7 +1991,8 @@ inline int printString(std::ostringstream &out, PyObject *obj,
 }
 
 int printPyFastRPCTree(PyObject *tree, std::ostringstream &out,
-                       int level = 1)
+                       int level, PyObject *names,
+                       std::bitset<sizeof(unsigned long)> pos)
 {
     if (PyInt_Check(tree)) {
         // integer
@@ -1999,15 +2027,18 @@ int printPyFastRPCTree(PyObject *tree, std::ostringstream &out,
                 // print all items
                 for (int i = 0; i < size; ++i) {
                     if (i) out << ", ";
+                    if (pos.test(i)) {
+                        out << "-hidden-";
+                        continue;
+                    }
                     PyObjectWrapper_t subTree(PySequence_GetItem(tree, i));
                     if (!subTree) {
                         // oops, cannot get item
                         return -1;
-                    } else {
-                        // print item
-                        if (printPyFastRPCTree(subTree, out, level - 1))
-                            return -1;
                     }
+                    // print item
+                    if (printPyFastRPCTree(subTree, out, level - 1, names, 0))
+                        return -1;
                 }
             }
         } else out << "...";
@@ -2027,15 +2058,28 @@ int printPyFastRPCTree(PyObject *tree, std::ostringstream &out,
                 else other = true;
 
                 // print key
-                if (printPyFastRPCTree(key, out, level - 1))
+                std::ostringstream os;
+                if (printPyFastRPCTree(key, os, level - 1, names, 0))
                     return -1;
 
                 // put key && value
-                out << ": ";
+                out << os.str() << ": ";
 
-                // print value
-                if (printPyFastRPCTree(value, out, level - 1))
-                    return -1;
+                std::string xkey = os.str();
+                if (!xkey.empty() && *(xkey.end() - 1) == '"') {
+                    std::string::const_iterator end = xkey.end() - 1;
+                    std::string::const_iterator begin = xkey.begin();
+                    while (*begin++ != '"');
+                    xkey = std::string(begin, end);
+                }
+                if (PyMapping_HasKeyString(names,
+                                           const_cast<char *>(xkey.c_str()))) {
+                    out << "-hidden-";
+                } else {
+                    // print value
+                    if (printPyFastRPCTree(value, out, level - 1, names, 0))
+                        return -1;
+                }
 
             }
         } else out << "...";
@@ -2059,7 +2103,7 @@ int printPyFastRPCTree(PyObject *tree, std::ostringstream &out,
         // print DateTime
         PyObjectWrapper_t data(PyObject_GetAttrString(tree, "data"));
         if (!data) return -1;
-        if (printString(out, data, "b\"", "\"", "<BASE64>", 10))
+        if (printString(out, data, "b\"", "\"", "<BASE64>", 10, true))
             return -1;
     } else {
         // other, unsupported type
@@ -2073,12 +2117,15 @@ int printPyFastRPCTree(PyObject *tree, std::ostringstream &out,
 
 PyObject* fastrpc_dumpTree(PyObject *, PyObject *args) {
     PyObject *value;
+    PyObject *names = 0x0;
+    int pos = 0;
     int level = 1;
-    if (!PyArg_ParseTuple(args, "O|i:fastrpc.dumpTree", &value, &level))
+    if (!PyArg_ParseTuple(args, "O|iOi:fastrpc.dumpTree",
+                                &value, &level, &names, &pos))
         return 0;
 
     std::ostringstream out;
-    printPyFastRPCTree(value, out, level);
+    printPyFastRPCTree(value, out, level, names, pos);
 
     // OK
     return PyString_FromStringAndSize(out.str().data(), out.str().size());
