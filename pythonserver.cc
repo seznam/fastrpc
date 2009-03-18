@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: pythonserver.cc,v 1.23 2008-12-08 12:15:34 burlog Exp $
+ * $Id: pythonserver.cc,v 1.24 2009-03-18 14:19:23 burlog Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -221,7 +221,8 @@ namespace {
 
     struct Method_t {
         Method_t(const std::string &name, PyObject *callback,
-                 PyObject *signature, PyObject *help, PyObject *context = 0);
+                 PyObject *signature, PyObject *help, PyObject *context,
+                 PyObject *names, int pos);
 
         Method_t(const std::string &name, PyObject *callback,
                  const std::string &signature, const std::string &help,
@@ -234,6 +235,8 @@ namespace {
         PyObjectWrapper_t signature;
         PyObjectWrapper_t help;
         PyObjectWrapper_t context;
+        PyObjectWrapper_t names;
+        int pos;
     };
 
     typedef std::map<std::string, Method_t> MethodLookup_t;
@@ -1256,18 +1259,20 @@ PyObject* MethodRegistryObject_new(PyTypeObject *type, PyObject *args,
 DECL_METHOD_KWD(MethodRegistryObject, register) {
     // keyword list
     static const char *kwlist[] = { "name", "method", "signature", "doc",
-                                    "context", 0 };
+                                    "context", "names", "pos", 0 };
 
     char *name;
     PyObject *callback;
     PyObject *signature = emptyTuple;
     PyObject *help = emptyString;
     PyObject *context = 0;
+    PyObject *names = 0;
+    int pos = 0;
 
     // parse arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "sO|OSO", (char **)kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "sO|OSOOi", (char **)kwlist,
                                      &name, &callback, &signature,
-                                     &help, &context))
+                                     &help, &context, &names, &pos))
         return 0;
 
     // callback must me callable
@@ -1280,7 +1285,7 @@ DECL_METHOD_KWD(MethodRegistryObject, register) {
 
     try {
         // add or replace method
-        Method_t m(name, callback, signature, help, context);
+        Method_t m(name, callback, signature, help, context, names, pos);
         std::pair<MethodLookup_t::iterator, bool>
             i(self->lookup->insert(MethodLookup_t::value_type(name, m)));
 
@@ -1401,10 +1406,26 @@ PyObject* dispatchCall(MethodRegistryObject *self, const char *name,
 
     FRPC::MethodRegistry_t::TimeDiff_t timeD;
 
+    // first fetch method, we need names and pos filters
+    MethodLookup_t::const_iterator flookup = self->lookup->find(name);
+    if (flookup != self->lookup->end()) {
+        method = &flookup->second;
+    }
+
     // call preprocessor
     if (self->preProcess != Py_None) {
-        if (!PyObject_CallFunction(self->preProcess, (char *)"(sOO)",
-                                   name, clientIP, params)) {
+        bool fail = false;
+
+        if (method->names.object) {
+            fail = !PyObject_CallFunction(self->preProcess, (char *)"(sOOOi)",
+                                          name, clientIP, params,
+                                          method->names.object, method->pos);
+        } else {
+            fail = !PyObject_CallFunction(self->preProcess, (char *)"(sOO)",
+                                          name, clientIP, params);
+        }
+
+        if (fail) {
             // exception thrown => fetch exception
             fetchException(type, value, traceback);
             result = makeFault("Unhandled exception in postprocessor ",
@@ -1413,11 +1434,7 @@ PyObject* dispatchCall(MethodRegistryObject *self, const char *name,
     }
 
     if (!result) {
-        // find method
-        MethodLookup_t::const_iterator flookup = self->lookup->find(name);
-        if (flookup != self->lookup->end()) {
-            method = &flookup->second;
-        } else if (!self->defaultMethod) {
+        if (!method && !self->defaultMethod) {
             result = makeFault
                 (FRPC::MethodRegistry_t::FRPC_NO_SUCH_METHOD_ERROR,
                  "Method '%s' not found.", name);
@@ -1919,9 +1936,10 @@ static DECL_METHOD(ServerObject, serve) {
 
 namespace {
     Method_t::Method_t(const std::string &name, PyObject *callback,
-                       PyObject *signature, PyObject *help, PyObject *context)
+                       PyObject *signature, PyObject *help, PyObject *context,
+                       PyObject *names, int pos)
         : name(name), callback(callback, true), signature(signature, true),
-          help(help, true), context(context, true)
+          help(help, true), context(context, true), names(names, true), pos(pos)
     {
         if (PyString_Check(signature)) {
             char *sig;
@@ -1938,7 +1956,7 @@ namespace {
                        const std::string &signature, const std::string &help,
                        PyObject *context)
         : name(name), callback(callback, true), signature(), help(),
-          context(context, true)
+          context(context, true), names(0), pos(0)
     {
         if (!(this->help = PyString_FromStringAndSize
               (help.data(), help.size())))
