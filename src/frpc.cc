@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpc.cc,v 1.14 2009-03-17 11:27:37 burlog Exp $
+ * FILE          $Id: frpc.cc,v 1.15 2009-03-24 10:37:48 burlog Exp $
  *
  * DESCRIPTION
  *
@@ -277,7 +277,7 @@ void parseISODateTime(const char *data, long len, short &year, char &month,
  */
 int FRPC_DLLEXPORT dumpFastrpcTree(const Value_t &value, std::string &outstr,
                                    int level, std::set<std::string> names,
-                                   std::bitset<sizeof(unsigned long)> pos) {
+                                   std::bitset<sizeof(unsigned long) * 8> pos) {
     std::ostringstream out;
 
     switch (value.getType()) {
@@ -393,7 +393,8 @@ int FRPC_DLLEXPORT dumpFastrpcTree(const Value_t &value, std::string &outstr,
                     else
                         first = false;
 
-                    if (pos.test(i - b)) {
+                    size_t xpos = i - b;
+                    if ((xpos < pos.size()) && pos.test(xpos)) {
                         out << "-hidden-";
 
                     } else {
