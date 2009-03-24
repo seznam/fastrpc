@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: fastrpcmodule.cc,v 1.25 2009-03-18 12:55:57 burlog Exp $
+ * $Id: fastrpcmodule.cc,v 1.26 2009-03-24 10:53:37 burlog Exp $
  *
  * AUTHOR      Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
@@ -1992,7 +1992,7 @@ inline int printString(std::ostringstream &out, PyObject *obj,
 
 int printPyFastRPCTree(PyObject *tree, std::ostringstream &out,
                        int level, PyObject *names,
-                       std::bitset<sizeof(unsigned long)> pos)
+                       std::bitset<sizeof(unsigned long) * 8> pos)
 {
     if (PyInt_Check(tree)) {
         // integer
@@ -2027,7 +2027,7 @@ int printPyFastRPCTree(PyObject *tree, std::ostringstream &out,
                 // print all items
                 for (int i = 0; i < size; ++i) {
                     if (i) out << ", ";
-                    if (pos.test(i)) {
+                    if ((i < pos.size()) && pos.test(i)) {
                         out << "-hidden-";
                         continue;
                     }
