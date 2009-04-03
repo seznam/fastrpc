@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: pythonserver.cc,v 1.24 2009-03-18 14:19:23 burlog Exp $
+ * $Id: pythonserver.cc,v 1.25 2009-04-03 12:34:49 burlog Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -1416,7 +1416,7 @@ PyObject* dispatchCall(MethodRegistryObject *self, const char *name,
     if (self->preProcess != Py_None) {
         bool fail = false;
 
-        if (method->names.object) {
+        if (method && method->names.object) {
             fail = !PyObject_CallFunction(self->preProcess, (char *)"(sOOOi)",
                                           name, clientIP, params,
                                           method->names.object, method->pos);
