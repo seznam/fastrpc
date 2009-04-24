@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: pythonbuilder.cc,v 1.7 2008-11-14 10:18:22 burlog Exp $
+ * $Id: pythonbuilder.cc,v 1.8 2009-04-24 12:33:58 vasek Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -128,7 +128,7 @@ void Builder_t::buildFault(int errNumber, const char* errMsg, unsigned int size)
     PyObject *args =Py_BuildValue("iNO",errNumber,
                                   PyString_FromStringAndSize(errMsg,size),
                                   methodObject ? methodObject : Py_None);
-    PyObject *fault = PyInstance_New(Fault, args, 0);
+    PyObject *fault = PyObject_Call(Fault, args, 0);
     //isFirst(fault);
 
     if (!fault)
@@ -144,7 +144,7 @@ void Builder_t::buildFault(int errNumber, const std::string &errMsg) {
         return;
     PyObject *args =Py_BuildValue("isO", errNumber, errMsg.c_str(),
                                   methodObject ? methodObject : Py_None);
-    PyObject *fault = PyInstance_New(Fault, args, 0);
+    PyObject *fault = PyObject_Call(Fault, args, 0);
 
     if (!fault)
         setError();

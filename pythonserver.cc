@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: pythonserver.cc,v 1.25 2009-04-03 12:34:49 burlog Exp $
+ * $Id: pythonserver.cc,v 1.26 2009-04-24 12:33:58 vasek Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -304,7 +304,7 @@ namespace {
         PyObjectWrapper_t faultArgs = Py_BuildValue("(is)", faultCode, buf);
         if (!faultArgs) return 0;
 
-        return PyInstance_New(Fault, faultArgs, 0);
+        return PyObject_Call(Fault, faultArgs, 0);
     }
 
     PyObject* makeFault(const std::string &msg, PyObjectWrapper_t type,
@@ -331,7 +331,7 @@ namespace {
                           *message);
         if (!faultArgs) return 0;
 
-        return PyInstance_New(Fault, faultArgs, 0);
+        return PyObject_Call(Fault, faultArgs, 0);
     }
 
     PyObject* makeFault(const std::string &msg) {
