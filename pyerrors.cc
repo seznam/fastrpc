@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: pyerrors.cc,v 1.5 2008-11-14 10:18:22 burlog Exp $
+ * $Id: pyerrors.cc,v 1.6 2009-04-27 04:34:43 burlog Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -254,10 +254,8 @@ PyObject* initException(PyObject *module, const char *name,
                         const char *niceName, PyObject *base,
                         PyMethodDef *methodDef)
 {
-    PyObjectWrapper_t Exception_dict(PyDict_New());
     // create runtime error
-    PyObject *Exception = PyErr_NewException((char *)niceName, base,
-                          Exception_dict);
+    PyObject *Exception = PyErr_NewException((char *)niceName, base, 0);
     if (!Exception)
         return 0;
 
@@ -272,7 +270,7 @@ PyObject* initException(PyObject *module, const char *name,
         PyObjectWrapper_t method(PyMethod_New(func, NULL, Exception));
         if (!method)
             return 0;
-        if (PyDict_SetItemString(Exception_dict, md->ml_name, method))
+        if (PyObject_SetAttrString(Exception, md->ml_name, method))
             return 0;
     }
 
