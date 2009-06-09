@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcbinmarshaller.cc,v 1.10 2008-04-01 13:19:03 burlog Exp $
+ * FILE          $Id: frpcbinmarshaller.cc,v 1.11 2009-06-09 13:11:36 burlog Exp $
  *
  * DESCRIPTION
  *
@@ -233,7 +233,7 @@ void BinMarshaller_t::packMethodCall(const char* methodName,
     //write  nameSize
     writer.write(reinterpret_cast<char*>(&realSize), 1);
     //write method name
-    writer.write(methodName, realSize);
+    writer.write(methodName, size);
 
 }
 
@@ -266,8 +266,6 @@ void BinMarshaller_t::packStruct(unsigned int  numOfMembers) {
     writer.write(&type, 1);
     //write packed numOfMembers
     writer.write(number.data, getNumberSize(numType));
-
-
 }
 
 void BinMarshaller_t::packStructMember(const char* memberName,
@@ -282,7 +280,7 @@ void BinMarshaller_t::packStructMember(const char* memberName,
     int8_t realSize = int8_t(size);
     writer.write(reinterpret_cast<char *>(&realSize), 1);
     //write whole memberName
-    writer.write(memberName, realSize);
+    writer.write(memberName, size);
 
 }
 
