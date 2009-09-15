@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: pythonfeeder.cc,v 1.9 2008-11-18 13:23:18 burlog Exp $
+ * $Id: pythonfeeder.cc,v 1.10 2009-09-15 14:56:32 mirecta Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -89,7 +89,14 @@ void Feeder_t::feedValue(PyObject *value)
     if (PyInt_Check(value)) {
         marshaller->packInt(PyInt_AsLong(value));
     } else if(PyLong_Check(value)) {
-        Int_t::value_type i = PyLong_AsLongLong(value);
+        size_t bits = _PyLong_NumBits(value);
+        int sign = _PyLong_Sign(value);
+        Int_t::value_type i;
+        if (bits == 64 && sign == 1)
+            i = PyLong_AsUnsignedLongLong(value);
+        else
+            i = PyLong_AsLongLong(value);
+               
         // check for error
         if (PyErr_Occurred()) throw PyError_t();
         marshaller->packInt(i);
