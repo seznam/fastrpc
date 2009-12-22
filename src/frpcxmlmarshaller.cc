@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcxmlmarshaller.cc,v 1.9 2008-04-01 13:19:07 burlog Exp $
+ * FILE          $Id: frpcxmlmarshaller.cc,v 1.10 2009-12-22 15:34:05 burlog Exp $
  *
  * DESCRIPTION
  *
@@ -185,7 +185,7 @@ void XmlMarshaller_t::packDateTime(short year, char month, char day, char hour,
 }
 
 void XmlMarshaller_t::packDouble(double value) {
-    char buff[50];
+    char buff[512];
 
     sprintf(buff,"%f",value);
 
