@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpchttpclient.cc,v 1.12 2008-11-21 10:31:27 burlog Exp $
+ * FILE          $Id: frpchttpclient.cc,v 1.13 2010-02-12 10:40:34 burlog Exp $
  *
  * DESCRIPTION
  *
@@ -30,6 +30,8 @@
  * HISTORY
  *
  */
+
+#include "nonglibc.h"
 
 #include <sys/types.h>
 #include <string.h>

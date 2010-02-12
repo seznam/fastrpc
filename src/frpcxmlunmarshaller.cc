@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcxmlunmarshaller.cc,v 1.14 2008-04-01 13:19:08 burlog Exp $
+ * FILE          $Id: frpcxmlunmarshaller.cc,v 1.15 2010-02-12 10:40:34 burlog Exp $
  *
  * DESCRIPTION
  *
@@ -30,6 +30,7 @@
  * HISTORY
  *
  */
+#include <limits.h>
 #include "frpcxmlunmarshaller.h"
 #include <frpc.h>
 #include <stdio.h>
