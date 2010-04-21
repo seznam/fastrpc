@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcbinunmarshaller.cc,v 1.9 2008-04-01 13:19:04 burlog Exp $
+ * FILE          $Id: frpcbinunmarshaller.cc,v 1.10 2010-04-21 08:48:03 edois Exp $
  *
  * DESCRIPTION
  *
@@ -31,7 +31,7 @@
  *
  */
 #include "frpcbinunmarshaller.h"
-
+#include "frpctreebuilder.h"
 #include <memory.h>
 #include <frpcstreamerror.h>
 
@@ -139,6 +139,19 @@ void BinUnMarshaller_t::unMarshall(const char *data, unsigned int size, char typ
                 case BOOL: {
                     dataBuilder.buildBool(FRPC_GET_DATA_TYPE_INFO(mainBuff[0]) & 0x01);
                     //decrement member count
+                    internalType = NONE;
+                    mainBuff.erase();
+                    dataWanted = 1;
+                    decrementMember();
+                }
+                break;
+                case NULLTYPE: {
+                    TreeBuilder_t *treeBuilder(dynamic_cast<TreeBuilder_t*>(&dataBuilder));
+                    if (treeBuilder) {
+                        treeBuilder->buildNull();
+                    } else {
+                        dynamic_cast<DataBuilderWithNull_t&>(dataBuilder).buildNull();
+                    }
                     internalType = NONE;
                     mainBuff.erase();
                     dataWanted = 1;

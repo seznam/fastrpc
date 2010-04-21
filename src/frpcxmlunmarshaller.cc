@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcxmlunmarshaller.cc,v 1.15 2010-02-12 10:40:34 burlog Exp $
+ * FILE          $Id: frpcxmlunmarshaller.cc,v 1.16 2010-04-21 08:48:03 edois Exp $
  *
  * DESCRIPTION
  *
@@ -32,6 +32,7 @@
  */
 #include <limits.h>
 #include "frpcxmlunmarshaller.h"
+#include "frpctreebuilder.h"
 #include <frpc.h>
 #include <stdio.h>
 #include <string.h>
@@ -499,8 +500,13 @@ inline char getValueType(const char *name) {
     break;
     case 'n': {
         //membername structs
-        if (strcmp(name,"name") == 0)
+        if (name[1] == 'a' && strcmp(name,"name") == 0) {
             return MEMBER_NAME;
+        } else if (name[1] == 'i' && strcmp(name,"nil") == 0) {
+            return NULLTYPE;
+        } else {
+            return NONE;
+        }
     }
     break;
     case 'm': {
@@ -564,6 +570,7 @@ void XmlUnMarshaller_t::setValueType(const char *name) {
     case MEMBER_NAME:
     case METHOD_NAME:
     case DOUBLE:
+    case NULLTYPE:
     case NONE:
         if (mainInternalType == TYPE_METHOD_RESPONSE) {
             dataBuilder.buildMethodResponse();
@@ -724,6 +731,16 @@ void XmlUnMarshaller_t::setValueData(const char *data, unsigned int len) {
     break;
     case BOOL: {
         dataBuilder.buildBool((data[0] == '1'));
+        internalType = NONE;
+    }
+    break;
+    case NULLTYPE: {
+        TreeBuilder_t *treeBuilder(dynamic_cast<TreeBuilder_t*>(&dataBuilder));
+        if (treeBuilder) {
+            treeBuilder->buildNull();
+        } else {
+            dynamic_cast<DataBuilderWithNull_t&>(dataBuilder).buildNull();
+        }
         internalType = NONE;
     }
     break;

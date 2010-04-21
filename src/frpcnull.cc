@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcvalue.cc,v 1.3 2010-04-21 08:48:03 edois Exp $
+ * FILE          $Id: frpcnull.cc,v 1.1 2010-04-21 08:48:03 edois Exp $
  *
  * DESCRIPTION   
  *
@@ -30,8 +30,8 @@
  * HISTORY
  *       
  */
-#include "frpcvalue.h"
 #include "frpcnull.h"
+#include "frpcpool.h"
 
 namespace FRPC
 {
@@ -39,16 +39,16 @@ namespace FRPC
 
 
 
-Value_t::~Value_t()
+Null_t::~Null_t()
 {}
 
-const bool Value_t::isNull() const
+Value_t& Null_t::clone(Pool_t &newPool) const
 {
-    return FRPC::isNull(*this);
+  
+return newPool.Null();
+   
 }
 
+Null_t Null_t::staticValue;
+
 }
-
-
-
-

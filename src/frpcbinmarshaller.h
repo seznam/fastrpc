@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcbinmarshaller.h,v 1.8 2008-04-01 13:19:04 burlog Exp $
+ * FILE          $Id: frpcbinmarshaller.h,v 1.9 2010-04-21 08:48:03 edois Exp $
  *
  * DESCRIPTION
  *
@@ -39,6 +39,7 @@
 #include <frpc.h>
 #include <frpcwriter.h>
 #include <frpcint.h>
+#include <frpcnull.h>
 #include <frpcstreamerror.h>
 
 namespace FRPC {
@@ -70,6 +71,8 @@ public:
     virtual void packStructMember(const char* memberName, unsigned int size);
     virtual void packMethodResponse();
     virtual void flush();
+
+    void packNull();
 
 private:
 

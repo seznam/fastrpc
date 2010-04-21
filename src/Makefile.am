@@ -21,7 +21,7 @@
 # http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
 #
 #
-# $Id: Makefile.am,v 1.8 2008-11-14 08:26:52 burlog Exp $
+# $Id: Makefile.am,v 1.9 2010-04-21 08:48:03 edois Exp $
 #
 # DESCRIPTION
 # A Fast RPC library.
@@ -51,11 +51,11 @@ include_HEADERS = frpc.h frpcvalue.h frpcarray.h frpcstruct.h frpcbinary.h frpcd
                   frpctreebuilder.h frpctreefeeder.h frpcfault.h frpcmethod.h frpcdefaultmethod.h \
                   frpcmethodregistry.h frpcserver.h frpcresponseerror.h frpcplatform.h frpcheadmethod.h \
                   frpcsocket.h frpcsocketunix.h frpcsocketwin.h frpcplatform.h \
-                  frpcversion.h frpcconnector.h frpcconverters.h
+                  frpcversion.h frpcconnector.h frpcconverters.h frpcnull.h \
+                  frpcbinmarshaller.h frpcxmlmarshaller.h frpcinternals.h
 
 
-noinst_HEADERS = frpcinternals.h frpcbinmarshaller.h  frpcxmlmarshaller.h \
-                 frpcbinunmarshaller.h frpcxmlunmarshaller.h
+noinst_HEADERS = frpcbinunmarshaller.h frpcxmlunmarshaller.h
 
 # compile this library
 lib_LTLIBRARIES = libfastrpc.la
@@ -70,7 +70,7 @@ libfastrpc_la_SOURCES = frpcvalue.cc frpcarray.cc frpcstruct.cc frpcbinary.cc fr
                         frpcbinunmarshaller.cc frpcxmlunmarshaller.cc frpcprotocolerror.cc \
                         frpchttperror.cc frpcencodingerror.cc frpchttpio.cc frpchttp.cc frpchttpclient.cc \
                         frpctreebuilder.cc frpctreefeeder.cc frpcfault.cc frpc.cc frpcmethodregistry.cc \
-                        frpcserver.cc frpcresponseerror.cc frpcconnector.cc
+                        frpcserver.cc frpcresponseerror.cc frpcconnector.cc frpcnull.cc
 
 # with these flags (version info etc.)
 libfastrpc_la_LDFLAGS = @VERSION_INFO@ $(XML2_LIBS)

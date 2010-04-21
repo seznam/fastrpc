@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpctreefeeder.cc,v 1.4 2008-04-01 13:19:07 burlog Exp $
+ * FILE          $Id: frpctreefeeder.cc,v 1.5 2010-04-21 08:48:03 edois Exp $
  *
  * DESCRIPTION   
  *
@@ -32,6 +32,8 @@
  */
 
 #include "frpctreefeeder.h"
+#include "frpcbinmarshaller.h"
+#include "frpcxmlmarshaller.h"
 
 namespace FRPC {
 
@@ -46,6 +48,18 @@ void TreeFeeder_t::feedValue(const Value_t &value){
     case Bool_t::TYPE:
         {
             marshaller.packBool(Bool(value).getValue());
+        }
+        break;
+
+    case Null_t::TYPE:
+        {
+            BinMarshaller_t *binMarshaller(dynamic_cast<BinMarshaller_t*>(&marshaller));
+            if (binMarshaller) {
+                binMarshaller->packNull();
+            } else {
+                XmlMarshaller_t &xmlMarshaller(dynamic_cast<XmlMarshaller_t&>(marshaller));
+                xmlMarshaller.packNull();
+            }
         }
         break;
 

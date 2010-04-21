@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcmarshaller.h,v 1.4 2008-04-01 13:19:05 burlog Exp $
+ * FILE          $Id: frpcmarshaller.h,v 1.5 2010-04-21 08:48:03 edois Exp $
  *
  * DESCRIPTION
  *
@@ -95,6 +95,7 @@ public:
         or if created as XML using method XML(Xml-RPC)
     */
     virtual void packBool(bool value) = 0;
+
     /**
         @brief Marshall an datetime type
         @param year - Year is offset (0 - 2047) to zero-year 1600
@@ -111,6 +112,8 @@ public:
         If marshaller is create as binary  using method Binary(FastRPC)
         or if created as XML using method XML(Xml-RPC)
     */
+
+    
 
     virtual void packDateTime(short year, char month, char day,char hour, char min,  char sec,
                               char weekDay, time_t unixTime, int timeZone ) = 0;

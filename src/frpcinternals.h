@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcinternals.h,v 1.11 2008-04-01 13:19:05 burlog Exp $
+ * FILE          $Id: frpcinternals.h,v 1.12 2010-04-21 08:48:03 edois Exp $
  *
  * DESCRIPTION
  *
@@ -49,7 +49,7 @@
 
 
 #define FRPC_MAJOR_VERSION 2
-#define FRPC_MINOR_VERSION 0
+#define FRPC_MINOR_VERSION 1
 
 #define SWAP_BYTE(byte1,byte2)  \
          byte1 = byte1 ^ byte2; \
@@ -60,7 +60,7 @@ namespace FRPC
 {
 
 enum{NONE=0, INT=1,BOOL,DOUBLE,STRING,DATETIME,BINARY,INTP8,INTN8,
-     STRUCT=10,ARRAY,METHOD_CALL=13,METHOD_RESPONSE,FAULT,
+     STRUCT=10,ARRAY,NULLTYPE,METHOD_CALL=13,METHOD_RESPONSE,FAULT,
      MEMBER_NAME = 100,METHOD_NAME,METHOD_NAME_LEN,MAGIC,MAIN };
 
 enum{CHAR8=0,SHORT16=1,LONG24,LONG32,LONG40,LONG48,LONG56,LONG64};

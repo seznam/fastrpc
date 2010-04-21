@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcpool.h,v 1.6 2008-05-05 12:52:00 burlog Exp $
+ * FILE          $Id: frpcpool.h,v 1.7 2010-04-21 08:48:03 edois Exp $
  *
  * DESCRIPTION   
  *
@@ -51,6 +51,7 @@ class String_t;
 class Array_t;
 class DateTime_t;
 class Struct_t;
+class Null_t;
 
 /**
 @author Miroslav Talasek
@@ -330,6 +331,11 @@ public:
                      const std::string &key3, const Value_t &item3,
                      const std::string &key4, const Value_t &item4,
                      const std::string &key5, const Value_t &item5);
+
+    /**
+        @brief Create new  Null_t
+    */
+    Null_t& Null();
 
     //private:
     std::vector< Value_t* > pointerStorage; ///@brief pointer storage of pool

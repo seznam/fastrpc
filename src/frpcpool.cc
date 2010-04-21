@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcpool.cc,v 1.7 2008-05-05 12:52:00 burlog Exp $
+ * FILE          $Id: frpcpool.cc,v 1.8 2010-04-21 08:48:03 edois Exp $
  *
  * DESCRIPTION
  *
@@ -402,6 +402,11 @@ Struct_t& Pool_t::Struct(const std::string &key1, const Value_t &item1,
     pointerStorage.push_back(newValue);
 
     return *newValue;
+}
+
+Null_t& Pool_t::Null()
+{
+    return Null_t::staticValue;
 }
 
 }

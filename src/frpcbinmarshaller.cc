@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcbinmarshaller.cc,v 1.11 2009-06-09 13:11:36 burlog Exp $
+ * FILE          $Id: frpcbinmarshaller.cc,v 1.12 2010-04-21 08:48:03 edois Exp $
  *
  * DESCRIPTION
  *
@@ -102,7 +102,6 @@ void BinMarshaller_t::packBool(bool value) {
 
     //add DATATYPE to buffer
     writer.write(&type,1);
-
 
 }
 
@@ -308,6 +307,18 @@ void BinMarshaller_t::flush() {
     writer.flush();
 }
 
+void BinMarshaller_t::packNull() {
 
+    if (protocolVersion.versionMajor < 2
+        || protocolVersion.versionMinor < 1) {
+
+        throw StreamError_t("Null is not supported by protocol version lower than 2.1");
+    }
+
+    char type = FRPC_DATA_TYPE(NULLTYPE, 0);
+
+    writer.write(&type,1);
+
+}
 
 };

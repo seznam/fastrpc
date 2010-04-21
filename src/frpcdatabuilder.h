@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcdatabuilder.h,v 1.5 2008-04-01 13:19:04 burlog Exp $
+ * FILE          $Id: frpcdatabuilder.h,v 1.6 2010-04-21 08:48:03 edois Exp $
  *
  * DESCRIPTION   
  *
@@ -78,6 +78,37 @@ public:
     virtual void openArray(unsigned int numOfItems) = 0;
     virtual void openStruct(unsigned int numOfMembers) = 0;
 
+};
+
+class FRPC_DLLEXPORT DataBuilderWithNull_t : public DataBuilder_t
+{
+public:
+    DataBuilderWithNull_t();
+    virtual ~DataBuilderWithNull_t();
+    virtual void buildMethodResponse() = 0;
+    virtual void buildBinary(const char* data, unsigned int size) = 0;
+    virtual void buildBinary(const std::string &data) = 0;
+    virtual void buildBool(bool value) = 0;
+    virtual void buildDateTime(short year, char month, char day,char hour,
+                               char minute, char sec, char weekDay,
+                               time_t unixTime, int timeZone) = 0;
+    virtual void buildDouble(double value) = 0;
+    virtual void buildFault(int errNumber, const char* errMsg,
+                            unsigned int size ) = 0;
+    virtual void buildFault(int errNumber, const std::string &errMsg) = 0;
+    virtual void buildInt(Int_t::value_type value) = 0;
+    virtual void buildMethodCall(const char* methodName, unsigned int size) = 0;
+    virtual void buildMethodCall(const std::string &methodName) = 0;
+    virtual void buildString(const char* data, unsigned int size) = 0;
+    virtual void buildString(const std::string &data) = 0;
+    virtual void buildStructMember(const char *memberName,
+                                   unsigned int size) = 0;
+    virtual void buildStructMember(const std::string &memberName) = 0;
+    virtual void closeArray() = 0;
+    virtual void closeStruct() = 0;
+    virtual void openArray(unsigned int numOfItems) = 0;
+    virtual void openStruct(unsigned int numOfMembers) = 0;
+    virtual void buildNull() = 0;
 };
 
 };

@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpctreebuilder.cc,v 1.5 2008-04-01 13:19:06 burlog Exp $
+ * FILE          $Id: frpctreebuilder.cc,v 1.6 2010-04-21 08:48:03 edois Exp $
  *
  * DESCRIPTION
  *
@@ -60,6 +60,13 @@ void TreeBuilder_t::buildBool(bool value)
     if(!isMember(boolean))
         isFirst(boolean);
 
+}
+
+void TreeBuilder_t::buildNull()
+{
+    Value_t &nullValue = pool.Null();
+    if (!isMember(nullValue))
+        isFirst(nullValue);
 }
 
 void TreeBuilder_t::buildDateTime(short year, char month, char day, char hour,

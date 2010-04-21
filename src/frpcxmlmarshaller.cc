@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcxmlmarshaller.cc,v 1.10 2009-12-22 15:34:05 burlog Exp $
+ * FILE          $Id: frpcxmlmarshaller.cc,v 1.11 2010-04-21 08:48:03 edois Exp $
  *
  * DESCRIPTION
  *
@@ -149,6 +149,28 @@ void XmlMarshaller_t::packBool(bool value) {
     }
     decrementItem();
 
+}
+
+void XmlMarshaller_t::packNull() {
+    if (protocolVersion.versionMajor < 2
+        || protocolVersion.versionMinor < 1) {
+
+        throw StreamError_t("Null is not supported by protocol version lower than 2.1");
+    }
+
+    packSpaces(level);
+    if (entityStorage.empty()) {
+        writer.write("<param>\n",8);
+        ++level;
+    }
+    packSpaces(level);
+    writer.write("<value><nil/></value>\n",22);
+    if (entityStorage.empty()) {
+        packSpaces(level - 1);
+        writer.write("</param>\n",9);
+        --level;
+    }
+    decrementItem();
 }
 
 void XmlMarshaller_t::packDateTime(short year, char month, char day, char hour,
@@ -425,8 +447,12 @@ void XmlMarshaller_t::packMagic() {
         char magic[]="<?xml version=\"1.0\"?>\n";
         //write magic
         writer.write(magic,strlen(magic));
-    } else {
+    } else if (protocolVersion.versionMajor == 2 && protocolVersion.versionMinor == 0) {
         char magic[]="<?xml version=\"1.0\"?>\n<!--protocolVersion=\"2.0\"-->\n";
+        //write magic
+        writer.write(magic,strlen(magic));
+    } else {
+        char magic[]="<?xml version=\"1.0\"?>\n<!--protocolVersion=\"2.1\"-->\n";
         //write magic
         writer.write(magic,strlen(magic));
     }

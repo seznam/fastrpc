@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcarray.cc,v 1.11 2008-05-05 12:52:00 burlog Exp $
+ * FILE          $Id: frpcarray.cc,v 1.12 2010-04-21 08:48:03 edois Exp $
  *
  * DESCRIPTION   
  *
@@ -157,16 +157,29 @@ const Value_t& Array_t::operator[] (Array_t::size_type index) const
 
 void Array_t::checkItems(const std::string &items) const
 {
+    size_t itemsSize(0);
+    for (size_t i(0) ; i < items.size() ; ++i) {
+        if (items[i] != '?') {
+            ++itemsSize;
+        }
+    }
 
-    if(arrayData.size() !=  items.size())
+    if(arrayData.size() !=  itemsSize)
     {
         throw LenError_t("Array must have %d parameters.",items.size() );
     }
 
-    unsigned int  itemNum = 0;
+    unsigned int itemNum = 0;
 
     for( std::vector<Value_t*>::const_iterator i = arrayData.begin(); i != arrayData.end(); ++i)
     {
+        bool canBeNull(itemNum < items.size()-1 && items[itemNum+1] == '?');
+
+        if (canBeNull && (*i)->getType() == Null_t::TYPE) {
+            itemNum += 2;
+            continue;
+        }
+
         switch(items[itemNum])
         {
         case 'i':
@@ -219,7 +232,7 @@ void Array_t::checkItems(const std::string &items) const
 
         }
 
-        itemNum ++;
+        itemNum += canBeNull ? 2 : 1;
     }
 
 
