@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: pythonbuilder.h,v 1.6 2008-11-14 10:18:22 burlog Exp $
+ * $Id: pythonbuilder.h,v 1.7 2010-04-21 08:48:23 edois Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -72,15 +72,15 @@ struct TypeStorage_t
     PyObject* container;
 };
 
-class Builder_t : public FRPC::DataBuilder_t
+class Builder_t : public FRPC::DataBuilderWithNull_t
 {
 public:
     enum{NONE=0, INT=1,BOOL,DOUBLE,STRING,DATETIME,BINARY,INTP8,INTN8,
-         STRUCT=10,ARRAY,METHOD_CALL=13,METHOD_RESPONSE,FAULT,
+         STRUCT=10,ARRAY,NULLTYPE,METHOD_CALL=13,METHOD_RESPONSE,FAULT,
          MEMBER_NAME = 100,METHOD_NAME,METHOD_NAME_LEN,MAGIC,MAIN };
 
     Builder_t(PyObject *methodObject, StringMode_t stringMode)
-        : FRPC::DataBuilder_t(), first(true), error(false), retValue(Py_None),
+        : FRPC::DataBuilderWithNull_t(), first(true), error(false), retValue(Py_None),
           methodObject(methodObject), methodName(0), stringMode(stringMode)
     {
         Py_INCREF(retValue);
@@ -114,6 +114,7 @@ public:
     virtual void closeStruct();
     virtual void openArray(unsigned int numOfItems);
     virtual void openStruct(unsigned int numOfMembers);
+    virtual void buildNull();
     inline  void setError()
     {
         Py_XDECREF(retValue);

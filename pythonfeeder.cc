@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: pythonfeeder.cc,v 1.10 2009-09-15 14:56:32 mirecta Exp $
+ * $Id: pythonfeeder.cc,v 1.11 2010-04-21 08:48:23 edois Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -33,6 +33,8 @@
  */
 
 #include <frpcint.h>
+#include <frpcbinmarshaller.h>
+#include <frpcxmlmarshaller.h>
 #include "pythonfeeder.h"
 #include "fastrpcmodule.h"
 
@@ -216,6 +218,13 @@ void Feeder_t::feedValue(PyObject *value)
                                  getLongAttr(value, (char *)"second"),
                                  -1, -1, -1);
 
+    } else if (value == Py_None) {
+        FRPC::BinMarshaller_t *binMarshaller(dynamic_cast<FRPC::BinMarshaller_t*>(marshaller));
+        if (binMarshaller) {
+            binMarshaller->packNull();
+        } else {
+            dynamic_cast<FRPC::XmlMarshaller_t&>(*marshaller).packNull();
+        }
     } else {
 
         std::string objectRepr = "unknown";
