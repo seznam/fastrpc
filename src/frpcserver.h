@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcserver.h,v 1.7 2008-04-03 08:22:11 burlog Exp $
+ * FILE          $Id: frpcserver.h,v 1.8 2010-05-10 08:39:33 mirecta Exp $
  *
  * DESCRIPTION
  *
@@ -185,7 +185,7 @@ private:
     * @brief send response to client
     *
     */
-    void sendResponse();
+    void sendResponse(bool last = false);
     /**
     * @brief send HTTP header with HTTPError_t to client
     *

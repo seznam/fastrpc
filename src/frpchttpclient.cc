@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpchttpclient.cc,v 1.13 2010-02-12 10:40:34 burlog Exp $
+ * FILE          $Id: frpchttpclient.cc,v 1.14 2010-05-10 08:39:33 mirecta Exp $
  *
  * DESCRIPTION
  *
@@ -112,7 +112,7 @@ HTTPClient_t::HTTPClient_t(HTTPIO_t &httpIO, URL_t &url,
       unmarshaller(0), useHTTP10(useHTTP10)
 {
     queryStorage.push_back(std::string());
-    queryStorage.back().reserve(BUFFER_SIZE);
+    queryStorage.back().reserve(BUFFER_SIZE + HTTP_BALLAST);
 }
 
 
@@ -125,20 +125,22 @@ void HTTPClient_t::flush() {
     if (!useChunks) {
         sendRequest();
     } else {
-        sendRequest();
-        try {
+        //append empty chunk to data
+
+        sendRequest(true);
+   /*     try {
             httpIO.sendData("0\r\n\r\n", 5, true);
         } catch(const ResponseError_t &e) {
             connectionMustClose = true;
             throw;
-        }
+        }*/
     }
 }
 
 void HTTPClient_t::write(const char* data, unsigned int size) {
     contentLenght += size;
 
-    if (size > BUFFER_SIZE - queryStorage.back().size()) {
+    if (size > (BUFFER_SIZE - queryStorage.back().size())) {
         if (useChunks) {
             sendRequest();
             queryStorage.back().append(data, size);
@@ -265,8 +267,10 @@ void HTTPClient_t::readResponse(DataBuilder_t &builder) {
     }
 }
 
-void HTTPClient_t::sendRequest() {
+void HTTPClient_t::sendRequest(bool last) {
     SocketCloser_t closer(httpIO.socket());
+
+    std::string headerData;
 
     if (!headersSent) {
         HTTPHeader_t header;
@@ -331,15 +335,16 @@ void HTTPClient_t::sendRequest() {
         //connect socket
         connector->connectSocket(httpIO.socket());
 
-        try {
+       /* try {
             // send header
             httpIO.sendData(os.os.str());
         } catch(const ResponseError_t &e) {
             connectionMustClose = true;
             closer.doClose = false;
             throw ResponseError_t();
-        }
-        headersSent = true;
+        }*/
+        headerData = os.os.str();
+       // headersSent = true;
     }
 
     try {
@@ -347,21 +352,41 @@ void HTTPClient_t::sendRequest() {
             // write chunk size
             StreamHolder_t os;
             os.os << std::hex << queryStorage.back().size() << "\r\n";
-            httpIO.sendData(os.os.str(), true);
+            //httpIO.sendData(os.os.str(), true);
+            if (!headersSent){
+                headerData.append(os.os.str());
+                queryStorage.back().insert(0,headerData);
+                headersSent = true;
+            }else{
+                queryStorage.back().insert(0,os.os.str());
+            }
+            // add chunk terminator to data
+            if (last){
+                queryStorage.back().append("\r\n0\r\n\r\n");
+            }else{
+                queryStorage.back().append("\r\n");
+            }            
 
             // write chunk
             httpIO.sendData(queryStorage.back().data(),
                             queryStorage.back().size(), true);
 
-            // write chunk terminator
-            httpIO.sendData("\r\n", 2, true);
             queryStorage.back().erase();
         } else {
-            while (queryStorage.size() != 0) {
-                httpIO.sendData(queryStorage.back().data(),
-                                queryStorage.back().size(), true);
-                queryStorage.pop_back();
+            if (!headersSent){
+                queryStorage.front().insert(0,headerData);
+                headersSent = true;
             }
+
+            while (queryStorage.size() != 1) {
+
+                httpIO.sendData(queryStorage.front().data(),
+                                queryStorage.front().size(), true);
+                queryStorage.pop_front();
+            }
+            httpIO.sendData(queryStorage.back().data(),queryStorage.back().size() );
+            queryStorage.back().erase();
+
         }
     } catch(const ResponseError_t &e) {
         connectionMustClose = true;

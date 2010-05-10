@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcserver.cc,v 1.13 2008-04-03 08:22:10 burlog Exp $
+ * FILE          $Id: frpcserver.cc,v 1.14 2010-05-10 08:39:33 mirecta Exp $
  *
  * DESCRIPTION
  *
@@ -62,7 +62,7 @@ void Server_t::serve(int fd, struct sockaddr_in* addr )
 {
     // prepare query storage
     queryStorage.push_back(std::string());
-    queryStorage.back().reserve(BUFFER_SIZE);
+    queryStorage.back().reserve(BUFFER_SIZE + HTTP_BALLAST);
     contentLength = 0;
     closeConnection = false;
     headersSent = false;
@@ -185,7 +185,7 @@ void Server_t::readRequest(DataBuilder_t &builder)
     head = false;
     queryStorage.clear();
     queryStorage.push_back(std::string());
-    queryStorage.back().reserve(BUFFER_SIZE);
+    queryStorage.back().reserve(BUFFER_SIZE + HTTP_BALLAST);
     HTTPHeader_t httpHead;
 
     std::string protocol;
@@ -398,8 +398,7 @@ void Server_t::flush()
     }
     else
     {
-        sendResponse();
-        io.sendData("0\r\n\r\n", 5);
+        sendResponse(true);
     }
 
 
@@ -420,9 +419,10 @@ void Server_t::sendHttpError(const HTTPError_t &httpError)
     io.sendData(os.os.str());
 }
 
-void Server_t::sendResponse()
+void Server_t::sendResponse( bool last )
 {
 
+    std::string headerData;
     if(!headersSent)
     {
         HTTPHeader_t header;
@@ -484,12 +484,15 @@ void Server_t::sendResponse()
 
 
         // send header
-        io.sendData(os.os.str());
+        //io.sendData(os.os.str());
+        headerData = os.os.str();
+        //headersSent = true;
 
-        headersSent = true;
-
-        if(head)
+        if(head){
+            // send header
+            io.sendData(os.os.str());
             return;
+        }
 
     }
 
@@ -498,11 +501,24 @@ void Server_t::sendResponse()
         // write chunk size
         StreamHolder_t os;
         os.os << std::hex << queryStorage.back().size() << "\r\n";
-        io.sendData(os.os.str());
+        //io.sendData(os.os.str());
+        if (!headersSent){
+            headerData.append(os.os.str());
+            queryStorage.back().insert(0,headerData);
+            headersSent = true;
+        }else{
+            queryStorage.back().insert(0,os.os.str());
+        }
+
+        //add chunk terminator
+        if (last){
+            queryStorage.back().append("\r\n0\r\n\r\n");
+        }else{
+            queryStorage.back().append("\r\n");
+        }
+
         // write chunk
         io.sendData(queryStorage.back().data(),queryStorage.back().size() );
-        // write chunk terminator
-        io.sendData("\r\n", 2);
         queryStorage.back().erase();
 
 
@@ -510,10 +526,14 @@ void Server_t::sendResponse()
 
     else
     {
+        if (!headersSent){
+            queryStorage.front().insert(0,headerData);
+            headersSent = true;
+        }
         while(queryStorage.size() != 1)
         {
-            io.sendData(queryStorage.back().data(),queryStorage.back().size() );
-            queryStorage.pop_back();
+            io.sendData(queryStorage.front().data(),queryStorage.front().size() );
+            queryStorage.pop_front();
         }
         io.sendData(queryStorage.back().data(),queryStorage.back().size() );
         queryStorage.back().erase();
