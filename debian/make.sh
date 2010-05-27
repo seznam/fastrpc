@@ -22,7 +22,7 @@
 # http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
 #
 #
-# $Id: make.sh,v 1.6 2008-11-18 13:23:17 burlog Exp $
+# $Id: make.sh,v 1.7 2010-05-27 12:32:53 mirecta Exp $
 #
 # DESCRIPTION
 # Packager for Fastrpc library.
@@ -296,7 +296,7 @@ if test -z "${SKIP_BUILD}"; then
     
         # configure sources -- we want to instal under /usr
         # info goes to share dir
-        ./configure --prefix=/usr --infodir=/usr/share/info || exit 1
+        ./configure --prefix=/usr --infodir=/usr/share/info --enable-optimization=yes || exit 1
         # clean any previously created files
         make clean  || exit 1
         # make libfastrpc
