@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcbinunmarshaller.cc,v 1.10 2010-04-21 08:48:03 edois Exp $
+ * FILE          $Id: frpcbinunmarshaller.cc,v 1.11 2010-06-10 15:21:04 mirecta Exp $
  *
  * DESCRIPTION
  *
@@ -121,6 +121,9 @@ void BinUnMarshaller_t::unMarshall(const char *data, unsigned int size, char typ
         break;
         case MEMBER_NAME: {
             dataBuilder.buildStructMember(mainBuff);
+#ifdef _DEBUG
+            printf( "struct member: %s \n",mainBuff.c_str());
+#endif
             //we have member name
             entityStorage.back().member = true;
 
@@ -139,6 +142,9 @@ void BinUnMarshaller_t::unMarshall(const char *data, unsigned int size, char typ
                 case BOOL: {
                     dataBuilder.buildBool(FRPC_GET_DATA_TYPE_INFO(mainBuff[0]) & 0x01);
                     //decrement member count
+#ifdef _DEBUG
+		    printf("bool\n");
+#endif
                     internalType = NONE;
                     mainBuff.erase();
                     dataWanted = 1;
@@ -164,6 +170,9 @@ void BinUnMarshaller_t::unMarshall(const char *data, unsigned int size, char typ
                     if (dataWanted > 4 || !dataWanted)
                         throw StreamError_t("Size of int is 0 or > 4 !!!");
                     mainBuff.erase();
+#ifdef _DEBUG
+		    printf("int lenght:%d\n",dataWanted);
+#endif
                 }
                 break;
                 case INTN8: {
@@ -182,12 +191,18 @@ void BinUnMarshaller_t::unMarshall(const char *data, unsigned int size, char typ
                     internalType = DOUBLE;
                     dataWanted = 8;
                     mainBuff.erase();
+#ifdef _DEBUG
+                    printf("double size 8 \n");
+#endif
                 }
                 break;
                 case DATETIME: {
                     internalType = DATETIME;
                     dataWanted = 10;
                     mainBuff.erase();
+#ifdef _DEBUG
+                    printf("datetime size 10 \n");
+#endif
                 }
                 break;
 
@@ -202,6 +217,9 @@ void BinUnMarshaller_t::unMarshall(const char *data, unsigned int size, char typ
                     if (!dataWanted)
                         throw StreamError_t("Size of string length is 0 !!!");
                     mainBuff.erase();
+#ifdef _DEBUG
+                    printf("string size size: %d (or + 1) \n",dataWanted);
+#endif
                 }
                 break;
 
@@ -216,6 +234,9 @@ void BinUnMarshaller_t::unMarshall(const char *data, unsigned int size, char typ
                     if (!dataWanted)
                         throw StreamError_t("Size of binary length is 0 !!!");
                     mainBuff.erase();
+#ifdef _DEBUG
+                    printf("binary size size: %d (or + 1) \n",dataWanted);
+#endif
 
                 }
                 break;
@@ -227,6 +248,9 @@ void BinUnMarshaller_t::unMarshall(const char *data, unsigned int size, char typ
                         dataWanted = FRPC_GET_DATA_TYPE_INFO(mainBuff[0]) + 1;
 
                     mainBuff.erase();
+#ifdef _DEBUG
+                    printf("array size size: %d (or + 1) \n",dataWanted);
+#endif
                 }
                 break;
                 case STRUCT: {
@@ -237,6 +261,10 @@ void BinUnMarshaller_t::unMarshall(const char *data, unsigned int size, char typ
                         dataWanted = FRPC_GET_DATA_TYPE_INFO(mainBuff[0]) + 1;
 
                     mainBuff.erase();
+#ifdef _DEBUG
+                    printf("struct size size: %d (or + 1) \n",dataWanted);
+#endif
+
                 }
                 break;
                 default:
@@ -255,6 +283,10 @@ void BinUnMarshaller_t::unMarshall(const char *data, unsigned int size, char typ
                 //unpack string len
                 Number_t stringSize(mainBuff.data(), mainBuff.size());
                 dataWanted = stringSize.number;
+#ifdef _DEBUG
+                    printf("string  size: %d  \n",dataWanted);
+#endif
+
                 mainBuff.erase();
                 if (!dataWanted) {
                     if (mainInternalType == FAULT) {
@@ -302,6 +334,10 @@ void BinUnMarshaller_t::unMarshall(const char *data, unsigned int size, char typ
                 } else {
                     typeEvent = DATA;
                 }
+#ifdef _DEBUG
+                printf( "binary size: %d \n",dataWanted);
+#endif
+
             } else {
                 //obtain whole data
                 dataBuilder.buildBinary(mainBuff);
@@ -327,6 +363,10 @@ void BinUnMarshaller_t::unMarshall(const char *data, unsigned int size, char typ
             //decrement member count
             decrementMember();
             mainBuff.erase();
+#ifdef _DEBUG
+                printf( "int number: %i \n",value.number);
+#endif
+
         }
         break;
 
@@ -443,6 +483,9 @@ void BinUnMarshaller_t::unMarshall(const char *data, unsigned int size, char typ
             internalType = NONE;
             dataWanted = 1;
             mainBuff.erase();
+#ifdef _DEBUG
+            printf( "struct size: %i \n",numOfMembers.number);
+#endif
         }
         break;
         case ARRAY: {
@@ -461,6 +504,9 @@ void BinUnMarshaller_t::unMarshall(const char *data, unsigned int size, char typ
             internalType = NONE;
             dataWanted = 1;
             mainBuff.erase();
+#ifdef _DEBUG
+            printf( "array size: %i \n",numOfItems.number);
+#endif
 
         }
         break;

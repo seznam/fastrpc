@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcxmlmarshaller.cc,v 1.11 2010-04-21 08:48:03 edois Exp $
+ * FILE          $Id: frpcxmlmarshaller.cc,v 1.12 2010-06-10 15:21:04 mirecta Exp $
  *
  * DESCRIPTION
  *
@@ -152,11 +152,11 @@ void XmlMarshaller_t::packBool(bool value) {
 }
 
 void XmlMarshaller_t::packNull() {
-    if (protocolVersion.versionMajor < 2
+  /*  if (protocolVersion.versionMajor < 2
         || protocolVersion.versionMinor < 1) {
 
         throw StreamError_t("Null is not supported by protocol version lower than 2.1");
-    }
+    }*/
 
     packSpaces(level);
     if (entityStorage.empty()) {

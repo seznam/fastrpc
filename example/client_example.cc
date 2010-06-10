@@ -12,11 +12,11 @@ using namespace FRPC;
 int main(int argc, char *argv[]) {
     Pool_t pool; // memory pool
     ServerProxy_t::Config_t config;
-    ServerProxy_t client("http://localhost:2424/RPC2", config);
+    ServerProxy_t client("http://localhost:9898/RPC2", config);
 
     try  {
         // Calling introspection method system.listMethods()
-        Value_t &retVal1 = client(pool, "system.listMethods");
+        Value_t &retVal1 = client(pool, "test1",pool.Int(-424343202538277637),pool.String("c++"));
         printf("Output from list method is: ");
         printValue(retVal1);
 
