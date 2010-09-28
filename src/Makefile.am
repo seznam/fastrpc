@@ -21,7 +21,7 @@
 # http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
 #
 #
-# $Id: Makefile.am,v 1.10 2010-05-27 12:32:54 mirecta Exp $
+# $Id: Makefile.am,v 1.11 2010-09-28 05:30:36 burlog Exp $
 #
 # DESCRIPTION
 # A Fast RPC library.
@@ -52,7 +52,7 @@ include_HEADERS = frpc.h frpcvalue.h frpcarray.h frpcstruct.h frpcbinary.h frpcd
                   frpcmethodregistry.h frpcserver.h frpcresponseerror.h frpcplatform.h frpcheadmethod.h \
                   frpcsocket.h frpcsocketunix.h frpcsocketwin.h frpcplatform.h \
                   frpcversion.h frpcconnector.h frpcconverters.h frpcnull.h \
-                  frpcbinmarshaller.h frpcxmlmarshaller.h frpcinternals.h
+                  frpcbinmarshaller.h frpcxmlmarshaller.h frpcinternals.h frpccompare.h
 
 
 noinst_HEADERS = frpcbinunmarshaller.h frpcxmlunmarshaller.h
