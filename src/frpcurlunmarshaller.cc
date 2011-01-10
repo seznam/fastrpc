@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE             $Id: frpcurlunmarshaller.cc,v 1.1 2011-01-10 22:27:04 burlog Exp $
+ * FILE             $Id: frpcurlunmarshaller.cc,v 1.2 2011-01-10 22:41:49 burlog Exp $
  *
  * DESCRIPTION      Url encoded unmarshaller.
  *
@@ -180,7 +180,7 @@ public:
                 // extract type info and push value
                 Builder_t type = resolveType(value);
                 values[name].push_back(std::make_pair(type, value));
-#ifndef _DEBUG
+#ifdef _DEBUG
                 printf("> %s=%s\n", name.c_str(), value.c_str());
 #endif
             }
