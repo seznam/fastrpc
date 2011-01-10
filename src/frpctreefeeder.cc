@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpctreefeeder.cc,v 1.5 2010-04-21 08:48:03 edois Exp $
+ * FILE          $Id: frpctreefeeder.cc,v 1.6 2011-01-10 22:25:15 burlog Exp $
  *
  * DESCRIPTION   
  *
@@ -31,9 +31,11 @@
  *       
  */
 
-#include "frpctreefeeder.h"
 #include "frpcbinmarshaller.h"
 #include "frpcxmlmarshaller.h"
+#include "frpcjsonmarshaller.h"
+#include "frpcerror.h"
+#include "frpctreefeeder.h"
 
 namespace FRPC {
 
@@ -53,12 +55,15 @@ void TreeFeeder_t::feedValue(const Value_t &value){
 
     case Null_t::TYPE:
         {
-            BinMarshaller_t *binMarshaller(dynamic_cast<BinMarshaller_t*>(&marshaller));
-            if (binMarshaller) {
-                binMarshaller->packNull();
+            if (BinMarshaller_t *m = dynamic_cast<BinMarshaller_t*>(&marshaller)) {
+                m->packNull();
+            } else if (XmlMarshaller_t *m = dynamic_cast<XmlMarshaller_t*>(&marshaller)) {
+                m->packNull();
+            } else if (JSONMarshaller_t *m = dynamic_cast<JSONMarshaller_t*>(&marshaller)) {
+                m->packNull();
             } else {
-                XmlMarshaller_t &xmlMarshaller(dynamic_cast<XmlMarshaller_t&>(marshaller));
-                xmlMarshaller.packNull();
+                throw Error_t("Unknown marshaller type, "
+                              "we don't known how to pack null");
             }
         }
         break;

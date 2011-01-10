@@ -21,7 +21,7 @@
 # http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
 #
 #
-# $Id: Makefile.am,v 1.11 2010-09-28 05:30:36 burlog Exp $
+# $Id: Makefile.am,v 1.12 2011-01-10 22:25:15 burlog Exp $
 #
 # DESCRIPTION
 # A Fast RPC library.
@@ -55,7 +55,7 @@ include_HEADERS = frpc.h frpcvalue.h frpcarray.h frpcstruct.h frpcbinary.h frpcd
                   frpcbinmarshaller.h frpcxmlmarshaller.h frpcinternals.h frpccompare.h
 
 
-noinst_HEADERS = frpcbinunmarshaller.h frpcxmlunmarshaller.h
+noinst_HEADERS = frpcbinunmarshaller.h frpcxmlunmarshaller.h frpcurlunmarshaller.h
 
 # compile this library
 lib_LTLIBRARIES = libfastrpc.la
@@ -70,7 +70,8 @@ libfastrpc_la_SOURCES = frpcvalue.cc frpcarray.cc frpcstruct.cc frpcbinary.cc fr
                         frpcbinunmarshaller.cc frpcxmlunmarshaller.cc frpcprotocolerror.cc \
                         frpchttperror.cc frpcencodingerror.cc frpchttpio.cc frpchttp.cc frpchttpclient.cc \
                         frpctreebuilder.cc frpctreefeeder.cc frpcfault.cc frpc.cc frpcmethodregistry.cc \
-                        frpcserver.cc frpcresponseerror.cc frpcconnector.cc frpcnull.cc
+                        frpcserver.cc frpcresponseerror.cc frpcconnector.cc frpcnull.cc \
+			frpcurlunmarshaller.cc frpcjsonmarshaller.cc
 
 # with these flags (version info etc.)
 libfastrpc_la_LDFLAGS = @VERSION_INFO@ $(XML2_LIBS)

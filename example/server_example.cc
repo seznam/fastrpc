@@ -11,8 +11,9 @@
 #include <sys/types.h>
 #include <sys/fcntl.h>
 
-#include <string.h>
-#include <errno.h>
+#include <cstdlib>
+#include <cstring>
+#include <cerrno>
 
 #include <stdio.h>
 #include <string>
@@ -50,7 +51,6 @@ Value_t& methodTest(Pool_t &pool, Array_t &params, int &data) {
                        pool.String("OK"), "int", params[0], "string",
                        params[1]);
 }
-
 
 class Callbacks_t : public MethodRegistry_t::Callbacks_t {
     virtual void preRead() {

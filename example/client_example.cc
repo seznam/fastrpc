@@ -1,5 +1,6 @@
-#include <stdio.h>
+#include <cstdio>
 #include <string>
+#include <cstdlib>
 #include <frpc.h>
 #include <frpcserverproxy.h>
 
@@ -29,20 +30,20 @@ int main(int argc, char *argv[]) {
         Struct_t &result = Struct(client(pool, "test2", pool.Int(2),
                                         pool.String("hello")));
 
-        printf("\nresult[\"status\"]=%i\n", Int(result["status"]).getValue());
+        printf("\nresult[\"status\"]=%li\n", Int(result["status"]).getValue());
 	printf("\nOutput from test2 method is: ");
 	printValue(result);
 					
 	
 					
         printf("\nOutput from test1 method is: ");
-        printValue(client(pool, "test1", pool.Struct("now",pool.DateTime(),"id",pool.Int(22),"Status",pool.String("OK")),pool.Double(2.587),
+        printValue(client(pool, "test1", pool.Struct("now",pool.LocalTime(),"id",pool.Int(22),"Status",pool.String("OK")),pool.Double(2.587),
                                         pool.String("hello")));
     } catch (const Fault_t &f) {
-        printf("Fault Status:%ld Message:%s \n", f.errorNum(),
+        printf("Fault Status:%d Message:%s \n", f.errorNum(),
                f.message().c_str() );
     } catch (const HTTPError_t &e) {
-        printf("Http Error Status:%ld Message:%s \n", e.errorNum(),
+        printf("Http Error Status:%d Message:%s \n", e.errorNum(),
                e.message().c_str() );
     } catch (const StreamError_t &e) {
         printf("Stream Error  Message:%s \n", e.message().c_str());

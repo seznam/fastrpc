@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcserver.cc,v 1.14 2010-05-10 08:39:33 mirecta Exp $
+ * FILE          $Id: frpcserver.cc,v 1.15 2011-01-10 22:25:15 burlog Exp $
  *
  * DESCRIPTION
  *
@@ -51,9 +51,22 @@
 #include <frpcsocket.h>
 
 
-namespace FRPC
-{
+namespace FRPC {
+namespace {
 
+inline unsigned int chooseType(unsigned int type) {
+    switch(type) {
+    case Server_t::BINARY_RPC:
+        return Marshaller_t::BINARY_RPC;
+    case Server_t::JSON:
+        return Marshaller_t::JSON;
+    case Server_t::XML_RPC:
+    default:
+        return Marshaller_t::XML_RPC;
+    }
+}
+
+} // namespace
 
 Server_t::~Server_t()
 {}
@@ -114,13 +127,10 @@ void Server_t::serve(int fd, struct sockaddr_in* addr )
         }
         catch(const StreamError_t &streamError)
         {
-            std::auto_ptr<Marshaller_t> marshaller(Marshaller_t::create(
-                                                       ((outType ==
-                                                         BINARY_RPC)?
-                                                         Marshaller_t::BINARY_RPC
-                                                        :Marshaller_t::XML_RPC),
-                                                         *this,
-                                                         ProtocolVersion_t()));
+            std::auto_ptr<Marshaller_t>
+                marshaller(Marshaller_t::create(chooseType(outType),
+                                                *this,
+                                                ProtocolVersion_t()));
 
             marshaller->packFault(MethodRegistry_t::FRPC_PARSE_ERROR,
                                   streamError.message().c_str());
@@ -149,17 +159,18 @@ void Server_t::serve(int fd, struct sockaddr_in* addr )
                 if (result == 0)
                     flush();
                 else if (result < 0)
-                    throw HTTPError_t(HTTP_METHOD_NOT_ALLOWED,"Method Not Allowed");
+                    throw HTTPError_t(HTTP_METHOD_NOT_ALLOWED,
+                                      "Method Not Allowed");
                 else
-                    throw HTTPError_t(HTTP_SERVICE_UNAVAILABLE,"Service Unavailable");
-            }
-            else
-            {
-                methodRegistry.processCall(clientIP, builder.getUnMarshaledMethodName(),
-                                           Array(builder.getUnMarshaledData()),*this,
-                                           ((outType ==
-                                             BINARY_RPC)?Marshaller_t::BINARY_RPC
-                                            :Marshaller_t::XML_RPC),protocolVersion);
+                    throw HTTPError_t(HTTP_SERVICE_UNAVAILABLE,
+                                      "Service Unavailable");
+            } else {
+                methodRegistry.processCall(clientIP,
+                                           builder.getUnMarshaledMethodName(),
+                                           Array(builder.getUnMarshaledData()),
+                                           *this,
+                                           chooseType(outType),
+                                           protocolVersion);
             }
         }
 
@@ -173,8 +184,9 @@ void Server_t::serve(int fd, struct sockaddr_in* addr )
         requestCount++;
 
 
-    }
-    while(!(closeConnection == true || keepAlive == false || requestCount >= maxKeepalive));
+    } while (!(closeConnection == true
+               || keepAlive == false
+               || requestCount >= maxKeepalive));
 }
 
 void Server_t::readRequest(DataBuilder_t &builder)
@@ -267,7 +279,8 @@ void Server_t::readRequest(DataBuilder_t &builder)
             }
             else
             {
-                throw HTTPError_t(HTTP_METHOD_NOT_ALLOWED, "Method Not Allowed");
+                throw HTTPError_t(HTTP_METHOD_NOT_ALLOWED,
+                                  "Method Not Allowed");
             }
         }
 
@@ -294,6 +307,9 @@ void Server_t::readRequest(DataBuilder_t &builder)
                     outType = BINARY_RPC;
                     useChunks = true;
                 }
+
+            } else if (accept.find("application/json") != std::string::npos) {
+                outType = JSON;
             }
         }
 
@@ -309,6 +325,15 @@ void Server_t::readRequest(DataBuilder_t &builder)
                     UnMarshaller_t::create(
                             UnMarshaller_t::XML_RPC,
                             builder));
+
+        } else if (contentType.find("application/x-www-form-urlencoded")
+                   != std::string::npos)
+        {
+            unmarshaller = std::auto_ptr<UnMarshaller_t>(
+                    UnMarshaller_t::create(
+                            UnMarshaller_t::URL_ENCODED,
+                            builder,
+                            uriPath));
 
         } else {
             throw StreamError_t("Unknown ContentType");
@@ -408,8 +433,14 @@ void Server_t::sendHttpError(const HTTPError_t &httpError)
 {
     StreamHolder_t os;
     //create header
-    os.os << "HTTP/1.1" << ' ' << httpError.errorNum() << ' ' << httpError.message() << "\r\n";
-    os.os  << HTTP_HEADER_ACCEPT << ": " << "text/xml, application/x-frpc"<< "\r\n";
+    os.os << "HTTP/1.1" << ' '
+          << httpError.errorNum() << ' ' << httpError.message() << "\r\n";
+    os.os << HTTP_HEADER_ACCEPT
+          << ": " << "text/xml";
+    if (useBinary)
+        os.os << ", application/x-frpc";
+    os.os << ", application/x-www-form-urlencoded";
+    os.os << "\r\n";
     os.os << "Server:" << " Fast-RPC  Server Linux\r\n";
 
     // terminate header
@@ -438,12 +469,21 @@ void Server_t::sendResponse( bool last )
         case XML_RPC:
             {
 
-                os.os << HTTP_HEADER_CONTENT_TYPE << ": " << "text/xml"<< "\r\n";
+                os.os << HTTP_HEADER_CONTENT_TYPE
+                      << ": " << "text/xml"<< "\r\n";
             }
             break;
         case BINARY_RPC:
             {
-                os.os << HTTP_HEADER_CONTENT_TYPE << ": " << "application/x-frpc"<< "\r\n";
+                os.os << HTTP_HEADER_CONTENT_TYPE
+                      << ": " << "application/x-frpc"<< "\r\n";
+            }
+            break;
+
+        case JSON:
+            {
+                os.os << HTTP_HEADER_CONTENT_TYPE
+                      << ": " << "application/json"<< "\r\n";
             }
             break;
 
@@ -457,11 +497,13 @@ void Server_t::sendResponse( bool last )
               << ": " << "text/xml";
         if (useBinary)
             os.os << ", application/x-frpc";
+        os.os << ", application/x-www-form-urlencoded";
         os.os << "\r\n";
 
         //append connection header
-        os.os << HTTP_HEADER_CONNECTION << (keepAlive ? ": keep-alive" : ": close")
-        << "\r\n";
+        os.os << HTTP_HEADER_CONNECTION
+              << (keepAlive ? ": keep-alive" : ": close")
+              << "\r\n";
 
         // write content-length or content-transfer-encoding when we can send
         // content
@@ -532,7 +574,8 @@ void Server_t::sendResponse( bool last )
         }
         while(queryStorage.size() != 1)
         {
-            io.sendData(queryStorage.front().data(),queryStorage.front().size() );
+            io.sendData(queryStorage.front().data(),
+                        queryStorage.front().size() );
             queryStorage.pop_front();
         }
         io.sendData(queryStorage.back().data(),queryStorage.back().size() );

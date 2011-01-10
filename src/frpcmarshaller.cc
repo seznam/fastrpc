@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcmarshaller.cc,v 1.4 2007-05-22 13:03:23 mirecta Exp $
+ * FILE          $Id: frpcmarshaller.cc,v 1.5 2011-01-10 22:25:15 burlog Exp $
  *
  * DESCRIPTION
  *
@@ -34,6 +34,7 @@
 #include <frpcwriter.h>
 #include <frpcbinmarshaller.h>
 #include <frpcxmlmarshaller.h>
+#include <frpcjsonmarshaller.h>
 #include <frpcerror.h>
 #include <string.h>
 
@@ -55,6 +56,10 @@ Marshaller_t* Marshaller_t::create(unsigned int contentType, Writer_t& writer,
 
     case XML_RPC:
         marshaller = new XmlMarshaller_t(writer,protocolVersion);
+        break;
+
+    case JSON:
+        marshaller = new JSONMarshaller_t(writer,protocolVersion);
         break;
 
     default:

@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcxmlmarshaller.cc,v 1.12 2010-06-10 15:21:04 mirecta Exp $
+ * FILE          $Id: frpcxmlmarshaller.cc,v 1.13 2011-01-10 22:25:15 burlog Exp $
  *
  * DESCRIPTION
  *
@@ -110,7 +110,7 @@ void XmlMarshaller_t::packBinary(const char* value, unsigned int size) {
     writer.write("<value><base64>",15);
     //write value base64
     //writer.write(value,size);
-    writeEncodeBase64(value, size);
+    writeEncodeBase64(writer, value, size);
     //write tags
     writer.write("</base64></value>\n",18);
 
@@ -459,7 +459,7 @@ void XmlMarshaller_t::packMagic() {
 
 }
 
-void XmlMarshaller_t::writeEncodeBase64(const char *data, unsigned int len) {
+void XmlMarshaller_t::writeEncodeBase64(Writer_t &writer, const char *data, unsigned int len, bool rn) {
     static const char table[] =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
@@ -495,14 +495,14 @@ void XmlMarshaller_t::writeEncodeBase64(const char *data, unsigned int len) {
                 writer.write("=",1);
             lineLen += 4;
             if (lineLen > 72) {
-                writer.write("\r\n",2);
+                if (rn) writer.write("\r\n",2);
                 lineLen = 0;
             }
         }
     }
 
     if (lineLen) {
-        writer.write("\r\n",2);
+        if (rn) writer.write("\r\n",2);
         lineLen = 0;
     }
 

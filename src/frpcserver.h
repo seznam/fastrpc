@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcserver.h,v 1.8 2010-05-10 08:39:33 mirecta Exp $
+ * FILE          $Id: frpcserver.h,v 1.9 2011-01-10 22:25:15 burlog Exp $
  *
  * DESCRIPTION
  *
@@ -55,7 +55,7 @@ class UnMarshaller_t;
 */
 class FRPC_DLLEXPORT Server_t:public Writer_t {
 public:
-    enum{XML_RPC = 0x01, BINARY_RPC = 0x02};
+    enum{XML_RPC = 0x01, BINARY_RPC = 0x02, JSON = 0x03};
 
     class Config_t {
     public:

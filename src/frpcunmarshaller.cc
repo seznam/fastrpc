@@ -20,21 +20,22 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcunmarshaller.cc,v 1.3 2007-05-18 15:29:46 mirecta Exp $
+ * FILE          $Id: frpcunmarshaller.cc,v 1.4 2011-01-10 22:25:15 burlog Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
+#include "frpcerror.h"
+#include "frpcinternals.h"
+#include "frpcbinunmarshaller.h"
+#include "frpcxmlunmarshaller.h"
+#include "frpcurlunmarshaller.h"
 #include "frpcunmarshaller.h"
-#include <frpcbinunmarshaller.h>
-#include <frpcxmlunmarshaller.h>
-#include <frpcerror.h>
-#include <frpcinternals.h>
 
 namespace FRPC
 {
@@ -50,6 +51,13 @@ UnMarshaller_t::~UnMarshaller_t()
 UnMarshaller_t* UnMarshaller_t::create(unsigned int contentType,
                                        DataBuilder_t& dataBuilder)
 {
+    return UnMarshaller_t::create(contentType, dataBuilder, std::string());
+}
+
+UnMarshaller_t* UnMarshaller_t::create(unsigned int contentType,
+                                       DataBuilder_t& dataBuilder,
+                                       const std::string &path)
+{
     UnMarshaller_t *unMarshaller;
 
     switch(contentType)
@@ -60,6 +68,10 @@ UnMarshaller_t* UnMarshaller_t::create(unsigned int contentType,
 
     case XML_RPC:
         unMarshaller = new XmlUnMarshaller_t(dataBuilder);
+        break;
+
+    case URL_ENCODED:
+        unMarshaller = new URLUnMarshaller_t(dataBuilder, path);
         break;
 
     default:
@@ -75,13 +87,13 @@ UnMarshaller_t* UnMarshaller_t::create(const char* data, unsigned int size,
 {
     UnMarshaller_t *unMarshaller;
     char magic[]={0xCA, 0x11};
-    
+
     if(size < 4)
     {
         unMarshaller = new XmlUnMarshaller_t(dataBuilder);
         unMarshaller->unMarshall(data, size, TYPE_ANY);
     }
-        
+
     if(memcmp(data, magic, 2) != 0)
     {
         unMarshaller = new XmlUnMarshaller_t(dataBuilder);
@@ -91,8 +103,8 @@ UnMarshaller_t* UnMarshaller_t::create(const char* data, unsigned int size,
     {
         unMarshaller = new BinUnMarshaller_t(dataBuilder);
         unMarshaller->unMarshall(data, size, TYPE_ANY);
-    }  
-        
+    }
+
 
     return unMarshaller;
 }

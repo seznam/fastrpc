@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcxmlmarshaller.h,v 1.6 2010-04-21 08:48:03 edois Exp $
+ * FILE          $Id: frpcxmlmarshaller.h,v 1.7 2011-01-10 22:25:15 burlog Exp $
  *
  * DESCRIPTION
  *
@@ -75,9 +75,12 @@ public:
 
     void packNull();
 
+    static void writeEncodeBase64(Writer_t &writer,
+                                  const char *data, unsigned int len,
+                                  bool rn = true);
+
 private:
     XmlMarshaller_t();
-    void writeEncodeBase64(const char *data, unsigned int len);
     void packMagic();
     void writeQuotedString(const char *data, unsigned int len);
     inline void packSpaces(unsigned int numSpaces)
