@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE             $Id: frpcjsonmarshaller.cc,v 1.2 2011-01-14 08:23:06 burlog Exp $
+ * FILE             $Id: frpcjsonmarshaller.cc,v 1.3 2011-01-14 10:12:31 burlog Exp $
  *
  * DESCRIPTION      JSON marshaller
  *
@@ -188,7 +188,7 @@ void JSONMarshaller_t::packStructMember(const char *memberName,
 void JSONMarshaller_t::packBinary(const char *value, unsigned int size) {
     DBG("binary: %.*s\n", size, value);
     writer.write("\"", 1);
-    XmlMarshaller_t::writeEncodeBase64(writer, value, size);
+    XmlMarshaller_t::writeEncodeBase64(writer, value, size, false);
     writer.write("\"", 1);
     dec(ctx, writer);
 }
