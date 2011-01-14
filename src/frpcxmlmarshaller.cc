@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcxmlmarshaller.cc,v 1.13 2011-01-10 22:25:15 burlog Exp $
+ * FILE          $Id: frpcxmlmarshaller.cc,v 1.14 2011-01-14 11:16:12 burlog Exp $
  *
  * DESCRIPTION
  *
@@ -30,12 +30,16 @@
  * HISTORY
  *
  */
-#include "frpcxmlmarshaller.h"
-#include <string.h>
-#include <stdio.h>
-#include <frpclenerror.h>
-#include <frpc.h>
+
 #include <sstream>
+#include <limits>
+#include <iomanip>
+#include <string.h>
+#include <cstdio>
+
+#include "frpc.h"
+#include "frpclenerror.h"
+#include "frpcxmlmarshaller.h"
 
 namespace FRPC {
 
@@ -207,9 +211,9 @@ void XmlMarshaller_t::packDateTime(short year, char month, char day, char hour,
 }
 
 void XmlMarshaller_t::packDouble(double value) {
-    char buff[512];
-
-    sprintf(buff,"%f",value);
+    std::ostringstream os;
+    os << std::setprecision(std::numeric_limits<double>::digits10 + 2) << value;
+    std::string buff = os.str();
 
     //write correct spaces
     packSpaces(level);
@@ -221,7 +225,7 @@ void XmlMarshaller_t::packDouble(double value) {
     //write correct spaces
     packSpaces(level);
     writer.write("<value><double>",15);
-    writer.write(buff,strlen(buff));
+    writer.write(buff.data(), buff.size());
     writer.write("</double></value>\n",18);
 
 
