@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE             $Id: frpcjsonmarshaller.cc,v 1.3 2011-01-14 10:12:31 burlog Exp $
+ * FILE             $Id: frpcjsonmarshaller.cc,v 1.4 2011-01-14 10:51:28 burlog Exp $
  *
  * DESCRIPTION      JSON marshaller
  *
@@ -202,7 +202,7 @@ void JSONMarshaller_t::packBool(bool value) {
 void JSONMarshaller_t::packDouble(double value) {
     DBG("double: %f\n", value);
     std::ostringstream os;
-    os << std::setprecision(std::numeric_limits<double>::digits10) << value;
+    os << std::setprecision(std::numeric_limits<double>::digits10 + 2) << value;
     write(writer, os.str());
     dec(ctx, writer);
 }
