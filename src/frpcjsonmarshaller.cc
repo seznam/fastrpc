@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE             $Id: frpcjsonmarshaller.cc,v 1.1 2011-01-10 22:27:04 burlog Exp $
+ * FILE             $Id: frpcjsonmarshaller.cc,v 1.2 2011-01-14 08:23:06 burlog Exp $
  *
  * DESCRIPTION      JSON marshaller
  *
@@ -210,8 +210,7 @@ void JSONMarshaller_t::packDouble(double value) {
 void JSONMarshaller_t::packInt(Int_t::value_type value) {
     DBG("int: %li\n", value);
     std::ostringstream os;
-    os << std::setprecision(std::numeric_limits<Int_t::value_type>::digits10)
-       << value;
+    os << value;
     write(writer, os.str());
     dec(ctx, writer);
 }
@@ -222,13 +221,13 @@ void JSONMarshaller_t::packString(const char *value, unsigned int size) {
     dec(ctx, writer);
 }
 
-void JSONMarshaller_t::packDateTime(short year, char month, char day, char hour,
-                          char min, char sec, char weekDay, time_t unixTime,
-                          int tz)
+void JSONMarshaller_t::packDateTime(short, char, char, char, char, char, char,
+                                    time_t unixTime, int)
 {
-    std::string data = getISODateTime(year, month, day, hour, min, sec, tz);
-    DBG("datetime: %s\n", data.c_str());
-    write(writer, "\"" + data + "\"");
+    DBG("datetime: %lu\n", unixTime);
+    std::ostringstream os;
+    os << unixTime;
+    write(writer, os.str());
     dec(ctx, writer);
 }
 
