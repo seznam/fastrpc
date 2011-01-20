@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Fastrpc  RPC using XML and binary protocol.
 # Copyright (C) 2004  Seznam.cz, a.s.
@@ -22,7 +22,7 @@
 # http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
 #
 #
-# $Id: make.sh,v 1.7 2010-05-27 12:32:53 mirecta Exp $
+# $Id: make.sh,v 1.8 2011-01-20 13:07:15 burlog Exp $
 #
 # DESCRIPTION
 # Packager for Fastrpc library.
@@ -253,7 +253,12 @@ elif test "${MODE}" = "dev"; then
     cp -v ${INSTALL_DIR}/usr/lib/*.a ${DEBIAN_BASE}/usr/lib || exit 1
     cp -v ${INSTALL_DIR}/usr/lib/*.la ${DEBIAN_BASE}/usr/lib || exit 1
     cp -vd ${INSTALL_DIR}/usr/lib/*.so ${DEBIAN_BASE}/usr/lib || exit 1
-    
+
+    # pkg config   
+    mkdir -p ${DEBIAN_BASE}/usr/lib/pkgconfig
+    cp -v ${INSTALL_DIR}/usr/lib/pkgconfig/*.pc \
+          ${DEBIAN_BASE}/usr/lib/pkgconfig || exit 1
+
     # Compose extra dependencies: we must depend on fastrpc library with
     # exactly same version.
     VERSION=$(< ../version)

@@ -21,7 +21,7 @@
 # http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
 #
 #
-# $Id: Makefile.am,v 1.3 2008-11-14 08:26:51 burlog Exp $
+# $Id: Makefile.am,v 1.4 2011-01-20 13:07:15 burlog Exp $
 #
 # DESCRIPTION
 # A makefile template for project Fast RPC.
@@ -39,3 +39,5 @@ SUBDIRS = src
 EXTRA_DIST = debian/libfastrpc.control debian/libfastrpc-dev.control \
 	     debian/libfastrpc.postinst debian/make.sh
 
+pkgconfigdir=@libdir@/pkgconfig
+pkgconfig_DATA=libfastrpc.pc

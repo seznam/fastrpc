@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE             $Id: frpcjsonmarshaller.cc,v 1.4 2011-01-14 10:51:28 burlog Exp $
+ * FILE             $Id: frpcjsonmarshaller.cc,v 1.5 2011-01-20 13:07:15 burlog Exp $
  *
  * DESCRIPTION      JSON marshaller
  *
@@ -146,8 +146,8 @@ void JSONMarshaller_t::packFault(int errNumber, const char *errMsg,
                                  unsigned int size)
 {
     std::ostringstream os;
-    os << "{ \"status\": " << errNumber
-       << ", \"statusMessage\": ";
+    os << "{ \"failure\": " << errNumber
+       << ", \"failureMessage\": ";
     write(writer, os.str());
     quote(writer, errMsg, size);
     writer.write(" }", 2);
