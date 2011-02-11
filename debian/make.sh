@@ -22,7 +22,7 @@
 # http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
 #
 #
-# $Id: make.sh,v 1.8 2011-01-20 13:07:15 burlog Exp $
+# $Id: make.sh,v 1.9 2011-02-11 09:45:38 burlog Exp $
 #
 # DESCRIPTION
 # Packager for Fastrpc library.
@@ -329,6 +329,12 @@ fi
 # and libfastrpc<LIBRARY_VERSION>-dev packages.
 export LIBRARY_VERSION=$(sed -n -e 's/current=\(.*\)/\1/p' \
                          ${INSTALL_DIR}/usr/lib/libfastrpc.la) || exit 1
+LIBRARY_VERSION=$(sed -n -e 's/current=\(.*\)/\1/p' \
+        ${INSTALL_DIR}/usr/lib/libfastrpc.la) || exit -1
+LIBRARY_AGE=$(sed -n -e 's/age=\(.*\)/\1/p' \
+        ${INSTALL_DIR}/usr/lib/libfastrpc.la) || exit -1
+export LIBRARY_VERSION=$(($LIBRARY_VERSION - $LIBRARY_AGE))
+                         
 
 export PROJECT_NAME
 export INSTALL_DIR
