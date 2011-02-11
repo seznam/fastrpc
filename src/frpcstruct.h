@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcstruct.h,v 1.7 2008-05-05 12:52:00 burlog Exp $
+ * FILE          $Id: frpcstruct.h,v 1.8 2011-02-11 08:56:17 burlog Exp $
  *
  * DESCRIPTION   
  *
@@ -215,8 +215,17 @@ public:
         @return reference to Value_t or exeption KeyError_t if key isn't exist
     */
     const Value_t& operator[] (const key_type &key) const;
-    ///static member
+
+    /**
+         @brief Returns iterator to value or end()
+    */
+    const_iterator find(const key_type &key) const {
+         return structData.find(key);
+    }
+
+    /// static member
     static const Struct_t &FRPC_EMPTY;
+
 private:
     /** 
         @brief Costructor empty Struct_t 

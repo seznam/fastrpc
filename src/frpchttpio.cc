@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE             $Id: frpchttpio.cc,v 1.12 2010-02-12 10:40:34 burlog Exp $
+ * FILE             $Id: frpchttpio.cc,v 1.13 2011-02-11 08:56:17 burlog Exp $
  *
  * DESCRIPTION      HTTP I/O
  *
@@ -188,6 +188,7 @@ std::string HTTPIO_t::readLine(bool checkLimit)
 
         case -1:
             // other error
+            STRERROR_PRE();
             throw ProtocolError_t(HTTP_SYSCALL, "Syscall error: <%d, %s>.",
                               ERRNO, STRERROR(ERRNO));
         }
@@ -204,6 +205,7 @@ std::string HTTPIO_t::readLine(bool checkLimit)
 
         case -1:
             // other error
+            STRERROR_PRE();
             throw ProtocolError_t(HTTP_SYSCALL, "Syscall error: <%d, %s>.",
                               ERRNO, STRERROR(ERRNO));
         }
@@ -236,6 +238,7 @@ std::string HTTPIO_t::readLine(bool checkLimit)
 
             case -1:
                 // other error
+                STRERROR_PRE();
                 throw ProtocolError_t(HTTP_SYSCALL, "Syscall error: <%d, %s>.",
                                   ERRNO, STRERROR(ERRNO));
 
@@ -281,6 +284,7 @@ std::string HTTPIO_t::readLine(bool checkLimit)
 
             case -1:
                 // other error
+                STRERROR_PRE();
                 throw ProtocolError_t(HTTP_SYSCALL, "Syscall error: <%d, %s>.",
                                   ERRNO, STRERROR(ERRNO));
 
@@ -332,6 +336,7 @@ void HTTPIO_t::sendData(const char *data, size_t length, bool watchForResponse)
 
         case -1:
             // other error
+            STRERROR_PRE();
             throw ProtocolError_t(HTTP_SYSCALL, "Syscall error: <%d, %s>.",
                               ERRNO, STRERROR(ERRNO));
         }
@@ -355,6 +360,7 @@ void HTTPIO_t::sendData(const char *data, size_t length, bool watchForResponse)
                 throw ResponseError_t();
             }
             // other error
+            STRERROR_PRE();
             throw ProtocolError_t(HTTP_SYSCALL, "Syscall error: <%d, %s>.",
                               ERRNO, STRERROR(ERRNO));
 
@@ -414,6 +420,7 @@ void HTTPIO_t::readBlock(long int contentLength_, DataSink_t &data)
 
         case -1:
             // other error
+            STRERROR_PRE();
             throw ProtocolError_t(HTTP_SYSCALL, "Syscall error: <%d, %s>.",
                               ERRNO, STRERROR(ERRNO));
         }
@@ -433,6 +440,7 @@ void HTTPIO_t::readBlock(long int contentLength_, DataSink_t &data)
 
         case -1:
             // other error
+            STRERROR_PRE();
             throw ProtocolError_t(HTTP_SYSCALL, "Syscall error: <%d, %s>.",
                               ERRNO, STRERROR(ERRNO));
 

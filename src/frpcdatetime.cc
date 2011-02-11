@@ -20,15 +20,15 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcdatetime.cc,v 1.10 2008-11-14 08:26:52 burlog Exp $
+ * FILE          $Id: frpcdatetime.cc,v 1.11 2011-02-11 08:56:17 burlog Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #include <time.h>
 #include <frpc.h>
@@ -57,10 +57,11 @@ DateTime_t::DateTime_t(short year, char month, char day,
     time_tm.tm_sec = sec;
     time_tm.tm_isdst = -1; // we know nothing about daylight savings time
     time_t time_l = mktime(&time_tm);
-    struct tm *timeValid = localtime(&time_l);
+    struct tm timeValid;
+    localtime_r(&time_l, &timeValid);
 
     this->unixTime = time_l;
-    this->weekDay = timeValid->tm_wday;
+    this->weekDay = timeValid.tm_wday;
 }
 
 DateTime_t::DateTime_t(short year, char month, char day,
@@ -77,10 +78,11 @@ DateTime_t::DateTime_t(short year, char month, char day,
     time_tm.tm_sec = sec;
     time_tm.tm_isdst = -1; // we know nothing about daylight savings time
     time_t time_l = mktime(&time_tm);
-    struct tm *timeValid = localtime(&time_l);
+    struct tm timeValid;
+    localtime_r(&time_l, &timeValid);
 
     unixTime = time_l;
-    weekDay = timeValid->tm_wday;
+    weekDay = timeValid.tm_wday;
 #ifdef HAVE_ALTZONE
     timeZone = (time_tm.tm_isdst > 0)? ::altzone: ::timezone;
 #else
@@ -90,34 +92,36 @@ DateTime_t::DateTime_t(short year, char month, char day,
 
 DateTime_t::DateTime_t(const time_t &unixTime)
 {
-    struct tm *time_tm = localtime(&unixTime);
-    year = time_tm->tm_year + 1900;
-    month = time_tm->tm_mon + 1;
-    day = time_tm->tm_mday;
-    hour =  time_tm->tm_hour;
-    minute =  time_tm->tm_min;
-    sec =  time_tm->tm_sec;
-    weekDay =  time_tm->tm_wday;
+    struct tm time_tm;
+    localtime_r(&unixTime, &time_tm);
+    year = time_tm.tm_year + 1900;
+    month = time_tm.tm_mon + 1;
+    day = time_tm.tm_mday;
+    hour =  time_tm.tm_hour;
+    minute =  time_tm.tm_min;
+    sec =  time_tm.tm_sec;
+    weekDay =  time_tm.tm_wday;
     this->unixTime = unixTime;
 
 #ifdef HAVE_ALTZONE
-    timeZone = (time_tm->tm_isdst > 0)? ::altzone: ::timezone;
+    timeZone = (time_tm.tm_isdst > 0)? ::altzone: ::timezone;
 #else
-    timeZone = (time_tm->tm_isdst > 0)? ::timezone - 3600: ::timezone;
+    timeZone = (time_tm.tm_isdst > 0)? ::timezone - 3600: ::timezone;
 #endif
 }
 
 DateTime_t::DateTime_t(time_t unixTime, int timeZone)
     : timeZone(timeZone)
 {
-    struct tm *time_tm = localtime(&unixTime);
-    year = time_tm->tm_year + 1900;
-    month = time_tm->tm_mon + 1;
-    day = time_tm->tm_mday;
-    hour =  time_tm->tm_hour;
-    minute =  time_tm->tm_min;
-    sec =  time_tm->tm_sec;
-    weekDay =  time_tm->tm_wday;
+    struct tm time_tm;
+    localtime_r(&unixTime, &time_tm);
+    year = time_tm.tm_year + 1900;
+    month = time_tm.tm_mon + 1;
+    day = time_tm.tm_mday;
+    hour =  time_tm.tm_hour;
+    minute =  time_tm.tm_min;
+    sec =  time_tm.tm_sec;
+    weekDay =  time_tm.tm_wday;
     this->unixTime = unixTime;
 }
 
@@ -137,20 +141,21 @@ DateTime_t::DateTime_t(const struct tm &tm)
 DateTime_t::DateTime_t()
 {
     time_t unix_time =  time(0);
-    struct tm *time_tm = localtime(&unix_time);
-    year = time_tm->tm_year + 1900;
-    month = time_tm->tm_mon + 1;
-    day = time_tm->tm_mday;
-    hour =  time_tm->tm_hour;
-    minute =  time_tm->tm_min;
-    sec =  time_tm->tm_sec;
-    weekDay =  time_tm->tm_wday;
+    struct tm time_tm;
+    localtime_r(&unix_time, &time_tm);
+    year = time_tm.tm_year + 1900;
+    month = time_tm.tm_mon + 1;
+    day = time_tm.tm_mday;
+    hour =  time_tm.tm_hour;
+    minute =  time_tm.tm_min;
+    sec =  time_tm.tm_sec;
+    weekDay =  time_tm.tm_wday;
     this->unixTime = unixTime;
 
 #ifdef HAVE_ALTZONE
-    timeZone = (time_tm->tm_isdst > 0)? ::altzone: ::timezone;
+    timeZone = (time_tm.tm_isdst > 0)? ::altzone: ::timezone;
 #else
-    timeZone = (time_tm->tm_isdst > 0)? ::timezone - 3600: ::timezone;
+    timeZone = (time_tm.tm_isdst > 0)? ::timezone - 3600: ::timezone;
 #endif
 }
 
@@ -168,10 +173,11 @@ DateTime_t::DateTime_t(const std::string &isoFormat)
     time_tm.tm_sec = sec;
     time_tm.tm_isdst = -1; // we know nothing about daylight savings time
     time_t time_l = mktime(&time_tm);
-    struct tm *timeValid = localtime(&time_l);
+    struct tm timeValid;
+    localtime_r(&time_l, &timeValid);
 
     this->unixTime =  time_l;
-    this->weekDay = timeValid->tm_wday;
+    this->weekDay = timeValid.tm_wday;
 }
 
 
@@ -232,7 +238,9 @@ Value_t& FRPC::DateTime_t::clone(Pool_t &newPool) const
 }
 
 bool FRPC::DateTime_t::isSaveLightDay() const {
-    return localtime(&unixTime)->tm_isdst;
+    struct tm timeValid;
+    localtime_r(&unixTime, &timeValid);
+    return timeValid.tm_isdst;
 }
 
 }

@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcserver.cc,v 1.15 2011-01-10 22:25:15 burlog Exp $
+ * FILE          $Id: frpcserver.cc,v 1.16 2011-02-11 08:56:17 burlog Exp $
  *
  * DESCRIPTION
  *
@@ -81,6 +81,7 @@ void Server_t::serve(int fd, struct sockaddr_in* addr )
     headersSent = false;
     head = false;
 
+    char tmpstr[256];
     std::string clientIP;
 
     io.setSocket(fd);
@@ -91,7 +92,7 @@ void Server_t::serve(int fd, struct sockaddr_in* addr )
         socklen_t sinSize = sizeof( struct sockaddr_in );
         if(getpeername(fd,(struct sockaddr*) &clientaddr, &sinSize) == 0 )
         {
-            clientIP = inet_ntoa(clientaddr.sin_addr);
+            clientIP = inet_ntop(AF_INET, &(clientaddr.sin_addr), tmpstr, 256);
         }
         else
         {
@@ -100,7 +101,7 @@ void Server_t::serve(int fd, struct sockaddr_in* addr )
     }
     else
     {
-        clientIP = inet_ntoa(addr->sin_addr);
+        clientIP = inet_ntop(AF_INET, &(addr->sin_addr), tmpstr, 256);
     }
 
     unsigned int requestCount = 0;

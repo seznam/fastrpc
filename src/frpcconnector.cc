@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcconnector.cc,v 1.6 2010-02-12 10:40:34 burlog Exp $
+ * FILE          $Id: frpcconnector.cc,v 1.7 2011-02-11 08:56:17 burlog Exp $
  *
  * DESCRIPTION
  *
@@ -101,12 +101,17 @@ SimpleConnector_t::SimpleConnector_t(const URL_t &url, int connectTimeout,
                                      bool keepAlive)
     : Connector_t(url, connectTimeout, keepAlive)
 {
-    struct hostent *he = gethostbyname(url.host.c_str());
+    struct hostent h, *he;
+    char tmpbuf[1024];
+    int errcode;
+
+    gethostbyname_r(url.host.c_str(), &h, tmpbuf, 1024, &he, &errcode);
+
     if (!he) {
         // oops
         throw HTTPError_t(HTTP_DNS, "Cannot resolve host '%s': <%d, %s>.",
-                          url.host.c_str(), h_errno,
-                          host_strerror(h_errno));
+                          url.host.c_str(), errcode,
+                          host_strerror(errcode));
     }
 
     // remember IP address
@@ -169,6 +174,7 @@ void SimpleConnector_t::connectSocket(int &fd) {
         // otevøeme socket
         if ((fd = ::socket(PF_INET, SOCK_STREAM, 0)) < 0) {
             // oops! error
+            STRERROR_PRE();
             throw HTTPError_t(HTTP_SYSCALL,
                               "Cannot select on socketr: <%d, %s>.",
                               ERRNO, STRERROR(ERRNO));
@@ -183,6 +189,7 @@ void SimpleConnector_t::connectSocket(int &fd) {
 #endif //WIN32
 
         {
+            STRERROR_PRE();
             throw HTTPError_t(HTTP_SYSCALL,
                               "Cannot set socket non-blocking: "
                               "<%d, %s>.", ERRNO, STRERROR(ERRNO));
@@ -193,6 +200,7 @@ void SimpleConnector_t::connectSocket(int &fd) {
         if (::setsockopt(fd, IPPROTO_TCP, TCP_NODELAY,
                          (char*) &just_say_no, sizeof(int)) < 0)
         {
+            STRERROR_PRE();
             throw HTTPError_t(HTTP_SYSCALL,
                               "Cannot set socket non-delaying: "
                               "<%d, %s>.", ERRNO, STRERROR(ERRNO));
@@ -221,6 +229,7 @@ void SimpleConnector_t::connectSocket(int &fd) {
                 break;
 
             default:
+                STRERROR_PRE();
                 throw HTTPError_t(HTTP_SYSCALL,
                                   "Cannot connect socket: <%d, %s>.",
                                   ERRNO, STRERROR(ERRNO));
@@ -249,6 +258,7 @@ void SimpleConnector_t::connectSocket(int &fd) {
                                       "Timeout while connecting.");
 
                 default:
+                    STRERROR_PRE();
                     throw HTTPError_t(HTTP_SYSCALL,
                                       "Cannot select on socket: <%d, %s>.",
                                       ERRNO, STRERROR(ERRNO));
@@ -267,6 +277,7 @@ void SimpleConnector_t::connectSocket(int &fd) {
 #endif //WIN32
 
             {
+                STRERROR_PRE();
                 throw HTTPError_t(HTTP_SYSCALL,
                                   "Cannot get socket info: <%d, %s>.",
                                   ERRNO, STRERROR(ERRNO));
@@ -274,6 +285,7 @@ void SimpleConnector_t::connectSocket(int &fd) {
 
             // check for error
             if (status) {
+                STRERROR_PRE();
                 throw HTTPError_t(HTTP_SYSCALL,
                                   "Cannot connect socket: <%d, %s>.",
                                   status, STRERROR(status));

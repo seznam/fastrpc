@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcdouble.h,v 1.7 2008-05-05 12:52:00 burlog Exp $
+ * FILE          $Id: frpcdouble.h,v 1.8 2011-02-11 08:56:17 burlog Exp $
  *
  * DESCRIPTION   
  *
@@ -49,6 +49,8 @@ class FRPC_DLLEXPORT Double_t : public Value_t
 public:
     enum{TYPE = 0x03};
 
+    typedef double value_type;
+
     /**
     @brief Destructor
     */
@@ -76,7 +78,7 @@ public:
     @brief Getting internal double value
     @return  @b double - internal value 
     */
-    double getValue() const
+    value_type getValue() const
     {
         return value;
     }
@@ -84,7 +86,7 @@ public:
     /**
         @brief Operator double const
     */
-    inline operator double () const 
+    inline operator value_type () const 
     {
         return value;
     }
@@ -107,11 +109,11 @@ private:
     @param pool is a reference to Pool_t used for allocating
     @param value  is a double value
     */
-    explicit Double_t(const double &value)
+    explicit Double_t(const value_type &value)
         :value(value)
     {}
 
-    double value;/**  @brief Internal double value */
+    value_type value;/**  @brief Internal double value */
 };
 
 /**

@@ -21,7 +21,7 @@
 # http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
 #
 #
-# $Id: configure.in,v 1.47 2011-01-20 13:07:15 burlog Exp $
+# $Id: configure.in,v 1.48 2011-02-11 08:56:17 burlog Exp $
 #
 # DESCRIPTION
 # configure template for fastrpc.
@@ -36,7 +36,7 @@
 
 
 # initialize autoconf
-AC_INIT(fastrpc, 3.2.1, fastrpc@firma.seznam.cz)
+AC_INIT(fastrpc, 3.2.3, fastrpc@firma.seznam.cz)
 # initialize automake(use AC_INIT's arguments)
 AM_INIT_AUTOMAKE(AC_PACKAGE_NAME, AC_PACKAGE_VERSION)
 
@@ -91,7 +91,7 @@ dnl ------------------------------------------------------------------------
 # version info') before touching this.
 FASTRPC_MAJOR=3
 FASTRPC_MINOR=1
-VERSION_INFO="-version-info $FASTRPC_MAJOR:$FASTRPC_MINOR:0"
+VERSION_INFO="-version-info 4:0:1"
 
 AC_ARG_ENABLE(optimization,[  --enable-optimization compile optimized without debug logging],[
     case "${enableval}" in

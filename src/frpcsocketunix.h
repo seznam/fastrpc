@@ -20,15 +20,15 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcsocketunix.h,v 1.3 2007-04-02 15:28:20 vasek Exp $
+ * FILE          $Id: frpcsocketunix.h,v 1.4 2011-02-11 08:56:17 burlog Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Roman Marek <roman.marek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 
 #ifndef FRPCSOCKETUNIX_H_
@@ -43,7 +43,8 @@
 #include <unistd.h>
 #include <sys/time.h>
 
+#define STRERROR_PRE() char strErrBuff[256]
 #define ERRNO (errno)
-#define STRERROR(e) strerror(e)
+#define STRERROR(e) strerror_r(e, strErrBuff, sizeof(strErrBuff))
 
 #endif // FRPCSOCKETUNIX_H_
