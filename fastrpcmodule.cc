@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: fastrpcmodule.cc,v 1.27 2010-04-21 08:48:23 edois Exp $
+ * $Id: fastrpcmodule.cc,v 1.28 2011-02-16 12:04:07 volca Exp $
  *
  * AUTHOR      Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
@@ -31,13 +31,15 @@
 
 #define __ENABLE_WSTRING
 
+// Included first to get rid of the _POSIX_C_SOURCE warning
+#include <Python.h>
+
 #include <new>
 #include <string>
 #include <vector>
 #include <memory>
 #include <sstream>
 
-#include <Python.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
@@ -2019,13 +2021,13 @@ int printPyFastRPCTree(PyObject *tree, std::ostringstream &out,
         out << '(';
         if (level) {
             // level is ok, we can go on
-            int size = PySequence_Size(tree);
+            Py_ssize_t size = PySequence_Size(tree);
             if (size < 0) {
                 // oops, cannot get size
                 return -1;
             } else {
                 // print all items
-                for (int i = 0; i < size; ++i) {
+                for (size_t i = 0; i < static_cast<size_t>(size); ++i) {
                     if (i) out << ", ";
                     if ((i < pos.size()) && pos.test(i)) {
                         out << "-hidden-";

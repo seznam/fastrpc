@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: pythonfeeder.cc,v 1.11 2010-04-21 08:48:23 edois Exp $
+ * $Id: pythonfeeder.cc,v 1.12 2011-02-16 12:04:07 volca Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -31,6 +31,9 @@
  *      2006-05-24 (vasek)
  *              Created
  */
+
+// Included first to get rid of the _POSIX_C_SOURCE warning
+#include <Python.h>
 
 #include <frpcint.h>
 #include <frpcbinmarshaller.h>

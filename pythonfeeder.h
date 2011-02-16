@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: pythonfeeder.h,v 1.3 2007-04-02 15:42:58 vasek Exp $
+ * $Id: pythonfeeder.h,v 1.4 2011-02-16 12:04:07 volca Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -36,10 +36,11 @@
 #ifndef PYTHONFEEDER_H_
 #define PYTHONFEEDER_H_
 
+// Included first to get rid of the _POSIX_C_SOURCE warning
+#include <Python.h>
+
 #include <string>
 #include <vector>
-
-#include <Python.h>
 
 #include <frpcmarshaller.h>
 

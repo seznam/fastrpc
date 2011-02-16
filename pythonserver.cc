@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: pythonserver.cc,v 1.26 2009-04-24 12:33:58 vasek Exp $
+ * $Id: pythonserver.cc,v 1.27 2011-02-16 12:04:07 volca Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -34,6 +34,9 @@
 
 #define __ENABLE_WSTRING
 
+// Included first to get rid of the _POSIX_C_SOURCE warning
+#include <Python.h>
+
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -43,7 +46,6 @@
 #include <algorithm>
 #include <functional>
 
-#include <Python.h>
 #include <structmember.h>
 #include <methodobject.h>
 
@@ -1306,12 +1308,14 @@ DECL_METHOD_KWD(MethodRegistryObject, registerDefault) {
     };
 
     Callback_t callbacks[] = {
-        { (char *)"default method callback",  &self->defaultMethod},
-        { (char *)"default method list callback", &self->defaultListMethods },
-        { (char *)"default method help callback", &self->defaultMethodHelp},
+        { (char *)"default method callback",  &self->defaultMethod, NULL},
+        { (char *)"default method list callback",
+                                        &self->defaultListMethods, NULL},
+        { (char *)"default method help callback", 
+                                        &self->defaultMethodHelp, NULL},
         { (char *)"default method signature callback",
-                                                &self->defaultMethodSignature },
-        {}
+                                        &self->defaultMethodSignature, NULL},
+        { NULL, NULL, NULL }
     };
 
     static const char *kwlist[] = {"method", "listMethods", "methodHelp",

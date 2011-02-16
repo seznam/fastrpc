@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: pyerrors.cc,v 1.6 2009-04-27 04:34:43 burlog Exp $
+ * $Id: pyerrors.cc,v 1.7 2011-02-16 12:04:07 volca Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -32,6 +32,9 @@
  *              Created
  */
 
+
+// Included first to get rid of the _POSIX_C_SOURCE warning
+#include <Python.h>
 
 #include <string>
 

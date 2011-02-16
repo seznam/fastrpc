@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: pythonbuilder.h,v 1.7 2010-04-21 08:48:23 edois Exp $
+ * $Id: pythonbuilder.h,v 1.8 2011-02-16 12:04:07 volca Exp $
  *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
@@ -36,10 +36,11 @@
 #ifndef PYTHONBUILDER_H_
 #define PYTHONBUILDER_H_
 
+// Included first to get rid of the _POSIX_C_SOURCE warning
+#include <Python.h>
+
 #include <string>
 #include <vector>
-
-#include <Python.h>
 
 #include <frpcdatabuilder.h>
 #include <frpcint.h>
