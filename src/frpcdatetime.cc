@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcdatetime.cc,v 1.11 2011-02-11 08:56:17 burlog Exp $
+ * FILE          $Id: frpcdatetime.cc,v 1.12 2011-02-16 07:22:39 burlog Exp $
  *
  * DESCRIPTION
  *
@@ -66,7 +66,7 @@ DateTime_t::DateTime_t(short year, char month, char day,
 
 DateTime_t::DateTime_t(short year, char month, char day,
                        char hour, char min, char sec)
-    : year(year), month(month), day(day), hour(hour), minute(minute), sec(sec)
+    : year(year), month(month), day(day), hour(hour), minute(min), sec(sec)
 {
     struct tm time_tm;
     memset(&time_tm, 0, sizeof(tm));
