@@ -19,7 +19,7 @@
  * Seznam.cz, a.s.
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
- * FILE             $Id: frpccompare.h,v 1.3 2011-02-16 09:17:05 burlog Exp $
+ * FILE             $Id: frpccompare.h,v 1.4 2011-02-16 09:23:09 burlog Exp $
  *
  * DESCRIPTION      Comparing generic values.
  *
@@ -216,7 +216,7 @@ int compare(const FRPC::Value_t &lhs, const FRPC::Value_t &rhs) {
     case FRPC::Array_t::TYPE:
         return helper::compare(FRPC::Array(lhs), FRPC::Array(rhs));
     case FRPC::Null_t::TYPE:
-        return true;
+        return 0;
     default:
         break;
     }
