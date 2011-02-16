@@ -19,7 +19,7 @@
  * Seznam.cz, a.s.
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
- * FILE             $Id: frpccompare.h,v 1.2 2011-02-16 09:15:54 burlog Exp $
+ * FILE             $Id: frpccompare.h,v 1.3 2011-02-16 09:17:05 burlog Exp $
  *
  * DESCRIPTION      Comparing generic values.
  *
@@ -46,6 +46,7 @@
 #include <frpcdatetime.h>
 #include <frpcstruct.h>
 #include <frpcarray.h>
+#include <frpcnull.h>
 
 namespace FRPC {
 
