@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcserverproxy.h,v 1.18 2007-10-31 13:49:41 mirecta Exp $
+ * FILE          $Id: frpcserverproxy.h,v 1.19 2011-02-18 10:37:45 skeleton-golem Exp $
  *
  * DESCRIPTION
  *
@@ -535,7 +535,7 @@ private:
 
     ServerProxy_t& operator=(const ServerProxy_t&);
 
-    ServerProxyImpl_t *sp;
+    std::auto_ptr<ServerProxyImpl_t> sp;
 };
 
 } // namespace FRPC

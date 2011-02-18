@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcserverproxy.cc,v 1.10 2007-07-31 14:05:44 vasek Exp $
+ * FILE          $Id: frpcserverproxy.cc,v 1.11 2011-02-18 10:37:45 skeleton-golem Exp $
  *
  * DESCRIPTION
  *
@@ -226,7 +226,6 @@ ServerProxy_t::ServerProxy_t(const std::string &server, const Struct_t &config)
 
 ServerProxy_t::~ServerProxy_t() {
     // get rid of implementation
-    delete sp;
 }
 
 Value_t& ServerProxyImpl_t::call(Pool_t &pool, const std::string &methodName,
