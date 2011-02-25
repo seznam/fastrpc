@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcunmarshaller.h,v 1.4 2011-01-10 22:25:15 burlog Exp $
+ * FILE          $Id: frpcunmarshaller.h,v 1.5 2011-02-25 09:21:07 volca Exp $
  *
  * DESCRIPTION
  *
@@ -57,6 +57,7 @@ public:
         BINARY_RPC,
         XML_RPC,
         URL_ENCODED,
+        BASE64
     };
 
     UnMarshaller_t();
@@ -65,10 +66,10 @@ public:
 
     /**
         @brief unmarshall data
-        @param data is input data 
-        
+        @param data is input data
+
         @param size is size of input data
-        @param type expected main data type 
+        @param type expected main data type
             @li @b TYPE_METHOD_CALL - method call
             @li @b TYPE_METHOD_RESPONSE - method response
             @li @b TYPE_ANY - any
@@ -78,10 +79,10 @@ public:
 
     /**
         @brief create marshaller object with contentType
-        @param contentType is an content type 
+        @param contentType is an content type
             @li @b XML_RPC - create xml marshaller
             @li @b BINARY_RPC create binary marshaler
-        
+
         @param dataBuilder is abstract object used to build data tree
         @return reference to new unMarshaller
 
@@ -91,10 +92,10 @@ public:
 
     /**
         @brief create marshaller object with contentType
-        @param contentType is an content type 
+        @param contentType is an content type
             @li @b XML_RPC - create xml marshaller
             @li @b BINARY_RPC create binary marshaler
-        
+
         @param dataBuilder is abstract object used to build data tree
         @param path uri path
         @return reference to new unMarshaller
@@ -115,12 +116,12 @@ public:
     static UnMarshaller_t* create(const char* data, unsigned int size,
                                   DataBuilder_t& dataBuilder);
     /**
-        @brief finishing unmarshalling  
+        @brief finishing unmarshalling
     */
     virtual void finish() = 0;
 
     /**
-    @brief get actual protocol version 
+    @brief get actual protocol version
     */
     virtual ProtocolVersion_t getProtocolVersion() {
         return ProtocolVersion_t();

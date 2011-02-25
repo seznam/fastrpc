@@ -20,15 +20,15 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcxmlunmarshaller.h,v 1.6 2007-05-22 13:30:59 mirecta Exp $
+ * FILE          $Id: frpcxmlunmarshaller.h,v 1.7 2011-02-25 09:21:08 volca Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #ifndef FRPCFRPCXMLUNMARSHALLER_H
 #define FRPCFRPCXMLUNMARSHALLER_H
@@ -74,9 +74,6 @@ public:
     std::string localBuffer;
 
 private:
-
-    const std::string decodeBase64(const char *data, long len);
-
     //static void initCallbacks();
 
     DataBuilder_t &dataBuilder;

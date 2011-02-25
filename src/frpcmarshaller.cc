@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcmarshaller.cc,v 1.5 2011-01-10 22:25:15 burlog Exp $
+ * FILE          $Id: frpcmarshaller.cc,v 1.6 2011-02-25 09:21:07 volca Exp $
  *
  * DESCRIPTION
  *
@@ -35,6 +35,7 @@
 #include <frpcbinmarshaller.h>
 #include <frpcxmlmarshaller.h>
 #include <frpcjsonmarshaller.h>
+#include <frpcb64marshaller.h>
 #include <frpcerror.h>
 #include <string.h>
 
@@ -61,6 +62,12 @@ Marshaller_t* Marshaller_t::create(unsigned int contentType, Writer_t& writer,
     case JSON:
         marshaller = new JSONMarshaller_t(writer,protocolVersion);
         break;
+
+    case BASE64_RPC: {
+            std::auto_ptr<Base64Writer_t> b64writer(new Base64Writer_t(writer));
+            marshaller = new Base64Marshaller_t(b64writer, protocolVersion);
+            break;
+        }
 
     default:
         throw Error_t("This marshaller not exists");

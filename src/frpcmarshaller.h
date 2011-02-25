@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcmarshaller.h,v 1.6 2011-01-10 22:25:15 burlog Exp $
+ * FILE          $Id: frpcmarshaller.h,v 1.7 2011-02-25 09:21:07 volca Exp $
  *
  * DESCRIPTION
  *
@@ -51,7 +51,7 @@ struct  ProtocolVersion_t;
 class FRPC_DLLEXPORT Marshaller_t
 {
 public:
-    enum{ BINARY_RPC, XML_RPC, JSON};
+    enum{ BINARY_RPC, XML_RPC, JSON, BASE64_RPC};
     /**
         @brief Default constructor
     */
@@ -113,7 +113,7 @@ public:
         or if created as XML using method XML(Xml-RPC)
     */
 
-    
+
 
     virtual void packDateTime(short year, char month, char day,char hour, char min,  char sec,
                               char weekDay, time_t unixTime, int timeZone ) = 0;

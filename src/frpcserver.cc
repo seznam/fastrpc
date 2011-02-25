@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcserver.cc,v 1.16 2011-02-11 08:56:17 burlog Exp $
+ * FILE          $Id: frpcserver.cc,v 1.17 2011-02-25 09:21:07 volca Exp $
  *
  * DESCRIPTION
  *
@@ -60,6 +60,8 @@ inline unsigned int chooseType(unsigned int type) {
         return Marshaller_t::BINARY_RPC;
     case Server_t::JSON:
         return Marshaller_t::JSON;
+    case Server_t::BASE64_RPC:
+        return Marshaller_t::BASE64_RPC;
     case Server_t::XML_RPC:
     default:
         return Marshaller_t::XML_RPC;
@@ -311,6 +313,8 @@ void Server_t::readRequest(DataBuilder_t &builder)
 
             } else if (accept.find("application/json") != std::string::npos) {
                 outType = JSON;
+            } else if (accept.find("application/x-base64-frpc") != std::string::npos) {
+                outType = BASE64_RPC;
             }
         }
 
@@ -335,6 +339,14 @@ void Server_t::readRequest(DataBuilder_t &builder)
                             UnMarshaller_t::URL_ENCODED,
                             builder,
                             uriPath));
+
+        } else if (contentType.find("application/x-base64-frpc")
+                  != std::string::npos)
+        {
+            unmarshaller = std::auto_ptr<UnMarshaller_t>(
+                    UnMarshaller_t::create(
+                            UnMarshaller_t::BASE64,
+                            builder));
 
         } else {
             throw StreamError_t("Unknown ContentType");
@@ -488,6 +500,13 @@ void Server_t::sendResponse( bool last )
             }
             break;
 
+        case BASE64_RPC:
+            {
+                os.os << HTTP_HEADER_CONTENT_TYPE
+                      << ": " << "application/x-base64-frpc"<< "\r\n";
+            }
+            break;
+
         default:
             throw StreamError_t("Unknown protocol");
             break;
@@ -499,6 +518,7 @@ void Server_t::sendResponse( bool last )
         if (useBinary)
             os.os << ", application/x-frpc";
         os.os << ", application/x-www-form-urlencoded";
+        os.os << ", application/x-base64-frpc";
         os.os << "\r\n";
 
         //append connection header

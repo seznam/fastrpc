@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcxmlunmarshaller.cc,v 1.16 2010-04-21 08:48:03 edois Exp $
+ * FILE          $Id: frpcxmlunmarshaller.cc,v 1.17 2011-02-25 09:21:08 volca Exp $
  *
  * DESCRIPTION
  *
@@ -33,6 +33,7 @@
 #include <limits.h>
 #include "frpcxmlunmarshaller.h"
 #include "frpctreebuilder.h"
+#include "frpcbase64.h"
 #include <frpc.h>
 #include <stdio.h>
 #include <string.h>
@@ -144,81 +145,6 @@ extern "C" {
 
 }
 namespace {
-const unsigned char base64Table[256] = {
-                                           // 000 - 007
-                                           0x00, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-                                           // 008 - 015
-                                           0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-                                           // 016 - 023
-                                           0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-                                           // 024 - 031
-                                           0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-                                           // 032 - 039
-                                           0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-                                           // 040 - 047      '+'                     '/
-                                           0x80, 0x80, 0x80, 0x3e, 0x80, 0x80, 0x80, 0x3f,
-                                           // 048 - 055      '0'   '1'   '2'   '3'   '4'
-                                           0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x3b,
-                                           // 056 - 063
-                                           //'5' '6'   '7'   '8'   '9'
-                                           0x3c, 0x3d, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-                                           // 064 - 072
-                                           //    'A'   'B'   'C'   'D'   'E'   'F'   'G'
-                                           0x80, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
-                                           // 072 - 079
-                                           //'H' 'I'   'J'   'K'   'L'   'M'   'N'   'O'
-                                           0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e,
-                                           // 080 - 087
-                                           //'P' 'Q'   'R'   'S'   'T'   'U'   'V'   'W'
-                                           0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16,
-                                           // 088 - 095
-                                           //'X' 'Y'   'Z'
-                                           0x17, 0x18, 0x19, 0x80, 0x80, 0x80, 0x80, 0x80,
-                                           // 096 - 103
-                                           //    'a'   'b'   'c'   'd'   'e'   'f'   'g'
-                                           0x80, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 0x20,
-                                           // 104 - 111
-                                           //'h' 'i'   'j'   'k'   'l'   'm'   'n'   'o'
-                                           0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28,
-                                           // 112 - 119
-                                           //'p' 'q'   'r'   's'   't'   'u'   'v'   'w'
-                                           0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e, 0x2f, 0x30,
-                                           // 120 - 127
-                                           //'x' 'y'   'z'
-                                           0x31, 0x32, 0x33, 0x80, 0x80, 0x80, 0x80, 0x80,
-                                           // 128 - 135
-                                           0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-                                           // 136 - 143
-                                           0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-                                           // 144 - 151
-                                           0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-                                           // 152 - 159
-                                           0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-                                           // 160 - 167
-                                           0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-                                           // 168 - 175
-                                           0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-                                           // 176 - 183
-                                           0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-                                           // 184 - 191
-                                           0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-                                           // 192 - 199
-                                           0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-                                           // 200 - 207
-                                           0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-                                           // 208 - 215
-                                           0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-                                           // 216 - 223
-                                           0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-                                           // 224 - 231
-                                           0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-                                           // 232 - 239
-                                           0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-                                           // 240 - 247
-                                           0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-                                           // 248 - 255
-                                           0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80
-                                       };
 const char *error_mapping[] = {
                                   "No error",
                                   "Internal error",
@@ -393,7 +319,7 @@ void XmlUnMarshaller_t::unMarshall( const char *data, unsigned int size, char ty
 
     // xmlSwitchEncoding(parser, XML_CHAR_ENCODING_UTF8);
     /* xmlSwitchEncoding(parser,XML_CHAR_ENCODING_NONE);
-     
+
      xmlSwitchToEncoding(parser,
     xmlGetCharEncodingHandler(XML_CHAR_ENCODING_UTF8));  */
 
@@ -615,48 +541,6 @@ void XmlUnMarshaller_t::setValueType(const char *name) {
 
 }
 
-const std::string XmlUnMarshaller_t::decodeBase64(const char *data, long len) {
-    std::string src(data,len);
-
-    if (src.empty()) {
-
-        return src;
-    }
-
-    std::string tmpDest;
-    tmpDest.reserve((src.length() * 3) / 4);
-
-    std::string::const_iterator end = src.end();
-    for (std::string::const_iterator isrc = src.begin();
-            isrc != end; ) {
-        unsigned char a[4] = { '=', '=', '=', '=' };
-        unsigned char b[4];
-        int i = 0;
-        for (; (isrc != end) && (i < 4); isrc++) {
-            if (isspace(*isrc))
-                continue;
-            b[i] = base64Table[a[i] = *isrc];
-            i++;
-        }
-
-        // when nothing read terminate this loop
-        if (!i)
-            break;
-
-        unsigned char o[4];
-        o[0] = (b[0] << 2) | (b[1] >> 4);
-        o[1] = (b[1] << 4) | (b[2] >> 2);
-        o[2] = (b[2] << 6) | b[3];
-        int len = (a[2] == '=') ? 1 : ((a[3] == '=') ? 2 : 3);
-        tmpDest.append((char *)o, len);
-        if (len < 3)
-            break;
-    }
-
-    return  tmpDest;
-}
-
-
 void XmlUnMarshaller_t::setValueData(const char *data, unsigned int len) {
 
 
@@ -724,7 +608,7 @@ void XmlUnMarshaller_t::setValueData(const char *data, unsigned int len) {
     break;
     case BINARY: {
 
-        std::string binary = decodeBase64(data,len);
+        std::string binary = Base64::decode(data,len);
         dataBuilder.buildBinary(binary.data(), binary.size());
         internalType = NONE;
     }

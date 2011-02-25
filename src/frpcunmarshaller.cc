@@ -20,7 +20,7 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpcunmarshaller.cc,v 1.4 2011-01-10 22:25:15 burlog Exp $
+ * FILE          $Id: frpcunmarshaller.cc,v 1.5 2011-02-25 09:21:07 volca Exp $
  *
  * DESCRIPTION
  *
@@ -35,6 +35,7 @@
 #include "frpcbinunmarshaller.h"
 #include "frpcxmlunmarshaller.h"
 #include "frpcurlunmarshaller.h"
+#include "frpcb64unmarshaller.h"
 #include "frpcunmarshaller.h"
 
 namespace FRPC
@@ -72,6 +73,10 @@ UnMarshaller_t* UnMarshaller_t::create(unsigned int contentType,
 
     case URL_ENCODED:
         unMarshaller = new URLUnMarshaller_t(dataBuilder, path);
+        break;
+
+    case BASE64:
+        unMarshaller = new Base64UnMarshaller_t(dataBuilder);
         break;
 
     default:
