@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# FILE              $Id: make.sh,v 1.7 2011-02-23 14:04:06 volca Exp $
+# FILE              $Id: make.sh,v 1.8 2011-02-28 10:26:27 volca Exp $
 #
 # DESCRIPTION       Packager for python Fastrpc module.
 #
@@ -19,6 +19,9 @@ set -e
 
 # Only lenny and older are supported
 DEB_MAJOR="`cat /etc/debian_version | cut -d . -f 1`"
+
+# igored if debian_version's not numeric
+echo $DEB_MAJOR | grep "[^0-9]" > /dev/null 2>&1 && DEB_MAJOR=0
 
 if [ "$DEB_MAJOR" -ge "6" ]; then
     # On squeeze we're on different package name scheme (and we're also packing
