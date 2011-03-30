@@ -52,10 +52,12 @@ include_HEADERS = frpc.h frpcvalue.h frpcarray.h frpcstruct.h frpcbinary.h frpcd
                   frpcmethodregistry.h frpcserver.h frpcresponseerror.h frpcplatform.h frpcheadmethod.h \
                   frpcsocket.h frpcsocketunix.h frpcsocketwin.h frpcplatform.h \
                   frpcversion.h frpcconnector.h frpcconverters.h frpcnull.h \
-                  frpcbinmarshaller.h frpcxmlmarshaller.h frpcinternals.h frpccompare.h frpcb64marshaller.h
+                  frpcbinmarshaller.h frpcxmlmarshaller.h frpcinternals.h frpccompare.h frpcb64marshaller.h \
+                  frpcjsonmarshaller.h
 
 
-noinst_HEADERS = frpcbinunmarshaller.h frpcxmlunmarshaller.h frpcurlunmarshaller.h frpcb64unmarshaller.h frpcbase64.h
+noinst_HEADERS = frpcbinunmarshaller.h frpcxmlunmarshaller.h frpcurlunmarshaller.h frpcb64unmarshaller.h frpcbase64.h \
+                 frpcb64writer.h nonglibc.h
 
 # compile this library
 lib_LTLIBRARIES = libfastrpc.la
