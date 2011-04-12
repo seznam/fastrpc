@@ -1,3 +1,9 @@
+python-fastrpc (3.1.2) unstable; urgency=low
+
+  * Support for custom http headers in C++ library.
+
+ -- Michal Bukovsky <michal.bukovsky@firma.seznam.cz>  Tue, 12 Apr 2011 12:53:32 +0200
+
 python-fastrpc (3.1.1) unstable; urgency=low
 
   * Added debhelper packaging.
