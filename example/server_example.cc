@@ -14,6 +14,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <cerrno>
+#include <sstream>
 
 #include <stdio.h>
 #include <string>
@@ -51,6 +52,23 @@ Value_t& methodTest(Pool_t &pool, Array_t &params, int &data) {
                        pool.String("OK"), "int", params[0], "string",
                        params[1]);
 }
+
+class HeaderDumper_t {
+public:
+    HeaderDumper_t(HTTPHeader_t *headers)
+        : headers(headers)
+    {}
+
+    Value_t &dump(Pool_t &pool, Array_t &params) {
+        std::ostringstream os;
+        os << *headers;
+        return pool.Struct("status", pool.Int(200),
+                           "statusMessage", pool.String("OK"),
+                           "headers", pool.String(os.str()));
+    }
+
+    HTTPHeader_t *headers;
+};
 
 class Callbacks_t : public MethodRegistry_t::Callbacks_t {
     virtual void preRead() {
@@ -96,11 +114,17 @@ class Callbacks_t : public MethodRegistry_t::Callbacks_t {
 
 int main(int argc, char *argv[]) {
     Test_t test;
+
     Callbacks_t callbacks;
     MethodRegistry_t methodRegistry(&callbacks, true);
     Server_t::Config_t config(10000, 10000, false, 0, true, &callbacks);
     Server_t server(config);
     int a=2;
+
+    HTTPHeader_t in;
+    HTTPHeader_t out;
+    out.add("X-Hello", "World!");
+    HeaderDumper_t hdump(&in);
 
     // register methods
     server.registry().registerMethod("test1",
@@ -111,6 +135,11 @@ int main(int argc, char *argv[]) {
                                      unboundMethod(methodTest, a),
                                      "S:is",
                                      "Global method");
+    server.registry().registerMethod("headers",
+                                     boundMethod(&HeaderDumper_t::dump, hdump),
+                                     "S:",
+                                     "Dump input HTTP headers");
+
     // register head method FOR HTTP HEAD
     server.registry().registerHeadMethod(boundHeadMethod(&Test_t::head, test));
 
@@ -149,7 +178,7 @@ int main(int argc, char *argv[]) {
         if (fdNew < 0) {
             printf("Cannot accept connection(%s)\n", strerror(errno));
         }
-        server.serve(fdNew);
+        server.serve(fdNew, &clientAddr, in, out);
         close(fdNew);
     }
 

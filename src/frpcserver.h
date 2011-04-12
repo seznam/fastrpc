@@ -33,6 +33,8 @@
 #ifndef FRPCFRPCSERVER_H
 #define FRPCFRPCSERVER_H
 
+#include <memory>
+
 #include <frpcplatform.h>
 
 #include <frpcmethodregistry.h>
@@ -46,9 +48,9 @@
 
 
 namespace FRPC {
+
 class DataBuilder_t;
 class UnMarshaller_t;
-
 
 /**
 @author Miroslav Talasek
@@ -144,22 +146,25 @@ public:
         bool introspectionEnabled;
 
         MethodRegistry_t::Callbacks_t *callbacks;
-
-//         std::string path;
-
     };
 
     Server_t(Config_t &config)
         : Writer_t(),
           methodRegistry(config.callbacks, config.introspectionEnabled),
-          io(0,config.readTimeout, config.writeTimeout, -1, -1),
+          io(0, config.readTimeout, config.writeTimeout, -1, -1),
           keepAlive(config.keepAlive), useBinary(config.useBinary),
           maxKeepalive(config.maxKeepalive), callbacks(config.callbacks),
           /*path(config.path), */outType(XML_RPC), closeConnection(true),
+          queryStorage(new std::list<std::string>()), headerOut(0x0),
           contentLength(0), useChunks(false), headersSent(false), head(false)
     {}
 
     void serve(int fd, struct sockaddr_in* addr = 0);
+
+    void serve(int fd,
+               struct sockaddr_in* addr,
+               HTTPHeader_t &headerIn,
+               HTTPHeader_t &headerOut);
 
     ~Server_t();
 
@@ -169,6 +174,10 @@ public:
 
 private:
     void readRequest(DataBuilder_t &builder);
+
+    void readRequest(DataBuilder_t &builder,
+                     HTTPHeader_t &headersIn);
+
 
     /**
     * @brief says to server that all data was writed
@@ -203,7 +212,9 @@ private:
 //     std::string path;
     unsigned int outType;
     bool closeConnection;
-    std::list<std::string> queryStorage;
+    std::auto_ptr<std::list<std::string> > queryStorage;
+    HTTPHeader_t *headerOut;
+    //std::list<std::string> queryStorage;
     //UnMarshaller_t *unmarshaller;
     unsigned int contentLength;
     bool  useChunks;
@@ -212,6 +223,6 @@ private:
     ProtocolVersion_t protocolVersion;
 };
 
-};
+}
 
 #endif

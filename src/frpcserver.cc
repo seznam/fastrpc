@@ -73,11 +73,20 @@ inline unsigned int chooseType(unsigned int type) {
 Server_t::~Server_t()
 {}
 
-void Server_t::serve(int fd, struct sockaddr_in* addr )
+void Server_t::serve(int fd, struct sockaddr_in* addr) {
+    HTTPHeader_t headerIn;
+    HTTPHeader_t headerOut;
+    serve(fd, addr, headerIn, headerOut);
+}
+
+void Server_t::serve(int fd,
+                     struct sockaddr_in* addr,
+                     HTTPHeader_t &headerIn,
+                     HTTPHeader_t &headerOut)
 {
     // prepare query storage
-    queryStorage.push_back(std::string());
-    queryStorage.back().reserve(BUFFER_SIZE + HTTP_BALLAST);
+    queryStorage->push_back(std::string());
+    queryStorage->back().reserve(BUFFER_SIZE + HTTP_BALLAST);
     contentLength = 0;
     closeConnection = false;
     headersSent = false;
@@ -88,48 +97,27 @@ void Server_t::serve(int fd, struct sockaddr_in* addr )
 
     io.setSocket(fd);
 
-    if(!addr)
-    {
+    if (!addr) {
         struct sockaddr_in clientaddr;
         socklen_t sinSize = sizeof( struct sockaddr_in );
-        if(getpeername(fd,(struct sockaddr*) &clientaddr, &sinSize) == 0 )
-        {
+        if (getpeername(fd,(struct sockaddr*) &clientaddr, &sinSize) == 0 ) {
             clientIP = inet_ntop(AF_INET, &(clientaddr.sin_addr), tmpstr, 256);
-        }
-        else
-        {
+        } else {
             clientIP = "unknown";
         }
-    }
-    else
-    {
+    } else {
         clientIP = inet_ntop(AF_INET, &(addr->sin_addr), tmpstr, 256);
     }
 
     unsigned int requestCount = 0;
-
-
-    do
-    {
-
-//         if (callbacks)
-//         {
-//            callbacks->preRead(clientIP, requestCount);
-//         }
-
+    do {
         Pool_t pool;
         TreeBuilder_t builder(pool);
-
-
-
-        try
-        {
+        try {
             methodRegistry.preReadCallback();
-            readRequest(builder);
+            readRequest(builder, headerIn);
 
-        }
-        catch(const StreamError_t &streamError)
-        {
+        } catch(const StreamError_t &streamError) {
             std::auto_ptr<Marshaller_t>
                 marshaller(Marshaller_t::create(chooseType(outType),
                                                 *this,
@@ -138,26 +126,17 @@ void Server_t::serve(int fd, struct sockaddr_in* addr )
             marshaller->packFault(MethodRegistry_t::FRPC_PARSE_ERROR,
                                   streamError.message().c_str());
             marshaller->flush();
-
-
             continue;
 
-        }
-        catch(const HTTPError_t &httpError)
-        {
+        } catch(const HTTPError_t &httpError) {
             sendHttpError(httpError);
-
             break;
         }
 
+        this->headerOut = &headerOut;
 
-        //printf("method name %s \n",builder.getUnMarshaledMethodName().c_str());
-
-        try
-        {
-
-            if (head)
-            {
+        try {
+            if (head) {
                 int result = methodRegistry.headCall();
                 if (result == 0)
                     flush();
@@ -175,12 +154,8 @@ void Server_t::serve(int fd, struct sockaddr_in* addr )
                                            chooseType(outType),
                                            protocolVersion);
             }
-        }
-
-        catch(const HTTPError_t &httpError)
-        {
+        } catch(const HTTPError_t &httpError) {
             sendHttpError(httpError);
-
             break;
         }
 
@@ -192,16 +167,22 @@ void Server_t::serve(int fd, struct sockaddr_in* addr )
                || requestCount >= maxKeepalive));
 }
 
-void Server_t::readRequest(DataBuilder_t &builder)
+void Server_t::readRequest(DataBuilder_t &builder) {
+    HTTPHeader_t headerIn;
+    readRequest(builder, headerIn);
+}
+
+void Server_t::readRequest(DataBuilder_t &builder,
+                           HTTPHeader_t &headerIn)
 {
     closeConnection = false;
     contentLength = 0;
     headersSent = false;
     head = false;
-    queryStorage.clear();
-    queryStorage.push_back(std::string());
-    queryStorage.back().reserve(BUFFER_SIZE + HTTP_BALLAST);
-    HTTPHeader_t httpHead;
+    queryStorage->clear();
+    queryStorage->push_back(std::string());
+    queryStorage->back().reserve(BUFFER_SIZE + HTTP_BALLAST);
+    headerIn = HTTPHeader_t();
 
     std::string protocol;
     std::string transferMethod;
@@ -269,7 +250,7 @@ void Server_t::readRequest(DataBuilder_t &builder)
         }
 
         // read header from the request
-        io.readHeader(httpHead);
+        io.readHeader(headerIn);
 
         if(transferMethod != "POST")
         {
@@ -289,7 +270,7 @@ void Server_t::readRequest(DataBuilder_t &builder)
 
 
         // get content type from header
-        httpHead.get(HTTP_HEADER_CONTENT_TYPE, contentType );
+        headerIn.get(HTTP_HEADER_CONTENT_TYPE, contentType);
         //create unmarshaller and datasink
 
         // what types is supported by client
@@ -297,7 +278,7 @@ void Server_t::readRequest(DataBuilder_t &builder)
         useChunks = false;
 
         std::string accept("");
-        if (httpHead.get(HTTP_HEADER_ACCEPT, accept) == 0) {
+        if (headerIn.get(HTTP_HEADER_ACCEPT, accept) == 0) {
 
             /* xmlrpc is default
             if (accept.find("text/xml") != std::string::npos) {
@@ -313,7 +294,8 @@ void Server_t::readRequest(DataBuilder_t &builder)
 
             } else if (accept.find("application/json") != std::string::npos) {
                 outType = JSON;
-            } else if (accept.find("application/x-base64-frpc") != std::string::npos) {
+            } else if (accept.find("application/x-base64-frpc")
+                       != std::string::npos) {
                 outType = BASE64_RPC;
             }
         }
@@ -355,95 +337,56 @@ void Server_t::readRequest(DataBuilder_t &builder)
         DataSink_t data(*unmarshaller, UnMarshaller_t::TYPE_METHOD_CALL);
 
         // read body of request
-        io.readContent(httpHead, data, true);
+        io.readContent(headerIn, data, true);
 
         unmarshaller->finish();
         protocolVersion = unmarshaller->getProtocolVersion();
 
         std::string connection;
-        httpHead.get("Connection", connection);
+        headerIn.get("Connection", connection);
         std::transform(connection.begin(), connection.end(),
                        connection.begin(), std::ptr_fun<int, int>(toupper));
         closeConnection = false;
 
-        if (protocol == "HTTP/1.1")
-        {
+        if (protocol == "HTTP/1.1") {
             closeConnection = (connection == "CLOSE");
-        }
-        else
-        {
+        } else {
             closeConnection = (connection != "KEEP-ALIVE");
             useChunks = false;
         }
-
-
-
-
-    }
-    catch (const Error_t &)
-    {
+    } catch (const Error_t &) {
         // get rid of old method
-
         throw;
     }
-
-    /*// close socket
-    if (!((!keepAlive || closeConnection) && (httpIO.socket() > -1)))
-    {
-        closer.doClose = false;
-    } */
-
-
-
 }
-void Server_t::write(const char* data, unsigned int size)
-{
 
+void Server_t::write(const char* data, unsigned int size) {
     contentLength += size;
-
-    if(size > BUFFER_SIZE - queryStorage.back().size())
-    {
-        if(useChunks)
-        {
+    if (size > BUFFER_SIZE - queryStorage->back().size()) {
+        if (useChunks) {
             sendResponse();
-            queryStorage.back().append(data, size);
-        }
-        else
-        {
-            if(size > BUFFER_SIZE)
-            {
-                queryStorage.push_back(std::string(data, size));
-            }
-            else
-            {
-                queryStorage.back().append(data, size);
+            queryStorage->back().append(data, size);
+        } else {
+            if (size > BUFFER_SIZE) {
+                queryStorage->push_back(std::string(data, size));
+            } else {
+                queryStorage->back().append(data, size);
             }
         }
+    } else {
+        queryStorage->back().append(data, size);
     }
-    else
-    {
-        queryStorage.back().append(data, size);
-    }
-
 }
 
-void Server_t::flush()
-{
-    if(!useChunks)
-    {
+void Server_t::flush() {
+    if (!useChunks) {
         sendResponse();
-
-    }
-    else
-    {
+    } else {
         sendResponse(true);
     }
-
-
 }
 
-void Server_t::sendHttpError(const HTTPError_t &httpError)
-{
+void Server_t::sendHttpError(const HTTPError_t &httpError) {
     StreamHolder_t os;
     //create header
     os.os << "HTTP/1.1" << ' '
@@ -463,13 +406,9 @@ void Server_t::sendHttpError(const HTTPError_t &httpError)
     io.sendData(os.os.str());
 }
 
-void Server_t::sendResponse( bool last )
-{
-
+void Server_t::sendResponse(bool last) {
     std::string headerData;
-    if(!headersSent)
-    {
-        HTTPHeader_t header;
+    if(!headersSent) {
         StreamHolder_t os;
 
 
@@ -477,8 +416,7 @@ void Server_t::sendResponse( bool last )
         os.os << "HTTP/1.1" << ' ' << "200" << ' ' << "OK" << "\r\n";
 
         //os.os << "Host: " << url.host << ':' << url.port << "\r\n";
-        switch(outType)
-        {
+        switch (outType) {
         case XML_RPC:
             {
 
@@ -529,17 +467,21 @@ void Server_t::sendResponse( bool last )
         // write content-length or content-transfer-encoding when we can send
         // content
 
-        if (!useChunks)
-        {
+        if (!useChunks) {
             os.os << HTTP_HEADER_CONTENT_LENGTH << ": " << contentLength
             << "\r\n";
-        }
-        else
-        {
+        } else {
             os.os << HTTP_HEADER_TRANSFER_ENCODING << ": chunked\r\n";
         }
 
         os.os << "Server:" << " Fast-RPC  Server Linux\r\n";
+
+        if (headerOut) {
+            os.os << *headerOut;
+            // for security reset the header ptr => next call can come without
+            // http out headers then it can point to somewhere in memory...
+            headerOut = 0x0;
+        }
 
         // terminate header
         // append separator
@@ -551,60 +493,51 @@ void Server_t::sendResponse( bool last )
         headerData = os.os.str();
         //headersSent = true;
 
-        if(head){
+        if (head) {
             // send header
             io.sendData(os.os.str());
             return;
         }
-
     }
 
-    if(useChunks)
-    {
+    if(useChunks) {
         // write chunk size
         StreamHolder_t os;
-        os.os << std::hex << queryStorage.back().size() << "\r\n";
+        os.os << std::hex << queryStorage->back().size() << "\r\n";
         //io.sendData(os.os.str());
         if (!headersSent){
             headerData.append(os.os.str());
-            queryStorage.back().insert(0,headerData);
+            queryStorage->back().insert(0,headerData);
             headersSent = true;
-        }else{
-            queryStorage.back().insert(0,os.os.str());
+        } else {
+            queryStorage->back().insert(0,os.os.str());
         }
 
         //add chunk terminator
         if (last){
-            queryStorage.back().append("\r\n0\r\n\r\n");
-        }else{
-            queryStorage.back().append("\r\n");
+            queryStorage->back().append("\r\n0\r\n\r\n");
+        } else {
+            queryStorage->back().append("\r\n");
         }
 
         // write chunk
-        io.sendData(queryStorage.back().data(),queryStorage.back().size() );
-        queryStorage.back().erase();
+        io.sendData(queryStorage->back().data(),queryStorage->back().size() );
+        queryStorage->back().erase();
 
 
-    }
-
-    else
-    {
+    } else {
         if (!headersSent){
-            queryStorage.front().insert(0,headerData);
+            queryStorage->front().insert(0,headerData);
             headersSent = true;
         }
-        while(queryStorage.size() != 1)
-        {
-            io.sendData(queryStorage.front().data(),
-                        queryStorage.front().size() );
-            queryStorage.pop_front();
+        while(queryStorage->size() != 1) {
+            io.sendData(queryStorage->front().data(),
+                        queryStorage->front().size() );
+            queryStorage->pop_front();
         }
-        io.sendData(queryStorage.back().data(),queryStorage.back().size() );
-        queryStorage.back().erase();
-
-
+        io.sendData(queryStorage->back().data(),queryStorage->back().size() );
+        queryStorage->back().erase();
     }
-
 }
 
 }
