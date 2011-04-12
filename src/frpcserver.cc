@@ -133,6 +133,7 @@ void Server_t::serve(int fd,
             break;
         }
 
+        headerOut = HTTPHeader_t();
         this->headerOut = &headerOut;
 
         try {
