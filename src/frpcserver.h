@@ -155,8 +155,8 @@ public:
           keepAlive(config.keepAlive), useBinary(config.useBinary),
           maxKeepalive(config.maxKeepalive), callbacks(config.callbacks),
           /*path(config.path), */outType(XML_RPC), closeConnection(true),
-          queryStorage(new std::list<std::string>()), headerOut(0x0),
-          contentLength(0), useChunks(false), headersSent(false), head(false)
+          queryStorage(), contentLength(0), useChunks(false),
+          headersSent(false), head(false), headerOut(0x0)
     {}
 
     void serve(int fd, struct sockaddr_in* addr = 0);
@@ -212,15 +212,14 @@ private:
 //     std::string path;
     unsigned int outType;
     bool closeConnection;
-    std::auto_ptr<std::list<std::string> > queryStorage;
-    HTTPHeader_t *headerOut;
-    //std::list<std::string> queryStorage;
+    std::list<std::string> queryStorage;
     //UnMarshaller_t *unmarshaller;
     unsigned int contentLength;
     bool  useChunks;
     bool headersSent;
     bool head;
     ProtocolVersion_t protocolVersion;
+    HTTPHeader_t *headerOut;
 };
 
 }

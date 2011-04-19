@@ -85,8 +85,8 @@ void Server_t::serve(int fd,
                      HTTPHeader_t &headerOut)
 {
     // prepare query storage
-    queryStorage->push_back(std::string());
-    queryStorage->back().reserve(BUFFER_SIZE + HTTP_BALLAST);
+    queryStorage.push_back(std::string());
+    queryStorage.back().reserve(BUFFER_SIZE + HTTP_BALLAST);
     contentLength = 0;
     closeConnection = false;
     headersSent = false;
@@ -180,9 +180,9 @@ void Server_t::readRequest(DataBuilder_t &builder,
     contentLength = 0;
     headersSent = false;
     head = false;
-    queryStorage->clear();
-    queryStorage->push_back(std::string());
-    queryStorage->back().reserve(BUFFER_SIZE + HTTP_BALLAST);
+    queryStorage.clear();
+    queryStorage.push_back(std::string());
+    queryStorage.back().reserve(BUFFER_SIZE + HTTP_BALLAST);
     headerIn = HTTPHeader_t();
 
     std::string protocol;
@@ -363,19 +363,19 @@ void Server_t::readRequest(DataBuilder_t &builder,
 
 void Server_t::write(const char* data, unsigned int size) {
     contentLength += size;
-    if (size > BUFFER_SIZE - queryStorage->back().size()) {
+    if (size > BUFFER_SIZE - queryStorage.back().size()) {
         if (useChunks) {
             sendResponse();
-            queryStorage->back().append(data, size);
+            queryStorage.back().append(data, size);
         } else {
             if (size > BUFFER_SIZE) {
-                queryStorage->push_back(std::string(data, size));
+                queryStorage.push_back(std::string(data, size));
             } else {
-                queryStorage->back().append(data, size);
+                queryStorage.back().append(data, size);
             }
         }
     } else {
-        queryStorage->back().append(data, size);
+        queryStorage.back().append(data, size);
     }
 }
 
@@ -504,40 +504,40 @@ void Server_t::sendResponse(bool last) {
     if(useChunks) {
         // write chunk size
         StreamHolder_t os;
-        os.os << std::hex << queryStorage->back().size() << "\r\n";
+        os.os << std::hex << queryStorage.back().size() << "\r\n";
         //io.sendData(os.os.str());
         if (!headersSent){
             headerData.append(os.os.str());
-            queryStorage->back().insert(0,headerData);
+            queryStorage.back().insert(0,headerData);
             headersSent = true;
         } else {
-            queryStorage->back().insert(0,os.os.str());
+            queryStorage.back().insert(0,os.os.str());
         }
 
         //add chunk terminator
         if (last){
-            queryStorage->back().append("\r\n0\r\n\r\n");
+            queryStorage.back().append("\r\n0\r\n\r\n");
         } else {
-            queryStorage->back().append("\r\n");
+            queryStorage.back().append("\r\n");
         }
 
         // write chunk
-        io.sendData(queryStorage->back().data(),queryStorage->back().size() );
-        queryStorage->back().erase();
+        io.sendData(queryStorage.back().data(),queryStorage.back().size() );
+        queryStorage.back().erase();
 
 
     } else {
         if (!headersSent){
-            queryStorage->front().insert(0,headerData);
+            queryStorage.front().insert(0,headerData);
             headersSent = true;
         }
-        while(queryStorage->size() != 1) {
-            io.sendData(queryStorage->front().data(),
-                        queryStorage->front().size() );
-            queryStorage->pop_front();
+        while(queryStorage.size() != 1) {
+            io.sendData(queryStorage.front().data(),
+                        queryStorage.front().size() );
+            queryStorage.pop_front();
         }
-        io.sendData(queryStorage->back().data(),queryStorage->back().size() );
-        queryStorage->back().erase();
+        io.sendData(queryStorage.back().data(),queryStorage.back().size() );
+        queryStorage.back().erase();
     }
 }
 
