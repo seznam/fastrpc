@@ -142,9 +142,15 @@ namespace FRPC {
             friend std::ostream& operator<<(std::ostream &os,
                                             const HTTPHeader_t &header);
 
-        private:
             typedef std::pair<std::string, std::string> Header_t;
             typedef std::vector<Header_t> HeaderMap_t;
+
+            inline const HeaderMap_t& getHeaders() const {
+                return header;
+            }
+
+        private:
+            
             HeaderMap_t header;
     };
     
