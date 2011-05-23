@@ -446,8 +446,21 @@ namespace {
 
         PyObject* serve(int fd, PyObjectWrapper_t addr);
 
+        inline PyObject* getInHeaders();
+
+        inline PyObject* getOutHeaders();
+
+        inline PyObject* getInHeadersFor(const std::string &name);
+
+        inline PyObject* getOutHeadersFor(const std::string &name);
+
+        inline void addOutHeader(const std::string &key, const std::string &value);
+
     private:
         void readRequest(FRPC::DataBuilder_t &builder);
+
+        PyObject* headersToPyList(const FRPC::HTTPHeader_t &headers, 
+                                  const std::string &name = ""); 
 
         /**
          * @brief says to server that all data was writed
@@ -491,6 +504,12 @@ namespace {
         bool head;
         ProtocolVersion_t protocolVersion;
         bool useBinary;
+
+        /** HTTP headers received in client's request. */
+        FRPC::HTTPHeader_t headersIn;
+
+        /** HTTP headers sent in server's response. */
+        FRPC::HTTPHeader_t headersOut;
     };
 }
 
@@ -538,6 +557,16 @@ extern "C" {
     static void ServerObject_dealloc(ServerObject *self);
 
     static DECL_METHOD(ServerObject, serve);
+
+    static DECL_METHOD(ServerObject, getInHeaders);
+
+    static DECL_METHOD(ServerObject, getOutHeaders);
+    
+    static DECL_METHOD(ServerObject, getInHeadersFor);
+
+    static DECL_METHOD(ServerObject, getOutHeadersFor);
+
+    static DECL_METHOD(ServerObject, addOutHeader);
 };
 
 #define OFF(x) offsetof(MethodRegistryObject, x)
@@ -873,7 +902,7 @@ void Server_t::readRequest(FRPC::DataBuilder_t &builder) {
     queryStorage.clear();
     queryStorage.push_back(std::string());
     queryStorage.back().reserve(BUFFER_SIZE);
-    FRPC::HTTPHeader_t httpHead;
+    headersIn.clear();
 
     std::string protocol;
     std::string transferMethod;
@@ -928,7 +957,7 @@ void Server_t::readRequest(FRPC::DataBuilder_t &builder) {
         }
 
         // read header from the request
-        io.readHeader(httpHead);
+        io.readHeader(headersIn);
 
         if (transferMethod != "POST") {
             if(transferMethod == "HEAD") {
@@ -942,7 +971,7 @@ void Server_t::readRequest(FRPC::DataBuilder_t &builder) {
         }
 
         // get content type from header
-        httpHead.get(FRPC::HTTP_HEADER_CONTENT_TYPE, contentType);
+        headersIn.get(FRPC::HTTP_HEADER_CONTENT_TYPE, contentType);
 
         //create unmarshaller and datasink
 
@@ -952,7 +981,7 @@ void Server_t::readRequest(FRPC::DataBuilder_t &builder) {
 
         // what type client send
         std::string accept;
-        if (!httpHead.get(FRPC::HTTP_HEADER_ACCEPT, accept)) {
+        if (!headersIn.get(FRPC::HTTP_HEADER_ACCEPT, accept)) {
 
             /* this is default
             if (accept.find("text/xml") != std::string::npos) {
@@ -990,12 +1019,12 @@ void Server_t::readRequest(FRPC::DataBuilder_t &builder) {
                               FRPC::UnMarshaller_t::TYPE_METHOD_CALL);
 
         // read body of request
-        io.readContent(httpHead, data, true);
+        io.readContent(headersIn, data, true);
 
         unmarshaller->finish();
         protocolVersion = unmarshaller->getProtocolVersion();
         std::string connection;
-        httpHead.get("Connection", connection);
+        headersIn.get(FRPC::HTTP_HEADER_CONNECTION, connection);
         std::transform(connection.begin(), connection.end(),
                        connection.begin(), std::ptr_fun<int, int>(toupper));
         closeConnection = false;
@@ -1041,22 +1070,15 @@ void Server_t::write(const char* data, unsigned int size) {
 
 void Server_t::sendResponse() {
     if (!headersSent) {
-        FRPC::HTTPHeader_t header;
-        std::ostringstream os;
+        std::string strHeaders("HTTP/1.1 200 OK\r\n");
 
-        //create header
-        os << "HTTP/1.1" << ' ' << "200" << ' ' << "OK" << "\r\n";
-
-        //os << "Host: " << url.host << ':' << url.port << "\r\n";
         switch (outType) {
         case FRPC::Server_t::XML_RPC:
-            os << FRPC::HTTP_HEADER_CONTENT_TYPE << ": "
-               << "text/xml"<< "\r\n";
+            headersOut.add(FRPC::HTTP_HEADER_CONTENT_TYPE, "text/xml");
             break;
 
         case FRPC::Server_t::BINARY_RPC:
-            os << FRPC::HTTP_HEADER_CONTENT_TYPE << ": "
-               << "application/x-frpc"<< "\r\n";
+            headersOut.add(FRPC::HTTP_HEADER_CONTENT_TYPE, "application/x-frpc");
             break;
 
         default:
@@ -1064,37 +1086,45 @@ void Server_t::sendResponse() {
             break;
         }
 
-        os << FRPC::HTTP_HEADER_ACCEPT << ": text/xml";
+        std::string strAccept("text/xml");
         if (useBinary)
-            os << ", application/x-frpc";
-        os << "\r\n";
+            strAccept += ", application/x-frpc";
+        headersOut.add(FRPC::HTTP_HEADER_ACCEPT, strAccept);
 
         //append connection header
-        os << FRPC::HTTP_HEADER_CONNECTION
-           << (serverObject->keepAlive ? ": keep-alive" : ": close")
-           << "\r\n";
+        headersOut.add(FRPC::HTTP_HEADER_CONNECTION, 
+            serverObject->keepAlive ? "keep-alive" : "close");
 
         // write content-length or content-transfer-encoding when we can send
         // content
 
         if (!useChunks) {
-            os << FRPC::HTTP_HEADER_CONTENT_LENGTH << ": " << contentLength
-            << "\r\n";
+            std::ostringstream os;
+            os << contentLength;
+            headersOut.add(FRPC::HTTP_HEADER_CONTENT_LENGTH, os.str());
         } else {
-            os << FRPC::HTTP_HEADER_TRANSFER_ENCODING << ": chunked\r\n";
+            headersOut.add(FRPC::HTTP_HEADER_TRANSFER_ENCODING, "chunked");
         }
 
-        os << "Server:" << " Fast-RPC  Server Linux\r\n";
+        headersOut.add(FRPC::HTTP_HEADER_SERVER, "Fast-RPC Server Linux");
+
+        // Serialize all headers
+        {
+            std::ostringstream stream;
+            stream << headersOut;
+            strHeaders += stream.str();
+        }
 
         // terminate header
         // append separator
-        os << "\r\n";
+        strHeaders += "\r\n";
 
         // send header
-        io.sendData(os.str());
+        io.sendData(strHeaders);
 
         headersSent = true;
 
+        headersOut.clear();
         if (head) return;
     }
 
@@ -1133,6 +1163,71 @@ void Server_t::sendHttpError(const FRPC::HTTPError_t &httpError) {
     os << "\r\n";
     // send header
     io.sendData(os.str());
+}
+
+
+PyObject *Server_t::headersToPyList(const FRPC::HTTPHeader_t &headers, const std::string &name) {
+    PyObjectWrapper_t retval(PyList_New(0));
+    if (!retval) {
+        PyErr_SetString(PyExc_MemoryError, "Failed to allocate output list");
+        return 0;
+    }
+    for (FRPC::HTTPHeader_t::const_iterator i(headers.begin()); i != headers.end(); ++i) {
+        if (name.empty() || name == i->first) {
+            PyObjectWrapper_t key(PyString_FromString(i->first.c_str()));
+            PyObjectWrapper_t value(PyString_FromString(i->second.c_str()));
+            if (!key || !value) {
+                PyErr_SetString(PyExc_MemoryError, "Failed to allocate key/value");
+                return 0;
+            }
+            PyObjectWrapper_t aTuple(PyTuple_New(2));
+            if (!aTuple) {
+                PyErr_SetString(PyExc_MemoryError, "Failed to allocate output tuple");
+                return 0;
+            }
+            if (0 != PyTuple_SetItem(aTuple, 0, key.inc())) {
+                key.dec();
+                PyErr_SetString(PyExc_RuntimeError, "Failed to insert key into tuple");
+                return 0;
+            }
+            if (0 != PyTuple_SetItem(aTuple, 1, value.inc())) {
+                value.dec();
+                PyErr_SetString(PyExc_RuntimeError, "Failed to insert value into tuple");
+                return 0;
+            }
+            if (0 != PyList_Append(retval, aTuple.inc())) {
+                aTuple.dec();
+                PyErr_SetString(PyExc_RuntimeError, "Failed to insert tuple into list");
+                return 0;
+            }
+        }
+    }
+    return retval.inc();
+}
+
+
+PyObject *Server_t::getInHeaders() {
+    return headersToPyList(headersIn);
+}
+
+
+PyObject *Server_t::getOutHeaders() {
+    return headersToPyList(headersOut);
+}
+
+
+PyObject *Server_t::getInHeadersFor(const std::string &name) {
+    return headersToPyList(headersIn, name);
+}
+
+
+PyObject *Server_t::getOutHeadersFor(const std::string &name) {
+    return headersToPyList(headersOut, name);
+}
+
+
+void Server_t::addOutHeader(const std::string &key, const std::string &value) { 
+    headersOut.add(key, value);
 }
 
 
@@ -1785,7 +1880,36 @@ static PyMethodDef ServerObject_methods[] = {
         METH_VARARGS,
         "Handle connection."
     },
-
+    {
+        "getInHeaders",
+        reinterpret_cast<PyCFunction>(ServerObject_getInHeaders),
+        METH_NOARGS,
+        "Retrieve incoming HTTP headers."
+    },
+    {
+        "getOutHeaders",
+        reinterpret_cast<PyCFunction>(ServerObject_getOutHeaders),
+        METH_NOARGS,
+        "Retrieve outgoing HTTP headers."
+    },
+    {
+        "getInHeadersFor",
+        reinterpret_cast<PyCFunction>(ServerObject_getInHeadersFor),
+        METH_VARARGS,
+        "Retrieve incoming HTTP header values for the given header name."
+    },
+    {
+        "getOutHeadersFor",
+        reinterpret_cast<PyCFunction>(ServerObject_getOutHeadersFor),
+        METH_VARARGS,
+        "Retrieve outgoing HTTP header values for the given header name."
+    },
+    {
+        "addOutHeader",
+        reinterpret_cast<PyCFunction>(ServerObject_addOutHeader),
+        METH_VARARGS,
+        "Add a new outging HTTP header."
+    },
     { 0, 0, 0, 0 } // sentinel
 };
 
@@ -1937,6 +2061,53 @@ static DECL_METHOD(ServerObject, serve) {
     // handle the connection
     return self->server->serve(fd, PyObjectWrapper_t(clientIP, true));
 }
+
+
+static DECL_METHOD(ServerObject, getInHeaders) {
+    return self->server->getInHeaders();
+}
+
+
+static DECL_METHOD(ServerObject, getOutHeaders) {
+    return self->server->getOutHeaders();
+}
+
+
+static DECL_METHOD(ServerObject, getInHeadersFor) {
+    char *name(0);
+    if (!PyArg_ParseTuple(args, "s|:fastrpc.Server.getInHeadersFor", &name) ||
+        (0 == strlen(name))) {
+        PyErr_SetString(PyExc_ValueError, "No header name specified");
+        return 0;
+    }
+    return self->server->getInHeadersFor(name);
+}
+
+
+static DECL_METHOD(ServerObject, getOutHeadersFor) {
+    char *name(0);
+    if (!PyArg_ParseTuple(args, "s|:fastrpc.Server.getOutHeadersFor", &name) ||
+        (0 == strlen(name))) {
+        PyErr_SetString(PyExc_ValueError, "No header name specified");
+        return 0;
+    }
+    return self->server->getOutHeadersFor(name);
+}
+
+
+static DECL_METHOD(ServerObject, addOutHeader) {
+    char *key(0);
+    char *value(0);
+    if (!PyArg_ParseTuple(args, "ss|:fastrpc.Server.addOutHeader", &key, &value) ||
+        (0 == strlen(key) || (0 == strlen(value)))) {
+        PyErr_SetString(PyExc_ValueError, "Invalid header name/value specified");
+        return 0;
+    }
+    self->server->addOutHeader(key, value);
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
 
 namespace {
     Method_t::Method_t(const std::string &name, PyObject *callback,
