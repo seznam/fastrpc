@@ -26,6 +26,7 @@
  *
  * AUTHOR           Vasek Blazek <blazek@firma.seznam.cz>
  *                  Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
+ *                  Zbynek Novotny <zbynek.novotny@firma.seznam.cz>
  *
  * HISTORY
  *          2005-02-07
@@ -120,6 +121,14 @@ namespace FRPC {
     const std::string HTTP_ACCEPT_RANGES("Accept-Ranges");
     
     class FRPC_DLLEXPORT HTTPHeader_t {
+        private:
+            typedef std::pair<std::string, std::string> Header_t;
+            typedef std::vector<Header_t> HeaderMap_t;
+
+        public:
+            typedef HeaderMap_t::const_iterator const_iterator;
+
+
         public:
             int get(const std::string &name, std::string &value,
                     unsigned int index = 0) const;
@@ -139,11 +148,20 @@ namespace FRPC {
                 return header.empty();
             }
 
+            void clear() {
+                header.clear();
+            }
+
             friend std::ostream& operator<<(std::ostream &os,
                                             const HTTPHeader_t &header);
 
-            typedef std::pair<std::string, std::string> Header_t;
-            typedef std::vector<Header_t> HeaderMap_t;
+            const_iterator begin() const { 
+                return header.begin(); 
+            }
+
+            const_iterator end() const {
+                return header.end();
+            }
 
             inline const HeaderMap_t& getHeaders() const {
                 return header;
