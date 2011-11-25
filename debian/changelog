@@ -1,3 +1,9 @@
+python-fastrpc (4.0.2) unstable; urgency=low
+
+  * Conversion to number returns int now
+
+ -- Michal Bukovsky <michal.bukovsky@firma.seznam.cz>  Fri, 25 Nov 2011 09:02:59 +0100
+
 python-fastrpc (4.0.1) unstable; urgency=low
 
   * HTTP headers are public available.
