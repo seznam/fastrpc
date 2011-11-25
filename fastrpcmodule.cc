@@ -1060,8 +1060,7 @@ int BooleanObject_nonzero(BooleanObject *self)
 
 PyObject* BooleanObject_int(BooleanObject *self)
 {
-    Py_INCREF(self->value);
-    return self->value;
+    return PyInt_FromLong(self->value == Py_True);
 }
 
 namespace FRPC { namespace Python {
