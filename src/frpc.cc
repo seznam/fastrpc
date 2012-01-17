@@ -81,7 +81,7 @@ std::string getISODateTime(short year, char month,
                            char day, char hour,
                            char minute, char sec, int timeZone) {
     char dateTime[50];
-    sprintf(dateTime, "%04d%02d%02dT%02d:%02d:%02d%c%02d%02d",
+    sprintf(dateTime, "%04d-%02d-%02dT%02d:%02d:%02d%c%02d:%02d",
             year, month, day, hour, minute, sec,
             ((timeZone <= 0)? '+': '-'),
             abs(timeZone / 60 / 60), abs(timeZone / 60 % 60));
