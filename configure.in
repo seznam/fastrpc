@@ -36,7 +36,7 @@
 
 
 # initialize autoconf
-AC_INIT(fastrpc, 4.0.2, fastrpc@firma.seznam.cz)
+AC_INIT(fastrpc, 4.1.0, fastrpc@firma.seznam.cz)
 # initialize automake(use AC_INIT's arguments)
 AM_INIT_AUTOMAKE(AC_PACKAGE_NAME, AC_PACKAGE_VERSION)
 
