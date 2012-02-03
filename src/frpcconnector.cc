@@ -135,12 +135,12 @@ void SimpleConnector_t::connectSocket(int &fd) {
         closer.release();
 
         // check for activity on socket
-        fd_set rfdset;
-        FD_ZERO(&rfdset);
-        FD_SET(fd, &rfdset);
+        pollfd pfd;
+        pfd.fd = fd;
+        pfd.events = POLLIN;
+
         // okam¾itý timeout
-        struct timeval timeout = { 0, 0 };
-        switch (TEMP_FAILURE_RETRY(::select(fd + 1, &rfdset, 0, 0, &timeout))) {
+        switch (TEMP_FAILURE_RETRY(::poll(&pfd, 1, 0))) {
         case 0:
             // OK
             break;
@@ -235,21 +235,14 @@ void SimpleConnector_t::connectSocket(int &fd) {
                                   ERRNO, STRERROR(ERRNO));
             }
 
-            // create fd-set
-            fd_set wfds;
-            FD_ZERO(&wfds);
-            FD_SET(fd, &wfds);
-
-            // and timeout
-            struct timeval timeout = {
-                connectTimeout / 1000,
-                (connectTimeout % 1000) * 1000
-            };
+            // create poll struct
+            pollfd pfd;
+            pfd.fd = fd;
+            pfd.events = POLLOUT;
 
             // wait for connect completion or timeout
             int ready = TEMP_FAILURE_RETRY(
-                    ::select(fd + 1, 0, &wfds, 0, (connectTimeout < 0)
-                                 ? 0 : &timeout));
+                    ::poll(&pfd, 1, (connectTimeout < 0) ? -1 : connectTimeout));
 
             if (ready <= 0) {
                 switch (ready) {

@@ -163,24 +163,20 @@ std::string HTTPIO_t::readLine(bool checkLimit)
 {
     // buffer pro ètení ze socketu.
     char buff[HTTP_BUFF_LENGTH];
-    fd_set rfdset;
 
     // celkový buffer
     std::string lineBuff;
 
+    pollfd pfd;
+    pfd.fd = fd;
+    pfd.events = POLLIN;
+
     for (;;)
     {
         // èekání na data na socketu
-        FD_ZERO(&rfdset);
-        FD_SET(fd, &rfdset);
-        struct timeval timeout =
-            {
-                readTimeout / 1000,
-                (readTimeout % 1000) * 1000
-            };
         int ready = TEMP_FAILURE_RETRY(
-                select(fd + 1, &rfdset, NULL, NULL,
-                           (readTimeout < 0) ? NULL : &timeout));
+                poll(&pfd, 1, readTimeout < 0 ? -1 : readTimeout));
+
         switch (ready)
         {
         case 0:
@@ -303,32 +299,18 @@ void HTTPIO_t::sendData(const char *data, size_t length, bool watchForResponse)
     if (!length)
         return;
 
-    fd_set wfdset;
-    fd_set rfdset; // used only when watchForResponse is true
+    pollfd pfd;
+    pfd.fd = fd;
+    pfd.events = POLLOUT;
+
+    if (watchForResponse)
+        pfd.events |= POLLIN;
 
     for (;;)
     {
-        // èekáme, a¾ budeme moci do socketu zapsat
-        FD_ZERO(&wfdset);
-        FD_SET(fd, &wfdset);
-
-        if (watchForResponse)
-        {
-            // register socket in read set
-            FD_ZERO(&rfdset);
-            FD_SET(fd, &rfdset);
-        }
-
-
-        struct timeval timeout =
-            {
-                writeTimeout / 1000,
-                (writeTimeout % 1000) * 1000
-            };
         int ready = TEMP_FAILURE_RETRY(
-                select(fd + 1,watchForResponse ? &rfdset : 0
-                           , &wfdset, 0,
-                           (writeTimeout < 0) ? 0 : &timeout));
+                poll(&pfd, 1, writeTimeout < 0 ? -1 : writeTimeout));
+
         switch (ready)
         {
         case 0:
@@ -342,7 +324,7 @@ void HTTPIO_t::sendData(const char *data, size_t length, bool watchForResponse)
         }
 
         // watch for read data if asked to do so
-        if (watchForResponse && FD_ISSET(fd, &rfdset))
+        if (watchForResponse && (pfd.revents & POLLIN))
             throw ResponseError_t();
 
         int toWrite = (length > HTTP_BUFF_LENGTH)
@@ -398,21 +380,17 @@ void HTTPIO_t::readBlock(long int contentLength_, DataSink_t &data)
 
     // buffer pro ètení ze socketu.
     char buff[HTTP_BUFF_LENGTH];
-    fd_set rfdset;
-    FD_ZERO(&rfdset);
-    FD_SET(fd, &rfdset);
+
+    pollfd pfd;
+    pfd.fd = fd;
+    pfd.events = POLLIN;
 
     for (;;)
     {
         // èekání na data na socketu
-        struct timeval timeout =
-            {
-                readTimeout / 1000,
-                (readTimeout % 1000) * 1000
-            };
         int ready = TEMP_FAILURE_RETRY(
-                select(fd + 1, &rfdset, NULL, NULL,
-                           (readTimeout < 0) ? NULL : &timeout));
+                poll(&pfd, 1, (readTimeout < 0) ? -1 : readTimeout));
+
         switch (ready)
         {
         case 0:
