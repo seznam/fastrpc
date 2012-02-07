@@ -35,7 +35,7 @@
 #define FRPCSOCKETUNIX_H_
 
 #include <sys/socket.h>
-#include <sys/poll.h>
+#include <poll.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
