@@ -105,7 +105,12 @@ SimpleConnector_t::SimpleConnector_t(const URL_t &url, int connectTimeout,
     char tmpbuf[1024];
     int errcode;
 
+
+#if (defined(sun) || defined(__sun)) && (defined(__SVR4) || defined(__svr4__))
+    he = gethostbyname_r(url.host.c_str(), &h, tmpbuf, 1024, &errcode);
+#else
     gethostbyname_r(url.host.c_str(), &h, tmpbuf, 1024, &he, &errcode);
+#endif
 
     if (!he) {
         // oops
