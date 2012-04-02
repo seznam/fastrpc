@@ -42,7 +42,7 @@ namespace FRPC
 Value_t::~Value_t()
 {}
 
-const bool Value_t::isNull() const
+bool Value_t::isNull() const
 {
     return FRPC::isNull(*this);
 }

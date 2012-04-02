@@ -46,7 +46,8 @@ namespace FRPC
 class FRPC_DLLEXPORT HTTPError_t : public ProtocolError_t
 {
 public:
-    HTTPError_t(long errNum,const char *format, ...):ProtocolError_t(errNum)
+    HTTPError_t(long errNum,const char *format, ...)
+        :   ProtocolError_t(static_cast<int>(errNum))
     {
         
         // open variadic arguments

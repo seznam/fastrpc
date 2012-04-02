@@ -87,7 +87,7 @@ private :
     static Null_t staticValue;
 };
 
-inline FRPC_DLLEXPORT const bool isNull(const Value_t &value)
+inline FRPC_DLLEXPORT bool isNull(const Value_t &value)
 {
     if (dynamic_cast<const Null_t*>(&value)) {
         return true;

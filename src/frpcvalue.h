@@ -96,7 +96,7 @@ public:
        */
     virtual Value_t& clone(Pool_t &newPool) const = 0;
 
-    const bool isNull() const;
+    bool isNull() const;
 
 
 private:

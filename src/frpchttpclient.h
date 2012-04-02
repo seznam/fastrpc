@@ -64,7 +64,7 @@ public:
     inline ~DataSink_t() {}
 
     inline void write(const char *data, unsigned int size) {
-        um.unMarshall(data, size, type);
+        um.unMarshall(data, size, static_cast<char>(type));
         dataWritten += size;
     }
 
