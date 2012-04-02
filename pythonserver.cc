@@ -81,6 +81,20 @@ using FRPC::Python::Fault;
 using FRPC::Python::Builder_t;
 using FRPC::Python::Feeder_t;
 
+inline unsigned int chooseType(unsigned int type) {
+    switch(type) {
+        case FRPC::Server_t::BINARY_RPC:
+            return FRPC::Marshaller_t::BINARY_RPC;
+        case FRPC::Server_t::JSON:
+            return FRPC::Marshaller_t::JSON;
+        case FRPC::Server_t::BASE64_RPC:
+            return FRPC::Marshaller_t::BASE64_RPC;
+        case FRPC::Server_t::XML_RPC:
+        default:
+            return FRPC::Marshaller_t::XML_RPC;
+    }
+}
+
 namespace {
     template <typename type>
     PyObject* asObject(type *o) {
@@ -769,9 +783,7 @@ PyObject* Server_t::serve(int fd, PyObjectWrapper_t addr) {
         } catch (const FRPC::StreamError_t &streamError) {
             std::auto_ptr<FRPC::Marshaller_t> marshaller
                 (FRPC::Marshaller_t::create
-                 (((outType == FRPC::Server_t::BINARY_RPC)
-                   ? FRPC::Marshaller_t::BINARY_RPC
-                   : FRPC::Marshaller_t::XML_RPC), *this,protocolVersion));
+                 (chooseType(outType), *this,protocolVersion));
 
             marshaller->packFault(FRPC::MethodRegistry_t::FRPC_PARSE_ERROR,
                                   streamError.message().c_str());
@@ -821,9 +833,7 @@ PyObject* Server_t::serve(int fd, PyObjectWrapper_t addr) {
             } else {
                 std::auto_ptr<FRPC::Marshaller_t>
                     marshaller(FRPC::Marshaller_t::create
-                               (((outType == FRPC::Server_t::BINARY_RPC)
-                                ? FRPC::Marshaller_t::BINARY_RPC
-                                : FRPC::Marshaller_t::XML_RPC), *this,
+                               (chooseType(outType), *this,
                                 protocolVersion));
                 Feeder_t feeder(marshaller.get(), "utf-8");
 
@@ -995,7 +1005,12 @@ void Server_t::readRequest(FRPC::DataBuilder_t &builder) {
                     outType = FRPC::Server_t::BINARY_RPC;
                     useChunks = true;
                 }
+            } else if (accept.find("application/json") != std::string::npos) {
+                outType = FRPC::Server_t::JSON;
+            } else if (accept.find("application/x-base64-frpc") != std::string::npos) {
+                outType = FRPC::Server_t::BASE64_RPC;
             }
+
         }
 
         // what type is request
@@ -1009,6 +1024,18 @@ void Server_t::readRequest(FRPC::DataBuilder_t &builder) {
            unmarshaller = std::auto_ptr<FRPC::UnMarshaller_t>(
                     FRPC::UnMarshaller_t::create(
                         FRPC::UnMarshaller_t::XML_RPC,
+                        builder));
+
+        } else if (contentType.find("application/x-www-form-urlencoded") != std::string::npos) {
+           unmarshaller = std::auto_ptr<FRPC::UnMarshaller_t>(
+                    FRPC::UnMarshaller_t::create(
+                        FRPC::UnMarshaller_t::URL_ENCODED,
+                        builder));
+
+        } else if (contentType.find("application/x-base64-frpc") != std::string::npos) {
+           unmarshaller = std::auto_ptr<FRPC::UnMarshaller_t>(
+                    FRPC::UnMarshaller_t::create(
+                        FRPC::UnMarshaller_t::BASE64,
                         builder));
 
         } else {
@@ -1076,17 +1103,21 @@ void Server_t::sendResponse() {
         case FRPC::Server_t::XML_RPC:
             headersOut.add(FRPC::HTTP_HEADER_CONTENT_TYPE, "text/xml");
             break;
-
         case FRPC::Server_t::BINARY_RPC:
             headersOut.add(FRPC::HTTP_HEADER_CONTENT_TYPE, "application/x-frpc");
             break;
-
+        case FRPC::Server_t::BASE64_RPC:
+            headersOut.add(FRPC::HTTP_HEADER_CONTENT_TYPE, "application/x-base64-frpc");
+            break;
+        case FRPC::Server_t::JSON:
+            headersOut.add(FRPC::HTTP_HEADER_CONTENT_TYPE, "application/json");
+            break;
         default:
             throw FRPC::StreamError_t("Unknown protocol");
             break;
         }
 
-        std::string strAccept("text/xml");
+        std::string strAccept("text/xml, application/x-www-form-urlencoded, application/x-base64-frpc");
         if (useBinary)
             strAccept += ", application/x-frpc";
         headersOut.add(FRPC::HTTP_HEADER_ACCEPT, strAccept);
@@ -1155,7 +1186,7 @@ void Server_t::sendHttpError(const FRPC::HTTPError_t &httpError) {
     os << "HTTP/1.1" << ' ' << httpError.errorNum() << ' '
           << httpError.message() << "\r\n";
     os  << FRPC::HTTP_HEADER_ACCEPT << ": "
-           << "text/xml, application/x-frpc"<< "\r\n";
+           << "text/xml, application/x-www-form-urlencoded, application/x-base64-frpc, application/x-frpc"<< "\r\n";
     os << "Server:" << " Fast-RPC  Server Linux\r\n";
 
     // terminate header
