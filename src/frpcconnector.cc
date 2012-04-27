@@ -294,3 +294,197 @@ void SimpleConnector_t::connectSocket(int &fd) {
         closer.release();
     }
 }
+
+
+
+SimpleConnectorIPv6_t::SimpleConnectorIPv6_t(const URL_t &url, int connectTimeout,
+                                     bool keepAlive)
+    : Connector_t(url, connectTimeout, keepAlive), addrInfo(0)
+{
+    int errcode;
+    struct addrinfo hints;
+    char port[8] = {0};
+
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_flags = 0;
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
+
+    snprintf(port, sizeof(port), "%u", url.port);
+    errcode = getaddrinfo(url.host.c_str(), port, &hints, &addrInfo);
+    if ( errcode != 0 ) {
+        // oops
+        throw HTTPError_t(HTTP_DNS, "Cannot resolve host '%s': <%d, %s>.",
+                          url.host.c_str(), errcode,
+                          gai_strerror(errcode));
+    }
+
+}
+
+SimpleConnectorIPv6_t::~SimpleConnectorIPv6_t() {
+    if ( addrInfo )
+        freeaddrinfo(addrInfo);
+}
+
+void SimpleConnectorIPv6_t::connectSocket(int &fd) {
+    // check socket
+    if (!keepAlive && (fd > -1)) {
+        TEMP_FAILURE_RETRY(::close(fd));
+        fd = -1;
+    }
+
+    // initialize closer (initially closes socket when valid)
+    SocketCloser_t closer(fd);
+
+    // check open socket whether the peer had not closed it
+    if (fd > -1) {
+        closer.release();
+
+        // check for activity on socket
+        pollfd pfd;
+        pfd.fd = fd;
+        pfd.events = POLLIN;
+
+        // okam¾itý timeout
+        switch (TEMP_FAILURE_RETRY(::poll(&pfd, 1, 0))) {
+        case 0:
+            // OK
+            break;
+
+        case -1:
+            // some error on socket => close it
+            TEMP_FAILURE_RETRY(::close(fd));
+            fd = -1;
+            break;
+
+        default:
+            // check whether any data can be read from the socket
+            char buff;
+            switch (TEMP_FAILURE_RETRY(recv(fd, &buff, 1, MSG_PEEK))) {
+            case -1:
+            case 0:
+                // zavøeme socket
+                TEMP_FAILURE_RETRY(::close(fd));
+                fd = -1;
+                break;
+
+            default:
+                // OK
+                break;
+            }
+        }
+    }
+
+    // if open socket is not availabe open new one
+    if (fd < 0) {
+        // otevøeme socket
+        if ((fd = ::socket(addrInfo->ai_family, SOCK_STREAM, 0)) < 0) {
+            // oops! error
+            STRERROR_PRE();
+            throw HTTPError_t(HTTP_SYSCALL,
+                              "Cannot select on socketr: <%d, %s>.",
+                              ERRNO, STRERROR(ERRNO));
+        }
+
+#ifdef WIN32
+        unsigned int flag = 1;
+        if (::ioctlsocket((SOCKET)fd, FIONBIO, &flag) < 0)
+#else //WIN32
+
+        if (::fcntl(fd, F_SETFL, O_NONBLOCK) < 0)
+#endif //WIN32
+
+        {
+            STRERROR_PRE();
+            throw HTTPError_t(HTTP_SYSCALL,
+                              "Cannot set socket non-blocking: "
+                              "<%d, %s>.", ERRNO, STRERROR(ERRNO));
+        }
+
+        // set not-delayed IO (we are not telnet)
+        int just_say_no = 1;
+        if (::setsockopt(fd, IPPROTO_TCP, TCP_NODELAY,
+                         (char*) &just_say_no, sizeof(int)) < 0)
+        {
+            STRERROR_PRE();
+            throw HTTPError_t(HTTP_SYSCALL,
+                              "Cannot set socket non-delaying: "
+                              "<%d, %s>.", ERRNO, STRERROR(ERRNO));
+        }
+
+        // connect the socket
+        if (TEMP_FAILURE_RETRY(::connect(fd, addrInfo->ai_addr,
+                               addrInfo->ai_addrlen)) < 0)
+        {
+            switch (ERRNO) {
+            case EINPROGRESS:
+                // connection already in progress
+            case EALREADY:
+                // connection already in progress
+            case EWOULDBLOCK:
+                // connection launched on the background
+                break;
+
+            default:
+                STRERROR_PRE();
+                throw HTTPError_t(HTTP_SYSCALL,
+                                  "Cannot connect socket: <%d, %s>.",
+                                  ERRNO, STRERROR(ERRNO));
+            }
+
+            // create poll struct
+            pollfd pfd;
+            pfd.fd = fd;
+            pfd.events = POLLOUT;
+
+            // wait for connect completion or timeout
+            int ready = TEMP_FAILURE_RETRY(
+                    ::poll(&pfd, 1, (connectTimeout < 0) ? -1 : connectTimeout));
+
+            if (ready <= 0) {
+                switch (ready) {
+                case 0:
+                    throw HTTPError_t(HTTP_SYSCALL,
+                                      "Timeout while connecting.");
+
+                default:
+                    STRERROR_PRE();
+                    throw HTTPError_t(HTTP_SYSCALL,
+                                      "Cannot select on socket: <%d, %s>.",
+                                      ERRNO, STRERROR(ERRNO));
+                }
+            }
+
+            // check for connect status
+            socklen_t len = sizeof(int);
+            int status;
+#ifdef WIN32
+
+            if (::getsockopt(fd, SOL_SOCKET, SO_ERROR, (char*)&status, &len))
+#else //WIN32
+
+            if (::getsockopt(fd, SOL_SOCKET, SO_ERROR, &status, &len))
+#endif //WIN32
+
+            {
+                STRERROR_PRE();
+                throw HTTPError_t(HTTP_SYSCALL,
+                                  "Cannot get socket info: <%d, %s>.",
+                                  ERRNO, STRERROR(ERRNO));
+            }
+
+            // check for error
+            if (status) {
+                STRERROR_PRE();
+                throw HTTPError_t(HTTP_SYSCALL,
+                                  "Cannot connect socket: <%d, %s>.",
+                                  status, STRERROR(status));
+            }
+        }
+
+        // connect OK => do not close the socket!
+        closer.release();
+    }
+}
+

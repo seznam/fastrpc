@@ -90,6 +90,25 @@ private:
     in_addr ipaddr;
 };
 
+
+/** Simple socket connector: connects to the first IP returned by host
+ *  resolution.
+ */
+class FRPC_DLLEXPORT SimpleConnectorIPv6_t : public Connector_t {
+public:
+    SimpleConnectorIPv6_t(const URL_t &url, int connectTimeout, bool keepAlive);
+
+    virtual ~SimpleConnectorIPv6_t();
+
+    virtual void connectSocket(int &fd);
+
+private:
+
+    /** Resolved IP address.
+     */
+    struct addrinfo *addrInfo;
+};
+
 } // namespace FRPC
 
 #endif // FRPCCONNECTOR

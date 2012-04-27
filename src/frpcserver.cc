@@ -80,23 +80,11 @@ void Server_t::serve(int fd, struct sockaddr_in* addr) {
 }
 
 void Server_t::serve(int fd,
-                     struct sockaddr_in* addr,
-                     HTTPHeader_t &headerIn,
-                     HTTPHeader_t &headerOut)
-{
-    // prepare query storage
-    queryStorage.push_back(std::string());
-    queryStorage.back().reserve(BUFFER_SIZE + HTTP_BALLAST);
-    contentLength = 0;
-    closeConnection = false;
-    headersSent = false;
-    head = false;
-
-    char tmpstr[256];
+            struct sockaddr_in* addr,
+            HTTPHeader_t &headerIn,
+            HTTPHeader_t &headerOut) {
     std::string clientIP;
-
-    io.setSocket(fd);
-
+    char tmpstr[256] = {};
     if (!addr) {
         struct sockaddr_in clientaddr;
         socklen_t sinSize = sizeof( struct sockaddr_in );
@@ -108,6 +96,24 @@ void Server_t::serve(int fd,
     } else {
         clientIP = inet_ntop(AF_INET, &(addr->sin_addr), tmpstr, 256);
     }
+    serve(fd, clientIP, headerIn, headerOut);
+}
+
+
+void Server_t::serve(int fd,
+                     const std::string &clientAddress,
+                     HTTPHeader_t &headerIn,
+                     HTTPHeader_t &headerOut)
+{
+    // prepare query storage
+    queryStorage.push_back(std::string());
+    queryStorage.back().reserve(BUFFER_SIZE + HTTP_BALLAST);
+    contentLength = 0;
+    closeConnection = false;
+    headersSent = false;
+    head = false;
+
+    io.setSocket(fd);
 
     unsigned int requestCount = 0;
     do {
@@ -148,7 +154,7 @@ void Server_t::serve(int fd,
                     throw HTTPError_t(HTTP_SERVICE_UNAVAILABLE,
                                       "Service Unavailable");
             } else {
-                methodRegistry.processCall(clientIP,
+                methodRegistry.processCall(clientAddress,
                                            builder.getUnMarshaledMethodName(),
                                            Array(builder.getUnMarshaledData()),
                                            *this,

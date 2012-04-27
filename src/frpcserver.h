@@ -166,6 +166,11 @@ public:
                HTTPHeader_t &headerIn,
                HTTPHeader_t &headerOut);
 
+    void serve(int fd,
+               const std::string &clientAddress,
+               HTTPHeader_t &headerIn,
+               HTTPHeader_t &headerOut);
+
     ~Server_t();
 
     MethodRegistry_t &registry() {
