@@ -1893,6 +1893,10 @@ DECL_METHOD(MethodRegistryObject, system_multicall) {
 
 #define OFF(x) offsetof(ServerObject, x)
 
+#ifndef T_BOOL
+#define T_BOOL T_INT
+#endif
+
 static PyMemberDef ServerObject_members[] = {
     {(char *)"registry",             T_OBJECT,    OFF(registry),        RO},
     {(char *)"readTimeout",          T_INT,       OFF(readTimeout),     RO},
