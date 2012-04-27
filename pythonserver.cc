@@ -287,6 +287,8 @@ namespace {
         int keepAlive;
         int maxKeepalive;
         int useBinary;
+        char nativeBoolean;
+        PyObject *datetimeBuilder;
 
         MethodRegistryObject *registry;
 
@@ -764,7 +766,7 @@ PyObject* Server_t::serve(int fd, PyObjectWrapper_t addr) {
     long requestCount = 0;
 
     do {
-        Builder_t builder(0, serverObject->stringMode);
+        Builder_t builder(0, serverObject->stringMode, serverObject->nativeBoolean, serverObject->datetimeBuilder);
 
         try {
             // call preprocessor
@@ -1892,12 +1894,14 @@ DECL_METHOD(MethodRegistryObject, system_multicall) {
 #define OFF(x) offsetof(ServerObject, x)
 
 static PyMemberDef ServerObject_members[] = {
-    {(char *)"registry",             T_OBJECT,    OFF(registry),       RO},
-    {(char *)"readTimeout",          T_INT,       OFF(readTimeout),    RO},
-    {(char *)"writeTimeout",         T_INT,       OFF(writeTimeout),   RO},
-    {(char *)"keepAlive",            T_INT,       OFF(keepAlive),      RO},
-    {(char *)"maxKeepalive",         T_INT,       OFF(maxKeepalive),   RO},
-    {(char *)"useBinary",            T_INT,       OFF(useBinary),      RO},
+    {(char *)"registry",             T_OBJECT,    OFF(registry),        RO},
+    {(char *)"readTimeout",          T_INT,       OFF(readTimeout),     RO},
+    {(char *)"writeTimeout",         T_INT,       OFF(writeTimeout),    RO},
+    {(char *)"keepAlive",            T_INT,       OFF(keepAlive),       RO},
+    {(char *)"maxKeepalive",         T_INT,       OFF(maxKeepalive),    RO},
+    {(char *)"useBinary",            T_INT,       OFF(useBinary),       RO},
+    {(char *)"nativeBoolean",        T_BOOL,      OFF(nativeBoolean),   0},
+    {(char *)"datetimeBuilder",      T_OBJECT,    OFF(datetimeBuilder), 0},
 
     {0}  // Sentinel
 };

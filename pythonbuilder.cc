@@ -87,7 +87,14 @@ void Builder_t::buildBinary(const std::string &data) {
 void Builder_t::buildBool(bool value) {
     if (isError())
         return;
-    PyObject *boolean = reinterpret_cast<PyObject*>(newBoolean(value));
+
+    PyObject *boolean = 0;
+    if ( nativeBoolean ) {
+        boolean = value ? Py_True : Py_False;
+        Py_INCREF(boolean);
+    } else {
+        boolean = reinterpret_cast<PyObject*>(newBoolean(value));
+    }
 
     if (!boolean)
         setError();
@@ -101,15 +108,24 @@ void Builder_t::buildNull()
     if (!isMember(Py_None))
         isFirst(Py_None);
 }
-void Builder_t::buildDateTime(short year, char month, char day,char hour, char
-                              min, char sec,
-                              char weekDay, time_t unixTime, int timeZone) {
+void Builder_t::buildDateTime(short year, char month, char day, char hour, char
+                              min, char sec, char weekDay, time_t unixTime,
+                              int timeZone) {
     if (isError())
         return;
 
-    PyObject *dateTime = reinterpret_cast<PyObject*>(newDateTime(year, month,
+    PyObject *dateTime = 0;
+    
+    if ( datetimeBuilder != 0 && PyCallable_Check(datetimeBuilder) ) {
+        dateTime = PyObject_CallFunction(datetimeBuilder,"(hbbbbbbii)", year,
+                                         month, day, hour, min, sec, weekDay,
+                                         unixTime, timeZone);
+    } else {
+        dateTime = reinterpret_cast<PyObject*>(newDateTime(year, month,
                          day, hour, min,
                          sec, weekDay, unixTime, timeZone) );
+    }
+    
     if (!dateTime)
         setError();
 

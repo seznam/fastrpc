@@ -395,7 +395,7 @@ int DateTimeObject_init(DateTimeObject *self, PyObject *args, PyObject *)
     if (!pyValue) {
 #warning remove this possibility in next major revision of fastrpc
         PyErr_WarnEx(PyExc_DeprecationWarning,
-               "Deprecated call use LocaTime() or UTCtime() instead.", 1);
+               "Deprecated call use LocalTime() or UTCtime() instead.", 1);
         return LocalTimeObject_init(self, args, NULL);
 
     } else if (PyString_Check(pyValue)) {
@@ -404,7 +404,7 @@ int DateTimeObject_init(DateTimeObject *self, PyObject *args, PyObject *)
     } else if (PyInt_Check(pyValue)) {
 #warning remove this possibility in next major revision of fastrpc
         PyErr_WarnEx(PyExc_DeprecationWarning,
-               "Deprecated call use LocaTime(int) or UTCtime(int) instead.", 1);
+               "Deprecated call use LocalTime(int) or UTCtime(int) instead.", 1);
         return LocalTimeObject_init(self, args, NULL);
 
     } else {
@@ -1144,17 +1144,21 @@ public:
             int writeTimeout, int connectTimeout, bool keepAlive,
             int rpcTransferMode, const std::string &encoding, bool useHTTP10,
             const std::string &proxyVia, StringMode_t stringMode,
-            const ProtocolVersion_t &protocolVersion)
+            const ProtocolVersion_t &protocolVersion, int nativeBoolean,
+            PyObject *datetimeBuilder)
         : url(serverUrl, proxyVia),
           io(-1, readTimeout, writeTimeout, -1, -1),
           rpcTransferMode(rpcTransferMode), encoding(encoding),
           serverSupportedProtocols(HTTPClient_t::XML_RPC),
           useHTTP10(useHTTP10), stringMode(stringMode),
           protocolVersion(protocolVersion),
-          connector(new SimpleConnector_t(url, connectTimeout, keepAlive))
+          connector(new SimpleConnector_t(url, connectTimeout, keepAlive)),
+          nativeBoolean(nativeBoolean), datetimeBuilder(datetimeBuilder)
     {}
 
-    ~Proxy_t() {}
+    ~Proxy_t() {
+        Py_XDECREF(datetimeBuilder);
+    }
 
     enum {
         BINARY_ON_SUPPORT_ON_KEEP_ALIVE = 0,
@@ -1190,6 +1194,8 @@ private:
     StringMode_t stringMode;
     ProtocolVersion_t protocolVersion;
     std::auto_ptr<Connector_t> connector;
+    int nativeBoolean;
+    PyObject *datetimeBuilder;
 };
 
 struct ServerProxyObject
@@ -1392,7 +1398,8 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
                                    "keepAlive", "useBinary","encoding",
                                    "useHTTP10", "proxyVia", "stringMode",
                                    "protocolVersionMajor",
-                                   "protocolVersionMinor",0};
+                                   "protocolVersionMinor",
+                                   "nativeBoolean", "datetimeBuilder", 0};
 
     // parse arguments
     char *serverUrl;
@@ -1408,17 +1415,20 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
     const char *proxyVia = "";
     int protocolVersionMajor = 2;
     int protocolVersionMinor = 1;
+    PyObject *nativeBoolean = 0;
+    PyObject *datetimeBuilder = 0;
 
 
     if (!PyArg_ParseTupleAndKeywords(args, keywds,
-                                     "s#|iiiiisissii:ServerProxy.__init__",
+                                     "s#|iiiiisissiiOO:ServerProxy.__init__",
                                      (char **)kwlist,
                                      &serverUrl, &serverUrlLen, &readTimeout,
                                      &writeTimeout, &connectTimeout,
                                      &keepAlive, &mode, &encoding,
                                      &useHTTP10, &proxyVia, &stringMode_,
                                      &protocolVersionMajor,
-                                     &protocolVersionMinor))
+                                     &protocolVersionMinor, &nativeBoolean,
+                                     &datetimeBuilder))
         return 0;
 
     // create server proxy object
@@ -1434,6 +1444,7 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
     if (protocolVersionMajor < 1) protocolVersionMajor = 1;
     if (protocolVersionMinor < 0) protocolVersionMinor = 0;
 
+    Py_XINCREF(datetimeBuilder);
     try
     {
         // initialize underlying proxy (inplace!)
@@ -1442,7 +1453,8 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
                                     connectTimeout, keepAlive, mode, encoding,
                                     useHTTP10, proxyVia, stringMode,
                                     ProtocolVersion_t(protocolVersionMajor,
-                                            protocolVersionMinor));
+                                            protocolVersionMinor),
+                                    nativeBoolean != 0 ? PyObject_IsTrue(nativeBoolean) : false, datetimeBuilder);
         proxy->proxyOk = true;
     }
 
@@ -1532,7 +1544,7 @@ PyObject* Proxy_t::operator()(MethodObject *methodObject, PyObject *args) {
 
     HTTPClient_t client(io, url, connector.get(), useHTTP10);
     Builder_t builder(reinterpret_cast<PyObject*>(methodObject),
-                      stringMode);
+                      stringMode, nativeBoolean, datetimeBuilder);
     Marshaller_t *marshaller;
 
     switch(rpcTransferMode) {
@@ -1877,8 +1889,10 @@ PyObject* fastrpc_loads(PyObject *, PyObject *args) {
     // parse arguments
     PyObject *data;
     char *stringMode_ = 0;
+    PyObject *nativeBoolean = 0;
+    PyObject *datetimeBuilder = 0;
 
-    if (!PyArg_ParseTuple(args, "O|s:fastrpc.loads", &data, &stringMode_))
+    if (!PyArg_ParseTuple(args, "O|sOO:fastrpc.loads", &data, &stringMode_, &nativeBoolean, &datetimeBuilder))
         return 0;
 
     StringMode_t stringMode = parseStringMode(stringMode_);
@@ -1890,7 +1904,10 @@ PyObject* fastrpc_loads(PyObject *, PyObject *args) {
         return 0;
 
     try {
-        Builder_t builder(0, stringMode);
+        Builder_t builder(0, stringMode,
+                nativeBoolean != 0 ? PyObject_IsTrue(nativeBoolean) : false,
+                datetimeBuilder);
+
         std::auto_ptr<UnMarshaller_t> unmarshaller
             (UnMarshaller_t::create(dataStr, dataSize, builder));
 
@@ -1995,7 +2012,15 @@ int printPyFastRPCTree(PyObject *tree, std::ostringstream &out,
                        int level, PyObject *names,
                        std::bitset<sizeof(unsigned long) * 8> pos)
 {
-    if (PyInt_Check(tree)) {
+
+    if ( tree->ob_type == Py_True->ob_type ||
+        PyBoolean_Check(tree) ) {
+        // print Boolean
+        int value = PyObject_IsTrue(tree);
+        if (value < 0) {
+            return -1;
+        } else out << (value ? "true" : "false");
+    } else if (PyInt_Check(tree)) {
         // integer
         out << PyInt_AS_LONG(tree);
     } else if (PyLong_Check(tree)) {
@@ -2085,12 +2110,6 @@ int printPyFastRPCTree(PyObject *tree, std::ostringstream &out,
             }
         } else out << "...";
         out << '}';
-    } else if (PyBoolean_Check(tree)) {
-        // print Boolean
-        int value = PyObject_IsTrue(tree);
-        if (value < 0) {
-            return -1;
-        } else out << (value ? "true" : "false");
     } else if (PyDateTime_Check(tree)) {
         // print DateTime
         PyObjectWrapper_t value(PyObject_GetAttrString(tree, "value"));
@@ -2108,7 +2127,13 @@ int printPyFastRPCTree(PyObject *tree, std::ostringstream &out,
             return -1;
     } else {
         // other, unsupported type
-        out << "<UNSUPPORTED>";
+        PyObjectWrapper_t value(PyObject_Repr(tree));
+        if ( value ) {
+            if (printString(out, value, "", "", "", -1))
+                return -1;
+        } else {
+            out << '<' << tree->ob_type->tp_name << '>';
+        }
     }
 
     // OK

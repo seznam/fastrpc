@@ -80,9 +80,10 @@ public:
          STRUCT=10,ARRAY,NULLTYPE,METHOD_CALL=13,METHOD_RESPONSE,FAULT,
          MEMBER_NAME = 100,METHOD_NAME,METHOD_NAME_LEN,MAGIC,MAIN };
 
-    Builder_t(PyObject *methodObject, StringMode_t stringMode)
+    Builder_t(PyObject *methodObject, StringMode_t stringMode, bool nativeBoolean = false, PyObject *datetimeBuilder = 0)
         : FRPC::DataBuilderWithNull_t(), first(true), error(false), retValue(Py_None),
-          methodObject(methodObject), methodName(0), stringMode(stringMode)
+          methodObject(methodObject), methodName(0), stringMode(stringMode), nativeBoolean(nativeBoolean),
+          datetimeBuilder(datetimeBuilder)
     {
         Py_INCREF(retValue);
     }
@@ -255,6 +256,9 @@ private :
     PyObject *methodObject;
     std::string *methodName;
     StringMode_t stringMode;
+    bool nativeBoolean;
+    //NOTE: Either null or ref managed by owner
+    PyObject *datetimeBuilder;
 };
 
 } } // namespace FRPC::Python
