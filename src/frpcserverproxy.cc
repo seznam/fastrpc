@@ -93,7 +93,7 @@ public:
           rpcTransferMode(config.useBinary), useHTTP10(config.useHTTP10),
           serverSupportedProtocols(HTTPClient_t::XML_RPC),
           protocolVersion(config.protocolVersion),
-          connector(new SimpleConnector_t(url, config.connectTimeout,
+          connector(new SimpleConnectorIPv6_t(url, config.connectTimeout,
                                           config.keepAlive))
     {}
 

@@ -212,8 +212,12 @@ void URL_t::parse(const std::string &url) {
         slash_pos = url.size();
     }
 
+    std::string::size_type pos = url.find(']');
+    if ( pos == std::string::npos )
+        pos = HTTP_SCHEMA.length();
+
     // najdeme první dvojteèku pøed lomítkem (oddìlovaè hostitele od portu)
-    std::string::size_type colon_pos = url.find(':', HTTP_SCHEMA.length());
+    std::string::size_type colon_pos = url.find(':', pos);
     if (colon_pos < slash_pos)
     {
         // pokud je dojteèka pøed lomítkem, rozdìlíme øetìzec na

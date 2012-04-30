@@ -307,16 +307,22 @@ SimpleConnectorIPv6_t::SimpleConnectorIPv6_t(const URL_t &url, int connectTimeou
 
     memset(&hints, 0, sizeof(hints));
     hints.ai_flags = 0;
-    hints.ai_family = AF_UNSPEC;
+    hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
 
+    std::string host = url.host;
+    if ( *host.begin() == '[' && *host.rbegin() == ']' ) {
+        host = host.substr(1, host.size() - 2);
+        hints.ai_family = AF_INET6;
+    }
+
     snprintf(port, sizeof(port), "%u", url.port);
-    errcode = getaddrinfo(url.host.c_str(), port, &hints, &addrInfo);
+    errcode = getaddrinfo(host.c_str(), port, &hints, &addrInfo);
     if ( errcode != 0 ) {
         // oops
-        throw HTTPError_t(HTTP_DNS, "Cannot resolve host '%s': <%d, %s>.",
-                          url.host.c_str(), errcode,
+        throw HTTPError_t(HTTP_DNS, "Cannot resolve host '%s'('%s'): <%d, %s>.",
+                          url.host.c_str(), host.c_str(), errcode,
                           gai_strerror(errcode));
     }
 
