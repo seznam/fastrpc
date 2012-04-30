@@ -89,7 +89,7 @@ using FRPC::LenError_t;
 using FRPC::ResponseError_t;
 using FRPC::ProtocolVersion_t;
 using FRPC::Connector_t;
-using FRPC::SimpleConnector_t;
+using FRPC::SimpleConnectorIPv6_t;
 
 using namespace FRPC::Python;
 
@@ -1152,7 +1152,7 @@ public:
           serverSupportedProtocols(HTTPClient_t::XML_RPC),
           useHTTP10(useHTTP10), stringMode(stringMode),
           protocolVersion(protocolVersion),
-          connector(new SimpleConnector_t(url, connectTimeout, keepAlive)),
+          connector(new SimpleConnectorIPv6_t(url, connectTimeout, keepAlive)),
           nativeBoolean(nativeBoolean), datetimeBuilder(datetimeBuilder)
     {}
 
