@@ -107,7 +107,7 @@ public:
           useHTTP10(FRPC::Bool(config.get("useHTTP10", Bool_t::FRPC_FALSE))),
           serverSupportedProtocols(HTTPClient_t::XML_RPC),
           protocolVersion(parseProtocolVersion(config, "protocolVersion")),
-          connector(new SimpleConnector_t
+          connector(new SimpleConnectorIPv6_t
                     (url, getTimeout(config, "connectTimeout", 10000),
                      FRPC::Bool(config.get("keepAlive", Bool_t::FRPC_FALSE))))
     {}
