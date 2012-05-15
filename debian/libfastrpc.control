@@ -1,8 +1,0 @@
-Package: @PACKAGE@
-Version: @VERSION@
-Architecture: @ARCHITECTURE@
-Depends: @SH_DEPEND@
-Maintainer: @MAINTAINER@
-Installed-Size: @SIZE@
-Description: Fastrpc - RPC library, supports binary and XML encoding
- Fastrpc is a powerful and easy to make distributed applications.

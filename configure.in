@@ -34,21 +34,30 @@
 #             Created.
 #
 
-
 # initialize autoconf
-AC_INIT(fastrpc-ipv6, 4.2.0, fastrpc@firma.seznam.cz)
+AC_INIT(fastrpc, m4_esyscmd([head -n1 debian/changelog | tr '()' ' ' | cut -d' ' -f3 | tr -d '\n']), fastrpc@firma.seznam.cz)
 # initialize automake(use AC_INIT's arguments)
 AM_INIT_AUTOMAKE(AC_PACKAGE_NAME, AC_PACKAGE_VERSION)
+
+AC_CONFIG_MACRO_DIR([m4])
 
 # tell autoconf where to find sources
 AC_CONFIG_SRCDIR([src/frpcvalue.cc])
 
 AC_PREREQ(2.50)
 
-# Set the flags for solaris to enable 64bit compilation
-CPPFLAGS="-m64"
-CXXFLAGS="-m64"
-CFLAGS="-m64"
+case $host in
+*solaris*)
+    CPPFLAGS="-m64"
+    CXXFLAGS="-m64"
+    CFLAGS="-m64"
+    LDFLAGS="-m64 -L/usr/local/lib/amd64"
+    sbindir='${exec_prefix}/sbin/amd64'
+    bindir='${exec_prefix}/bin/amd64'
+    libdir='${exec_prefix}/lib/amd64'
+    ;;
+esac
+
 
 # check for C compiled
 AC_PROG_CC

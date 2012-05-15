@@ -1,0 +1,4 @@
+libfastrpc.pc /usr/lib/pkgconfig
+src/.libs/libfastrpc.so* /usr/lib
+src/.libs/libfastrpc.a /usr/lib
+src/libfastrpc.la /usr/lib

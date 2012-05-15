@@ -1,0 +1,5 @@
+libfastrpc (4.2.1) Seznam; urgency=low
+
+  * debhelper
+
+ -- Lukas Lobotka <lukas.lobotka@firma.seznam.cz>  Mon, 14 May 2012 13:15:28 +0200
