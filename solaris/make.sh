@@ -126,7 +126,7 @@ function build_package {
             && cp ${PROJECT_NAME}.conffiles ${CONTROL_DIR}/conffiles
 
     VERSION=$(< ../version)
-    ARCHITECTURE=$(uname -p)
+    ARCHITECTURE=$(isainfo | cut -d' ' -f1)
 
     # Process control file -- all @tags@ will be replaced with
     # appropriate data.
@@ -137,7 +137,7 @@ function build_package {
         > ${SOLARIS_BASE}/prototype
 
     # Make package
-    (cd ${ROOT_DIR}; pkgmk -o -r / \
+    (cd ${ROOT_DIR}; pkgmk -o -r . \
         -f ${SOLARIS_BASE}/prototype -d ${PACKAGE_DIR} ${SOL_PACKAGE})
 
     # Trasnform package
@@ -146,7 +146,7 @@ function build_package {
         ${SOL_PACKAGE}
 
     # Get rid of temporary build directory.
-    rm -r ${BUILD_DIR} ${PACKAGE_DIR}/${SOL_PACKAGE}
+    # rm -r ${BUILD_DIR} ${PACKAGE_DIR}/${SOL_PACKAGE}
 }
 
 # determine operation
@@ -161,7 +161,7 @@ if [ "${MODE}" = "binary" ]; then
 
     # lib files
     mkdir -p ${ROOT_DIR}/usr/lib
-    cp -vd ${INSTALL_DIR}/usr/lib/*.so.* ${ROOT_DIR}/usr/lib
+    cp ${INSTALL_DIR}/usr/lib/*.so.* ${ROOT_DIR}/usr/lib
 
     # build extra depend
     SH_DEPEND=''
@@ -184,13 +184,13 @@ elif [ "${MODE}" = "dev" ]; then
 
     # headers
     mkdir -p ${ROOT_DIR}/usr/include
-    cp -vrd ${INSTALL_DIR}/usr/include/* ${ROOT_DIR}/usr/include
+    cp -r ${INSTALL_DIR}/usr/include/* ${ROOT_DIR}/usr/include
 
     # lib files
     mkdir -p ${ROOT_DIR}/usr/lib
-    cp -vd ${INSTALL_DIR}/usr/lib/*.a ${ROOT_DIR}/usr/lib
-    cp -vd ${INSTALL_DIR}/usr/lib/*.la ${ROOT_DIR}/usr/lib
-    cp -vd ${INSTALL_DIR}/usr/lib/*.so ${ROOT_DIR}/usr/lib
+    cp ${INSTALL_DIR}/usr/lib/*.a ${ROOT_DIR}/usr/lib
+    cp ${INSTALL_DIR}/usr/lib/*.la ${ROOT_DIR}/usr/lib
+    cp ${INSTALL_DIR}/usr/lib/*.so ${ROOT_DIR}/usr/lib
 
     # Compose extra dependencies: we must depend on libfastrpc library with
     # exactly same version.
@@ -228,16 +228,11 @@ mkdir -p ${INSTALL_DIR}
 # Build.
 if test -z "${SKIP_BUILD}"; then
     (
-        # Try to determine number of processors => we will tell make to run
-        # same number of jobs in parallel.
-        # This is appropriate only for linux. If you know how to determine number
-        # of processor on your platform do no hassitate :-)
-        PROCESSORS=$( (cat /proc/cpuinfo || echo processor) \
-                | grep ^processor | wc -l)
 
         # go to the project root
         cd ..
-
+        [ ! -f Makefile ] || make distclean
+        autoreconf -fi
         # configure sources -- we want to instal under /usr
         # info goes to share dir
         ./configure --prefix=/usr --infodir=/usr/share/info
@@ -266,8 +261,12 @@ fi
 
 # Determine library version -- we generate libfastrpc<LIBRARY_VERSION>
 # and libfastrpc<LIBRARY_VERSION>-dev packages.
-export LIBRARY_VERSION=$(sed -n -e 's/current=\(.*\)/\1/p' \
+CUR=$(sed -n -e 's/current=\(.*\)/\1/p' \
         ${INSTALL_DIR}/usr/lib/libfastrpc.la) || exit -1
+AGE=$(sed -n -e 's/age=\(.*\)/\1/p' \
+        ${INSTALL_DIR}/usr/lib/libfastrpc.la) || exit -1
+
+export LIBRARY_VERSION=$[$CUR - $AGE]
 
 export PROJECT_NAME
 export MAINTAINER

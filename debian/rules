@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 
-DH_VERBOSE=1
-DEB_BUILD_OPTIONS='nostrip'
+#DH_VERBOSE=1
+#DEB_BUILD_OPTIONS='nostrip'
 
 build: build-stamp
 build-stamp:

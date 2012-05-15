@@ -35,7 +35,7 @@
 #
 
 # initialize autoconf
-AC_INIT(fastrpc, m4_esyscmd([head -n1 debian/changelog | tr '()' ' ' | cut -d' ' -f3 | tr -d '\n']), fastrpc@firma.seznam.cz)
+AC_INIT(fastrpc, m4_esyscmd([head -n1 debian/changelog | tr -d '()' | cut -d' ' -f2 | tr -d '\n']), fastrpc@firma.seznam.cz)
 # initialize automake(use AC_INIT's arguments)
 AM_INIT_AUTOMAKE(AC_PACKAGE_NAME, AC_PACKAGE_VERSION)
 
@@ -46,6 +46,7 @@ AC_CONFIG_SRCDIR([src/frpcvalue.cc])
 
 AC_PREREQ(2.50)
 
+AC_CANONICAL_HOST
 case $host in
 *solaris*)
     CPPFLAGS="-m64"
