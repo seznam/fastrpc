@@ -2,14 +2,13 @@
 
 #DH_VERBOSE=1
 #DEB_BUILD_OPTIONS='nostrip'
+PROCESSORS=$(shell cat /proc/cpuinfo | grep ^processor | wc -l)
 
 build: build-stamp
 build-stamp:
 	dh_testdir
-
-	./configure --enable-optimization
-	$(MAKE)
-
+	./configure --enable-optimization --prefix=/usr
+	$(MAKE) -j$(PROCESSORS)
 	touch build-stamp
 
 clean:
@@ -22,30 +21,24 @@ clean:
 	autoreconf -fi
 
 install: build
-	dh_testdir
-	dh_testroot
-	dh_prep
-	dh_installdirs
-	dh_install
+	make DESTDIR=`pwd`/debian/tmp install
 
-binary-indep: build install
-# We have nothing to do by default.
-
-# Build architecture-dependent files here.
-binary-arch: build install
+binary-arch: install
+	rm -rf debian/files
 	dh_testdir
 	dh_testroot
 	dh_installchangelogs
+	dh_install --sourcedir=debian/tmp
 	dh_link
-	dh_compress
-	dh_fixperms
 	dh_makeshlibs
+	dh_compress
 	dh_installdeb
+	dh_fixperms
 	dh_shlibdeps
 	dh_gencontrol
 	dh_md5sums
 	dh_builddeb
 
-binary: binary-indep binary-arch
-.PHONY: build clean binary-indep binary-arch binary install
+binary-indep: build install
 
+binary: binary-indep binary-arch

@@ -1,3 +1,4 @@
-src/*.h /usr/include
-libfastrpc.pc /usr/lib/pkgconfig
-src/.libs/libfastrpc.so* /usr/lib
+usr/include/*.h
+usr/lib/pkgconfig/libfastrpc.pc
+usr/lib/libfastrpc.a
+usr/lib/libfastrpc.so
