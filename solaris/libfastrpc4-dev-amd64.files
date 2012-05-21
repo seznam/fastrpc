@@ -1,0 +1,3 @@
+usr/lib/amd64/libfastrpc.a
+usr/lib/amd64/pkgconfig/libfastrpc.pc
+usr/include/*.h
