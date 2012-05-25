@@ -310,7 +310,7 @@ void BinMarshaller_t::flush() {
 void BinMarshaller_t::packNull() {
 
     if (protocolVersion.versionMajor < 2
-        || protocolVersion.versionMinor < 1) {
+        || ( protocolVersion.versionMajor == 2 && protocolVersion.versionMinor < 1) ) {
 
         throw StreamError_t("Null is not supported by protocol version lower than 2.1");
     }
