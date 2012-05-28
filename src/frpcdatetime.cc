@@ -180,6 +180,12 @@ DateTime_t::DateTime_t(const std::string &isoFormat)
     this->weekDay = timeValid.tm_wday;
 }
 
+DateTime_t::DateTime_t(short year, char month, char day,
+                       char hour, char minute, char sec,
+                       time_t unixTime)
+    : year(year), month(month), day(day), hour(hour), minute(minute),
+      sec(sec), weekDay(), unixTime(unixTime), timeZone()
+{}
 
 short DateTime_t::getDay() const
 {

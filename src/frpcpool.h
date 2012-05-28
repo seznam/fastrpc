@@ -191,6 +191,21 @@ public:
     DateTime_t&  UTCTime();
 
     /**
+        @brief Create new DateTime_t object without clearly from given data
+               no additional check will be performed
+        @param year  - 0 ... 2012 ... (I think doc above lies about year range)
+        @param month - Month is 1 - 12
+        @param day -   Day is 1 - 31
+        @param hour -  Hour is 0 - 23
+        @param min -   Minute is 0 - 59
+        @param sec -   Second is 0 - 59
+        @return reference to DateTime_t
+    */
+    DateTime_t&  ForceUTCTime(short year, char month, char day,
+                              char hour, char min, char sec,
+                              time_t unixTime);
+
+    /**
         @brief Create new String_t object from std::string
         @param value is a std::string 
         @return reference to String_t

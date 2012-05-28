@@ -199,6 +199,19 @@ DateTime_t&  Pool_t::UTCTime(const time_t &timestamp) {
     return *newValue;
 }
 
+DateTime_t&  Pool_t::ForceUTCTime(short year, char month, char day,
+                                  char hour, char min, char sec,
+                                  time_t unixTime)
+{
+    DateTime_t *
+        newValue = new DateTime_t(year, month, day, hour, min, sec, unixTime);
+
+    pointerStorage.push_back(newValue);
+
+    return *newValue;
+}
+
+
 DateTime_t&  Pool_t::UTCTime() {
     DateTime_t *newValue = new DateTime_t(time(0), 0);
 

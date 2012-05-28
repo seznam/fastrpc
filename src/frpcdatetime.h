@@ -203,6 +203,15 @@ private:
     */
     explicit DateTime_t(const std::string &isoFormat);
 
+    /**
+        @brief Create new DateTime_t object without clearly from given data.
+               No additional check will be performed. Weekday and zone will be
+               set to 0 .
+    */
+    explicit DateTime_t(short year, char month, char day,
+                        char hour, char min, char sec,
+                        time_t unixTime);
+
 
     short year;        /// year
     char month;        /// month

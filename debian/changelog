@@ -1,3 +1,9 @@
+libfastrpc (4.2.4) unstable; urgency=low
+
+  * Add ForceUTCTime DateTime_t builder without mktine(3) and localtime(3)
+
+ -- Michal Bukovsky <michal.bukovsky@firma.seznam.cz>  Sat, 26 May 2012 07:12:47 +0200
+
 libfastrpc (4.2.3) Seznam; urgency=low
 
   * Removed pkgconfig from lib package 
