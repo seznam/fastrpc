@@ -1,3 +1,2 @@
-usr/lib/pkgconfig/libfastrpc.pc
 usr/lib/libfastrpc.so.*
 usr/lib/libfastrpc.la
