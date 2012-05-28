@@ -12,7 +12,7 @@ Depends: ${shlibs:Depends}, ${misc:Depends}, libxml2
 Description: Fastrpc - RPC library, supports binary and XML encoding
  Fastrpc is a powerful and easy to make distributed applications.
 
-Package: libfastrpc4-dev
+Package: libfastrpc-dev
 Architecture: any
 Section: Seznam
 Depends: libfastrpc4 (= ${binary:Version})
