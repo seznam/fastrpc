@@ -1,6 +1,15 @@
+libfastrpc (4.2.5) unstable; urgency=low
+
+  * Added support for runtime library configuration
+  * Added Datetime_t validation policy
+  * Added String_t validation policy
+  * shlibs now contain library version
+
+ -- Lukas Lobotka <lukas.lobotka@firma.seznam.cz>  Fri, 01 Jun 2012 10:35:47 +0200
+
 libfastrpc (4.2.4) unstable; urgency=low
 
-  * Add ForceUTCTime DateTime_t builder without mktine(3) and localtime(3)
+  * Add ForceUTCTime DateTime_t builder without mktime(3) and localtime(3)
 
  -- Michal Bukovsky <michal.bukovsky@firma.seznam.cz>  Sat, 26 May 2012 07:12:47 +0200
 

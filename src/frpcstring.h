@@ -117,6 +117,13 @@ public:
     operator std::wstring () const;
     ///static members
     static const String_t &FRPC_EMPTY;
+
+    /**
+        @brief Validates data, must be valid utf-8 byte sequence in range http://www.w3.org/TR/xml/#NT-Char
+        @param pData - is a data pointer
+        @param dataSize - is a size of data in bytes
+    */
+    static void validateBytes(const std::string::value_type *pData, std::string::size_type dataSize);
 private:
     /**
         @brief Default constructor is disabled

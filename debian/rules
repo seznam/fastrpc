@@ -30,7 +30,7 @@ binary-arch: install
 	dh_installchangelogs
 	dh_install --sourcedir=debian/tmp
 	dh_link
-	dh_makeshlibs
+	dh_makeshlibs -V
 	dh_compress
 	dh_installdeb
 	dh_fixperms

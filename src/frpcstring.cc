@@ -32,6 +32,11 @@
  */
 #include "frpcstring.h"
 #include "frpcpool.h"
+#include "frpcconfig.h"
+#include <cstdlib>
+#include <cstring>
+#include <iomanip>
+#include <sstream>
 
 #ifdef WIN32
 #include <windows.h>
@@ -50,11 +55,15 @@ String_t::~String_t()
 String_t::String_t(std::string::value_type *pData, std::string::size_type dataSize)
         :value(pData,dataSize)
 {
+    //WARNING: Pointer to raw data, not null-terminated
+    validateBytes(value.data(), value.size());
 }
 
 String_t::String_t(const std::string &value)
         :value(value)
 {
+    //WARNING: Pointer to raw data, not null-terminated
+    validateBytes(value.data(), value.size());
 }
 
 
@@ -133,5 +142,51 @@ Value_t& String_t::clone(Pool_t &newPool) const
 {
     return newPool.String(value);
 }
+
+void String_t::validateBytes(const std::string::value_type *pData, std::string::size_type dataSize)
+{
+
+    if ( LibConfig_t::getInstance()->getStringValidationPolicy() == false )
+        return;
+
+    mbstate_t state;
+    memset(&state, 0, sizeof(mbstate_t));
+    const std::string::value_type *at = pData;
+    const std::string::value_type *end = at + dataSize;
+    std::string::size_type curSize = 0;
+    wchar_t w;
+    size_t rest;
+    size_t r;
+    bool isValid = true;
+
+    while ((at != end) && (isValid == true)) {
+        rest = ::std::min(static_cast<unsigned long>(end - at), static_cast<unsigned long int>(4));
+        r = mbrtowc(&w, at, rest, &state);
+        if ( r <= 0 ) {
+            isValid = false;
+        }else {
+            if  ( (w != 0x9 && w != 0xA && w != 0xD) &&
+                (w < 0x20 || w > 0xD7FF)         &&
+                (w < 0xE000 || w > 0xFFFD)       &&
+                (w < 0x10000 || w > 0x10FFFF) ) {
+                isValid = false;
+            }else {
+                curSize += r;
+                at += r;
+            }
+        }
+    }
+
+    if ( isValid == false ) {
+    std::stringstream fmt;
+        for (std::string::size_type i = 0; i < std::min(dataSize, static_cast<std::string::size_type>(20)); i++)
+            fmt << std::hex << std::setw(2) << std::setfill('0') << static_cast<int> (pData[i]);
+        throw TypeError_t("Cannot create FRPC::String_t from given data. Size %u bytes, failed at %u, first %u bytes in hex = %s",
+            dataSize, curSize, std::min(dataSize, static_cast<std::string::size_type>(20)), fmt.str().c_str());
+    }
+
+    return;
+}
+
 
 };

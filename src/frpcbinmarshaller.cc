@@ -238,6 +238,9 @@ void BinMarshaller_t::packMethodCall(const char* methodName,
 
 void BinMarshaller_t::packString(const char* value, unsigned int size) {
 
+    // validate bytes
+    String_t::validateBytes(value, size);
+
     //obtain size of number
     int numType = getNumberType(size);
     //pack type

@@ -53,7 +53,7 @@ include_HEADERS = frpc.h frpcvalue.h frpcarray.h frpcstruct.h frpcbinary.h frpcd
                   frpcsocket.h frpcsocketunix.h frpcsocketwin.h frpcplatform.h \
                   frpcversion.h frpcconnector.h frpcconverters.h frpcnull.h \
                   frpcbinmarshaller.h frpcxmlmarshaller.h frpcinternals.h frpccompare.h frpcb64marshaller.h \
-                  frpcjsonmarshaller.h frpcb64writer.h
+                  frpcjsonmarshaller.h frpcb64writer.h frpcconfig.h
 
 
 noinst_HEADERS = frpcbinunmarshaller.h frpcxmlunmarshaller.h frpcurlunmarshaller.h frpcb64unmarshaller.h frpcbase64.h \
@@ -74,7 +74,7 @@ libfastrpc_la_SOURCES = frpcvalue.cc frpcarray.cc frpcstruct.cc frpcbinary.cc fr
                         frpctreebuilder.cc frpctreefeeder.cc frpcfault.cc frpc.cc frpcmethodregistry.cc \
                         frpcserver.cc frpcresponseerror.cc frpcconnector.cc frpcnull.cc \
                         frpcurlunmarshaller.cc frpcjsonmarshaller.cc frpcb64unmarshaller.cc frpcbase64.cc \
-                        frpcb64writer.cc
+                        frpcb64writer.cc frpcconfig.cc
 
 # with these flags (version info etc.)
 libfastrpc_la_LDFLAGS = @VERSION_INFO@ $(XML2_LIBS)

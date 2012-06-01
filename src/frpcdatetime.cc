@@ -36,6 +36,7 @@
 
 #include "frpcdatetime.h"
 #include "frpcpool.h"
+#include "frpcconfig.h"
 
 namespace FRPC {
 
@@ -47,21 +48,23 @@ DateTime_t::DateTime_t(short year, char month, char day,
     : year(year), month(month), day(day), hour(hour), minute(minute),
       sec(sec), weekDay(weekDay), unixTime(unixTime), timeZone(timeZone)
 {
-    struct tm time_tm;
-    memset(&time_tm, 0, sizeof(tm));
-    time_tm.tm_year = year - 1900;
-    time_tm.tm_mon = month - 1;
-    time_tm.tm_mday = day;
-    time_tm.tm_hour = hour;
-    time_tm.tm_min = minute;
-    time_tm.tm_sec = sec;
-    time_tm.tm_isdst = -1; // we know nothing about daylight savings time
-    time_t time_l = mktime(&time_tm);
-    struct tm timeValid;
-    localtime_r(&time_l, &timeValid);
+    if ( LibConfig_t::getInstance()->getDatetimeValidationPolicy() == true ) {
+        struct tm time_tm;
+        memset(&time_tm, 0, sizeof(tm));
+        time_tm.tm_year = year - 1900;
+        time_tm.tm_mon = month - 1;
+        time_tm.tm_mday = day;
+        time_tm.tm_hour = hour;
+        time_tm.tm_min = minute;
+        time_tm.tm_sec = sec;
+        time_tm.tm_isdst = -1; // we know nothing about daylight savings time
+        time_t time_l = mktime(&time_tm);
+        struct tm timeValid;
+        localtime_r(&time_l, &timeValid);
 
-    this->unixTime = time_l;
-    this->weekDay = timeValid.tm_wday;
+        this->unixTime = time_l;
+        this->weekDay = timeValid.tm_wday;
+    }
 }
 
 DateTime_t::DateTime_t(short year, char month, char day,
