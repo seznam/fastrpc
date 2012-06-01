@@ -30,6 +30,8 @@
 
 namespace FRPC {
 
+    LibConfig_t *LibConfig_t::m_instance = 0;
+
     LibConfig_t *LibConfig_t::getInstance() {
 
         if ( LibConfig_t::m_instance == 0 ) {
