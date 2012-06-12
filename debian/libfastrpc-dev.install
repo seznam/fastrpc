@@ -1,4 +1,5 @@
 usr/include/*.h
 usr/lib/pkgconfig/libfastrpc.pc
+usr/lib/libfastrpc.la
 usr/lib/libfastrpc.a
 usr/lib/libfastrpc.so
