@@ -1,3 +1,9 @@
+libfastrpc (4.2.6) unstable; urgency=low
+
+  * Added -fPIC
+
+ -- Lukas Lobotka <lukas.lobotka@firma.seznam.cz>  Tue, 21 Aug 2012 12:59:18 +0200
+
 libfastrpc (4.2.5) unstable; urgency=low
 
   * Added support for runtime library configuration
