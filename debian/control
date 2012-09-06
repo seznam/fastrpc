@@ -5,17 +5,18 @@ Maintainer: Lukas Lobotka <lukas.lobotka@firma.seznam.cz>
 Build-Depends: debhelper, libxml2-dev, autoconf, libtool, automake
 Standards-Version: 3.7.2.2
 
-Package: libfastrpc4
+Package: libfastrpc5
 Architecture: any
 Section: Seznam
 Depends: ${shlibs:Depends}, ${misc:Depends}, libxml2
 Description: Fastrpc - RPC library, supports binary and XML encoding
  Fastrpc is a powerful and easy to make distributed applications.
 
-Package: libfastrpc-dev
+Package: libfastrpc5-dev
 Architecture: any
 Section: Seznam
-Depends: libfastrpc4 (= ${binary:Version}), libxml2-dev
+Conflict: libfastrpc-dev
+Depends: libfastrpc5 (= ${binary:Version}), libxml2-dev
 Description: Description: Development files for fastrpc library
  Here are files necessary for developing new applications
  that use fastrpc library and its C/C++ interface.
