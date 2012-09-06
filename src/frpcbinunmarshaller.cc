@@ -53,6 +53,17 @@ void BinUnMarshaller_t::finish() {
 }
 
 void BinUnMarshaller_t::unMarshall(const char *data, unsigned int size, char type) {
+    try {
+        unMarshallInternal(data, size, type);
+    }
+    catch (...) {
+        mainBuff.finish();
+        throw;
+    }
+    mainBuff.finish();
+}
+
+void BinUnMarshaller_t::unMarshallInternal(const char *data, unsigned int size, char type) {
     char magic[]={0xCA, 0x11};
 
 
@@ -112,7 +123,7 @@ void BinUnMarshaller_t::unMarshall(const char *data, unsigned int size, char typ
         }
         break;
         case METHOD_NAME: {
-            dataBuilder.buildMethodCall(mainBuff);
+            dataBuilder.buildMethodCall(mainBuff.data(), mainBuff.size());
             mainBuff.erase();
             mainInternalType = NONE;
             internalType = NONE;
@@ -120,9 +131,9 @@ void BinUnMarshaller_t::unMarshall(const char *data, unsigned int size, char typ
         }
         break;
         case MEMBER_NAME: {
-            dataBuilder.buildStructMember(mainBuff);
+            dataBuilder.buildStructMember(mainBuff.data(), mainBuff.size());
 #ifdef _DEBUG
-            printf( "struct member: %s \n",mainBuff.c_str());
+            printf( "struct member: %s \n", std::string(mainBuff.data(), mainBuff.size()).c_str());
 #endif
             //we have member name
             entityStorage.back().member = true;
@@ -290,12 +301,12 @@ void BinUnMarshaller_t::unMarshall(const char *data, unsigned int size, char typ
                 mainBuff.erase();
                 if (!dataWanted) {
                     if (mainInternalType == FAULT) {
-                        dataBuilder.buildFault(errNo, mainBuff);
+                        dataBuilder.buildFault(errNo, mainBuff.data(), mainBuff.size());
                         mainInternalType = NONE;
                         internalType = NONE;
 
                     } else {
-                        dataBuilder.buildString(mainBuff);
+                        dataBuilder.buildString(mainBuff.data(), mainBuff.size());
                         internalType = NONE;
                         dataWanted = 1;
                         decrementMember();
@@ -306,12 +317,12 @@ void BinUnMarshaller_t::unMarshall(const char *data, unsigned int size, char typ
             } else {
                 //obtain whole string
                 if (mainInternalType == FAULT) {
-                    dataBuilder.buildFault(errNo, mainBuff);
+                    dataBuilder.buildFault(errNo, mainBuff.data(), mainBuff.size());
                     mainInternalType = NONE;
                     internalType = NONE;
                     mainBuff.erase();
                 } else {
-                    dataBuilder.buildString(mainBuff);
+                    dataBuilder.buildString(mainBuff.data(), mainBuff.size());
                     internalType = NONE;
                     dataWanted = 1;
                     decrementMember();
@@ -327,7 +338,7 @@ void BinUnMarshaller_t::unMarshall(const char *data, unsigned int size, char typ
                 dataWanted = stringSize.number;
                 mainBuff.erase();
                 if (!dataWanted) {
-                    dataBuilder.buildBinary(mainBuff);
+                    dataBuilder.buildBinary(mainBuff.data(), mainBuff.size());
                     internalType = NONE;
                     dataWanted = 1;
                     decrementMember();
@@ -340,7 +351,7 @@ void BinUnMarshaller_t::unMarshall(const char *data, unsigned int size, char typ
 
             } else {
                 //obtain whole data
-                dataBuilder.buildBinary(mainBuff);
+                dataBuilder.buildBinary(mainBuff.data(), mainBuff.size());
                 internalType = NONE;
                 dataWanted = 1;
                 decrementMember();

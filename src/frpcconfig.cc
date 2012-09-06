@@ -46,7 +46,7 @@ namespace FRPC {
     }
 
     LibConfig_t::LibConfig_t()
-    : m_validateDatetime(true), m_validateString(false) {
+    : m_validateDatetime(true), m_validateString(false), m_preallocatedArraySize(4) {
     }
 
     LibConfig_t::LibConfig_t(const std::string &cfgFn) {

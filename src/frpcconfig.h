@@ -90,6 +90,22 @@ namespace FRPC {
                 m_validateString = enabled;
             }
 
+            /**
+             * \brief Returns number of preallocated Array_t members
+             * \see m_preallocatedArraySize
+            **/
+            unsigned long getDefaultArraySize() const {
+                return m_preallocatedArraySize;
+            }
+
+            /**
+             * \brief Sets number of preallocated Array_t members
+             * \see m_preallocatedArraySize
+            **/
+            void setDefaultArraySize(unsigned long size) {
+                m_preallocatedArraySize = size;
+            }
+
         protected:
 
             // TODO: Add IPv6/IPv4 resolution policies
@@ -116,6 +132,14 @@ namespace FRPC {
             * If false (default), String_t accepts any character
             **/
             bool m_validateString;
+
+            /**
+            * \brief Sets Array_t's preallocated space
+            *
+            * Positive number, that specifies number of preallocated
+            * members in Array_t, default 4
+            **/
+            unsigned long m_preallocatedArraySize;
 
             /**
             * \brief Default constructor

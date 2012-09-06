@@ -186,7 +186,8 @@ void TreeBuilder_t::closeStruct()
 
 void TreeBuilder_t::openArray(unsigned int numOfItems)
 {
-    Value_t &array = pool.Array();
+    Array_t &array = pool.Array();
+    array.reserve(numOfItems);
 
     if(!isMember(array))
         isFirst(array);

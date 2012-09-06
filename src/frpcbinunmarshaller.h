@@ -62,6 +62,69 @@ public:
 
 private:
     BinUnMarshaller_t();
+
+    virtual void unMarshallInternal(const char *data, unsigned int size, char type);
+
+    class Buffer_t
+    {
+    public:
+        Buffer_t() : m_weakData(NULL), m_weakDataSize(0) {}
+
+        void append(const char *data, const unsigned int size) {
+            if (m_data.empty()) {
+                if (m_weakData != NULL)
+                    throw Error_t("append is not supported on weak BinUnMarshaller_t::Buffer_t");
+                m_weakData = data;
+                m_weakDataSize = size;
+            } else {
+                m_data.reserve(m_data.size() + size);
+                m_data.append(data, size);
+            }
+        }
+
+        const char *data() const {
+            if (m_weakData != NULL)
+                return m_weakData;
+            else
+                return m_data.data();
+        }
+
+        unsigned int size() const {
+            if (m_weakData != NULL)
+                return m_weakDataSize;
+            else
+                return m_data.size();
+        }
+
+        const char & operator [] (const unsigned int index) const {
+            if (m_weakData != NULL)
+                return m_weakData[index];
+            else
+                return m_data[index];
+        }
+
+        void erase() {
+            m_weakData = NULL;
+            m_weakDataSize = 0;
+            m_data.clear();
+            m_data.reserve();
+        }
+
+        void finish() {
+            if (m_weakData != NULL) {
+                m_data.reserve(m_data.size() + m_weakDataSize);
+                m_data.append(m_weakData, m_weakDataSize);
+                m_weakData = NULL;
+                m_weakDataSize = 0;
+            }
+        }
+
+    private:
+        const char* m_weakData;
+        unsigned int m_weakDataSize;
+        std::string m_data;
+    };
+
     inline int readData(const char *data, unsigned int size) {
 
         unsigned int readSize = (dataWanted > (size-readPosition))?size
@@ -141,7 +204,7 @@ private:
     char internalType;
     char typeEvent;
     char mainInternalType;
-    std::string mainBuff;
+    Buffer_t mainBuff;
     //long dataReaded;
     unsigned int dataWanted;
     unsigned int readPosition;

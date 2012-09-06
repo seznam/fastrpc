@@ -40,9 +40,7 @@
 #include "frpclenerror.h"
 #include "frpctypeerror.h"
 #include "frpc.h"
-
-
-const long ARRAY_RESERVED_SPACE = 32;
+#include "frpcconfig.h"
 
 namespace FRPC
 {
@@ -55,6 +53,7 @@ Array_t::~Array_t()
 Value_t& Array_t::clone(Pool_t& newPool) const
 {
     Array_t *newArray =&newPool.Array();
+    newArray->reserve(size());
 
     for(std::vector<Value_t*>::const_iterator iarrayData = arrayData.begin();
             iarrayData != arrayData.end(); ++iarrayData)
@@ -67,13 +66,13 @@ Value_t& Array_t::clone(Pool_t& newPool) const
 
 Array_t::Array_t()
 {
-    arrayData.reserve(ARRAY_RESERVED_SPACE);
+    arrayData.reserve(LibConfig_t::getInstance()->getDefaultArraySize());
 }
 
 
 Array_t::Array_t(const Value_t &item)
 {
-    arrayData.reserve(ARRAY_RESERVED_SPACE);
+    arrayData.reserve(LibConfig_t::getInstance()->getDefaultArraySize());
     arrayData.push_back(const_cast<Value_t*>(&item));
 }
 

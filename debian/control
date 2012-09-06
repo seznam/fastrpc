@@ -15,7 +15,7 @@ Description: Fastrpc - RPC library, supports binary and XML encoding
 Package: libfastrpc5-dev
 Architecture: any
 Section: Seznam
-Conflict: libfastrpc-dev
+Conflicts: libfastrpc-dev
 Depends: libfastrpc5 (= ${binary:Version}), libxml2-dev
 Description: Description: Development files for fastrpc library
  Here are files necessary for developing new applications
