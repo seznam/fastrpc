@@ -1,3 +1,9 @@
+libfastrpc (4.2.7) unstable; urgency=low
+
+  * Custom result builder for FRPC::ServerProxy_t::call
+
+ -- Lukas Lobotka <lukas.lobotka@firma.seznam.cz>  Fri, 14 Sep 2012 15:13:13 +0200
+
 libfastrpc (4.2.6) unstable; urgency=low
 
   * Added -fPIC

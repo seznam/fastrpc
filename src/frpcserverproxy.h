@@ -53,6 +53,8 @@ class ServerProxyImpl_t;
 
 class Struct_t;
 
+class DataBuilder_t;
+
 /**
 @brief ServerProxy Object
 
@@ -501,6 +503,15 @@ public:
     */
     Value_t& call(Pool_t &pool, const std::string &methodName,
                   const Array_t &params);
+
+    /**
+        @brief  Calling method with many parameters
+        @param builder is virtual class used to build custom response
+        @param methodName is the remote method name
+        @param params is Array_t. Is is an array of parameters
+    */
+    void call(DataBuilder_t &builder, const std::string &methodName,
+            const Array_t &params);
 
     /**
         @brief  Calling method with many parameters
