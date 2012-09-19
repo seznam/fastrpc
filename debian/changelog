@@ -1,8 +1,9 @@
 libfastrpc (4.2.7) unstable; urgency=low
 
   * Custom result builder for FRPC::ServerProxy_t::call
+  * Fixed URL_t::isSsl
 
- -- Lukas Lobotka <lukas.lobotka@firma.seznam.cz>  Fri, 14 Sep 2012 15:13:13 +0200
+ -- Lukas Lobotka <lukas.lobotka@firma.seznam.cz>  Wed, 19 Sep 2012 08:55:50 +0200
 
 libfastrpc (4.2.6) unstable; urgency=low
 
