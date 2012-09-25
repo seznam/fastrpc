@@ -53,6 +53,7 @@ dist:
 		fastrpcmodule.cc pyerrors.cc pythonbuilder.cc \
 		pythonfeeder.cc pythonserver.cc fastrpcmodule.h \
 		pyobjectwrapper.h pythonbuilder.h pythonfeeder.h \
+		frpcpythonhelper.h \
 	        python-fastrpc
 
 	tar cvzf python-fastrpc.tar.gz python-fastrpc

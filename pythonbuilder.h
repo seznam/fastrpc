@@ -45,18 +45,14 @@
 #include <frpcdatabuilder.h>
 #include <frpcint.h>
 
+#include "frpcpythonhelper.h"
+
 /***************************************************************************/
 /***Builder for unmarshaller                                             ***/
 /***************************************************************************/
 
 namespace FRPC { namespace Python {
 
-enum StringMode_t {
-    STRING_MODE_INVALID = -1,
-    STRING_MODE_MIXED = 0,
-    STRING_MODE_UNICODE,
-    STRING_MODE_STRING
-};
 const Int_t::value_type ZERO = 0;
 const Int_t::value_type ALLONES = ~ZERO;
 const Int_t::value_type INT31_MASK = ALLONES << 31;
@@ -108,7 +104,7 @@ public:
     virtual void buildMethodCall(const std::string &methodName);
     virtual void buildString(const char* data, unsigned int size );
     virtual void buildString(const std::string &data) {
-        return buildString(data.data(), data.size());
+        return buildString(data.data(), static_cast<unsigned int>(data.size()));
     }
     virtual void buildStructMember(const char *memberName, unsigned int size );
     virtual void buildStructMember(const std::string &memberName);
@@ -247,6 +243,8 @@ public:
                                           methodName->size());
     }
 
+    PyObject * getRetValue() { return retValue; }
+
 private :
     bool first;
     bool error;
@@ -260,6 +258,8 @@ private :
     //NOTE: Either null or ref managed by owner
     PyObject *datetimeBuilder;
 };
+
+
 
 } } // namespace FRPC::Python
 

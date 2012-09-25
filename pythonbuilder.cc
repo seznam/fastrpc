@@ -35,6 +35,7 @@
 
 #include "pythonbuilder.h"
 #include "fastrpcmodule.h"
+#include "frpcpythonhelper.h"
 
 using namespace FRPC::Python;
 
@@ -115,7 +116,7 @@ void Builder_t::buildDateTime(short year, char month, char day, char hour, char
         return;
 
     PyObject *dateTime = 0;
-    
+
     if ( datetimeBuilder != 0 && PyCallable_Check(datetimeBuilder) ) {
         dateTime = PyObject_CallFunction(datetimeBuilder,"(hbbbbbbii)", year,
                                          month, day, hour, min, sec, weekDay,
@@ -125,7 +126,7 @@ void Builder_t::buildDateTime(short year, char month, char day, char hour, char
                          day, hour, min,
                          sec, weekDay, unixTime, timeZone) );
     }
-    
+
     if (!dateTime)
         setError();
 
@@ -180,7 +181,7 @@ void Builder_t::buildInt(Int_t::value_type value) {
         return;
     Int_t::value_type absValue = value < 0 ? -value :value;
     PyObject *integer = 0;
-    
+
     if ((absValue & INT31_MASK)) {
 
         integer = PyLong_FromLongLong(value);
@@ -296,3 +297,37 @@ void Builder_t::openStruct(unsigned int) {
 
     entityStorage.push_back(TypeStorage_t(structVal,STRUCT));
 }
+
+namespace {
+class VirtBuilder_t : public BuilderInterface_t {
+public:
+    VirtBuilder_t(PyObject *methodObject, FRPC::Python::StringMode_t smode) :
+        b(methodObject, smode)
+    {}
+
+    FRPC::DataBuilder_t * builder() {
+        return &b;
+    }
+
+    PyObject * getRetValue() {
+        return b.getRetValue();
+    }
+
+private:
+    Builder_t b;
+};
+}
+
+extern "C" {
+
+    FRPC::Python::BuilderInterface_t *
+    create_frpc_python_builder(PyObject *methodObject, FRPC::Python::StringMode_t smode) {
+        return new VirtBuilder_t(methodObject, smode);
+    }
+
+    void destroy_frpc_python_builder(FRPC::Python::BuilderInterface_t *builder) {
+        delete builder;
+    }
+
+} // extern "C"
+

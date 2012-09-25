@@ -1,3 +1,9 @@
+python-fastrpc (4.1.2) unstable; urgency=low
+
+  * Added create_frpc_python_feeder and destroy_frpc_python_feeder functions
+
+ -- Lukas Lobotka <lukas.lobotka@firma.seznam.cz>  Tue, 25 Sep 2012 15:23:28 +0200
+
 python-fastrpc (4.1.1) unstable; urgency=low
 
   * IPv6 support

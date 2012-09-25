@@ -40,12 +40,27 @@
 #include <frpcxmlmarshaller.h>
 #include "pythonfeeder.h"
 #include "fastrpcmodule.h"
+#include "frpcpythonhelper.h"
 
 #if PY_VERSION_HEX < 0x02050000 && !defined(PY_SSIZE_T_MIN)
 typedef int Py_ssize_t;
 #define PY_SSIZE_T_MAX INT_MAX
 #define PY_SSIZE_T_MIN INT_MIN
 #endif
+
+namespace {
+class VirtFeeder_t : public FRPC::Python::FeederInterface_t {
+public:
+    VirtFeeder_t(FRPC::Marshaller_t *marshaller, const std::string &encoding) :
+        feeder(marshaller, encoding)
+    {}
+
+    void feed(PyObject *args) { feeder.feed(args); }
+    void feedValue(PyObject *value) { feeder.feedValue(value); }
+private:
+    FRPC::Python::Feeder_t feeder;
+};
+} // namespace
 
 using FRPC::Int_t;
 
@@ -240,3 +255,18 @@ void Feeder_t::feedValue(PyObject *value)
         throw PyError_t();
     }
 }
+
+extern "C"  {
+
+FRPC::Python::FeederInterface_t * create_frpc_python_feeder(FRPC::Marshaller_t *marshaller,const std::string *encoding) {
+    return new VirtFeeder_t(marshaller, *encoding);
+}
+
+void destroy_frpc_python_feeder(FRPC::Python::FeederInterface_t *feeder) {
+    delete feeder;
+}
+
+} // extern "C"
+
+
+

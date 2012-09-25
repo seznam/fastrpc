@@ -44,6 +44,8 @@
 
 #include <frpcmarshaller.h>
 
+#include "frpcpythonhelper.h"
+
 namespace FRPC { namespace Python {
 
 class  Feeder_t {
