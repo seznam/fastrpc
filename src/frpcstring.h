@@ -49,7 +49,9 @@ class FRPC_DLLEXPORT String_t : public Value_t
 {
     friend class Pool_t;
 public:
-   enum{ TYPE = 0x04 };
+    enum{ TYPE = 0x04 };
+
+    typedef std::string value_type;
 
     virtual ~String_t();
     /**
@@ -89,7 +91,14 @@ public:
         @brief Get binary data as STL string.
         @return Binary data as string. 
     */
+    //FIXME: const std::string&
     std::string getString() const;
+    
+    /**
+        @brief Get binary data as STL string.
+        @return Binary data as string.
+    */
+    const std::string& getValue() const;
 
     /**
         @brief Get binary data as C string.

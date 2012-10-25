@@ -138,6 +138,12 @@ std::string String_t::getString() const
     return value;
 }
 
+const std::string& String_t::getValue() const
+{
+    return value;
+}
+
+
 Value_t& String_t::clone(Pool_t &newPool) const
 {
     return newPool.String(value);
