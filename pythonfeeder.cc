@@ -38,6 +38,8 @@
 #include <frpcint.h>
 #include <frpcbinmarshaller.h>
 #include <frpcxmlmarshaller.h>
+#include <frpcb64marshaller.h>
+#include <frpcjsonmarshaller.h>
 #include "pythonfeeder.h"
 #include "fastrpcmodule.h"
 #include "frpcpythonhelper.h"
@@ -237,9 +239,12 @@ void Feeder_t::feedValue(PyObject *value)
                                  -1, -1, -1);
 
     } else if (value == Py_None) {
+        //NOTE: Base64Marshaller is inherited from BinMarshaller_t
         FRPC::BinMarshaller_t *binMarshaller(dynamic_cast<FRPC::BinMarshaller_t*>(marshaller));
         if (binMarshaller) {
             binMarshaller->packNull();
+        } else if ( dynamic_cast<FRPC::JSONMarshaller_t*>(marshaller) ) {
+            dynamic_cast<FRPC::JSONMarshaller_t*>(marshaller)->packNull();
         } else {
             dynamic_cast<FRPC::XmlMarshaller_t&>(*marshaller).packNull();
         }

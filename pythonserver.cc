@@ -921,6 +921,7 @@ void Server_t::readRequest(FRPC::DataBuilder_t &builder) {
     std::string contentType;
     std::string uriPath;
     std::auto_ptr<FRPC::UnMarshaller_t> unmarshaller;
+    bool enforceV21 = false;
 
     // read header
     try {
@@ -1033,13 +1034,13 @@ void Server_t::readRequest(FRPC::DataBuilder_t &builder) {
                     FRPC::UnMarshaller_t::create(
                         FRPC::UnMarshaller_t::URL_ENCODED,
                         builder));
-
+           enforceV21 = true;
         } else if (contentType.find("application/x-base64-frpc") != std::string::npos) {
            unmarshaller = std::auto_ptr<FRPC::UnMarshaller_t>(
                     FRPC::UnMarshaller_t::create(
                         FRPC::UnMarshaller_t::BASE64,
                         builder));
-
+           enforceV21 = true;
         } else {
             throw FRPC::StreamError_t("Unknown ContentType");
         }
@@ -1052,6 +1053,11 @@ void Server_t::readRequest(FRPC::DataBuilder_t &builder) {
 
         unmarshaller->finish();
         protocolVersion = unmarshaller->getProtocolVersion();
+        if ( enforceV21 ) {
+            //NOTE: x-base64 has no version info
+            protocolVersion.versionMajor = 2;
+            protocolVersion.versionMinor = 1;
+        }
         std::string connection;
         headersIn.get(FRPC::HTTP_HEADER_CONNECTION, connection);
         std::transform(connection.begin(), connection.end(),
