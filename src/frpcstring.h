@@ -93,7 +93,7 @@ public:
     */
     //FIXME: const std::string&
     std::string getString() const;
-    
+
     /**
         @brief Get binary data as STL string.
         @return Binary data as string.

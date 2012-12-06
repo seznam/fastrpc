@@ -1,9 +1,18 @@
+libfastrpc (4.2.9) unstable; urgency=low
+
+  * LibConfig_t is noncopyable
+  * Added FRPC::String_t::value_type for consistency
+  * Added FRPC::String_t::getValue
+
+
+ -- Lukas Lobotka <lukas.lobotka@firma.seznam.cz>  Thu, 06 Dec 2012 17:22:03 +0100
+
 libfastrpc (4.2.8) unstable; urgency=low
 
   * Added FRPC::String_t::value_type for consistency
   * Added FRPC::String_t::getValue
 
- -- Lukas Lobotka <lukas.lobotka@firma.seznam.cz>  Thu, 25 Oct 2012 14:45:55 +0200
+ -- Lukas Lobotka <lukas.lobotka@firma.seznam.cz>  Thu, 06 Dec 2012 17:21:32 +0100
 
 libfastrpc (4.2.7) unstable; urgency=low
 
