@@ -57,5 +57,10 @@ namespace FRPC {
         return false;
     }
 
+    LibConfig_t::LibConfig_t(const LibConfig_t&) {
+    }
+
+    LibConfig_t LibConfig_t::operator=(const LibConfig_t&) {
+    }
 };
 

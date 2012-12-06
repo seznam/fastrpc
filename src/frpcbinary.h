@@ -51,6 +51,8 @@ class FRPC_DLLEXPORT  Binary_t : public Value_t
 public:
     enum{ TYPE = 0x06 };
 
+    typedef std::string value_type;
+
     virtual ~Binary_t();
 
     /**
@@ -90,6 +92,12 @@ public:
         @return Binary data as string. 
     */
     std::string getString() const;
+
+    /**
+        @brief Get binary data as STL string.
+        @return Binary data as string.
+    */
+    const std::string& getValue() const;
 
     /**
         @brief Method to clone/copy Binary_t 

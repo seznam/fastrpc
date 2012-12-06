@@ -43,7 +43,6 @@ namespace FRPC {
     class LibConfig_t {
         public:
 
-
             /**
             * \brief Returns instance of LibConfig_t
             **/
@@ -155,6 +154,13 @@ namespace FRPC {
             * \warning Not yet implemented
             **/
             LibConfig_t(const std::string &cfgFn);
+
+            //! No copies
+            LibConfig_t(const LibConfig_t&);
+
+            //! No assignemnts
+            LibConfig_t operator=(const LibConfig_t&);
+
 
     };
 

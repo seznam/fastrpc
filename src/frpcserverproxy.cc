@@ -140,6 +140,9 @@ public:
     Value_t& call(Pool_t &pool, const std::string &methodName,
                   const Array_t &params);
 
+    void call(DataBuilder_t &builder, const std::string &methodName,
+                                 const Array_t &params);
+
     /** Call method with variable number of arguments.
      */
     Value_t& call(Pool_t &pool, const char *methodName, va_list args);
@@ -259,6 +262,32 @@ Value_t& ServerProxyImpl_t::call(Pool_t &pool, const std::string &methodName,
     return builder.getUnMarshaledData();
 }
 
+
+void ServerProxyImpl_t::call(DataBuilder_t &builder, const std::string &methodName,
+                                 const Array_t &params)
+{
+    HTTPClient_t client(io, url, connector.get(), useHTTP10);
+    std::auto_ptr<Marshaller_t>marshaller(createMarshaller(client));
+    TreeFeeder_t feeder(*marshaller);
+
+    try {
+        marshaller->packMethodCall(methodName.c_str());
+        for (Array_t::const_iterator
+                 iparams = params.begin(),
+                 eparams = params.end();
+             iparams != eparams; ++iparams) {
+            feeder.feedValue(**iparams);
+        }
+
+        marshaller->flush();
+    } catch (const ResponseError_t &e) {}
+
+    client.readResponse(builder);
+    serverSupportedProtocols = client.getSupportedProtocols();
+    protocolVersion = client.getProtocolVersion();
+}
+
+
 Value_t& ServerProxy_t::call(Pool_t &pool, const std::string &methodName,
                              const Array_t &params)
 {
@@ -312,6 +341,12 @@ Value_t& ServerProxy_t::call(Pool_t &pool, const char *methodName, ...) {
 
     // use implementation
     return sp->call(pool, methodName, args);
+}
+
+void ServerProxy_t::call(DataBuilder_t &builder,
+        const std::string &methodName, const Array_t &params)
+{
+    sp->call(builder, methodName, params);
 }
 
 void ServerProxy_t::setReadTimeout(int timeout) {

@@ -1,3 +1,15 @@
+libfastrpc (5.0.1) unstable; urgency=low
+
+  * LibConfig_t is noncopyable
+  * Added FRPC::String_t::value_type for consistency
+  * Added FRPC::String_t::getValue
+  * Added FRPC::String_t::value_type for consistency
+  * Added FRPC::String_t::getValue
+  * Custom result builder for FRPC::ServerProxy_t::call
+  * Fixed URL_t::isSsl
+
+ -- Lukas Lobotka <lukas.lobotka@firma.seznam.cz>  Thu, 06 Dec 2012 17:27:00 +0100
+
 libfastrpc (5.0.0) unstable; urgency=low
 
   * Branched from 4.2.6

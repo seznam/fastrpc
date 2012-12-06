@@ -188,17 +188,27 @@ namespace {
 }
 
 void URL_t::parse(const std::string &url) {
+    static const std::string https_schema("https://");
+    size_t hostStart = 0;
     // otestujeme url
-    if ((url.length() < HTTP_SCHEMA.length()) ||
-            (!equal(HTTP_SCHEMA.begin(), HTTP_SCHEMA.end(), url.begin(),
-                    nocaseCmp)))
+    if ((url.length() >= HTTP_SCHEMA.length()) &&
+        equal(HTTP_SCHEMA.begin(), HTTP_SCHEMA.end(),
+                url.begin(), nocaseCmp))
     {
+        hostStart = HTTP_SCHEMA.length();
+    } else if ((url.length() >= https_schema.length()) &&
+               equal(https_schema.begin(), https_schema.end(),
+                     url.begin(), nocaseCmp))
+    {
+        hostStart = https_schema.length();
+        isSSL = true;
+    } else {
         // oops, chyba -> zalogujeme
         throw TypeError_t("URL '%s' is not an HTTP URL.", url.c_str());
     }
 
     // najdeme pozici prvního lomítka
-    std::string::size_type slash_pos = url.find('/', HTTP_SCHEMA.length());
+    std::string::size_type slash_pos = url.find('/', hostStart);
     if (slash_pos != std::string::npos)
     {
         // pokud URL obsahuje lomítko, vezmene celou èást za lomítkem vèetnì
@@ -214,7 +224,7 @@ void URL_t::parse(const std::string &url) {
 
     std::string::size_type pos = url.find(']');
     if ( pos == std::string::npos )
-        pos = HTTP_SCHEMA.length();
+        pos = hostStart;
 
     // najdeme první dvojteèku pøed lomítkem (oddìlovaè hostitele od portu)
     std::string::size_type colon_pos = url.find(':', pos);
@@ -222,7 +232,7 @@ void URL_t::parse(const std::string &url) {
     {
         // pokud je dojteèka pøed lomítkem, rozdìlíme øetìzec na
         // hostitele a port
-        host = url.substr(HTTP_SCHEMA.length(), colon_pos - HTTP_SCHEMA.length());
+        host = url.substr(hostStart, colon_pos - hostStart);
         ++colon_pos;
         // port pøevedeme na èíslo
         std::istringstream(url.substr(colon_pos, slash_pos - colon_pos).c_str()) >> port;
@@ -230,9 +240,13 @@ void URL_t::parse(const std::string &url) {
     else
     {
         // celý øetìzec pøed lomítkem je hostitel
-        host = url.substr(HTTP_SCHEMA.length(), slash_pos - HTTP_SCHEMA.length());
-        // deault HTTP port
-        port = 80;
+        host = url.substr(hostStart, slash_pos - hostStart);
+        // default HTTP(S) port
+        if (isSSL) {
+            port = 443;
+        } else {
+            port = 80;
+        }
     }
 }
 
@@ -257,8 +271,16 @@ std::string URL_t::getUrl() const {
     if (usesProxy) return path;
 
     std::ostringstream os;
-    os << "http://" << host;
-    if (port != 80) os  << ':' << port;
+    os << (isSSL ? "https://" : "http://") << host;
+    if (isSSL) {
+        if (port != 443) os  << ':' << port;
+    } else {
+        if (port != 80) os  << ':' << port;
+    }
     os << path;
     return os.str();
+}
+
+bool URL_t::sslUsed() const {
+    return isSSL;
 }

@@ -67,6 +67,12 @@ std::string Binary_t::getString() const
     return value;
 }
 
+const std::string& Binary_t::getValue() const
+{
+    return value;
+}
+
+
 Value_t& Binary_t::clone(Pool_t &newPool) const
 {
     return newPool.Binary(value);
