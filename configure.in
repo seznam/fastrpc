@@ -105,7 +105,7 @@ dnl ------------------------------------------------------------------------
 # version info') before touching this.
 FASTRPC_MAJOR=4
 FASTRPC_MINOR=1
-VERSION_INFO="-version-info 9:0:1"
+VERSION_INFO="-version-info 9:0:0"
 
 AC_ARG_ENABLE(optimization,[  --enable-optimization compile optimized without debug logging],[
     case "${enableval}" in
