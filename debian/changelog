@@ -1,3 +1,9 @@
+python-fastrpc (5.0.0) unstable; urgency=low
+
+  * Linked against fastrpc5
+
+ -- Lukas Lobotka <lukas.lobotka@firma.seznam.cz>  Mon, 10 Dec 2012 17:17:38 +0100
+
 python-fastrpc (4.1.3) unstable; urgency=low
 
   * Fixed null marshalling in Base64 and Json marshallers 
