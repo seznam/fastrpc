@@ -839,6 +839,9 @@ PyObject* Server_t::serve(int fd, PyObjectWrapper_t addr) {
                                 protocolVersion));
                 Feeder_t feeder(marshaller.get(), "utf-8");
 
+                if ( builder.getRetValue() == Py_None )
+                    throw FRPC::HTTPError_t(FRPC::HTTP_BAD_REQUEST, "Demarshaller failed");
+
                 PyObjectWrapper_t result
                     (dispatchCall(serverObject->registry,
                                   builder.getStringMethodName()->c_str(),

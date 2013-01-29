@@ -1,3 +1,9 @@
+python-fastrpc (5.0.1) unstable; urgency=low
+
+  * Fixed crash on invalid request
+
+ -- Lukas Lobotka <lukas.lobotka@firma.seznam.cz>  Tue, 29 Jan 2013 13:06:42 +0100
+
 python-fastrpc (5.0.0) unstable; urgency=low
 
   * Linked against fastrpc5
