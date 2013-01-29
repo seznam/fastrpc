@@ -154,6 +154,8 @@ void Server_t::serve(int fd,
                     throw HTTPError_t(HTTP_SERVICE_UNAVAILABLE,
                                       "Service Unavailable");
             } else {
+                if ( builder.getUnMarshaledDataPtr() == 0 )
+                    throw HTTPError_t(HTTP_BAD_REQUEST, "Demarshaller failed");
                 methodRegistry.processCall(clientAddress,
                                            builder.getUnMarshaledMethodName(),
                                            Array(builder.getUnMarshaledData()),

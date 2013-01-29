@@ -1,3 +1,15 @@
+libfastrpc (5.0.3) unstable; urgency=low
+
+  * Fixed crash on invalid request
+
+ -- Lukas Lobotka <lukas.lobotka@firma.seznam.cz>  Tue, 29 Jan 2013 12:38:05 +0100
+
+libfastrpc (5.0.2-1) unstable; urgency=low
+
+  * Added Bool_t::value_type
+
+ -- Lukas Lobotka <lukas.lobotka@firma.seznam.cz>  Mon, 28 Jan 2013 09:04:10 +0100
+
 libfastrpc (5.0.2) unstable; urgency=low
 
   * Merged with branchlibfastrpc5
@@ -18,7 +30,7 @@ libfastrpc (5.0.1) unstable; urgency=low
 
 libfastrpc (5.0.0) unstable; urgency=low
 
-  * Branched from 4.2.6
+  * Forked from 4.2.6
   * Improved memmory usage
 
  -- Lukas Lobotka <lukas.lobotka@firma.seznam.cz>  Thu, 06 Sep 2012 15:22:18 +0200

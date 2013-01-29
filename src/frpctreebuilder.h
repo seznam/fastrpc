@@ -135,6 +135,10 @@ public:
     {
         return *retValue;
     }
+    inline Value_t* getUnMarshaledDataPtr()
+    {
+        return retValue;
+    }
     inline const std::string getUnMarshaledMethodName()
     {
         return methodName;
