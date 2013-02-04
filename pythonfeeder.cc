@@ -70,7 +70,7 @@ using namespace FRPC::Python;
 
 namespace {
 
-long getLongAttr(PyObject *object, char *name) {
+long getLongAttr(PyObject *object, const char *name) {
     PyObjectWrapper_t attr(PyObject_GetAttrString(object, name));
     if (!attr) throw PyError_t();
 
@@ -79,6 +79,28 @@ long getLongAttr(PyObject *object, char *name) {
 
     return value;
 }
+
+time_t datetimeToTm(PyObject *obj, tm &res) {
+time_t timestamp = 0;
+
+    memset(&res, 0, sizeof(res));
+
+    res.tm_year = getLongAttr(obj, "year") - 1900;
+    res.tm_mon = getLongAttr(obj, "month") - 1;
+    res.tm_mday = getLongAttr(obj, "day");
+    res.tm_hour = getLongAttr(obj, "hour");
+    res.tm_min = getLongAttr(obj, "minute");
+    res.tm_sec = getLongAttr(obj, "second");
+    res.tm_isdst = -1;
+
+    timestamp = mktime(&res);
+    if ( timestamp != -1 ) {
+        res.tm_wday = localtime(&timestamp)->tm_wday;
+    }
+
+    return timestamp;
+}
+
 
 }
 
@@ -217,26 +239,22 @@ void Feeder_t::feedValue(PyObject *value)
             marshaller->packStructMember(str, strLen);
             feedValue(member);
         }
-    } else if (mxDateTime && (PyObject_IsInstance(value, mxDateTime) == 1)) {
+    } else if ((dateTimeDateTime
+            && (PyObject_IsInstance(value, dateTimeDateTime) == 1))
+            || (mxDateTime && (PyObject_IsInstance(value, mxDateTime) == 1))) {
 
-        marshaller->packDateTime(getLongAttr(value, (char *)"year"),
-                                 getLongAttr(value, (char *)"month"),
-                                 getLongAttr(value, (char *)"day"),
-                                 getLongAttr(value, (char *)"hour"),
-                                 getLongAttr(value, (char *)"minute"),
-                                 getLongAttr(value, (char *)"second"),
-                                 -1, -1, -1);
+        tm tm;
+        time_t timestamp = datetimeToTm(value, tm);
 
-    } else if (dateTimeDateTime
-            && (PyObject_IsInstance(value, dateTimeDateTime) == 1)) {
-
-        marshaller->packDateTime(getLongAttr(value, (char *)"year"),
-                                 getLongAttr(value, (char *)"month"),
-                                 getLongAttr(value, (char *)"day"),
-                                 getLongAttr(value, (char *)"hour"),
-                                 getLongAttr(value, (char *)"minute"),
-                                 getLongAttr(value, (char *)"second"),
-                                 -1, -1, -1);
+        marshaller->packDateTime(tm.tm_year + 1900,
+                                 tm.tm_mon + 1,
+                                 tm.tm_mday,
+                                 tm.tm_hour,
+                                 tm.tm_min,
+                                 tm.tm_sec,
+                                 tm.tm_wday,
+                                 timestamp,
+                                 -1);
 
     } else if (value == Py_None) {
         //NOTE: Base64Marshaller is inherited from BinMarshaller_t

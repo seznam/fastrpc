@@ -1,3 +1,9 @@
+python-fastrpc (5.0.2) unstable; urgency=low
+
+  * Datetime marshalling (#223)
+
+ -- Lukas Lobotka <lukas.lobotka@firma.seznam.cz>  Thu, 31 Jan 2013 09:07:58 +0100
+
 python-fastrpc (5.0.1) unstable; urgency=low
 
   * Fixed crash on invalid request
