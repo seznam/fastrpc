@@ -1,0 +1,142 @@
+
+
+
+
+
+
+
+
+/** @class ServerProxy
+    @brief a FastRpc client class
+    @author Miroslav Talasek
+   Fast rpc client object is used to call methods on server via RPC
+*/
+class ServerProxy
+{
+    public:
+/**
+  
+  @brief Client constructor
+  @param serverUrl - server url string
+  @param readTimeout - read timeout from socket in miliseconds
+  @param writeTimeout - write timeout to socket in miliseconds
+  @param connectTimeout - connect timeout to server in miliseconds
+  @param keepAlive - @li @b 1 - connection keep alive
+                   @li @b  0 - not keep alive
+  @param useBinary - 
+                    @li @b ON_SUPPORT_ON_KEEP_ALIVE  - Use binary on keep-alive and on server support
+                    @li @b ON_SUPPORT - Use binary on server support
+                    @li @b ALWAYS - Use binary always
+  @param encoding - I/O encoding default utf-8
+  @param useHTTP10 - if 0 use HTTP1.1 or use HTTP1.0 default 0
+  @param proxyVia - url to http proxy if any exists default ""
+*/
+
+ServerProxy(string serverUrl, int readTimeout, int writeTimeout,               
+            int connectTimeout,int keepAlive,int useBinary,
+            string encoding,int useHTTP10,string  proxyVia);
+
+                  ///server host
+string    host; 
+                  ///url path
+string    path; 
+                 ///complette url
+string    url;  
+                   /// last call method
+string    last_call;  
+                        /// server port
+long      port; 
+};
+
+
+/** @class DateTime
+    @brief a DateTimeClass class
+    @author Miroslav Talasek
+   Date time class
+ */
+class DateTime
+{
+    public:  
+/**
+  @brief DateTime constructor from now time
+  
+  this constructor grab actual time and fill atributes
+  */
+  DateTime();
+  /**
+  @brief DateTime constructor from iso string format
+  @param IsoFormat  - iso format time as 2005-02-15T12:25:00
+  this constructor parse iso format anf fill atributes
+  */
+  DateTime(string IsoFormat);
+  /**
+  @brief DateTime constructor from unix timestamp
+  @param unixTime timestamp
+  this constructor process timestamp and fill atributes
+  */
+  DateTime(int unixTime);
+  
+                 ///year
+
+  int year;         
+                     ///month
+  int month;        
+                    ///day
+  int day;          
+                    ///hour
+  int hour;        
+                    ///minute
+  int min;         
+                    /// second
+  int sec;         
+                   ///day of week
+  int weekDay;
+                    ///long unix time
+  int unixTime;     
+                    ///time zone
+  int timeZone;     
+
+
+};
+ /** @class Boolean
+    @brief a Boolean class
+    @author Miroslav Talasek
+   Boolean class
+ */ 
+class Boolean
+{
+
+    public:
+    /**
+    @brief Constructor
+    @param value - any python object type 
+    Constructor from any python object 
+    */
+    Boolean(any_object value);
+    
+              ///internal value 1 or 0
+    int value;
+
+};
+  /** @class Binary
+    @brief a Binary class
+    @author Miroslav Talasek
+   Binary class
+  */ 
+class Binary
+{
+
+    public:
+    /**
+    @brief Constructor
+    @param value - data in string 
+    Constructor from string 
+    */
+    Binary(string value);
+    
+              ///internal string value
+    string value;
+
+}; 
+
+

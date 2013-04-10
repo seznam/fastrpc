@@ -1,0 +1,19 @@
+Source: python-fastrpc
+Section: python
+Priority: Extra
+Maintainer: Lukas Lobotka <lukas.lobotka@firma.seznam.cz>
+XS-Python-Standards-Version: 0.4
+XS-Python-Version: all
+Build-Depends: debhelper, python-all-dev, python-central, libfastrpc-dev
+
+
+Package: python-fastrpc
+Section: python
+Architecture: any
+Depends: ${shlibs:Depends}, ${python:Depends}
+Conflicts: python2.5-fastrpc, python2.6-fastrpc
+Provides: ${python:Provides}
+XB-Python-Version: ${python:Versions}
+Description: Fastrpc -- RPC using XML and Binary protocol
+ Fastrpc is a powerful and easy to use framework for the creation of
+ distributed applications.
