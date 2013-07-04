@@ -1,3 +1,9 @@
+libfastrpc (5.0.3-1) unstable; urgency=low
+
+  * Added mutable Struct_t::find 
+
+ -- Lukas Lobotka <lukas.lobotka@firma.seznam.cz>  Thu, 04 Jul 2013 12:58:00 +0200
+
 libfastrpc (5.0.3) unstable; urgency=low
 
   * Fixed crash on invalid request
