@@ -1,0 +1,275 @@
+.TH fastrpc-netcat 1 "September 27, 2007" "version 0.1" "USER COMMANDS"
+.SH NAME
+fastrpc-netcat
+.SH SYNOPSIS
+.B fastrpc-netcat [{HOST [PORT]} | http://HOST:PORT/PATH}]
+.SH DESCRIPTION
+XML-RPC/FastRPC/MySQL console with Python-like syntax
+.SH OPTIONS
+.TP
+HOST
+RPC server hostname
+.TP
+PORT
+RPC server port
+.TP
+PATH
+RPC server path, default is /RPC2 (when not using URL notation)
+.SH EXAMPLES
+.TP
+Connect to RPC server on http://10.0.16.40:3990/RPC2:
+.B fastrpc-netcat 10.0.16.40 3990
+.PP
+.TP
+Connect to RPC server on http://10.0.16.40:9999/rpc.php:
+.B fastrpc-netcat http://10.0.16.40:9999/rpc.php
+.PP
+.SH STARTUP
+On startup fastrpc-netcat tries to import fn.py from PYTHONPATH. On success symbols from fn.py are available as fn.SYMBOLNAME.
+.SH INTERACTIVE CONSOLE
+.TP
+When fastrpc-netcat is executed, it spawns an interactive console. This interactive console uses Python-like syntax. By default the expression entered is evaluated as Python expression and printed out, for example:
+
+.nf
+fastrpc-netcat[18107] > [1,2,3,4,5]
+.fi
+
+.TP
+writes out:
+
+.nf
+result = array (
+    [0] int = 1
+    [1] int = 2
+    [2] int = 3
+    [3] int = 4
+    [4] int = 5
+)
+
+Method returned after 121.117 microseconds
+.fi
+
+.TP
+If we want to write expression out in Python syntax, we can use:
+
+.nf
+fastrpc-netcat[18107] > [1,2,3,4,5,{"a":"b"}]*
+.fi
+
+.TP
+and it writes out:
+
+.nf
+[1, 2, 3, 4, 5, {'a': 'b'}]
+
+Method returned after 121.117 microseconds
+.fi
+
+.TP
+This console also supports one-line Python sentences, if you prefix it with exclamation mark:
+
+.nf
+fastrpc-netcat[18107] > !for a in xrange(5): print "Hello %s!" % a
+.fi
+
+.TP
+produces this output:
+
+.nf
+Hello 0!
+Hello 1!
+Hello 2!
+Hello 3!
+Hello 4!
+.fi
+
+.TP
+To connect to (another) RPC server and call it 'test', we use:
+
+.nf
+fastrpc-netcat[18107] > connect test 127.0.0.1 9999
+New client is now known as test
+fastrpc-netcat[18107] >
+.fi
+
+.TP
+then we can call methods:
+
+.nf
+fastrpc-netcat[18107] > test.system.listMethods()
+
+result = array (
+    [0] string = "session.check"
+    [1] string = "session.cleanup"
+    [2] string = "session.create"
+    [3] string = "session.getMetadata"
+    [4] string = "session.remove"
+    [5] string = "session.setMetadata"
+    [6] string = "session.stat"
+    [7] string = "session.update"
+    [8] string = "system.listMethods"
+    [9] string = "system.methodHelp"
+    [10] string = "system.methodSignature"
+    [11] string = "system.multicall"
+)
+
+Method returned after 1.036 milliseconds
+
+fastrpc-netcat[18107] >
+.fi
+
+.TP
+To connect to database and call it 'testdb', we use:
+
+.nf
+fastrpc-netcat[18107] > connectdb testdb 127.0.0.1 mysql root mysecretpassword
+New database client is now known as testdb
+fastrpc-netcat[18107] > 
+.fi
+
+.TP
+and now we can do some SQL query:
+
+.nf
+fastrpc-netcat[18107] > testdb.execute("SELECT DISTINCT Host FROM user")
+
+result = array (
+    [0] struct = {
+        string Host = "%"
+    }
+    [1] struct = {
+        string Host = "192.168.1.99"
+    }
+    [2] struct = {
+        string Host = "ingwe"
+    }
+    [3] struct = {
+        string Host = "localhost"
+    }
+    [4] struct = {
+        string Host = "thingol"
+    }
+)
+
+Method returned after 420.048 milliseconds
+.fi
+
+.TP
+we can work with result as in Python:
+
+.nf
+fastrpc-netcat[18107] > testdb.execute("SELECT DISTINCT Host FROM user")[0]["Host"]
+
+result = string "%"
+
+Method returned after 74.213 milliseconds
+.fi
+
+.SH "COMMANDS IN INTERACTIVE CONSOLE"
+.TP
+.B connect
+Creates new connection to RPC server:
+    connect [NAME] {HOST} {PORT}
+    connect [NAME] http://{HOST}:{PORT}/{URL}
+
+.TP
+.B connectdb
+Creates new connection to MySQL database:
+    connectdb {NAME} {HOST} {DBNAME} {USER} [PASSWORD]
+
+.TP
+.B timeout
+Sets RPC read timeout:
+    timeout {MILLISECONDS}
+
+.TP
+.B charset
+Sets input/output charset:
+    charset {CHARSET}
+
+.TP
+.B autocommit
+Enable/disable autocommit (default on)
+    autocommit {1|on|true|0|off|false}
+
+.TP
+.B autosort
+Enable/disable autosort (default on)
+    autosort {1|on|true|0|off|false}
+
+.TP
+.B name
+Rename console
+    name test
+
+.TP
+.B help
+Prints help:
+    help [METHOD]
+    {METHOD} -h
+
+.TP
+.B shell
+Spawns a subshell
+    shell
+
+.TP
+.B exec
+Runs command
+    exec {COMMAND} [ARG1] [ARG2] ...
+
+.TP
+.B exit
+Exits fastrpc-netcat console:
+    exit [RESULT]
+    quit [RESULT]
+
+.TP
+.B import
+Imports python module:
+    import sys
+    import datetime
+
+.TP
+.B FILE()
+Readfile function, returns file contents as fastrpc binary:
+    FILE("{FILENAME}")
+    when bare string needed, use FILE(...).data
+
+.TP
+.B Binary()
+Creates binary type (Base64 for XML-RPC, Binary for FastRPC):
+    Binary({STRING})
+
+.TP
+.B DateTime()
+Creates datetime type:
+    DateTime({TIMESTAMP|STRING})
+
+.TP
+.B Boolean()
+Creates boolean type:
+    Boolean({BOOLEAN|INTEGER})
+
+.SH FILES
+.TP
+.B ~/.fastrpc-netcatrc
+The individual startup file
+
+.TP
+.B ~/.fastrpc-netcat_history
+Console history file
+
+.TP
+.B fn.py (in PYTHONPATH)
+The individual methods and variables file
+
+.TP
+.B /usr/share/fastrpc-netcat/COPYING
+License information
+
+.SH AUTHOR
+Eduard Veleba (eduard.veleba (at) firma.seznam.cz)
+
+.SH LICENSE
+Fastrpc-netcat is released under GNU General Public License version 3.

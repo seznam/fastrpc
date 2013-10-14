@@ -22,13 +22,13 @@
  *
  * FILE          $Id: frpcstruct.h,v 1.8 2011-02-11 08:56:17 burlog Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #ifndef FRPCFRPCSTRUCT_H
 #define FRPCFRPCSTRUCT_H
@@ -87,13 +87,13 @@ public:
     */
     virtual ~Struct_t();
     /**
-        @brief Method to clone/copy Struct_t 
+        @brief Method to clone/copy Struct_t
         @param newPool is pointer of Pool_t which is used for allocate objects
     */
     virtual Value_t& clone(Pool_t& newPool) const;
     /**
         @brief Getting type of value
-        @return  @b unsigned @b short always 
+        @return  @b unsigned @b short always
         @li @b Struct_t::TYPE - identificator of struct value
     */
     virtual unsigned short getType() const
@@ -120,7 +120,7 @@ public:
     /**
         @brief Inserting a new item with key
         @param key is reference to Struct_t::key_type
-        @param value is reference to new Value_t 
+        @param value is reference to new Value_t
         @return  std::pair<iterator, bool> as std::map<>::insert(..)
     */
     std::pair<iterator, bool> insert(const key_type &key, const Value_t &value);
@@ -145,7 +145,7 @@ public:
         @brief Checking if Struct_t is empty
         @return bool
         @li @b TRUE if the Struct_t is empty @n
-        @li @b FALSE if the Struct_t isn't empty   
+        @li @b FALSE if the Struct_t isn't empty
     */
     bool empty() const;
     /**
@@ -153,7 +153,7 @@ public:
         @return  Struct_t::size_type -  number of items in Struct_t
     */
     size_type size() const;
-    
+
     /**
         @brief Getting iterator to first item
         @return Struct_t::iterator - position to first item
@@ -179,13 +179,13 @@ public:
     /**
         @brief Insert Value_t to Struct_t with key
         @param value is is new pair Struct_t::pair(std::string key, Value_t* value)
-        @return Struct_t& reference with apended value 
+        @return Struct_t& reference with apended value
     */
     Struct_t& append(const pair &value);
     /**
         @brief Insert Value_t to Struct_t with key
         @param key is reference to Struct_t::key_type
-        @param value is reference to new Value_t 
+        @param value is reference to new Value_t
         @return Struct_t& reference with apended value
     */
     Struct_t& append(const key_type &key, const Value_t &value);
@@ -223,12 +223,19 @@ public:
          return structData.find(key);
     }
 
+    /**
+         @brief Returns iterator to value or end(). Mutable version
+    */
+    iterator find(const key_type &key) {
+         return structData.find(key);
+    }
+
     /// static member
     static const Struct_t &FRPC_EMPTY;
 
 private:
-    /** 
-        @brief Costructor empty Struct_t 
+    /**
+        @brief Costructor empty Struct_t
         @param pool is a reference to Pool_t used for allocating
     */
     Struct_t();
@@ -236,29 +243,29 @@ private:
         @brief Costructor of Struct_t with one item
         @param pool is a reference to Pool_t used for allocating
         @param key is reference to Struct_t::key_type
-        @param value is reference to new Value_t 
+        @param value is reference to new Value_t
     */
     Struct_t(const std::string &key, const Value_t &value);
-    /** 
+    /**
         @brief Costructor of Struct_t  with one item
         @param pool is a reference to Pool_t used for allocating
         @param value is new pair Struct_t::pair(std::string key, Value_t* value)
-    */  
+    */
     explicit Struct_t(const pair &value);
-    
-    
-    
+
+
+
     std::map<std::string,Value_t*> structData; ///internal Struct_t data
 
 
 };
 /**
     @brief Inline method
-    
-    Used to retype Value_t to Struct_t 
+
+    Used to retype Value_t to Struct_t
     @return  If Value_t  can  retype to Struct_t return reference to  Struct_t
     @n If Value_t can't retype to Struct_t: throw exception TypeError_t
-    
+
 */
 inline FRPC_DLLEXPORT Struct_t& Struct(Value_t &value)
 {
@@ -272,11 +279,11 @@ inline FRPC_DLLEXPORT Struct_t& Struct(Value_t &value)
 
 /**
     @brief Inline method
-    
-    Used to retype Value_t to Struct_t 
+
+    Used to retype Value_t to Struct_t
     @return  If Value_t  can  retype to Struct_t return reference to  Struct_t
     @n If Value_t can't retype to Struct_t: throw exception TypeError_t
-    
+
 */
 inline FRPC_DLLEXPORT const Struct_t& Struct(const Value_t &value)
 {
