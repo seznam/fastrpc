@@ -326,7 +326,8 @@ namespace {
     }
 
     PyObject* makeFault(const std::string &msg, PyObjectWrapper_t type,
-                        PyObjectWrapper_t value, PyObjectWrapper_t)
+                        PyObjectWrapper_t value, PyObjectWrapper_t,
+                        bool errSet=false)
     {
         if (PyErr_GivenExceptionMatches(type, Fault)) {
             // we've got Fault => do not touch it
@@ -349,7 +350,12 @@ namespace {
                           *message);
         if (!faultArgs) return 0;
 
-        return PyObject_Call(Fault, faultArgs, 0);
+        if (errSet) {
+            PyErr_SetObject(Fault, faultArgs);
+            return NULL;
+        } else {
+            return PyObject_Call(Fault, faultArgs, 0);
+        }
     }
 
     PyObject* makeFault(const std::string &msg) {
@@ -776,7 +782,7 @@ PyObject* Server_t::serve(int fd, PyObjectWrapper_t addr) {
             // exception thrown => fetch exception
                          fetchException(type, value, traceback);
                          makeFault("Unhandled exception in preread ",
-                                            type, value, traceback);
+                                            type, value, traceback, true);
                          return 0;
                      }
             }
@@ -1569,7 +1575,7 @@ PyObject* dispatchCall(MethodRegistryObject *self, const char *name,
         if (fail) {
             // exception thrown => fetch exception
             fetchException(type, value, traceback);
-            result = makeFault("Unhandled exception in postprocessor ",
+            result = makeFault("Unhandled exception in preprocessor ",
                                type, value, traceback);
         }
     }

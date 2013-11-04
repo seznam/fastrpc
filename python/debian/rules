@@ -32,7 +32,7 @@ install-prereq:
 	dh_clean -k
 	dh_installdirs
 
-install-ext-%:
+install-ext-%: install-prereq
 	$* setup.py install --root=debian/python-fastrpc --install-layout=deb
 	find debian/python-fastrpc -name '*.pyc' | xargs rm -f
 

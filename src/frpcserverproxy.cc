@@ -178,7 +178,7 @@ Marshaller_t* ServerProxyImpl_t::createMarshaller(HTTPClient_t &client) {
 
     case ServerProxy_t::Config_t::NEVER:
         {
-            //using BINARY_RPC  always
+            // never using BINARY_RPC
             marshaller= Marshaller_t::create(Marshaller_t::XML_RPC,
                                              client,protocolVersion);
             client.prepare(HTTPClient_t::XML_RPC);

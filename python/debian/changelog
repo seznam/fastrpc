@@ -1,3 +1,9 @@
+python-fastrpc (5.0.3) unstable; urgency=low
+
+  * Added preCall and postCall callbacks
+
+ -- Tomas Golembiovsky <tomas.golembiovsky@firma.seznam.cz>  Wed, 11 Sep 2013 18:08:22 +0200
+
 python-fastrpc (5.0.2) unstable; urgency=low
 
   * Datetime marshalling (#223)

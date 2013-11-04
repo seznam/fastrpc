@@ -1145,7 +1145,7 @@ public:
             int rpcTransferMode, const std::string &encoding, bool useHTTP10,
             const std::string &proxyVia, StringMode_t stringMode,
             const ProtocolVersion_t &protocolVersion, int nativeBoolean,
-            PyObject *datetimeBuilder)
+            PyObject *datetimeBuilder, PyObject *preCall, PyObject *postCall)
         : url(serverUrl, proxyVia),
           io(-1, readTimeout, writeTimeout, -1, -1),
           rpcTransferMode(rpcTransferMode), encoding(encoding),
@@ -1153,11 +1153,14 @@ public:
           useHTTP10(useHTTP10), stringMode(stringMode),
           protocolVersion(protocolVersion),
           connector(new SimpleConnectorIPv6_t(url, connectTimeout, keepAlive)),
-          nativeBoolean(nativeBoolean), datetimeBuilder(datetimeBuilder)
+          nativeBoolean(nativeBoolean), datetimeBuilder(datetimeBuilder),
+          preCall(preCall), postCall(postCall)
     {}
 
     ~Proxy_t() {
         Py_XDECREF(datetimeBuilder);
+        Py_XDECREF(preCall);
+        Py_XDECREF(postCall);
     }
 
     enum {
@@ -1196,6 +1199,8 @@ private:
     std::auto_ptr<Connector_t> connector;
     int nativeBoolean;
     PyObject *datetimeBuilder;
+    PyObject *preCall;
+    PyObject *postCall;
 };
 
 struct ServerProxyObject
@@ -1399,7 +1404,9 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
                                    "useHTTP10", "proxyVia", "stringMode",
                                    "protocolVersionMajor",
                                    "protocolVersionMinor",
-                                   "nativeBoolean", "datetimeBuilder", 0};
+                                   "nativeBoolean", "datetimeBuilder", 
+                                   "preCall", "postCall",
+                                   0};
 
     // parse arguments
     char *serverUrl;
@@ -1417,10 +1424,12 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
     int protocolVersionMinor = 1;
     PyObject *nativeBoolean = 0;
     PyObject *datetimeBuilder = 0;
+    PyObject *preCall = 0;
+    PyObject *postCall = 0;
 
 
     if (!PyArg_ParseTupleAndKeywords(args, keywds,
-                                     "s#|iiiiisissiiOO:ServerProxy.__init__",
+                                     "s#|iiiiisissiiOOOO:ServerProxy.__init__",
                                      (char **)kwlist,
                                      &serverUrl, &serverUrlLen, &readTimeout,
                                      &writeTimeout, &connectTimeout,
@@ -1428,8 +1437,17 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
                                      &useHTTP10, &proxyVia, &stringMode_,
                                      &protocolVersionMajor,
                                      &protocolVersionMinor, &nativeBoolean,
-                                     &datetimeBuilder))
+                                     &datetimeBuilder, &preCall, &postCall))
         return 0;
+
+    if (preCall && !PyCallable_Check(preCall)) {
+        PyErr_Format(PyExc_TypeError, "'%s' must be callable.", "preCall");
+        return 0;
+    }
+    if (postCall && !PyCallable_Check(postCall)) {
+        PyErr_Format(PyExc_TypeError, "'%s' must be callable.", "postCall");
+        return 0;
+    }
 
     // create server proxy object
     ServerProxyObject *proxy = PyObject_New(ServerProxyObject,
@@ -1445,6 +1463,8 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
     if (protocolVersionMinor < 0) protocolVersionMinor = 0;
 
     Py_XINCREF(datetimeBuilder);
+    Py_XINCREF(preCall);
+    Py_XINCREF(postCall);
     try
     {
         // initialize underlying proxy (inplace!)
@@ -1454,8 +1474,10 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
                                     useHTTP10, proxyVia, stringMode,
                                     ProtocolVersion_t(protocolVersionMajor,
                                             protocolVersionMinor),
-                                    nativeBoolean != 0 ? PyObject_IsTrue(nativeBoolean) : false, datetimeBuilder);
+                                    nativeBoolean != 0 ? PyObject_IsTrue(nativeBoolean) : false,
+                                    datetimeBuilder, preCall, postCall);
         proxy->proxyOk = true;
+
     }
 
     catch (const HTTPError_t &httpError)
@@ -1495,9 +1517,9 @@ void ServerProxy_dealloc(ServerProxyObject *self)
 
 PyObject* ServerProxy_getattr(ServerProxyObject *self, char *name)
 {
+    const URL_t &url = self->proxy.getURL();
     if (!strncmp(name, "__", 2)) {
         if (!strcmp(name, "__dict__")) {
-            const URL_t &url = self->proxy.getURL();
 
             PyObjectWrapper_t dict(PyDict_New());
             if (!dict) return 0;
@@ -1532,6 +1554,19 @@ PyObject* ServerProxy_getattr(ServerProxyObject *self, char *name)
         return PyErr_Format(PyExc_AttributeError,
                             "ServerProxy object has no attributes '%s'",
                             name);
+
+    } else if (!strcmp(name, "host")) {
+        return PyString_FromStringAndSize(url.host.data(), url.host.size());
+    } else if (!strcmp(name, "path")) {
+        return PyString_FromStringAndSize(url.path.data(), url.path.size());
+    } else if (!strcmp(name, "port")) {
+        return PyInt_FromLong(url.port);
+    } else if (!strcmp(name, "url")) {
+        std::string fullUrl(url.getUrl());
+        return PyString_FromStringAndSize(fullUrl.data(), fullUrl.size());
+    } else if (!strcmp(name, "last_call")) {
+        const std::string &lastCall(self->proxy.getLastCall());
+        return PyString_FromStringAndSize(lastCall.data(), lastCall.size());
     }
 
     // return new method
@@ -1595,7 +1630,21 @@ PyObject* Proxy_t::operator()(MethodObject *methodObject, PyObject *args) {
         break;
     }
 
+    PyObject *callbackData = NULL;
+    PyObject *errEx = NULL;
+    PyObject *errArgs = NULL;
     try {
+
+        // Pre-call hook
+        if (preCall) {
+            callbackData = PyObject_CallFunction(preCall, "sO",
+                methodObject->name.c_str(), args, 0);
+            if (PyErr_Occurred()) {
+                // Ignore error
+                PyErr_Clear();
+            }
+        }
+
         Feeder_t feeder(marshaller,encoding);
         try {
             marshaller->packMethodCall(methodObject->name.c_str());
@@ -1608,73 +1657,118 @@ PyObject* Proxy_t::operator()(MethodObject *methodObject, PyObject *args) {
         client.readResponse(builder);
         serverSupportedProtocols = client.getSupportedProtocols();
         protocolVersion = client.getProtocolVersion();
+
     }
 
     catch (const LenError_t &lenError) {
-        delete marshaller;
-        PyErr_SetString(PyExc_TypeError, lenError.message().c_str());
-        return 0;
+        errEx = PyExc_TypeError;
+        Py_INCREF(errEx);
+        errArgs = Py_BuildValue("s", lenError.message().c_str());
 
     } catch (const HTTPError_t &httpError) {
-        delete marshaller;
-        PyObject *args = Py_BuildValue("isO", httpError.errorNum(),
-                                       httpError.message().c_str(),
-                                       methodObject);
-        if (args) PyErr_SetObject(ProtocolError, args);
-        return 0;
+        errEx = ProtocolError;
+        Py_INCREF(errEx);
+        args = Py_BuildValue("isO", httpError.errorNum(),
+            httpError.message().c_str(),
+            methodObject);
 
     } catch (const ProtocolError_t &protocolError) {
-        delete marshaller;
-        PyObject *args =Py_BuildValue("isO", protocolError.errorNum(),
-                                      protocolError.message().c_str(),
-                                      methodObject);
-        if (args) PyErr_SetObject(ProtocolError, args);
-        return 0;
+        errEx = ProtocolError;
+        Py_INCREF(errEx);
+        errArgs =Py_BuildValue("isO", protocolError.errorNum(),
+            protocolError.message().c_str(),
+            methodObject);
 
     } catch (const StreamError_t &streamError) {
-        delete marshaller;
-        PyObject *args = Py_BuildValue("sO", streamError.message().c_str(),
-                                       methodObject);
-        if (args) PyErr_SetObject(ResponseError, args);
-        return 0;
+        errEx = ResponseError;
+        Py_INCREF(errEx);
+        errArgs = Py_BuildValue("sO", streamError.message().c_str(),
+            methodObject);
 
     } catch (const TypeError_t &typeError) {
-        delete marshaller;
-        PyErr_SetString(PyExc_TypeError, typeError.message().c_str());
-        return 0;
+        errEx = PyExc_TypeError;
+        Py_INCREF(errEx);
+        errArgs = Py_BuildValue("s", typeError.message().c_str());
 
     } catch (const Error_t &error) {
-        delete marshaller;
-        PyErr_SetString(PyExc_RuntimeError, error.message().c_str());
-        return 0;
+        errEx = PyExc_RuntimeError;
+        Py_INCREF(errEx);
+        errArgs = Py_BuildValue("s", error.message().c_str());
 
     } catch (std::bad_alloc &badAlloc) {
-        delete marshaller;
-        PyErr_SetString(PyExc_MemoryError, "Out of memory");
-        return 0;
+        errEx = PyExc_MemoryError;
+        Py_INCREF(errEx);
+        errArgs = Py_BuildValue("s", "Out of memory");
 
     } catch (PyError_t &pyErr) {
-        delete marshaller;
         //closeSocket();
-        return 0;
+        errEx = PyExc_RuntimeError;
+        Py_INCREF(errEx);
+        errArgs = Py_BuildValue("s", "FRPC Runtime Error");
+
     }
 
     delete marshaller;
 
-    // check for error (exception already raised)
-    PyObject *umdata = builder.getUnMarshaledData();
-    if (!umdata) return 0;
+    PyObject *umdata = NULL;
+    if (errEx == NULL) {
+        // check for error (exception already raised)
+        umdata = builder.getUnMarshaledData();
+        if (!umdata) {
+            errEx = PyExc_RuntimeError;
+            Py_INCREF(errEx);
+            errArgs = Py_BuildValue("s", "FRPC Runtime Error");
+        }
+    }
 
-    // check for Fault response
-    switch (PyObject_IsInstance(umdata, Fault)) {
-    case -1:
-        // some exception occurred
-        Py_DECREF(umdata);
-        return 0;
+    if (errEx == NULL) {
+        // check for Fault response
+        switch (PyObject_IsInstance(umdata, Fault)) {
+            case -1:
+                // some exception occurred
+                Py_DECREF(umdata);
+                PyErr_Fetch(&errEx, &errArgs, NULL);
+                break;
 
-    case 1:
-        // is Fault
-        PyErr_SetObject(Fault, umdata);
+            case 1:
+                // is Fault
+                errEx = Fault;
+                Py_INCREF(errEx);
+                errArgs = umdata;
+                break;
+        }
+    }
+
+    // Post-call hook
+    if (postCall) {
+        // Pass following argumens (in this order):
+        //   method name
+        //   method arguments
+        //   callback data from preCall (or None)
+        //   exception (or None if no error occured)
+        //   exception arguments (or None if no error occured)
+        PyObjectWrapper_t result(
+            PyObject_CallFunction(postCall, "sOOOO",
+                methodObject->name.c_str(), args,
+                (callbackData == NULL ? Py_None : callbackData),
+                (errEx == NULL ? Py_None : errEx),
+                (errArgs == NULL ? Py_None : errArgs)
+                ));
+        if (PyErr_Occurred()) {
+            // Ignore error
+            PyErr_Clear();
+        }
+    }
+    if (callbackData != NULL) {
+        Py_DECREF(callbackData);
+    }
+
+    if (errEx != NULL) {
+        if (errArgs) {
+            PyErr_SetObject(errEx, errArgs);
+            Py_DECREF(errArgs);
+        }
+        Py_DECREF(errEx);
         return 0;
     }
 

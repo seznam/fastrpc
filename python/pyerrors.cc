@@ -277,7 +277,7 @@ PyObject* initException(PyObject *module, const char *name,
             return 0;
     }
 
-    // add this exception into the xmlrpcserver module
+    // add this exception into the fastrpc module
     if (PyModule_AddObject(module, (char *)name, Exception))
         return 0;
 

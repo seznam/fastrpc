@@ -62,7 +62,7 @@ namespace FRPC { namespace Python {
 
     struct BinaryObject {
         PyObject_HEAD                   /* python standard */
-        PyObject *value;                /* true/false value */
+        PyObject *value;                /* string value */
     };
 
     BinaryObject* newBinary(const char* data, long size);
