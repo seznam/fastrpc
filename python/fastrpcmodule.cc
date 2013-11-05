@@ -1410,15 +1410,25 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
     int keepAlive = 0;
     int mode = Proxy_t::BINARY_ON_SUPPORT_ON_KEEP_ALIVE;
     char *stringMode_ = 0;
-    const char *encoding = "utf-8";
+    char *encoding = "utf-8";
     int useHTTP10 = false;
-    const char *proxyVia = "";
+    char *proxyVia = "";
     int protocolVersionMajor = 2;
     int protocolVersionMinor = 1;
     PyObject *nativeBoolean = 0;
     PyObject *datetimeBuilder = 0;
 
+    static const char *kwtypes = "siiiiisissiiOO";
+    const void *kwvars[] = { serverUrl, &readTimeout,
+        &writeTimeout, &connectTimeout,
+        &keepAlive, &mode, encoding,
+        &useHTTP10, proxyVia, stringMode_,
+        &protocolVersionMajor,
+        &protocolVersionMinor,
+        &nativeBoolean, &datetimeBuilder,
+        NULL };
 
+    // Normal initialization
     if (!PyArg_ParseTupleAndKeywords(args, keywds,
                                      "s#|iiiiisissiiOO:ServerProxy.__init__",
                                      (char **)kwlist,
@@ -1428,8 +1438,66 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
                                      &useHTTP10, &proxyVia, &stringMode_,
                                      &protocolVersionMajor,
                                      &protocolVersionMinor, &nativeBoolean,
-                                     &datetimeBuilder))
-        return 0;
+                                     &datetimeBuilder)) {
+
+        // Initialization from ConfigParser and section
+        PyObject *cfgParser;
+        char *cfgSection;
+        int cfgSectionLen;
+
+        if (!PyArg_ParseTuple(args, "Os#:ServerProxy.__init__",
+                &cfgParser, &cfgSection, &cfgSectionLen)) {
+            return 0;
+        }
+
+            // serverUrl
+            PyObjectWrapper_t value(PyObject_CallMethod(cfgParser, "get",
+                        "s#s",
+                        cfgSection, cfgSectionLen, "serverUrl"));
+            if (!value) {
+                return 0;
+            }
+            serverUrl = PyString_AsString(value.object);
+            serverUrlLen = PyString_Size(value.object);
+
+            int i = 0;
+            while (kwtypes[++i]) {
+                char *method = NULL;
+                switch (kwtypes[i]) {
+                    case 's': method = "get"; break;
+                    case 'i': method = "getint"; break;
+                    case 'f': method = "getfloat"; break;
+                    case 'b': method = "getboolean"; break;
+                    case 'O': // don't know how to initialize objects
+                    default:
+                              method = NULL;
+                              break;
+                }
+                if (method == NULL) continue;
+                PyObjectWrapper_t value(PyObject_CallMethod(cfgParser, method,
+                        "s#s",
+                        cfgSection, cfgSectionLen, kwlist[i]));
+                if (value) {
+                    switch (kwtypes[i]) {
+                        case 's':
+                            kwvars[i] = strdupa(PyString_AsString(value.object));
+                            break;
+                        case 'i':
+                            *(int*)kwvars[i] = PyLong_AsLong(value.object);
+                            break;
+                        case 'f':
+                            *(float*)kwvars[i] = PyFloat_AsDouble(value.object);
+                            break;
+                        case 'b':
+                            *(bool*)kwvars[i] = (value.object == Py_True);
+                            break;
+                        default:
+                            break;
+                    }
+                }
+
+            }
+    }
 
     // create server proxy object
     ServerProxyObject *proxy = PyObject_New(ServerProxyObject,
