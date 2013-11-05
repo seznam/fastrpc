@@ -1668,7 +1668,7 @@ PyObject* Proxy_t::operator()(MethodObject *methodObject, PyObject *args) {
     } catch (const HTTPError_t &httpError) {
         errEx = ProtocolError;
         Py_INCREF(errEx);
-        args = Py_BuildValue("isO", httpError.errorNum(),
+        errArgs = Py_BuildValue("isO", httpError.errorNum(),
             httpError.message().c_str(),
             methodObject);
 
