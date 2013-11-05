@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.2
+#!/usr/bin/env python
 #/***************************************************************************
 # *   Copyright (C) 2004 by Miroslav Talasek                                *
 # ***************************************************************************/
@@ -28,5 +28,5 @@ except fastrpc.Fault, f:
     print f
 except fastrpc.ProtocolError, e:
     print e
-except fastrpc.StreamError,e:
+except fastrpc.Error, e:
     print e
