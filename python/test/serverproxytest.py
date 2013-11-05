@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import fastrpc
 import unittest 
+import ConfigParser
 
 class ServerProxyTest(unittest.TestCase):
     def setUp(self):
@@ -67,6 +68,19 @@ class ServerProxyTest(unittest.TestCase):
             raise Exception("exception fastrpc.ProtocolError expected")
         except fastrpc.ProtocolError:
             pass
+
+    def test_configparser(self):
+        section = "baklazan"
+        config_parser = ConfigParser.ConfigParser()
+        config_parser.add_section(section)
+        config_parser.set(section, "serverUrl", self.url)
+
+        client = fastrpc.ServerProxy(config_parser, section)
+
+        self.assertEqual(getattr(client, "host"), self.host)
+        self.assertEqual(getattr(client, "port"), self.port)
+        self.assertEqual(getattr(client, "url"), self.url)
+
 
 
 if __name__ == '__main__':
