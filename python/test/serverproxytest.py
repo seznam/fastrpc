@@ -57,6 +57,17 @@ class ServerProxyTest(unittest.TestCase):
         if self.postcall_exc:
             raise self.postcall_exc
 
+    def test_raise(self):
+        client = fastrpc.ServerProxy(self.url, readTimeout=1000,\
+                        writeTimeout=1000, connectTimeout=1000, \
+                        useBinary =fastrpc.ON_SUPPORT_ON_KEEP_ALIVE,)
+
+        try:
+            client.system.listMethods()
+            raise Exception("exception fastrpc.ProtocolError expected")
+        except fastrpc.ProtocolError:
+            pass
+
 
 if __name__ == '__main__':
         unittest.main()
