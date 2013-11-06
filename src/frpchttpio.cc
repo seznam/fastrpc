@@ -358,28 +358,6 @@ void HTTPIO_t::sendData(const char *data, size_t length, bool watchForResponse)
     return;
 }
 
-
-
-class BufferPtr_t {
-public:
-    BufferPtr_t(size_t size) {
-        m_ptr = new char[size];
-    }
-
-    ~BufferPtr_t(){
-        delete [] m_ptr;
-    }
-
-    char* get() {
-        return m_ptr;
-    }
-private:
-    BufferPtr_t(const BufferPtr_t&);
-    BufferPtr_t();
-    char* m_ptr;
-};
-
-
 void HTTPIO_t::readBlock(long int contentLength_, DataSink_t &data)
 {
     // do not read empty content
@@ -397,7 +375,11 @@ void HTTPIO_t::readBlock(long int contentLength_, DataSink_t &data)
     // buffer pro cteni ze socketu.
     // if contentLength_ == -1 (reading till the end of connection) -> max buff size is HTTP_BUFF_LENGTH
     size_t buffer_size = contentLength_ > 0 ? contentLength_ : HTTP_BUFF_LENGTH;
-    BufferPtr_t buff_ptr(buffer_size);
+
+    char buff[HTTP_BUFF_LENGTH];
+    std::string string_buffer;
+    string_buffer.reserve(buffer_size);
+
     size_t read_bytes = 0;
 
     pollfd pfd;
@@ -425,14 +407,15 @@ void HTTPIO_t::readBlock(long int contentLength_, DataSink_t &data)
         // pøeèteme data ze socketu
         int toRead = (contentLength_ < 0 || contentLength > HTTP_BUFF_LENGTH)
                      ? HTTP_BUFF_LENGTH : contentLength;
-        int bytes = TEMP_FAILURE_RETRY(recv(fd, buff_ptr.get() + read_bytes, toRead, MSG_NOSIGNAL));
+
+        int bytes = TEMP_FAILURE_RETRY(recv(fd, buff, toRead, MSG_NOSIGNAL));
         read_bytes += bytes;
         switch (bytes)
         {
         case 0:
             // protìjsí strana zavøela spojení
             if (contentLength_ < 0) {
-                data.write(buff_ptr.get(), read_bytes);
+                data.write(string_buffer.c_str(), read_bytes);
                 return; //done
             }
             throw ProtocolError_t(HTTP_CLOSED,
@@ -456,9 +439,13 @@ void HTTPIO_t::readBlock(long int contentLength_, DataSink_t &data)
                  "is too large (%u > %d)",
                  read_bytes, bodySizeLimit);
 
+            if (read_bytes > string_buffer.capacity())
+                string_buffer.reserve(read_bytes);
+
+            string_buffer.append(buff, bytes);
             // pokud ji¾ není co zapsat -> konec
             if (!contentLength) {
-                data.write(buff_ptr.get(), read_bytes);
+                data.write(string_buffer.c_str(), read_bytes);
                 return;
             }
         }

@@ -1,3 +1,9 @@
+libfastrpc (5.0.3-3) unstable; urgency=low
+
+  * bug fix - dynamic allocation of string buffer in case of infinite stream
+
+ -- Ondrej Kocian <ondrej.kocian@firma.seznam.cz>  Wed, 06 Nov 2013 15:10:49 +0100
+
 libfastrpc (5.0.3-2) unstable; urgency=low
 
   * recv bug
