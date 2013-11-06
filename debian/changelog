@@ -1,3 +1,9 @@
+libfastrpc (5.0.3-2) unstable; urgency=low
+
+  * recv bug
+
+ -- Ondrej Kocian <ondrej.kocian@firma.seznam.cz>  Wed, 06 Nov 2013 10:38:27 +0100
+
 libfastrpc (5.0.3-1) unstable; urgency=low
 
   * Added mutable Struct_t::find 
