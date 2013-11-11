@@ -1,5 +1,6 @@
 /*
- * FastRPC -- Fast RPC library compatible with XML-RPC * Copyright (C) 2005-7  Seznam.cz, a.s.
+ * FastRPC -- Fast RPC library compatible with XML-RPC
+ * Copyright (C) 2005-7  Seznam.cz, a.s.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -360,24 +361,6 @@ void HTTPIO_t::sendData(const char *data, size_t length, bool watchForResponse)
 
 
 
-class BufferPtr_t {
-public:
-    BufferPtr_t(size_t size) {
-        m_ptr = new char[size];
-    }
-
-    ~BufferPtr_t(){
-        delete [] m_ptr;
-    }
-
-    char* get() {
-        return m_ptr;
-    }
-private:
-    BufferPtr_t(const BufferPtr_t&);
-    BufferPtr_t();
-    char* m_ptr;
-};
 
 
 void HTTPIO_t::readBlock(long int contentLength_, DataSink_t &data)
@@ -390,15 +373,13 @@ void HTTPIO_t::readBlock(long int contentLength_, DataSink_t &data)
 
     // check if content fits the max block size
     if ((bodySizeLimit >= 0) && (contentLength_ > bodySizeLimit))
-        throw ProtocolError_t(HTTP_BODY_TOO_LONG, "Security limit exceeded: line "
+        throw ProtocolError_t
+        (HTTP_BODY_TOO_LONG, "Security limit exceeded: line "
          "is too long ('%ld' > '%d')",
          contentLength_, bodySizeLimit);
 
-    // buffer pro cteni ze socketu.
-    // if contentLength_ == -1 (reading till the end of connection) -> max buff size is HTTP_BUFF_LENGTH
-    size_t buffer_size = contentLength_ > 0 ? contentLength_ : HTTP_BUFF_LENGTH;
-    BufferPtr_t buff_ptr(buffer_size);
-    size_t read_bytes = 0;
+    // buffer pro ètení ze socketu.
+    char buff[HTTP_BUFF_LENGTH];
 
     pollfd pfd;
     pfd.fd = fd;
@@ -425,16 +406,13 @@ void HTTPIO_t::readBlock(long int contentLength_, DataSink_t &data)
         // pøeèteme data ze socketu
         int toRead = (contentLength_ < 0 || contentLength > HTTP_BUFF_LENGTH)
                      ? HTTP_BUFF_LENGTH : contentLength;
-        int bytes = TEMP_FAILURE_RETRY(recv(fd, buff_ptr.get() + read_bytes, toRead, MSG_NOSIGNAL));
-        read_bytes += bytes;
+        int bytes = TEMP_FAILURE_RETRY(recv(fd, buff, toRead, MSG_NOSIGNAL));
         switch (bytes)
         {
         case 0:
             // protìjsí strana zavøela spojení
-            if (contentLength_ < 0) {
-                data.write(buff_ptr.get(), read_bytes);
+            if (contentLength_ < 0)
                 return; //done
-            }
             throw ProtocolError_t(HTTP_CLOSED,
                                   "Connection closed by foreign host");
 
@@ -449,18 +427,17 @@ void HTTPIO_t::readBlock(long int contentLength_, DataSink_t &data)
             if (contentLength_ >= 0)
                 contentLength -= bytes;
             // test for maxblocksize
-            if (bodySizeLimit >= 0 && read_bytes
+            if (bodySizeLimit >= 0 && data.written()
                     > static_cast<unsigned long int>(bodySizeLimit))
                 throw ProtocolError_t
                 (HTTP_BODY_TOO_LONG, "Security limit exceeded: content "
                  "is too large (%u > %d)",
-                 read_bytes, bodySizeLimit);
+                 data.written(), bodySizeLimit);
 
+            data.write(buff, bytes);
             // pokud ji¾ není co zapsat -> konec
-            if (!contentLength) {
-                data.write(buff_ptr.get(), read_bytes);
+            if (!contentLength)
                 return;
-            }
         }
     }
 }
