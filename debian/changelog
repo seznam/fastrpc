@@ -1,3 +1,9 @@
+libfastrpc (5.0.3-4) unstable; urgency=low
+
+  * frpcb64unmarshaller supports stream input
+
+ -- Ondrej Kocian <ondrej.kocian@firma.seznam.cz>  Mon, 11 Nov 2013 08:05:11 +0100
+
 libfastrpc (5.0.3-2) unstable; urgency=low
 
   * recv bug
