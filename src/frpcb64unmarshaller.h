@@ -65,6 +65,9 @@ public:
      * @param type type of data to unmarshall (any, request, response, fault).
      */
     virtual void unMarshall(const char *data, unsigned int size, char type);
+
+private:
+    std::string m_residue;
 };
 
 } // namespace FRPC
