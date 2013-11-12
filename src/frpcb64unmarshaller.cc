@@ -38,8 +38,25 @@
 
 #include "frpcb64unmarshaller.h"
 #include "frpcbase64.h"
+#include <algorithm>
 
 namespace FRPC {
+
+bool isNonBase64Character(const char character) {
+    if(isalnum(character)) {
+        return false;
+    } else if ( character == '+' || character == '\\' || character == '='){
+        return false;
+    }
+    
+    return true;
+}
+
+void filterNonBase64(const char* data, unsigned int size, std::string& output) {
+    output.reserve(size);
+    output.append(data, size);
+    output.erase(std::remove_if(output.begin(), output.end(), isNonBase64Character), output.end());
+}
 
 Base64UnMarshaller_t::Base64UnMarshaller_t(DataBuilder_t &dataBuilder)
     : BinUnMarshaller_t(dataBuilder)
@@ -52,31 +69,33 @@ void Base64UnMarshaller_t::unMarshall(const char *data,
                                    char type)
 {
     std::string data_str; //> internal buffer
+    filterNonBase64(data, size, data_str);
+
+    std::string buffer;
     // reserve enough space = residue size + size of new incoming data
-    data_str.reserve(m_residue.size() + size);
+    buffer.reserve(m_residue.size() + data_str.size());
 
     // put residue (if there some) to the begining
     if (m_residue.size() > 0) {
-        data_str.append(m_residue.c_str(), m_residue.size());
+        buffer.append(m_residue.c_str(), m_residue.size());
     }
+    buffer.append(data_str);
 
-    data_str.append(data, size);
-
-    unsigned int residue_size = (m_residue.size() + size) % 4; //> new residue size
-    unsigned int to_decode = data_str.size() - residue_size; //> greatest size of data divisible by 4
+    unsigned int residue_size = buffer.size() % 4; //> new residue size
+    unsigned int to_decode = buffer.size() - residue_size; //> greatest size of data divisible by 4
 
     // handle new residue if there some
     if (residue_size > 0) {
         m_residue.reserve(residue_size);
         m_residue.erase();
-        m_residue.append(data_str.c_str() + to_decode, residue_size);
+        m_residue.append(buffer.data() + to_decode, residue_size);
     } else {
         m_residue.erase();
     }
 
     if (to_decode > 0) {
         //std::string decoded = Base64::decode(data, size);
-        std::string decoded = Base64::decode(data_str.c_str(), to_decode);
+        std::string decoded = Base64::decode(buffer.data(), to_decode);
         BinUnMarshaller_t::unMarshall(decoded.data(), decoded.size(), type);
     }
 }

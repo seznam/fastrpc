@@ -1,3 +1,9 @@
+libfastrpc (5.0.4) unstable; urgency=low
+
+  * frpcb64unmarshaller ignoring non base64 characters
+
+ -- Ondrej Kocian <ondrej.kocian@firma.seznam.cz>  Tue, 12 Nov 2013 09:49:38 +0100
+
 libfastrpc (5.0.3-4) unstable; urgency=low
 
   * frpcb64unmarshaller supports stream input
