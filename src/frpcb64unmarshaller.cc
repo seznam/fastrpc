@@ -45,7 +45,7 @@ namespace FRPC {
 bool isNonBase64Character(const char character) {
     if(isalnum(character)) {
         return false;
-    } else if ( character == '+' || character == '\\' || character == '='){
+    } else if ( character == '+' || character == '/' || character == '='){
         return false;
     }
     
