@@ -1,0 +1,4 @@
+opt/szn/lib/amd64/libfastrpc.a
+opt/szn/lib/amd64/pkgconfig/libfastrpc.pc
+opt/szn/include/*.h
+opt/szn/lib/amd64/libfastrpc.so

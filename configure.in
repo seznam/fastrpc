@@ -35,7 +35,8 @@
 #
 
 # initialize autoconf
-AC_INIT(fastrpc, m4_esyscmd([head -n1 debian/changelog | tr -d '()' | cut -d' ' -f2 | tr -d '\n']), fastrpc@firma.seznam.cz)
+# NOTE: We cannot use any dashes (-) in the version string so discard any package revision numbers (use ',REV=<date>' instead).
+AC_INIT(fastrpc, m4_esyscmd([head -n1 debian/changelog | tr -d '()' | cut -d' ' -f2 | cut -d- -f1 | tr -d '\n']), fastrpc@firma.seznam.cz)
 # initialize automake(use AC_INIT's arguments)
 AM_INIT_AUTOMAKE(AC_PACKAGE_NAME, AC_PACKAGE_VERSION)
 

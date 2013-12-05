@@ -55,7 +55,8 @@ def _init_posix():
         distutils.sysconfig._config_vars['LDSHARED'] = 'g++ -shared -g -W -Wall -Wno-deprecated'
     #endif
 
-    distutils.sysconfig._config_vars['CFLAGS'] = '-g -W -Wall -Wno-deprecated'
+    distutils.sysconfig._config_vars['CFLAGS'] = '-g -W -Wall -Wno-deprecated -I/opt/szn/include -m64'
+    distutils.sysconfig._config_vars['LDFLAGS'] = '-L/opt/szn/lib/amd64'
     distutils.sysconfig._config_vars['OPT'] = '-g -W -Wall -Wno-deprecated'
 #enddef
 
