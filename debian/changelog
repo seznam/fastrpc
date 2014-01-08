@@ -1,3 +1,11 @@
+libfastrpc (5.0.5) unstable; urgency=low
+
+  * improving frpc base64 decoder
+  * catching flush exception of ~Base64Writer_t destructor
+  * basic decoder test
+
+ -- Ondrej Kocian <ondrej.kocian@firma.seznam.cz>  Wed, 08 Jan 2014 14:58:18 +0100
+
 libfastrpc (5.0.3-1) unstable; urgency=low
 
   * Added mutable Struct_t::find 
