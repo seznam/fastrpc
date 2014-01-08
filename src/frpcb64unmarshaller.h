@@ -42,6 +42,7 @@
 
 #include <frpcbinunmarshaller.h>
 #include <frpcdatabuilder.h>
+#include <frpcbase64.h>
 #include "frpcinternals.h"
 #include <frpc.h>
 #include <vector>
@@ -67,10 +68,9 @@ public:
     virtual void unMarshall(const char *data, unsigned int size, char type);
 
 private:
-    std::string m_residue;
+    Base64 decoder;
 };
 
 } // namespace FRPC
 
 #endif /* FRPC_FRPCURLUNMARSHALLER_H */
-

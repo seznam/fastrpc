@@ -80,30 +80,46 @@ const unsigned char base64Table[256] = {
 } // namespace
 
 const std::string Base64::decode(const char *data, long len) {
-    std::string src(data,len);
+    Base64 decoder;
+    return decoder.process(data, len);
+}
 
-    if (src.empty()) {
+Base64::Base64() {
+    reset();
+}
 
-        return src;
+void Base64::reset() {
+    i = 0;
+    for (size_t seq = 0; seq < 4; ++seq) {
+        a[seq] = '=';
+        b[seq] = 0;
     }
+}
 
-    std::string tmpDest;
-    tmpDest.reserve((src.length() * 3) / 4);
+std::string Base64::process(const char *data, long len)
+{
+    std::string result;
+    result.reserve((len * 3) / 4);
 
-    std::string::const_iterator end = src.end();
-    for (std::string::const_iterator isrc = src.begin();
-            isrc != end; ) {
-        unsigned char a[4] = { '=', '=', '=', '=' };
-        unsigned char b[4];
-        int i = 0;
+    for (const char
+             *isrc = data,
+             *end = data + len;
+            isrc != end; )
+    {
         for (; (isrc != end) && (i < 4); isrc++) {
+            // a hack. should be based on the table values
             if (isspace(*isrc))
                 continue;
             b[i] = base64Table[a[i] = *isrc];
             i++;
         }
 
-        // when nothing read terminate this loop
+        // not a complete sequence.
+        // pre-decoded the valid part into b[] and a[]. Just return
+        if (i < 4)
+            break;
+
+        // when nothing read terminate this loop (invalid b64 chars)
         if (!i)
             break;
 
@@ -111,13 +127,17 @@ const std::string Base64::decode(const char *data, long len) {
         o[0] = (b[0] << 2) | (b[1] >> 4);
         o[1] = (b[1] << 4) | (b[2] >> 2);
         o[2] = (b[2] << 6) | b[3];
+
         int len = (a[2] == '=') ? 1 : ((a[3] == '=') ? 2 : 3);
-        tmpDest.append((char *)o, len);
+        result.append((char *)o, len);
+
+        reset();
+
         if (len < 3)
             break;
     }
 
-    return  tmpDest;
+    return  result;
 }
 
 } // namespace FRPC

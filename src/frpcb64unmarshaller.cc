@@ -42,44 +42,16 @@
 namespace FRPC {
 
 Base64UnMarshaller_t::Base64UnMarshaller_t(DataBuilder_t &dataBuilder)
-    : BinUnMarshaller_t(dataBuilder)
-{
-    m_residue.erase();
-}
+    : BinUnMarshaller_t(dataBuilder), decoder()
+{}
 
 void Base64UnMarshaller_t::unMarshall(const char *data,
-                                   unsigned int size,
-                                   char type)
+                                      unsigned int size,
+                                      char type)
 {
-    std::string data_str; //> internal buffer
-    // reserve enough space = residue size + size of new incoming data
-    data_str.reserve(m_residue.size() + size);
-
-    // put residue (if there some) to the begining
-    if (m_residue.size() > 0) {
-        data_str.append(m_residue.c_str(), m_residue.size());
-    }
-
-    data_str.append(data, size);
-
-    unsigned int residue_size = (m_residue.size() + size) % 4; //> new residue size
-    unsigned int to_decode = data_str.size() - residue_size; //> greatest size of data divisible by 4
-
-    // handle new residue if there some
-    if (residue_size > 0) {
-        m_residue.reserve(residue_size);
-        m_residue.erase();
-        m_residue.append(data_str.c_str() + to_decode, residue_size);
-    } else {
-        m_residue.erase();
-    }
-
-    if (to_decode > 0) {
-        //std::string decoded = Base64::decode(data, size);
-        std::string decoded = Base64::decode(data_str.c_str(), to_decode);
+    std::string decoded = decoder.process(data, size);
+    if (!decoded.empty())
         BinUnMarshaller_t::unMarshall(decoded.data(), decoded.size(), type);
-    }
 }
 
 } // namespace FRPC
-

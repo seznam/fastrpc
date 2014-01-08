@@ -40,7 +40,25 @@ namespace FRPC {
 
 class Base64 {
 public:
+    /// Decodes a complete Base64 sequence. Any trailing bytes (0-3)
+    /// that are not a part of a quad get thrown out
     static const std::string decode(const char *data, long len);
+
+    Base64();
+
+    /// Stateful decoder variant. Remembers the residue from last decode
+    std::string process(const char *data, long len);
+
+    /// complete == 0, otherwise there are some leftovers from last buffer.
+    int remains() const { return i; }
+
+private:
+    // resets to prepare for the next quad.
+    void reset();
+
+    int i;
+    unsigned char a[4];
+    unsigned char b[4];
 };
 
 }; // namespace FRPC

@@ -54,7 +54,11 @@ const Base64Writer_t::States_t Base64Writer_t::State_t::STATE_NEXT[3] = {
 };
 
 Base64Writer_t::~Base64Writer_t() {
-    flush();
+    //try to flush, ignore exceptions
+    try {
+        flush();
+    } catch (...)
+    {};
 }
 
 void Base64Writer_t::write(const char *data, unsigned int size) {
