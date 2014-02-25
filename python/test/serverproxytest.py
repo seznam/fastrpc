@@ -1,19 +1,20 @@
 #!/usr/bin/python
 import fastrpc
-import unittest 
+import unittest
 import ConfigParser
+
 
 class ServerProxyTest(unittest.TestCase):
     def setUp(self):
         self.host = "localhost"
         self.port = 2424
-        
+
         self.url = "http://%s:%i/RPC2" % (self.host, self.port)
- 
-    def test_getattr(self): 
-        client = fastrpc.ServerProxy(self.url, readTimeout=1000,\
-                        writeTimeout=1000, connectTimeout=1000, \
-                        useBinary =fastrpc.ON_SUPPORT_ON_KEEP_ALIVE)
+
+    def test_getattr(self):
+        client = fastrpc.ServerProxy(
+            self.url, readTimeout=1000, writeTimeout=1000, connectTimeout=1000,
+            useBinary=fastrpc.ON_SUPPORT_ON_KEEP_ALIVE)
         self.assertEqual(getattr(client, "host"), self.host)
         self.assertEqual(getattr(client, "port"), self.port)
         self.assertEqual(getattr(client, "url"), self.url)
@@ -27,25 +28,25 @@ class ServerProxyTest(unittest.TestCase):
 
         def fun_precall(method, args):
             self.precall_called = True
-            try: 
+            try:
                 self.assertEqual(self.method_name, method)
-            except:
+            except AssertionError as exc:
                 self.precall_exc = exc
 
-        def fun_postcall(method, args, data, err, errArg):
+        def fun_postcall(method, args, data, err, err_arg):
             self.postcall_called = True
-            try: 
+            try:
                 self.assertEqual(self.method_name, method)
-            except Exception, exc:
+            except AssertionError as exc:
                 self.postcall_exc = exc
 
-
-        client = fastrpc.ServerProxy(self.url, readTimeout=1000,\
-                        writeTimeout=1000, connectTimeout=1000, \
-                        useBinary =fastrpc.ON_SUPPORT_ON_KEEP_ALIVE, preCall=fun_precall, postCall=fun_postcall)
+        client = fastrpc.ServerProxy(
+            self.url, readTimeout=1000, writeTimeout=1000, connectTimeout=1000,
+            useBinary=fastrpc.ON_SUPPORT_ON_KEEP_ALIVE, preCall=fun_precall,
+            postCall=fun_postcall)
 
         try:
-            getattr(client,self.method_name)()
+            getattr(client, self.method_name)()
         except:
             pass
 
@@ -59,18 +60,18 @@ class ServerProxyTest(unittest.TestCase):
             raise self.postcall_exc
 
     def test_raise(self):
-        client = fastrpc.ServerProxy(self.url, readTimeout=1000,\
-                        writeTimeout=1000, connectTimeout=1000, \
-                        useBinary =fastrpc.ON_SUPPORT_ON_KEEP_ALIVE,)
+        client = fastrpc.ServerProxy(
+            self.url, readTimeout=1000, writeTimeout=1000, connectTimeout=1000,
+            useBinary=fastrpc.ON_SUPPORT_ON_KEEP_ALIVE)
 
         try:
             client.system.listMethods()
-            raise Exception("exception fastrpc.ProtocolError expected")
+            self.fail("exception fastrpc.ProtocolError expected")
         except fastrpc.ProtocolError:
             pass
 
     def test_configparser(self):
-        section = "baklazan"
+        section = "eggplant"
         config_parser = ConfigParser.ConfigParser()
         config_parser.add_section(section)
         config_parser.set(section, "serverUrl", self.url)
@@ -82,6 +83,5 @@ class ServerProxyTest(unittest.TestCase):
         self.assertEqual(getattr(client, "url"), self.url)
 
 
-
 if __name__ == '__main__':
-        unittest.main()
+    unittest.main()

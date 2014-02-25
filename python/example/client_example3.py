@@ -1,27 +1,27 @@
 #!/usr/bin/env python
-#
-#  Simple client initialized from configuration file
-#
-# Copyright (C) 2013 by Tomas Golembiovsky
+# coding=utf-8
+"""
+  Simple client initialized from configuration file
+
+Copyright (C) 2013 by Tomáš Golembiovský
+"""
 
 import fastrpc
 import ConfigParser
 
-        
+
 cfg = ConfigParser.RawConfigParser()
 cfg.read("client.conf")
 
-
 client = fastrpc.ServerProxy(cfg, "proxy")
-                        
-try:
 
-    retVal1 = client.system.listMethods()
-    print retVal1
-    
-    print client.system.methodSignature(retVal1[4])
-    
-except fastrpc.Fault, f:
+try:
+    result = client.system.listMethods()
+
+    print result
+    print client.system.methodSignature(result[4])
+
+except fastrpc.Fault as f:
     print f
-except fastrpc.ProtocolError, e:
+except fastrpc.ProtocolError as e:
     print e
