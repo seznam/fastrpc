@@ -1,0 +1,8 @@
+MANIFEST
+build*
+debian/files
+debian/python-fastrpc*
+dist
+*.pyc
+*.egg-info
+*.so
