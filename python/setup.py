@@ -23,60 +23,56 @@ Radlická 3294/10, Praha 5, 15000, Czech Republic
 http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
 """
 
-# This version is used when packaging.
-VERSION = "1.0.0"
-
-# Maintainer of this module.
-MAINTAINER = u"Miroslav Talášek"
-MAINTAINER_EMAIL = "miroslav.talasek@firma.seznam.cz"
-
-# Descriptions
-DESCRIPTION = "FastRPC - RPC protocol support Binary and XML format."
-LONG_DESCRIPTION = "FastRPC - RPC protocol support Binary and XML format.\n"
-
-# You probably don't need to edit anything below this line
-
-from distutils.core import setup, Extension
-
-########################################################################
-# Forces g++ instead of gcc on most systems
-# credits to eric jones (eric@enthought.com) (found at Google Groups)
-import distutils.sysconfig
-
-old_init_posix = distutils.sysconfig._init_posix
+from debian.changelog import Changelog
+from distutils import sysconfig
+from os.path import dirname, join
+from setuptools import setup, Extension
 
 
-def _init_posix():
-    old_init_posix()
+def _init_posix(init):
+    """
+    Forces g++ instead of gcc on most systems
+    credits to eric jones (eric@enthought.com) (found at Google Groups)
+    """
+    def wrapper():
+        init()
 
-    if distutils.sysconfig._config_vars["MACHDEP"].startswith("sun"):
-        # Sun needs forced gcc/g++ compilation
-        distutils.sysconfig._config_vars['CC'] = 'gcc'
-        distutils.sysconfig._config_vars['CXX'] = 'g++'
-    else:
-        # Non-Sun needs linkage with g++
-        distutils.sysconfig._config_vars['LDSHARED'] = \
-            'g++ -shared -g -W -Wall -Wno-deprecated'
+        config_vars = sysconfig.get_config_vars()  # by reference
+        if config_vars["MACHDEP"].startswith("sun"):
+            # Sun needs forced gcc/g++ compilation
+            config_vars['CC'] = 'gcc'
+            config_vars['CXX'] = 'g++'
+        else:
+            # Non-Sun needs linkage with g++
+            config_vars['LDSHARED'] = 'g++ -shared -g -W -Wall -Wno-deprecated'
 
-    distutils.sysconfig._config_vars['CFLAGS'] = '-g -W -Wall -Wno-deprecated'
-    distutils.sysconfig._config_vars['OPT'] = '-g -W -Wall -Wno-deprecated'
+        config_vars['CFLAGS'] = '-g -W -Wall -Wno-deprecated'
+        config_vars['OPT'] = '-g -W -Wall -Wno-deprecated'
 
-distutils.sysconfig._init_posix = _init_posix
-########################################################################
+    return wrapper
+sysconfig._init_posix = _init_posix(sysconfig._init_posix)
 
-# Main core
+
+here = dirname(__file__)
+readme = join(here, 'README')
+changelog = join(here, "debian/changelog")
+
+version = str(Changelog(open(changelog, 'rt')).get_version())
+
+author = u"Miroslav Talášek"
+author_email = "miroslav.talasek@firma.seznam.cz"
+
 setup(
     name="fastrpc",
-    version=VERSION,
-    author=MAINTAINER,
-    author_email=MAINTAINER_EMAIL,
-    maintainer=MAINTAINER,
-    maintainer_email=MAINTAINER_EMAIL,
-    description=DESCRIPTION,
-    long_description=LONG_DESCRIPTION,
+    version=version,
+    author=author,
+    author_email=author_email,
+    description=__doc__.strip().split("\n")[0],
+    long_description=open(readme, 'rt').read().strip(),
     url="http://github.com/seznam/fastrpc/python",
+    py_modules=['fastrpc'],
     ext_modules=[
-        Extension("fastrpcmodule", [
+        Extension("_fastrpc", [
             "fastrpcmodule.cc", "pythonserver.cc", "pyerrors.cc",
             "pythonbuilder.cc", "pythonfeeder.cc"
         ], libraries=["fastrpc"]),

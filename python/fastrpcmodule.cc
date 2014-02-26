@@ -1404,7 +1404,7 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
                                    "useHTTP10", "proxyVia", "stringMode",
                                    "protocolVersionMajor",
                                    "protocolVersionMinor",
-                                   "nativeBoolean", "datetimeBuilder", 
+                                   "nativeBoolean", "datetimeBuilder",
                                    "preCall", "postCall",
                                    0};
 
@@ -2428,10 +2428,10 @@ namespace FRPC { namespace Python {
 
 /** Initialize FRPC module
  */
-extern "C" DL_EXPORT(void) initfastrpc(void)
+extern "C" DL_EXPORT(void) init_fastrpc(void)
 {
     /* Create the module and add the functions */
-    PyObject *fastrpc_module = Py_InitModule("fastrpc", frpc_methods);
+    PyObject *fastrpc_module = Py_InitModule("_fastrpc", frpc_methods);
     if (!fastrpc_module)
         return;
 
