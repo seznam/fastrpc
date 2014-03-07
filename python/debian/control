@@ -1,16 +1,23 @@
 Source: python-fastrpc
 Section: python
-Priority: Extra
-Maintainer: Lukas Lobotka <lukas.lobotka@firma.seznam.cz>
-XS-Python-Standards-Version: 0.4
-XS-Python-Version: all
-Build-Depends: debhelper, python-all-dev, python-central, libfastrpc-dev
-
+Priority: extra
+Maintainer: Ondřej Kocian <ondrej.kocian@firma.seznam.cz>
+Build-Depends:
+ debhelper (>= 7.0.50~),
+ libfastrpc-dev,
+ python-all-dev,
+ python-debian,
+ python-setuptools
+Standards-Version: 3.9.1
+X-Python-Version: >= 2.6
 
 Package: python-fastrpc
 Section: python
 Architecture: any
-Depends: ${shlibs:Depends}, ${python:Depends}
+Depends:
+ ${misc:Depends},
+ ${shlibs:Depends},
+ ${python:Depends}
 Conflicts: python2.5-fastrpc, python2.6-fastrpc
 Provides: ${python:Provides}
 XB-Python-Version: ${python:Versions}

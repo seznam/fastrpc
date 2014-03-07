@@ -42,6 +42,8 @@ def _init_posix(init):
             # Sun needs forced gcc/g++ compilation
             config_vars['CC'] = 'gcc'
             config_vars['CXX'] = 'g++'
+
+        # FIXME raises hardening-no-fortify-functions lintian warning.
         else:
             # Non-Sun needs linkage with g++
             config_vars['LDSHARED'] = 'g++ -shared -g -W -Wall -Wno-deprecated'

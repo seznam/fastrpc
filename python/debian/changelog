@@ -1,9 +1,11 @@
 python-fastrpc (5.0.4) UNRELEASED; urgency=low
 
+  [ Alex Rembish ]
   * PEP8
   * Better setup.py flow, standard module naming for C++ modules
+  * Standard Python debianization
 
- -- Alex Rembish <alex@rembish.org>  Fri, 07 Mar 2014 14:10:33 +0100
+ -- Alex Rembish <alex@rembish.org>  Fri, 07 Mar 2014 15:48:33 +0100
 
 python-fastrpc (5.0.3) unstable; urgency=low
 
