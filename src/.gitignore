@@ -1,0 +1,8 @@
+.deps
+.libs
+Makefile
+Makefile.in
+frpcversion.h
+libfastrpc.la
+*.lo
+*.o
