@@ -6,7 +6,7 @@ includedir=@includedir@
 Name: fastrpc
 Description: The seznam fastrpc library
 Version: @PACKAGE_VERSION@
-Requires:
+Requires: @PC_DEPS@
 URL: [not yet]
 Libs: -L${libdir} -lfastrpc
 Libs.private:

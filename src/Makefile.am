@@ -36,7 +36,7 @@
 
 
 # warn on all
-AM_CXXFLAGS = -Wall -g -fPIC $(XML2_CFLAGS) ${CXXEXTRAFLAGS}
+AM_CXXFLAGS = -Wall -g -fPIC $(DEPS_CFLAGS) ${CXXEXTRAFLAGS}
 
 # extra compiler options
 AM_CPPFLAGS = -D_ISOC99_SOURCE -D__ENABLE_WSTRING=1
@@ -77,7 +77,7 @@ libfastrpc_la_SOURCES = frpcvalue.cc frpcarray.cc frpcstruct.cc frpcbinary.cc fr
                         frpcb64writer.cc frpcconfig.cc
 
 # with these flags (version info etc.)
-libfastrpc_la_LDFLAGS = @VERSION_INFO@ $(XML2_LIBS)
+libfastrpc_la_LDFLAGS = @VERSION_INFO@ $(DEPS_LIBS)
 
 
 # test program

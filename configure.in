@@ -76,19 +76,16 @@ AC_HEADER_STDC
 # check for libtool
 AC_PROG_LIBTOOL
 
-AC_LANG_CPLUSPLUS
-# check libxml2
-AC_CHECK_LIB(xml2,xmlParseChunk, ,
-             AC_MSG_ERROR(Cannot find xml2 library!))
+m4_ifndef([PKG_PROG_PKG_CONFIG], [m4_fatal([Please install pkg-config.])])
+PKG_PROG_PKG_CONFIG
 
-#AC_HAVE_LIBRARY(xml2,[],[echo "Error libxml not found" ;exit -1])
+# pkg-config resolvable dependencies for consistent .pc file wit configure
+# script;
+# add new pkg-config dependencies here
+PC_DEPS="libxml-2.0"
+AC_SUBST([PC_DEPS])
 
-XML2_CFLAGS=`xml2-config --cflags`
-XML2_LIBS=`xml2-config --libs`
-
-AC_SUBST(XML2_CFLAGS)
-AC_SUBST(XML2_LIBS)
-
+PKG_CHECK_MODULES([DEPS], [$PC_DEPS])
 
 dnl ------------------------------------------------------------------------
 # system dependant part
