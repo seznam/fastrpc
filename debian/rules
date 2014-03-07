@@ -1,44 +1,7 @@
 #!/usr/bin/make -f
 
-#DH_VERBOSE=1
-#DEB_BUILD_OPTIONS='nostrip'
-PROCESSORS=$(shell cat /proc/cpuinfo | grep ^processor | wc -l)
+# Uncomment this to turn on verbose mode.
+# export DH_VERBOSE=1
 
-build: build-stamp
-build-stamp:
-	dh_testdir
-	./configure --enable-optimization --prefix=/usr
-	$(MAKE) -j$(PROCESSORS)
-	touch build-stamp
-
-clean:
-	dh_testdir
-	dh_testroot
-	rm -f build-stamp
-	rm -rf build
-	[ ! -f Makefile ] || $(MAKE) distclean
-	dh_clean
-	autoreconf -fi
-
-install: build
-	make DESTDIR=`pwd`/debian/tmp install
-
-binary-arch: install
-	rm -rf debian/files
-	dh_testdir
-	dh_testroot
-	dh_installchangelogs
-	dh_install --sourcedir=debian/tmp
-	dh_link
-	dh_makeshlibs -V
-	dh_compress
-	dh_installdeb
-	dh_fixperms
-	dh_shlibdeps
-	dh_gencontrol
-	dh_md5sums
-	dh_builddeb
-
-binary-indep: build install
-
-binary: binary-indep binary-arch
+%:
+	dh $@ --with autoreconf --parallel
