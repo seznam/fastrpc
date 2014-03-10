@@ -3,39 +3,39 @@
 import fastrpc
 import unittest
 
-class ServerTest(unittest.TestCase): 
 
-    def test_preRead(self):
-        self.preRead_called = False
+class ServerTest(unittest.TestCase):
+    def test_prepead(self):
+        self.prepead_called = False
 
-        def preRead():
-            self.preRead_called = True
+        def preread():
+            self.preread_called = True
 
-        server = fastrpc.Server(readTimeout=0, callbacks={"preRead": preRead})
+        server = fastrpc.Server(readTimeout=0, callbacks={"preRead": preread})
 
         try:
             server.serve(0)
         except:
             pass
 
-        self.assertTrue(self.preRead_called)
+        self.assertTrue(self.preread_called)
 
+    def test_preread_raised(self):
+        fault_string = "Unhandled exception in preread " \
+                       "<type 'exceptions.ValueError'>: something"
 
-    def test_preRead_raised(self):
-        faultString = "Unhandled exception in preread <type 'exceptions.ValueError'>: something"
-        def preRead():
+        def preread():
             raise ValueError("something")
 
-        server = fastrpc.Server(readTimeout=0, callbacks={"preRead": preRead})
-        
+        server = fastrpc.Server(readTimeout=0, callbacks={"preRead": preread})
+
         try:
             server.serve(0)
             raise Exception("error expected")
         except fastrpc.Fault, exc:
-            self.assertEqual(exc.faultString, faultString)
+            self.assertEqual(exc.faultString, fault_string)
             pass
 
 
-
 if __name__ == '__main__':
-        unittest.main()
+    unittest.main()

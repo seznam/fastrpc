@@ -20,6 +20,7 @@ ltmain.sh
 m4
 missing
 version
+*.build
 *.changes
 *.dsc
 *.deb
