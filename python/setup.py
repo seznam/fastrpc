@@ -78,5 +78,6 @@ setup(
             "fastrpcmodule.cc", "pythonserver.cc", "pyerrors.cc",
             "pythonbuilder.cc", "pythonfeeder.cc"
         ], libraries=["fastrpc"]),
-    ]
+    ],
+    test_suite='test'
 )
