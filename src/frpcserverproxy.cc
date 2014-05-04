@@ -147,6 +147,14 @@ public:
      */
     Value_t& call(Pool_t &pool, const char *methodName, va_list args);
 
+    void addRequestHttpHeaderForCall(const HTTPClient_t::Header_t& header);
+    void addRequestHttpHeaderForCall(const HTTPClient_t::HeaderVector_t& headers);
+
+    void addRequestHttpHeader(const HTTPClient_t::Header_t& header);
+    void addRequestHttpHeader(const HTTPClient_t::HeaderVector_t& headers);
+
+    void deleteRequestHttpHeaders();
+
 private:
     URL_t url;
     HTTPIO_t io;
@@ -155,6 +163,8 @@ private:
     unsigned int serverSupportedProtocols;
     ProtocolVersion_t protocolVersion;
     std::auto_ptr<Connector_t> connector;
+    HTTPClient_t::HeaderVector_t requestHttpHeadersForCall;
+    HTTPClient_t::HeaderVector_t requestHttpHeaders;
 };
 
 Marshaller_t* ServerProxyImpl_t::createMarshaller(HTTPClient_t &client) {
@@ -235,6 +245,11 @@ Value_t& ServerProxyImpl_t::call(Pool_t &pool, const std::string &methodName,
                                  const Array_t &params)
 {
     HTTPClient_t client(io, url, connector.get(), useHTTP10);
+    {
+        client.addCustomRequestHeader(requestHttpHeaders);
+        client.addCustomRequestHeader(requestHttpHeadersForCall);
+        requestHttpHeadersForCall.clear();
+    }
     TreeBuilder_t builder(pool);
     std::auto_ptr<Marshaller_t>marshaller(createMarshaller(client));
     TreeFeeder_t feeder(*marshaller);
@@ -267,6 +282,11 @@ void ServerProxyImpl_t::call(DataBuilder_t &builder, const std::string &methodNa
                                  const Array_t &params)
 {
     HTTPClient_t client(io, url, connector.get(), useHTTP10);
+    {
+        client.addCustomRequestHeader(requestHttpHeaders);
+        client.addCustomRequestHeader(requestHttpHeadersForCall);
+        requestHttpHeadersForCall.clear();
+    }
     std::auto_ptr<Marshaller_t>marshaller(createMarshaller(client));
     TreeFeeder_t feeder(*marshaller);
 
@@ -298,6 +318,11 @@ Value_t& ServerProxyImpl_t::call(Pool_t &pool, const char *methodName,
                                  va_list args)
 {
     HTTPClient_t client(io, url, connector.get(), useHTTP10);
+    {
+        client.addCustomRequestHeader(requestHttpHeaders);
+        client.addCustomRequestHeader(requestHttpHeadersForCall);
+        requestHttpHeadersForCall.clear();
+    }
     TreeBuilder_t builder(pool);
     std::auto_ptr<Marshaller_t>marshaller(createMarshaller(client));
     TreeFeeder_t feeder(*marshaller);
@@ -321,6 +346,35 @@ Value_t& ServerProxyImpl_t::call(Pool_t &pool, const char *methodName,
 
     // OK, return unmarshalled data
     return builder.getUnMarshaledData();
+}
+
+void ServerProxyImpl_t::addRequestHttpHeaderForCall(const HTTPClient_t::Header_t& header)
+{
+    requestHttpHeadersForCall.push_back(header);
+}
+
+void ServerProxyImpl_t::addRequestHttpHeaderForCall(const HTTPClient_t::HeaderVector_t& headers)
+{
+    for (HTTPClient_t::HeaderVector_t::const_iterator it=headers.begin(); it!=headers.end(); it++) {
+        addRequestHttpHeaderForCall(*it);
+    }
+}
+
+void ServerProxyImpl_t::addRequestHttpHeader(const HTTPClient_t::Header_t& header)
+{
+    requestHttpHeaders.push_back(header);
+}
+
+void ServerProxyImpl_t::addRequestHttpHeader(const HTTPClient_t::HeaderVector_t& headers)
+{
+    for (HTTPClient_t::HeaderVector_t::const_iterator it=headers.begin(); it!=headers.end(); it++) {
+        addRequestHttpHeader(*it);
+    }
+}
+
+void ServerProxyImpl_t::deleteRequestHttpHeaders() {
+    requestHttpHeaders.clear();
+    requestHttpHeadersForCall.clear();
 }
 
 namespace {
@@ -363,6 +417,25 @@ void ServerProxy_t::setConnectTimeout(int timeout) {
 
 const URL_t& ServerProxy_t::getURL() {
     return sp->getURL();
+}
+
+void ServerProxy_t::addRequestHttpHeaderForCall(const HTTPClient_t::Header_t& header) {
+    sp->addRequestHttpHeaderForCall(header);
+}
+void ServerProxy_t::addRequestHttpHeaderForCall(const HTTPClient_t::HeaderVector_t& headers) {
+    sp->addRequestHttpHeaderForCall(headers);
+}
+
+void ServerProxy_t::addRequestHttpHeader(const HTTPClient_t::Header_t& header) {
+    sp->addRequestHttpHeader(header);
+}
+
+void ServerProxy_t::addRequestHttpHeader(const HTTPClient_t::HeaderVector_t& headers) {
+    sp->addRequestHttpHeader(headers);
+}
+
+void ServerProxy_t::deleteRequestHttpHeaders() {
+    sp->deleteRequestHttpHeaders();
 }
 
 } // namespace FRPC

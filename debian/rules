@@ -5,3 +5,12 @@
 
 %:
 	dh $@ --with autoreconf --parallel
+
+override_dh_auto_install:
+	find $(DESTDIR) -type f -name \*.la -delete
+	dh_auto_install
+
+
+.PHONY: override_dh_strip
+override_dh_strip:
+	dh_strip --dbg-package=libfastrpc6-dbg

@@ -35,7 +35,7 @@
 #
 
 # initialize autoconf
-AC_INIT(fastrpc, m4_esyscmd([head -n1 debian/changelog | tr -d '()' | cut -d' ' -f2 | tr -d '\n']), fastrpc@firma.seznam.cz)
+AC_INIT(fastrpc, m4_esyscmd([head -n1 debian/changelog | tr -d '()' | cut -d' ' -f2 | tr -d '\n']), opensource@firma.seznam.cz)
 # initialize automake(use AC_INIT's arguments)
 AM_INIT_AUTOMAKE(AC_PACKAGE_NAME, AC_PACKAGE_VERSION)
 
@@ -100,9 +100,9 @@ dnl ------------------------------------------------------------------------
 # This version number needs to be changed in several different ways for each
 # release. Please read the libtool documentation (info libtool 'Updating
 # version info') before touching this.
-FASTRPC_MAJOR=4
+FASTRPC_MAJOR=6
 FASTRPC_MINOR=1
-VERSION_INFO="-version-info 9:0:0"
+VERSION_INFO="-version-info 10:0:0"
 
 AC_ARG_ENABLE(optimization,[  --enable-optimization compile optimized without debug logging],[
     case "${enableval}" in
