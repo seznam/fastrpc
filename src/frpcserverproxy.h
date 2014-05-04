@@ -546,6 +546,14 @@ public:
 
     const URL_t& getURL();
 
+    void addRequestHttpHeaderForCall(const HTTPClient_t::Header_t& header);
+    void addRequestHttpHeaderForCall(const HTTPClient_t::HeaderVector_t& headers);
+
+    void addRequestHttpHeader(const HTTPClient_t::Header_t& header);
+    void addRequestHttpHeader(const HTTPClient_t::HeaderVector_t& headers);
+
+    void deleteRequestHttpHeaders();
+
 private:
     ServerProxy_t(const ServerProxy_t&);
 

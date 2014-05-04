@@ -100,31 +100,24 @@ struct SocketCloser_t {
     bool doClose;
 };
 
-// just replaces newline whitespace characters with spaces
-std::string cleanup_header_value(const std::string &input) {
-    std::string clensed;
-    clensed.reserve(input.size());
-    for (std::string::const_iterator ic = input.begin(),
-                                   iend = input.end();
-         ic != iend;
-         ++ic)
-    {
-        switch (*ic) {
-        case '\r':
-        case '\n':
-            clensed.push_back(' ');
-            break;
-        default:
-            clensed.push_back(*ic);
-
-        }
+template <typename T>
+inline void addHeader(StreamHolder_t& stream, const std::string& name, const T& value) {
+        stream.os << name << ": " << value << "\r\n";
     }
-    return clensed;
-}
 
 } // namespace
 
 namespace FRPC {
+
+const std::string HTTPClient_t::HOST = "HOST";
+const std::string HTTPClient_t::POST = "POST";
+const std::string HTTPClient_t::HTTP10 = "HTTP/1.0";
+const std::string HTTPClient_t::HTTP11 = "HTTP/1.1";
+const std::string HTTPClient_t::TYPE_XML = "text/xml";
+const std::string HTTPClient_t::TYPE_FRPC = "application/x-frpc";
+const std::string HTTPClient_t::ACCEPTED = "text/xml, application/x-frpc";
+const std::string HTTPClient_t::CLOSE = "close";
+const std::string HTTPClient_t::KEEPALIVE = "keep-alive";
 
 HTTPClient_t::HTTPClient_t(HTTPIO_t &httpIO, URL_t &url,
                            Connector_t *connector, bool useHTTP10)
@@ -147,15 +140,8 @@ void HTTPClient_t::flush() {
     if (!useChunks) {
         sendRequest();
     } else {
-        //append empty chunk to data
 
         sendRequest(true);
-   /*     try {
-            httpIO.sendData("0\r\n\r\n", 5, true);
-        } catch(const ResponseError_t &e) {
-            connectionMustClose = true;
-            throw;
-        }*/
     }
 }
 
@@ -236,24 +222,21 @@ void HTTPClient_t::readResponse(DataBuilder_t &builder) {
         if (httpHead.get(HTTP_HEADER_ACCEPT, accept) == 0) {
             supportedProtocols = 0;
 
-            if (accept.find("text/xml") != std::string::npos) {
+            if (accept.find(TYPE_XML) != std::string::npos) {
                 supportedProtocols |= XML_RPC;
             }
 
-            if (accept.find("application/x-frpc") != std::string::npos) {
+            if (accept.find(TYPE_FRPC) != std::string::npos) {
                 supportedProtocols |= BINARY_RPC;
             }
         }
 
         delete unmarshaller;
 
-        if (contentType.find("text/xml") != std::string::npos) {
-            unmarshaller = UnMarshaller_t::create(UnMarshaller_t::XML_RPC,
-                                                  builder);
-        } else if (contentType.find("application/x-frpc")
-                   != std::string::npos) {
-            unmarshaller = UnMarshaller_t::create(UnMarshaller_t::BINARY_RPC,
-                                                  builder);
+        if (contentType.find(TYPE_XML) != std::string::npos) {
+            unmarshaller = UnMarshaller_t::create(UnMarshaller_t::XML_RPC, builder);
+        } else if (contentType.find(TYPE_FRPC) != std::string::npos) {
+            unmarshaller = UnMarshaller_t::create(UnMarshaller_t::BINARY_RPC, builder);
         } else {
             throw StreamError_t("Unknown ContentType");
         }
@@ -270,9 +253,8 @@ void HTTPClient_t::readResponse(DataBuilder_t &builder) {
         httpHead.get("Connection", connection);
         std::transform(connection.begin(), connection.end(),
                        connection.begin(),std::ptr_fun<int, int>(toupper));
-        //bool closeConnection = false;
 
-        if (protocol == "HTTP/1.1") {
+        if (protocol == HTTP11) {
             closeConnection = (connection == "CLOSE");
         } else {
             closeConnection = (connection != "KEEP-ALIVE");
@@ -289,6 +271,7 @@ void HTTPClient_t::readResponse(DataBuilder_t &builder) {
     }
 }
 
+
 void HTTPClient_t::sendRequest(bool last) {
     SocketCloser_t closer(httpIO.socket());
 
@@ -299,55 +282,40 @@ void HTTPClient_t::sendRequest(bool last) {
         StreamHolder_t os;
 
         //create header
-        os.os << "POST" << ' ' << url.path << ' '
-        << (useHTTP10 ? "HTTP/1.0" : "HTTP/1.1") << "\r\n";
+        os.os << POST << " " << url.path << ' ' << (useHTTP10 ? HTTP10 : HTTP11) << "\r\n";
+        os.os << HOST << ": " << url.host << ':' << url.port << "\r\n";
 
-        os.os << "Host: " << url.host << ':' << url.port << "\r\n";
         switch(useProtocol) {
         case XML_RPC:
-            {
-                os.os << HTTP_HEADER_CONTENT_TYPE << ": "
-                      << "text/xml"<< "\r\n";
-            }
+            addHeader(os, HTTP_HEADER_CONTENT_TYPE, TYPE_XML);
             break;
         case BINARY_RPC:
-            {
-                os.os << HTTP_HEADER_CONTENT_TYPE << ": "
-                      << "application/x-frpc"<< "\r\n";
-            }
+            addHeader(os, HTTP_HEADER_CONTENT_TYPE, TYPE_FRPC);
             break;
-
         default:
             throw StreamError_t("Unknown protocol");
             break;
 
         }
 
-        os.os  << HTTP_HEADER_ACCEPT << ": "
-               << "text/xml, application/x-frpc"<< "\r\n";
+        addHeader(os, HTTP_HEADER_ACCEPT, ACCEPTED); 
 
         //append connection header
-        os.os << HTTP_HEADER_CONNECTION
-              << (connector->getKeepAlive() ? ": keep-alive" : ": close")
-        << "\r\n";
-
-        if (!forward.empty()) {
-            os.os << HTTP_HEADER_X_FORWARDED_FOR << ": "
-                  << cleanup_header_value(forward) << "\r\n";
-        }
+        addHeader(os, HTTP_HEADER_CONNECTION, (connector->getKeepAlive() ? KEEPALIVE : CLOSE)); 
 
         // write content-length or content-transfer-encoding when we can send
         // content
 
         if (!useChunks) {
-            os.os << HTTP_HEADER_CONTENT_LENGTH << ": " << contentLenght
-                  << "\r\n";
+            addHeader(os, HTTP_HEADER_CONTENT_LENGTH, contentLenght);
         } else {
-            os.os << HTTP_HEADER_TRANSFER_ENCODING << ": chunked\r\n";
+            addHeader(os, HTTP_HEADER_TRANSFER_ENCODING, "chunked");
         }
 
+        // add custom headers
+        os.os << m_customRequestHeaders.str();
+
         // terminate header
-        // append separator
         os.os << "\r\n";
 
         if (connectionMustClose) {
@@ -359,19 +327,9 @@ void HTTPClient_t::sendRequest(bool last) {
             connectionMustClose = false;
         }
 
-        //connect socket
         connector->connectSocket(httpIO.socket());
 
-       /* try {
-            // send header
-            httpIO.sendData(os.os.str());
-        } catch(const ResponseError_t &e) {
-            connectionMustClose = true;
-            closer.doClose = false;
-            throw ResponseError_t();
-        }*/
         headerData = os.os.str();
-       // headersSent = true;
     }
 
     try {
@@ -422,6 +380,25 @@ void HTTPClient_t::sendRequest(bool last) {
     }
 
     closer.doClose = false;
+}
+
+template <typename T>
+void HTTPClient_t::addCustomRequestHeader(const std::string& name, const T& value) {
+    m_customRequestHeaders << name << ": " << value << "\r\n";
+}
+
+void HTTPClient_t::addCustomRequestHeader(const Header_t& header) {
+    addCustomRequestHeader(header.first, header.second);
+}
+
+void HTTPClient_t::addCustomRequestHeader(const HeaderVector_t& headers) {
+    for (HeaderVector_t::const_iterator it=headers.begin(); it!=headers.end(); ++it) {
+        addCustomRequestHeader(it->first, it->second);
+    }
+}
+
+void HTTPClient_t::deleteCustomRequestHeaders() {
+    m_customRequestHeaders.str(std::string());
 }
 
 } // namespace FRPC
