@@ -42,6 +42,7 @@
 #include <frpcconnector.h>
 #include <list>
 #include <frpc.h>
+#include <sstream>
 
 
 
