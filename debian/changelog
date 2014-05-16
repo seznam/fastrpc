@@ -1,8 +1,8 @@
-libfastrpc (6.0.0) UNRELEASED; urgency=low
+libfastrpc (6.0.1) unstable; urgency=low
 
-  * serverproxy headers
+  * missing header
 
- -- Ondrej Kocian <ondrej.kocian@firma.seznam.cz>  Sun, 04 May 2014 20:20:09 +0200
+ -- Ondrej Kocian <ondrej.kocian@firma.seznam.cz>  Fri, 16 May 2014 09:51:00 +0200
 
 libfastrpc (5.0.5) unstable; urgency=low
 
