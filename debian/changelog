@@ -1,3 +1,9 @@
+libfastrpc (5.0.6) testing; urgency=low
+
+  * Array_t: adding value_type
+
+ -- Ondrej Kocian <ondrej.kocian@firma.seznam.cz>  Mon, 26 May 2014 14:03:32 +0200
+
 libfastrpc (5.0.5) unstable; urgency=low
 
   * improving frpc base64 decoder
