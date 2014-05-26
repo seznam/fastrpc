@@ -67,6 +67,7 @@ public:
     // value types
     typedef Value_t &reference;
     typedef const Value_t &const_reference;
+    typedef Value_t value_type;
 
     enum{TYPE = 0x0B};
     /**
