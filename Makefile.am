@@ -36,8 +36,7 @@
 
 SUBDIRS = src
 
-EXTRA_DIST = debian/libfastrpc.control debian/libfastrpc-dev.control \
-	     debian/libfastrpc.postinst debian/make.sh
+EXTRA_DIST = debian/libfastrpc.control 
 
 pkgconfigdir=@libdir@/pkgconfig
 pkgconfig_DATA=libfastrpc.pc
