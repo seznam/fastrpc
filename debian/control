@@ -4,6 +4,9 @@ Priority: optional
 Maintainer: Seznam.cz a.s. <opensource@firma.seznam.cz>
 Build-Depends: debhelper (>=8), libxml2-dev, autoconf, libtool, automake, dh-autoreconf, pkg-config
 Standards-Version: 3.9.1
+Vcs-Git: https://github.com/seznam/fastrpc.git
+Vcs-Browser: https://github.com/seznam/fastrpc
+
 
 Package: libfastrpc6
 Architecture: any
