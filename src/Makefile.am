@@ -73,7 +73,7 @@ libfastrpc_la_SOURCES = value/frpcvalue.cc value/frpcarray.cc value/frpcstruct.c
                         marshaller/frpcmarshaller.cc marshaller/frpcunmarshaller.cc writer/frpcwriter.cc \
                         marshaller/frpcbinmarshaller.cc  marshaller/frpcxmlmarshaller.cc \
                         marshaller/frpcbinunmarshaller.cc marshaller/frpcxmlunmarshaller.cc error/frpcprotocolerror.cc \
-                        error/frpchttperror.cc frpcencodingerror.cc http/frpchttpio.cc http/frpchttp.cc http/frpchttpclient.cc \
+                        error/frpchttperror.cc error/frpcencodingerror.cc http/frpchttpio.cc http/frpchttp.cc http/frpchttpclient.cc \
                         frpctreebuilder.cc frpctreefeeder.cc error/frpcfault.cc frpc.cc frpcmethodregistry.cc \
                         writer/frpcserver.cc error/frpcresponseerror.cc frpcconnector.cc value/frpcnull.cc \
                         marshaller/frpcurlunmarshaller.cc marshaller/frpcjsonmarshaller.cc marshaller/frpcb64unmarshaller.cc marshaller/frpcbase64.cc \
