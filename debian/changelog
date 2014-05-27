@@ -1,3 +1,11 @@
+libfastrpc (6.0.2) unstable; urgency=low
+
+  * file structure
+  * pc file
+  * versioned dev
+
+ -- Ondrej Kocian <ondrej.kocian@firma.seznam.cz>  Tue, 27 May 2014 19:33:27 +0200
+
 libfastrpc (6.0.1) unstable; urgency=low
 
   * missing header
