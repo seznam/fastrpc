@@ -36,7 +36,7 @@
 
 
 # warn on all
-AM_CXXFLAGS = -Wall -g -fPIC $(DEPS_CFLAGS) ${CXXEXTRAFLAGS}
+AM_CXXFLAGS = -Wall -g -fPIC $(DEPS_CFLAGS) ${CXXEXTRAFLAGS} -Ierror -Imarshaller -Iwriter -Ihttp -Ivalue
 
 # extra compiler options
 AM_CPPFLAGS = -D_ISOC99_SOURCE -D__ENABLE_WSTRING=1
@@ -53,7 +53,7 @@ pkginclude_HEADERS = frpc.h \
                   frpctreebuilder.h frpctreefeeder.h error/frpcfault.h frpcmethod.h frpcdefaultmethod.h \
                   frpcmethodregistry.h writer/frpcserver.h error/frpcresponseerror.h frpcplatform.h frpcheadmethod.h \
                   frpcsocket.h frpcsocketunix.h frpcsocketwin.h frpcplatform.h \
-                  frpcversion.h frpcconnector.h frpcconverters.h frpcnull.h \
+                  frpcversion.h frpcconnector.h frpcconverters.h value/frpcnull.h \
                   marshaller/frpcbinmarshaller.h marshaller/frpcxmlmarshaller.h frpcinternals.h frpccompare.h marshaller/frpcb64marshaller.h \
                   marshaller/frpcjsonmarshaller.h writer/frpcb64writer.h frpcconfig.h
 
