@@ -42,7 +42,7 @@ AM_INIT_AUTOMAKE(AC_PACKAGE_NAME, AC_PACKAGE_VERSION)
 AC_CONFIG_MACRO_DIR([m4])
 
 # tell autoconf where to find sources
-AC_CONFIG_SRCDIR([src/frpcvalue.cc])
+AC_CONFIG_SRCDIR([src/frpc.h])
 
 AC_PREREQ(2.50)
 

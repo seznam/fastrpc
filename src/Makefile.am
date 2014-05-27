@@ -44,21 +44,21 @@ AM_CPPFLAGS = -D_ISOC99_SOURCE -D__ENABLE_WSTRING=1
 # install these headers
 pkginclude_HEADERS = frpc.h \
 					 value/frpcvalue.h value/frpcarray.h value/frpcstruct.h value/frpcbinary.h value/frpcdatetime.h \
-                  value/frpcstring.h value/frpcbool.h value/frpcint.h value/frpcdouble.h frpcpool.h \
+                  value/frpcstring.h value/frpcbool.h value/frpcint.h value/frpcdouble.h value/frpcpool.h \
                   error/frpcerror.h error/frpckeyerror.h error/frpctypeerror.h error/frpcindexerror.h \
 				  error/frpcstreamerror.h error/frpclenerror.h \
 				  frpcserverproxy.h frpcdatabuilder.h \
-                  marshaller/frpcmarshaller.h marshaller/frpcunmarshaller.h frpcwriter.h error/frpcprotocolerror.h \
+                  marshaller/frpcmarshaller.h marshaller/frpcunmarshaller.h writer/frpcwriter.h error/frpcprotocolerror.h \
                   error/frpchttperror.h error/frpcencodingerror.h http/frpchttpio.h http/frpchttp.h http/frpchttpclient.h \
-                  frpctreebuilder.h frpctreefeeder.h frpcfault.h frpcmethod.h frpcdefaultmethod.h \
-                  frpcmethodregistry.h frpcserver.h error/frpcresponseerror.h frpcplatform.h frpcheadmethod.h \
+                  frpctreebuilder.h frpctreefeeder.h error/frpcfault.h frpcmethod.h frpcdefaultmethod.h \
+                  frpcmethodregistry.h writer/frpcserver.h error/frpcresponseerror.h frpcplatform.h frpcheadmethod.h \
                   frpcsocket.h frpcsocketunix.h frpcsocketwin.h frpcplatform.h \
                   frpcversion.h frpcconnector.h frpcconverters.h frpcnull.h \
                   marshaller/frpcbinmarshaller.h marshaller/frpcxmlmarshaller.h frpcinternals.h frpccompare.h marshaller/frpcb64marshaller.h \
-                  marshaller/frpcjsonmarshaller.h frpcb64writer.h frpcconfig.h
+                  marshaller/frpcjsonmarshaller.h writer/frpcb64writer.h frpcconfig.h
 
 
-noinst_HEADERS = marshaller/frpcbinunmarshaller.h marshaller/frpcxmlunmarshaller.h marshaller/frpcurlunmarshaller.h marshaller/frpcb64unmarshaller.h frpcbase64.h \
+noinst_HEADERS = marshaller/frpcbinunmarshaller.h marshaller/frpcxmlunmarshaller.h marshaller/frpcurlunmarshaller.h marshaller/frpcb64unmarshaller.h marshaller/frpcbase64.h \
                  nonglibc.h
 
 # compile this library
@@ -70,14 +70,14 @@ libfastrpc_la_SOURCES = value/frpcvalue.cc value/frpcarray.cc value/frpcstruct.c
                         error/frpcerror.cc error/frpckeyerror.cc error/frpctypeerror.cc error/frpcindexerror.cc \
                         error/frpcstreamerror.cc error/frpclenerror.cc \
 						frpcserverproxy.cc frpcdatabuilder.cc \
-                        marshaller/frpcmarshaller.cc marshaller/frpcunmarshaller.cc frpcwriter.cc \
+                        marshaller/frpcmarshaller.cc marshaller/frpcunmarshaller.cc writer/frpcwriter.cc \
                         marshaller/frpcbinmarshaller.cc  marshaller/frpcxmlmarshaller.cc \
                         marshaller/frpcbinunmarshaller.cc marshaller/frpcxmlunmarshaller.cc error/frpcprotocolerror.cc \
-                        http/frpchttperror.cc frpcencodingerror.cc http/frpchttpio.cc http/frpchttp.cc http/frpchttpclient.cc \
-                        frpctreebuilder.cc frpctreefeeder.cc frpcfault.cc frpc.cc frpcmethodregistry.cc \
-                        frpcserver.cc error/frpcresponseerror.cc frpcconnector.cc value/frpcnull.cc \
-                        marshaller/frpcurlunmarshaller.cc marshaller/frpcjsonmarshaller.cc marshaller/frpcb64unmarshaller.cc frpcbase64.cc \
-                        frpcb64writer.cc frpcconfig.cc
+                        error/frpchttperror.cc frpcencodingerror.cc http/frpchttpio.cc http/frpchttp.cc http/frpchttpclient.cc \
+                        frpctreebuilder.cc frpctreefeeder.cc error/frpcfault.cc frpc.cc frpcmethodregistry.cc \
+                        writer/frpcserver.cc error/frpcresponseerror.cc frpcconnector.cc value/frpcnull.cc \
+                        marshaller/frpcurlunmarshaller.cc marshaller/frpcjsonmarshaller.cc marshaller/frpcb64unmarshaller.cc marshaller/frpcbase64.cc \
+                        writer/frpcb64writer.cc frpcconfig.cc
 
 # with these flags (version info etc.)
 libfastrpc_la_LDFLAGS = @VERSION_INFO@ $(DEPS_LIBS)
