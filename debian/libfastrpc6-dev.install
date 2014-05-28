@@ -1,0 +1,4 @@
+usr/include/fastrpc6/*.h
+usr/lib/pkgconfig/libfastrpc6.pc
+usr/lib/libfastrpc6.a
+usr/lib/libfastrpc6.so

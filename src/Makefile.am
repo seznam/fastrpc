@@ -62,10 +62,10 @@ noinst_HEADERS = marshaller/frpcbinunmarshaller.h marshaller/frpcxmlunmarshaller
                  nonglibc.h
 
 # compile this library
-lib_LTLIBRARIES = libfastrpc.la
+lib_LTLIBRARIES = libfastrpc6.la
 
 # from the these sources
-libfastrpc_la_SOURCES = value/frpcvalue.cc value/frpcarray.cc value/frpcstruct.cc value/frpcbinary.cc value/frpcdatetime.cc \
+libfastrpc6_la_SOURCES = value/frpcvalue.cc value/frpcarray.cc value/frpcstruct.cc value/frpcbinary.cc value/frpcdatetime.cc \
                         value/frpcstring.cc value/frpcbool.cc value/frpcint.cc value/frpcdouble.cc value/frpcpool.cc \
                         error/frpcerror.cc error/frpckeyerror.cc error/frpctypeerror.cc error/frpcindexerror.cc \
                         error/frpcstreamerror.cc error/frpclenerror.cc \
@@ -80,7 +80,7 @@ libfastrpc_la_SOURCES = value/frpcvalue.cc value/frpcarray.cc value/frpcstruct.c
                         writer/frpcb64writer.cc frpcconfig.cc
 
 # with these flags (version info etc.)
-libfastrpc_la_LDFLAGS = @VERSION_INFO@ $(DEPS_LIBS)
+libfastrpc6_la_LDFLAGS = @VERSION_INFO@ $(DEPS_LIBS)
 
 
 # test program

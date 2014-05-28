@@ -1,9 +1,9 @@
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 libdir=@libdir@
-includedir=@includefastrpcdir@
+includedir=@includedir@/@PACKAGE@
 
-Name: fastrpc
+Name: fastrpc6
 Description: The seznam fastrpc library
 Version: @PACKAGE_VERSION@
 Requires: @PC_DEPS@
