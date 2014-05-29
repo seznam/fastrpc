@@ -159,10 +159,13 @@ namespace
 const unsigned int HTTP_BUFF_LENGTH = 1 << 16;
 }
 
-std::string HTTPIO_t::readLine(bool checkLimit)
+std::string HTTPIO_t::readLine(bool checkLimit, bool optional)
 {
     // buffer pro ètení ze socketu.
     char buff[HTTP_BUFF_LENGTH];
+
+    // Once we get some bytes the line is no longer optional.
+    bool noBytes = true;
 
     // celkový buffer
     std::string lineBuff;
@@ -196,8 +199,11 @@ std::string HTTPIO_t::readLine(bool checkLimit)
         {
         case 0:
             // protìjsí strana zavøela spojení
-            throw ProtocolError_t(HTTP_CLOSED,
-                                  "Connection closed by foreign host");
+            if (noBytes && optional)
+                return std::string("");
+            else
+                throw ProtocolError_t(HTTP_CLOSED,
+                    "Connection closed by foreign host");
 
         case -1:
             // other error
@@ -205,6 +211,8 @@ std::string HTTPIO_t::readLine(bool checkLimit)
             throw ProtocolError_t(HTTP_SYSCALL, "Syscall error: <%d, %s>.",
                               ERRNO, STRERROR(ERRNO));
         }
+
+        noBytes = false;
 
         // hledáme <LF> v pøeèteném bloku dat
         char *end = static_cast<char*>(memchr(buff, '\n', bytes));
@@ -442,14 +450,18 @@ void HTTPIO_t::readBlock(long int contentLength_, DataSink_t &data)
     }
 }
 
-void HTTPIO_t::readHeader(HTTPHeader_t &header)
+void HTTPIO_t::readHeader(HTTPHeader_t &header, bool optional)
 {
+    // Once we get the first line the header is no longer optional.
+    bool noLine = true;
+
     for (;;)
     {
-        std::string line (readLine());
+        std::string line (readLine(false, (noLine?optional:false)));
         // empty header terminates header
         if (line.empty())
             break;
+        noLine = false;
         std::string name;
         std::string value;
         // parse header line
@@ -513,7 +525,7 @@ void HTTPIO_t::readChunkedContent(HTTPHeader_t &header, DataSink_t &data)
     }
 
     // read trailer
-    readHeader(header);
+    readHeader(header, true);
 }
 
 void HTTPIO_t::readContent(HTTPHeader_t &header, DataSink_t &data,
