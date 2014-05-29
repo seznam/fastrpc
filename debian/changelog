@@ -1,3 +1,9 @@
+libfastrpc (5.0.7) testing; urgency=low
+
+  * Fixed processing of chunked transfer.
+
+ -- Tomas Golembiovsky <tomas.golembiovsky@firma.seznam.cz>  Thu, 29 May 2014 14:49:00 +0200
+
 libfastrpc (5.0.6) testing; urgency=low
 
   * Array_t: adding value_type

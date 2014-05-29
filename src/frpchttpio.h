@@ -81,11 +81,21 @@ public:
      * @short Read line from socket.
      *
      * @param checkLimit limit check  
-     * @return reat line
+     * @return read line
      */
     std::string readLine(bool checkLimit = false);
 
+    /**
+     * @short Read line from socket.
+     *
+     * @param checkLimit limit check
+     * @param optional don't throw exception if server closes connection before sending any line.
+     * @return read line
+     */
+    std::string readLineOpt(bool checkLimit = false, bool optional=false);
+
     void readHeader(HTTPHeader_t &header);
+    void readHeader(HTTPHeader_t &header, bool optional);
 
     long int readChunkSize();
 
