@@ -1,8 +1,15 @@
-libfastrpc (6.0.3) UNRELEASED; urgency=low
+libfastrpc (6.0.4) UNRELEASED; urgency=low
 
+  [ Tomas Golembiovsky ]
   * Fixed processing of chunked transfer.
 
- -- Tomas Golembiovsky <tomas.golembiovsky@firma.seznam.cz>  Thu, 29 May 2014 18:01:00 +0200
+  [ Ondrej Kocian ]
+  * library name link fixed
+  * remove debug flag
+  * missing value_type in array
+  * moved files to correct folder
+
+ -- Ondrej Kocian <ondrej.kocian@firma.seznam.cz>  Tue, 24 Jun 2014 13:35:55 +0200
 
 libfastrpc (6.0.2) unstable; urgency=low
 
