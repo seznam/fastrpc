@@ -36,14 +36,14 @@
 
 
 # warn on all
-AM_CXXFLAGS = -Wall -g -fPIC $(DEPS_CFLAGS) ${CXXEXTRAFLAGS} -Ierror -Imarshaller -Iwriter -Ihttp -Ivalue
+AM_CXXFLAGS = -Wall -fPIC $(DEPS_CFLAGS) ${CXXEXTRAFLAGS} -Ierror -Imarshaller -Iwriter -Ihttp -Ivalue
 
 # extra compiler options
 AM_CPPFLAGS = -D_ISOC99_SOURCE -D__ENABLE_WSTRING=1
 
 # install these headers
 pkginclude_HEADERS = frpc.h \
-					 value/frpcvalue.h value/frpcarray.h value/frpcstruct.h value/frpcbinary.h value/frpcdatetime.h \
+				  value/frpcvalue.h value/frpcarray.h value/frpcstruct.h value/frpcbinary.h value/frpcdatetime.h \
                   value/frpcstring.h value/frpcbool.h value/frpcint.h value/frpcdouble.h value/frpcpool.h \
                   error/frpcerror.h error/frpckeyerror.h error/frpctypeerror.h error/frpcindexerror.h \
 				  error/frpcstreamerror.h error/frpclenerror.h \
