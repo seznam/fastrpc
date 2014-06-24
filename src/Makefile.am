@@ -47,7 +47,7 @@ pkginclude_HEADERS = frpc.h \
                   value/frpcstring.h value/frpcbool.h value/frpcint.h value/frpcdouble.h value/frpcpool.h \
                   error/frpcerror.h error/frpckeyerror.h error/frpctypeerror.h error/frpcindexerror.h \
 				  error/frpcstreamerror.h error/frpclenerror.h \
-				  frpcserverproxy.h frpcdatabuilder.h \
+				  http/frpcserverproxy.h frpcdatabuilder.h \
                   marshaller/frpcmarshaller.h marshaller/frpcunmarshaller.h writer/frpcwriter.h error/frpcprotocolerror.h \
                   error/frpchttperror.h error/frpcencodingerror.h http/frpchttpio.h http/frpchttp.h http/frpchttpclient.h \
                   frpctreebuilder.h frpctreefeeder.h error/frpcfault.h frpcmethod.h frpcdefaultmethod.h \
@@ -69,7 +69,7 @@ libfastrpc6_la_SOURCES = value/frpcvalue.cc value/frpcarray.cc value/frpcstruct.
                         value/frpcstring.cc value/frpcbool.cc value/frpcint.cc value/frpcdouble.cc value/frpcpool.cc \
                         error/frpcerror.cc error/frpckeyerror.cc error/frpctypeerror.cc error/frpcindexerror.cc \
                         error/frpcstreamerror.cc error/frpclenerror.cc \
-						frpcserverproxy.cc frpcdatabuilder.cc \
+						http/frpcserverproxy.cc frpcdatabuilder.cc \
                         marshaller/frpcmarshaller.cc marshaller/frpcunmarshaller.cc writer/frpcwriter.cc \
                         marshaller/frpcbinmarshaller.cc  marshaller/frpcxmlmarshaller.cc \
                         marshaller/frpcbinunmarshaller.cc marshaller/frpcxmlunmarshaller.cc error/frpcprotocolerror.cc \
