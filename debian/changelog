@@ -1,3 +1,9 @@
+libfastrpc (5.0.8) testing; urgency=low
+
+  * Non-maintainer upload.
+
+ -- Ondrej Kocian <ondrej.kocian@firma.seznam.cz>  Wed, 25 Jun 2014 16:35:02 +0200
+
 libfastrpc (5.0.7) testing; urgency=low
 
   * Fixed processing of chunked transfer.
