@@ -1,7 +1,7 @@
 Source: python-fastrpc
 Section: python
 Priority: extra
-Maintainer: Ondřej Kocian <ondrej.kocian@firma.seznam.cz>
+Maintainer: Seznam.cz, a.s. <opensource@firma.seznam.cz>
 Build-Depends:
  debhelper (>= 7.0.50~),
  libfastrpc-dev,

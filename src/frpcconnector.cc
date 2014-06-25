@@ -253,7 +253,8 @@ void SimpleConnector_t::connectSocket(int &fd) {
                 switch (ready) {
                 case 0:
                     throw HTTPError_t(HTTP_SYSCALL,
-                                      "Timeout while connecting.");
+                                      "Timeout while connecting to %s.",
+                                      url.getUrl().c_str());
 
                 default:
                     STRERROR_PRE();
@@ -452,7 +453,8 @@ void SimpleConnectorIPv6_t::connectSocket(int &fd) {
                 switch (ready) {
                 case 0:
                     throw HTTPError_t(HTTP_SYSCALL,
-                                      "Timeout while connecting.");
+                                      "Timeout while connecting to %s.",
+                                      url.getUrl().c_str());
 
                 default:
                     STRERROR_PRE();
