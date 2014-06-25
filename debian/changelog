@@ -1,4 +1,11 @@
-libfastrpc (6.0.4) UNRELEASED; urgency=low
+libfastrpc (6.0.5) testing; urgency=low
+
+  * timout exception includes server url
+  * maintainer changed to tech team
+
+ -- Ondrej Kocian <ondrej.kocian@firma.seznam.cz>  Wed, 25 Jun 2014 16:42:19 +0200
+
+libfastrpc (6.0.4) stable; urgency=low
 
   [ Tomas Golembiovsky ]
   * Fixed processing of chunked transfer.
