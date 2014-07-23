@@ -108,7 +108,7 @@ public:
      * @param pool FastRPC pool.
      */
     explicit inline base_double_cnvt(Pool_t &pool)
-        : base_cnvt<Type_t, Double_t>(pool, &Pool_t::Int)
+        : base_cnvt<Type_t, Double_t>(pool, &Pool_t::Double)
     {}
 };
 
