@@ -115,6 +115,7 @@ extern "C"
                                    PyObject *kwds);
     static void DateTimeObject_dealloc(DateTimeObject *self);
     //static int DateTimeObject_cmp(BooleanObject *self, BooleanObject *other);
+    static int DateTimeObject_Compare(DateTimeObject *self, DateTimeObject *other);
     static PyObject* DateTimeObject_repr(DateTimeObject *self);
     static PyObject* DateTimeObject_getattr(DateTimeObject *self, char *name);
     static int DateTimeObject_setattr(DateTimeObject *self, char *name, PyObject
@@ -136,7 +137,7 @@ PyTypeObject DateTimeObject_Type =
         0,                                      /* tp_print */
         (getattrfunc)DateTimeObject_getattr,      /* tp_getattr */
         (setattrfunc)DateTimeObject_setattr,      /* tp_setattr */
-        0,                                      /* tp_compare */
+        (cmpfunc)DateTimeObject_Compare,                 /* tp_compare */
         (reprfunc)DateTimeObject_repr,            /* tp_repr */
         0,                                      /* tp_as_newDateTime->weekDay
                                                                 =number */
@@ -181,7 +182,7 @@ PyTypeObject LocalTimeObject_Type =
         0,                                      /* tp_print */
         (getattrfunc)DateTimeObject_getattr,      /* tp_getattr */
         (setattrfunc)DateTimeObject_setattr,      /* tp_setattr */
-        0,                                      /* tp_compare */
+        (cmpfunc)DateTimeObject_Compare,                 /* tp_compare */
         (reprfunc)DateTimeObject_repr,            /* tp_repr */
         0,                                      /* tp_as_newDateTime->weekDay
                                                                 =number */
@@ -226,7 +227,7 @@ PyTypeObject UTCTimeObject_Type =
         0,                                      /* tp_print */
         (getattrfunc)DateTimeObject_getattr,      /* tp_getattr */
         (setattrfunc)DateTimeObject_setattr,      /* tp_setattr */
-        0,                                      /* tp_compare */
+        (cmpfunc)DateTimeObject_Compare,                 /* tp_compare */
         (reprfunc)DateTimeObject_repr,            /* tp_repr */
         0,                                      /* tp_as_newDateTime->weekDay
                                                                 =number */
@@ -603,6 +604,31 @@ int DateTimeObject_setattr(DateTimeObject *self, char *name, PyObject *value)
     PyErr_Format(PyExc_AttributeError,
                  "DateTime object has no such attribute '%s'.", name);
     return -1;
+}
+
+time_t DateTimeObject_to_timestamp(DateTimeObject *datetime) {
+    struct tm timeinfo = {0};
+
+    timeinfo.tm_year = datetime->year - 1900;
+    timeinfo.tm_mon = datetime->month - 1;
+    timeinfo.tm_mday = datetime->day;
+    timeinfo.tm_hour = datetime->hour;
+    timeinfo.tm_min = datetime->min;
+    timeinfo.tm_sec = datetime->sec;
+    return mktime(&timeinfo) - datetime->timeZone;
+}
+
+int DateTimeObject_Compare(DateTimeObject *self, DateTimeObject *other)
+{
+    time_t self_timestemp = DateTimeObject_to_timestamp(self);
+    time_t other_timestemp = DateTimeObject_to_timestamp(other);
+
+    if (self_timestemp > other_timestemp)
+        return 1;
+    else if (self_timestemp < other_timestemp)
+        return -1;
+
+    return 0;
 }
 
 namespace FRPC { namespace Python {
@@ -1180,6 +1206,17 @@ public:
         return lastCall;
     }
 
+    /**
+     * @short Closes (keep alive) connection to server
+     */
+    void closeConnection() {
+        int &fd = io.socket();
+        if (fd > -1) {
+            TEMP_FAILURE_RETRY(::close(fd));
+            fd = -1;
+        }
+    }
+
 private:
 
     URL_t url;
@@ -1209,6 +1246,7 @@ struct ServerProxyObject
 
     Proxy_t proxy;
     bool proxyOk;
+
 };
 }
 
@@ -1218,8 +1256,9 @@ extern "C"
             PyObject *args, PyObject *keywds);
 
     static void ServerProxy_dealloc(ServerProxyObject *self);
-
     static PyObject* ServerProxy_getattr(ServerProxyObject *self, char *name);
+    static PyObject* ServerProxy_call(ServerProxyObject *self, PyObject *args, PyObject *kw);
+
 };
 
 static PyTypeObject ServerProxy_Type =
@@ -1240,7 +1279,7 @@ static PyTypeObject ServerProxy_Type =
         0,                                 /*tp_as_sequence*/
         0,                                 /*tp_as_mapping*/
         0,                                 /*tp_hash*/
-        0,                                 /* tp_call */
+        (ternaryfunc) ServerProxy_call,   /* tp_call */
         0,                                 /* tp_str */
         0,                                 /* tp_getattro */
         0,                                 /* tp_setattro */
@@ -1564,7 +1603,7 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
         PyErr_SetString(PyExc_TypeError, typeError.message().c_str());
         return 0;
     }
-
+    // wtf is there reason for that since its allocated inplace? (inplace!)
     catch(std::bad_alloc &badAlloc)
     {
         Py_DECREF(proxy);
@@ -1582,6 +1621,26 @@ void ServerProxy_dealloc(ServerProxyObject *self)
 
     // destroy my memory
     PyObject_Del(self);
+}
+
+//! inspired by https://docs.python.org/2/library/xmlrpclib.html
+PyObject* ServerProxy_call(ServerProxyObject *self, PyObject *args, PyObject *kw) {
+    static char *kwlist[] = {"action", NULL};
+    const char *action = 0;
+    const char CLOSE_CONNECTION[] = "close_connection";
+
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "s",  kwlist, &action))
+        return 0;
+
+    if (strcmp(action, CLOSE_CONNECTION) == 0) {
+        if (self->proxyOk)
+            self->proxy.closeConnection();
+    } else {
+        PyErr_Format(PyExc_TypeError, "unknown action %s", action);
+        return NULL;
+    }
+    
+    Py_RETURN_NONE;
 }
 
 PyObject* ServerProxy_getattr(ServerProxyObject *self, char *name)
@@ -2442,6 +2501,7 @@ extern "C" DL_EXPORT(void) init_fastrpc(void)
     if (PyModule_AddObject(fastrpc_module, "DateTime",
                            reinterpret_cast<PyObject*>(&DateTimeObject_Type)))
         return;
+
     Py_INCREF(&LocalTimeObject_Type);
     if (PyModule_AddObject(fastrpc_module, "LocalTime",
                            reinterpret_cast<PyObject*>(&LocalTimeObject_Type)))
