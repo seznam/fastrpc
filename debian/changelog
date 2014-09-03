@@ -1,3 +1,9 @@
+libfastrpc (5.0.9) testing; urgency=low
+
+  * initFastrc function - init fastrpc in case of multithreaded program 
+
+ -- Ondrej Kocian <ondrej.kocian@firma.seznam.cz>  Wed, 03 Sep 2014 10:33:38 +0200
+
 libfastrpc (5.0.8) testing; urgency=low
 
   * timout exception includes server url
