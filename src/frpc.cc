@@ -38,6 +38,7 @@
 #include <cstdlib>
 #include <sstream>
 #include <algorithm>
+#include <frpcxmlunmarshaller.h>
 
 
 
@@ -433,6 +434,11 @@ void printSpaces(long spaces) {
     for (long i= spaces ; i != 0; i--)
 
         printf(" ");
+}
+
+/*! init libxml2 parser in xmlunmarshaller */
+void initFastrpc() {
+    XmlUnMarshaller_t::initXmlUnMarshaller_t();
 }
 
 

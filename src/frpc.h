@@ -103,6 +103,13 @@ struct ProtocolVersion_t{
     unsigned char versionMinor;
 };
 
+/**
+ @brief init fastrpc library
+ * call once in the main thread 
+ * init xmllib parser
+ */
+void FRPC_DLLEXPORT initFastrpc();
+
 } // namespace FRPC
 
 #endif

@@ -72,7 +72,8 @@ public:
     std::string exErrMsg;
     long exErrNum;
     std::string localBuffer;
-
+    /*! init xmlInitParser() http://xmlsoft.org/threads.html */
+    static void initXmlUnMarshaller_t();
 private:
     //static void initCallbacks();
 
