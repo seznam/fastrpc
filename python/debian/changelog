@@ -1,4 +1,11 @@
-python-fastrpc (5.0.4) UNRELEASED; urgency=low
+python-fastrpc (5.0.5) testing; urgency=low
+
+  * compare on datetime types
+  * force python client to close its connection
+
+ -- Ondrej Kocian <ondrej.kocian@firma.seznam.cz>  Wed, 03 Sep 2014 07:46:44 +0200
+
+python-fastrpc (5.0.4) testing; urgency=low
 
   [ Alex Rembish ]
   * PEP8
