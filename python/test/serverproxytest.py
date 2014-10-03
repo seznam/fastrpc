@@ -2,23 +2,66 @@
 import fastrpc
 import unittest
 import ConfigParser
+from fastrpc import ProtocolError
 
 
 class ServerProxyTest(unittest.TestCase):
+    attributes_names = ["host", "port", "url", "last_call", "path"]
     def setUp(self):
         self.host = "localhost"
         self.port = 2424
+        self.path = "/RPC2"
+        self.last_call = ""
 
-        self.url = "http://%s:%i/RPC2" % (self.host, self.port)
+        self.url = "http://%s:%i%s" % (self.host, self.port, self.path)
 
     def test_getattr(self):
         client = fastrpc.ServerProxy(
             self.url, readTimeout=1000, writeTimeout=1000, connectTimeout=1000,
             useBinary=fastrpc.ON_SUPPORT_ON_KEEP_ALIVE)
-        self.assertEqual(getattr(client, "host"), self.host)
-        self.assertEqual(getattr(client, "port"), self.port)
-        self.assertEqual(getattr(client, "url"), self.url)
 
+        for attr in self.attributes_names:
+            self.assertEqual(getattr(client, attr), getattr(self, attr))
+
+    def test_hideAttibutes(self):
+        """
+        If hideAttributes parametr is set to True in constructor of ServerProxy
+        all serverproxy attrs should be taken as frpc call attempt (proxy.url(), proxy.path()...)
+        """
+        without_hide = fastrpc.ServerProxy(
+            self.url, readTimeout=1, writeTimeout=1, connectTimeout=1,
+            useBinary=fastrpc.ON_SUPPORT_ON_KEEP_ALIVE)
+
+        without_hide_false = fastrpc.ServerProxy(
+            self.url, readTimeout=1, writeTimeout=1, connectTimeout=1,
+            useBinary=fastrpc.ON_SUPPORT_ON_KEEP_ALIVE, hideAttributes=False)
+
+        with_hide = fastrpc.ServerProxy(
+            self.url, readTimeout=1, writeTimeout=1, connectTimeout=1,
+            useBinary=fastrpc.ON_SUPPORT_ON_KEEP_ALIVE, hideAttributes=True)
+
+        def try_attr(client):
+            for attr in self.attributes_names:
+                self.assertEqual(getattr(client, attr), getattr(self, attr))
+
+        def try_typeerror(client, exception):
+            for attr in self.attributes_names:
+                self.assertRaises(exception, lambda: getattr(client, attr)())
+
+        try_attr(without_hide)
+        try_attr(without_hide_false)
+
+        try_typeerror(without_hide, TypeError)
+        try_typeerror(without_hide_false, TypeError)
+        try_typeerror(with_hide, ProtocolError)
+
+    def test_action(self):
+        client = fastrpc.ServerProxy(self.url, readTimeout=1, writeTimeout=1, connectTimeout=1,
+            useBinary=fastrpc.ON_SUPPORT_ON_KEEP_ALIVE)
+
+        for attr in self.attributes_names:
+            self.assertEqual(client("get_" + attr), getattr(self, attr))
+        
     def test_hooks(self):
         self.method_name = "get_something"
         self.precall_called = False

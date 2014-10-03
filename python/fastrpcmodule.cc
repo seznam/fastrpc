@@ -1246,6 +1246,7 @@ struct ServerProxyObject
 
     Proxy_t proxy;
     bool proxyOk;
+    bool hideAttributes;
 
 };
 }
@@ -1444,7 +1445,7 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
                                    "protocolVersionMajor",
                                    "protocolVersionMinor",
                                    "nativeBoolean", "datetimeBuilder",
-                                   "preCall", "postCall",
+                                   "preCall", "postCall", "hideAttributes",
                                    0};
 
     // parse arguments
@@ -1465,6 +1466,7 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
     PyObject *datetimeBuilder = 0;
     PyObject *preCall = 0;
     PyObject *postCall = 0;
+    int hideAttributes = false;
 
     static const char *kwtypes = "siiiiisissiiOO";
     const void *kwvars[] = { serverUrl, &readTimeout,
@@ -1478,7 +1480,7 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
 
     // Normal initialization
     if (!PyArg_ParseTupleAndKeywords(args, keywds,
-                                     "s#|iiiiisissiiOOOO:ServerProxy.__init__",
+                                     "s#|iiiiisissiiOOOOi:ServerProxy.__init__",
                                      (char **)kwlist,
                                      &serverUrl, &serverUrlLen, &readTimeout,
                                      &writeTimeout, &connectTimeout,
@@ -1486,7 +1488,7 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
                                      &useHTTP10, &proxyVia, &stringMode_,
                                      &protocolVersionMajor,
                                      &protocolVersionMinor, &nativeBoolean,
-                                     &datetimeBuilder, &preCall, &postCall))
+                                     &datetimeBuilder, &preCall, &postCall, &hideAttributes))
     {
 
         // Initialization from ConfigParser and section
@@ -1563,6 +1565,7 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
     if (!proxy) return 0;
 
     proxy->proxyOk = false;
+    proxy->hideAttributes = hideAttributes;
 
     StringMode_t stringMode = parseStringMode(stringMode_);
     if (stringMode == STRING_MODE_INVALID) return 0;
@@ -1628,13 +1631,36 @@ PyObject* ServerProxy_call(ServerProxyObject *self, PyObject *args, PyObject *kw
     static char *kwlist[] = {"action", NULL};
     const char *action = 0;
     const char CLOSE_CONNECTION[] = "close_connection";
+    const char GET_HOST[] = "get_host";
+    const char GET_PORT[] = "get_port";
+    const char GET_URL[] = "get_url";
+    const char GET_PATH[] = "get_path";
+    const char GET_LAST_CALL[] = "get_last_call";
 
     if (!PyArg_ParseTupleAndKeywords(args, kw, "s",  kwlist, &action))
         return 0;
 
+    const URL_t &url = self->proxy.getURL();
+
     if (strcmp(action, CLOSE_CONNECTION) == 0) {
         if (self->proxyOk)
             self->proxy.closeConnection();
+    } else if (!strcmp(action, GET_HOST)) {
+        return PyString_FromStringAndSize(url.host.data(), url.host.size());
+
+    } else if (!strcmp(action, GET_PATH)) {
+        return PyString_FromStringAndSize(url.path.data(), url.path.size());
+
+    } else if (!strcmp(action, GET_PORT)) {
+        return PyInt_FromLong(url.port);
+
+    } else if (!strcmp(action, GET_URL)) {
+        std::string fullUrl(url.getUrl());
+        return PyString_FromStringAndSize(fullUrl.data(), fullUrl.size());
+
+    } else if (!strcmp(action, GET_LAST_CALL)) {
+        const std::string &lastCall(self->proxy.getLastCall());
+        return PyString_FromStringAndSize(lastCall.data(), lastCall.size());
     } else {
         PyErr_Format(PyExc_TypeError, "unknown action %s", action);
         return NULL;
@@ -1645,6 +1671,11 @@ PyObject* ServerProxy_call(ServerProxyObject *self, PyObject *args, PyObject *kw
 
 PyObject* ServerProxy_getattr(ServerProxyObject *self, char *name)
 {
+
+    if (self->hideAttributes) {
+        return newMethod(self, name);
+    }
+
     const URL_t &url = self->proxy.getURL();
     if (!strncmp(name, "__", 2)) {
         if (!strcmp(name, "__dict__")) {
