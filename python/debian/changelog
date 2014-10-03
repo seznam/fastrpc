@@ -1,3 +1,10 @@
+python-fastrpc (5.0.6) testing; urgency=low
+
+  * ServerProxy(hideAttributes=true/false) possibility: calling fastrpc
+    function with same names as attribues (url,path,host...) 
+
+ -- Ondrej Kocian <ondrej.kocian@firma.seznam.cz>  Fri, 03 Oct 2014 15:20:47 +0200
+
 python-fastrpc (5.0.5) testing; urgency=low
 
   * compare on datetime types
