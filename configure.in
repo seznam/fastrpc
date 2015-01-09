@@ -35,7 +35,18 @@
 #
 
 # initialize autoconf
-AC_INIT(fastrpc, m4_esyscmd([head -n1 debian/changelog | tr -d '()' | cut -d' ' -f2 | tr -d '\n']), fastrpc@firma.seznam.cz)
+AC_INIT(fastrpc, m4_esyscmd([
+    case `uname -s` in
+        *SunOS*)
+            # NOTE: We cannot use any dashes (-) in the version string so discard any package revision numbers (use ',REV=<date>' instead).
+            head -n1 debian/changelog | tr -d '()' | cut -d' ' -f2 | cut -d- -f1 | tr -d '\n'
+            ;;
+        *)
+            head -n1 debian/changelog | tr -d '()' | cut -d' ' -f2 | tr -d '\n'
+            ;;
+    esac
+    ]), fastrpc@firma.seznam.cz)
+
 # initialize automake(use AC_INIT's arguments)
 AM_INIT_AUTOMAKE(AC_PACKAGE_NAME, AC_PACKAGE_VERSION)
 
@@ -47,19 +58,23 @@ AC_CONFIG_SRCDIR([src/frpcvalue.cc])
 AC_PREREQ(2.50)
 
 AC_CANONICAL_HOST
+
 case $host in
 *solaris*)
     AC_ARG_ENABLE(m64, AS_HELP_STRING([--enable-m64],[enable 64bit mode]), [
             AC_MSG_CHECKING(for -m64 linker options)
-            CPPFLAGS="-m64"
-            CXXFLAGS="-m64"
-            CFLAGS="-m64"
+            CPPFLAGS="-m64 -DSOLARIS"
+            CXXFLAGS="-m64 -DSOLARIS"
+            CFLAGS="-m64 -DSOLARIS"
             LDFLAGS="-m64 -L/opt/csw/lib/amd64 -L/usr/local/lib/amd64"
             sbindir='${exec_prefix}/sbin/amd64'
             bindir='${exec_prefix}/bin/amd64'
             libdir='${exec_prefix}/lib/amd64'
             AC_MSG_RESULT([-m64 flag set])],
-            [LDFLAGS="-L/opt/csw/lib -L/usr/local/lib"])
+            [LDFLAGS="-L/opt/csw/lib -L/usr/local/lib"
+            CPPFLAGS="-DSOLARIS"
+            CXXFLAGS="-DSOLARIS"
+            CFLAGS="-DSOLARIS"])
     ;;
 esac
 
@@ -75,6 +90,15 @@ AC_HEADER_STDC
 
 # check for libtool
 AC_PROG_LIBTOOL
+
+AC_LANG_CPLUSPLUS
+
+case $host in
+*solaris*)
+    AC_ARG_ENABLE(m64, [enable 64bit mode], [], [
+        AC_CHECK_LIB(z,gzopen64, , AC_MSG_ERROR(Cannot find libz library!))])
+    ;;
+esac
 
 m4_ifndef([PKG_PROG_PKG_CONFIG], [m4_fatal([Please install pkg-config.])])
 PKG_PROG_PKG_CONFIG

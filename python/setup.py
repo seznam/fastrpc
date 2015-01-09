@@ -25,6 +25,7 @@ http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
 
 from debian.changelog import Changelog
 from distutils import sysconfig
+from os import uname
 from os.path import dirname, join
 from setuptools import setup, Extension
 
@@ -48,7 +49,12 @@ def _init_posix(init):
             # Non-Sun needs linkage with g++
             config_vars['LDSHARED'] = 'g++ -shared -g -W -Wall -Wno-deprecated'
 
-        config_vars['CFLAGS'] = '-g -W -Wall -Wno-deprecated'
+        if uname()[0] == 'SunOS':
+            config_vars['CFLAGS'] = '-g -W -Wall -Wno-deprecated -I/opt/szn/include -m64'
+            config_vars['LDFLAGS'] = '-L/opt/szn/lib/amd64'
+        else:
+            config_vars['CFLAGS'] = '-g -W -Wall -Wno-deprecated'
+
         config_vars['OPT'] = '-g -W -Wall -Wno-deprecated'
 
     return wrapper
