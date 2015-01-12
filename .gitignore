@@ -25,3 +25,9 @@ version
 *.dsc
 *.deb
 *.tar.gz
+
+# Solaris
+solaris/build/
+solaris/cfgfiles
+solaris/pkg/
+solaris/*.pkg.gz
