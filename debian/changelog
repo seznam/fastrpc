@@ -1,3 +1,9 @@
+libfastrpc (5.0.10) testing; urgency=low
+
+  * Fixed STRERROR on Solaris.
+
+ -- Tomas Golembiovsky <tomas.golembiovsky@firma.seznam.cz>  Mon, 12 Jan 2015 18:54:28 +0100
+
 libfastrpc (5.0.9-1) testing; urgency=low
 
   * added missing debian/symbols

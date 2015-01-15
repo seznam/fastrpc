@@ -12,7 +12,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
-:q * You should have received a copy of the GNU Lesser General Public
+ * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
@@ -41,7 +41,12 @@
 #ifdef __BYTE_ORDER
    #if __BYTE_ORDER == __BIG_ENDIAN
       #define FRPC_BIG_ENDIAN
-      #warning "BIG ENDIAN detectet ! Using it."
+      //#warning "BIG ENDIAN detected! Using it."
+   #endif
+#elif defined __BYTE_ORDER__
+   #if __BYTE_ORDER__ == __BIG_ENDIAN__
+      #define FRPC_BIG_ENDIAN
+      //#warning "BIG ENDIAN detected! Using it."
    #endif
 #else
   #warning "ENDIAN not defined ! Using default LITTLE ENDIAN"

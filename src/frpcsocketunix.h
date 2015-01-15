@@ -45,8 +45,9 @@
 
 #define STRERROR_PRE() char strErrBuff[256]
 #define ERRNO (errno)
+
 #ifdef SOLARIS
-#define STRERROR(e) ((strerror_r(e, strErrBuff, sizeof(strErrBuff)) == 0) ? strErrBuff : NULL)
+#define STRERROR(e) ((strerror_r(e, strErrBuff, sizeof(strErrBuff)) == 0) ? strErrBuff : "")
 #else
 #define STRERROR(e) strerror_r(e, strErrBuff, sizeof(strErrBuff))
 #endif

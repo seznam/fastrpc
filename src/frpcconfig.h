@@ -159,7 +159,7 @@ namespace FRPC {
             LibConfig_t(const LibConfig_t&);
 
             //! No assignemnts
-            LibConfig_t operator=(const LibConfig_t&);
+            LibConfig_t& operator=(const LibConfig_t&);
 
 
     };

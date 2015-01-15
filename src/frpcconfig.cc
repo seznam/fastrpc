@@ -58,9 +58,12 @@ namespace FRPC {
     }
 
     LibConfig_t::LibConfig_t(const LibConfig_t&) {
+        // Intentionaly left empty.
     }
 
-    LibConfig_t LibConfig_t::operator=(const LibConfig_t&) {
+    LibConfig_t& LibConfig_t::operator=(const LibConfig_t&) {
+        // Intentionaly left empty.
+        return *this;
     }
 };
 
