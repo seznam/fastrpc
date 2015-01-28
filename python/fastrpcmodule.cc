@@ -342,7 +342,7 @@ int TimeObject_init_parseString(DateTimeObject *self, PyObject *pyValue) {
                                min, sec, timeZone);
 
     } catch(const StreamError_t &e) {
-        PyErr_Format(PyExc_Exception,e.message().c_str());
+        PyErr_Format(PyExc_Exception, "%s", e.message().c_str());
         return -1;
     }
     //error, extra characters on line
