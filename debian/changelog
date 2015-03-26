@@ -1,3 +1,9 @@
+libfastrpc (5.0.11) UNRELEASED; urgency=low
+
+  * Generalized array operator.
+
+ -- Tomas Golembiovsky <tomas.golembiovsky@firma.seznam.cz>  Thu, 19 Mar 2015 17:26:48 +0100
+
 libfastrpc (5.0.10) testing; urgency=low
 
   * Fixed STRERROR on Solaris.

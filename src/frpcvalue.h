@@ -36,6 +36,8 @@
 #include <frpcplatform.h>
 
 #include <string>
+#include <vector>
+#include <map>
 #include "frpctypeerror.h"
 
 namespace FRPC
@@ -97,6 +99,23 @@ public:
     virtual Value_t& clone(Pool_t &newPool) const = 0;
 
     bool isNull() const;
+
+    /**
+        @brief Virtual method to get item from array
+        @param index              index in array
+        @return @b Value_t        object from index
+    */
+
+    virtual Value_t& operator[] (std::vector<Value_t*>::size_type index);
+    virtual const Value_t& operator[] (std::vector<Value_t*>::size_type index) const;
+
+    /**
+        @brief Virtual method to get item from struct
+        @param index              index in struct
+        @return @b Value_t        object from index
+    */
+    virtual Value_t& operator[] (const std::map<std::string,Value_t*>::key_type &key);
+    virtual const Value_t& operator[] (const std::map<std::string,Value_t*>::key_type &key) const;
 
 
 private:

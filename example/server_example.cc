@@ -48,9 +48,17 @@ Value_t& methodTest(Pool_t &pool, Array_t &params, int &data) {
     // automatic integrity check (only first level)
     params.checkItems("is");
 
+
+    Array_t& frpcarray = pool.Array();
+    frpcarray.push_back(pool.String("polozka0"));
+    frpcarray.push_back(pool.String("polozka1"));
+    frpcarray.push_back(pool.String("polozka2"));
+    frpcarray.push_back(pool.String("polozka3"));
+    frpcarray.push_back(pool.String("polozka4"));
+
     return pool.Struct("status", pool.Int(200), "statusMessage",
-                       pool.String("OK"), "int", params[0], "string",
-                       params[1]);
+                       pool.String("OK"),"struct", pool.Struct("int", params[0], "string",params[1]), 
+                       "array",frpcarray);
 }
 
 class HeaderDumper_t {

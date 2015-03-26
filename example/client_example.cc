@@ -13,7 +13,15 @@ using namespace FRPC;
 int main(int argc, char *argv[]) {
     Pool_t pool; // memory pool
     ServerProxy_t::Config_t config;
-    ServerProxy_t client("http://localhost:9898/RPC2", config);
+
+    std::string url;
+    if(argc > 1 && atoi(argv[1])){
+        url = "http://localhost:";url +=  argv[1];url +="/RPC2";
+    } else {
+        url = "http://localhost:2424/RPC2";
+    }
+
+    ServerProxy_t client(url.c_str(), config);
 
     try  {
         // Calling introspection method system.listMethods()
@@ -31,6 +39,8 @@ int main(int argc, char *argv[]) {
                                         pool.String("hello")));
 
         printf("\nresult[\"status\"]=%li\n", Int(result["status"]).getValue());
+        printf("\nresult[\"struct\"][\"int\"]=%li\n", Int(result["struct"]["int"]).getValue());
+        printf("\nresult[\"array\"][2]=%s\n", String(result["array"][2]).getValue().c_str());
 	printf("\nOutput from test2 method is: ");
 	printValue(result);
 					

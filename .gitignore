@@ -8,6 +8,8 @@ config.log
 config.status
 config.sub
 configure
+debian/autoreconf.after
+debian/autoreconf.before
 debian/files
 debian/libfastrpc-dev*
 debian/libfastrpc5*
