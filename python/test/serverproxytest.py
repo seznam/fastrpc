@@ -18,7 +18,7 @@ class ServerProxyTest(unittest.TestCase):
     def test_getattr(self):
         client = fastrpc.ServerProxy(
             self.url, readTimeout=1000, writeTimeout=1000, connectTimeout=1000,
-            useBinary=fastrpc.ON_SUPPORT_ON_KEEP_ALIVE)
+            useBinary=fastrpc.ON_SUPPORT_ON_KEEP_ALIVE, hideAttributes=False)
 
         for attr in self.attributes_names:
             self.assertEqual(getattr(client, attr), getattr(self, attr))
@@ -28,7 +28,7 @@ class ServerProxyTest(unittest.TestCase):
         If hideAttributes parametr is set to True in constructor of ServerProxy
         all serverproxy attrs should be taken as frpc call attempt (proxy.url(), proxy.path()...)
         """
-        without_hide = fastrpc.ServerProxy(
+        default_hide = fastrpc.ServerProxy(
             self.url, readTimeout=1, writeTimeout=1, connectTimeout=1,
             useBinary=fastrpc.ON_SUPPORT_ON_KEEP_ALIVE)
 
@@ -48,10 +48,9 @@ class ServerProxyTest(unittest.TestCase):
             for attr in self.attributes_names:
                 self.assertRaises(exception, lambda: getattr(client, attr)())
 
-        try_attr(without_hide)
         try_attr(without_hide_false)
 
-        try_typeerror(without_hide, TypeError)
+        try_typeerror(default_hide, ProtocolError)
         try_typeerror(without_hide_false, TypeError)
         try_typeerror(with_hide, ProtocolError)
 
@@ -121,9 +120,9 @@ class ServerProxyTest(unittest.TestCase):
 
         client = fastrpc.ServerProxy(config_parser, section)
 
-        self.assertEqual(getattr(client, "host"), self.host)
-        self.assertEqual(getattr(client, "port"), self.port)
-        self.assertEqual(getattr(client, "url"), self.url)
+        self.assertEqual(client("get_host"), self.host)
+        self.assertEqual(client("get_port"), self.port)
+        self.assertEqual(client("get_url"), self.url)
 
 
 if __name__ == '__main__':

@@ -1466,7 +1466,7 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
     PyObject *datetimeBuilder = 0;
     PyObject *preCall = 0;
     PyObject *postCall = 0;
-    int hideAttributes = false;
+    int hideAttributes = true;
 
     static const char *kwtypes = "siiiiisissiiOO";
     const void *kwvars[] = { serverUrl, &readTimeout,

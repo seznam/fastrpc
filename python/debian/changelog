@@ -1,3 +1,9 @@
+python-fastrpc (5.0.7) testing; urgency=low
+
+  * change default value of hideAttributes to true
+
+ -- Tomas Kral <tomas.kral@firma.seznam.cz>  Mon, 23 Mar 2015 10:01:20 +0100
+
 python-fastrpc (5.0.6) testing; urgency=low
 
   * ServerProxy(hideAttributes=true/false) possibility: calling fastrpc
