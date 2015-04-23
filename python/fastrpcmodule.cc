@@ -1671,11 +1671,9 @@ PyObject* ServerProxy_call(ServerProxyObject *self, PyObject *args, PyObject *kw
 
 PyObject* ServerProxy_getattr(ServerProxyObject *self, char *name)
 {
-
-    if (self->hideAttributes) {
-        return newMethod(self, name);
-    }
-
+    
+    // check for __dict__ before checking hideAttributes, 
+    // so __dict__ will be accessible regardless of hideAttributes
     const URL_t &url = self->proxy.getURL();
     if (!strncmp(name, "__", 2)) {
         if (!strcmp(name, "__dict__")) {
@@ -1713,8 +1711,13 @@ PyObject* ServerProxy_getattr(ServerProxyObject *self, char *name)
         return PyErr_Format(PyExc_AttributeError,
                             "ServerProxy object has no attributes '%s'",
                             name);
+    }
 
-    } else if (!strcmp(name, "host")) {
+    if (self->hideAttributes) {
+        return newMethod(self, name);
+    }
+
+    if (!strcmp(name, "host")) {
         return PyString_FromStringAndSize(url.host.data(), url.host.size());
     } else if (!strcmp(name, "path")) {
         return PyString_FromStringAndSize(url.path.data(), url.path.size());
