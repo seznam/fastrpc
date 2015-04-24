@@ -1,3 +1,9 @@
+python-fastrpc (5.0.8) testing; urgency=medium
+
+  *  allow access via __dict__ if hideAttributes=True (#10)
+
+ -- Tomas Kral <tomas.kral@firma.seznam.cz>  Fri, 24 Apr 2015 12:48:11 +0200
+
 python-fastrpc (5.0.7) testing; urgency=low
 
   * change default value of hideAttributes to true
