@@ -124,6 +124,21 @@ class ServerProxyTest(unittest.TestCase):
         self.assertEqual(client("get_port"), self.port)
         self.assertEqual(client("get_url"), self.url)
 
+    def test_dictAccess(self):
+        client_hide_false = fastrpc.ServerProxy(self.url, hideAttributes=False)
+        client_hide_true = fastrpc.ServerProxy(self.url, hideAttributes=True)
+
+        self.assertEqual(client_hide_false.__dict__['host'], self.host)
+        self.assertEqual(client_hide_false.__dict__['path'], self.path)
+        self.assertEqual(client_hide_false.__dict__['port'], self.port)
+        self.assertEqual(client_hide_false.__dict__['url'], self.url)
+        self.assertIsInstance(client_hide_false.__dict__['last_call'], str)
+
+        self.assertEqual(client_hide_true.__dict__['host'], self.host)
+        self.assertEqual(client_hide_true.__dict__['path'], self.path)
+        self.assertEqual(client_hide_true.__dict__['port'], self.port)
+        self.assertEqual(client_hide_true.__dict__['url'], self.url)
+        self.assertIsInstance(client_hide_true.__dict__['last_call'], str)
 
 if __name__ == '__main__':
     unittest.main()
