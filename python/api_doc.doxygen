@@ -40,7 +40,7 @@ ServerProxy(string serverUrl, int readTimeout, int writeTimeout,
 string    host; 
                   ///url path
 string    path; 
-                 ///complette url
+                 ///complete url
 string    url;  
                    /// last call method
 string    last_call;  
