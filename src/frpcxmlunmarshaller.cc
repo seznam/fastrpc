@@ -285,7 +285,7 @@ void XmlUnMarshaller_t::finish() {
 
     unMarshall(0,0,NONE);
     if (internalType !=NONE )
-        throw StreamError_t("Stream not complette");
+        throw StreamError_t("Stream not complete");
 
 }
 

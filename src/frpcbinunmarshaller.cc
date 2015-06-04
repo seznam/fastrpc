@@ -48,7 +48,7 @@ BinUnMarshaller_t::~BinUnMarshaller_t() {}
 
 void BinUnMarshaller_t::finish() {
     if (internalType !=NONE || entityStorage.size() > 0)
-        throw StreamError_t("Stream not complette");
+        throw StreamError_t("Stream not complete");
 
 }
 
