@@ -138,6 +138,20 @@ namespace {
         }
     }
 
+    void setNonDelayedSocket(int& fd)
+    {
+        // set not-delayed IO (we are not telnet)
+        int just_say_no = 1;
+        if (::setsockopt(fd, IPPROTO_TCP, TCP_NODELAY,
+                         (char*) &just_say_no, sizeof(int)) < 0)
+        {
+            STRERROR_PRE();
+            throw HTTPError_t(
+                HTTP_SYSCALL, "Cannot set socket non-delaying: <%d, %s>.",
+                ERRNO, STRERROR(ERRNO));
+        }
+    }
+
 } // namespace
 
 SimpleConnector_t::SimpleConnector_t(const URL_t &url, int connectTimeout,
@@ -230,16 +244,7 @@ void SimpleConnector_t::connectSocket(int &fd) {
 
         setNonBlockingSocket(fd);
 
-        // set not-delayed IO (we are not telnet)
-        int just_say_no = 1;
-        if (::setsockopt(fd, IPPROTO_TCP, TCP_NODELAY,
-                         (char*) &just_say_no, sizeof(int)) < 0)
-        {
-            STRERROR_PRE();
-            throw HTTPError_t(HTTP_SYSCALL,
-                              "Cannot set socket non-delaying: "
-                              "<%d, %s>.", ERRNO, STRERROR(ERRNO));
-        }
+        setNonDelayedSocket(fd);
 
         // peer address
         struct sockaddr_in addr;
@@ -402,16 +407,7 @@ void SimpleConnectorIPv6_t::connectSocket(int &fd) {
 
         setNonBlockingSocket(fd);
 
-        // set not-delayed IO (we are not telnet)
-        int just_say_no = 1;
-        if (::setsockopt(fd, IPPROTO_TCP, TCP_NODELAY,
-                         (char*) &just_say_no, sizeof(int)) < 0)
-        {
-            STRERROR_PRE();
-            throw HTTPError_t(HTTP_SYSCALL,
-                              "Cannot set socket non-delaying: "
-                              "<%d, %s>.", ERRNO, STRERROR(ERRNO));
-        }
+        setNonDelayedSocket(fd);
 
         // connect the socket
         if (TEMP_FAILURE_RETRY(::connect(fd, addrInfo->ai_addr,
