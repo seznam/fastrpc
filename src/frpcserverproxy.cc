@@ -80,6 +80,22 @@ namespace {
         // OK
         return FRPC::ProtocolVersion_t(major, minor);
     }
+
+    FRPC::ServerProxy_t::Config_t configFromStruct(const FRPC::Struct_t &s)
+    {
+        FRPC::ServerProxy_t::Config_t config;
+
+        config.proxyUrl = FRPC::String(s.get("proxyUrl", FRPC::String_t::FRPC_EMPTY));
+        config.readTimeout = getTimeout(s, "readTimeout", 10000);
+        config.writeTimeout = getTimeout(s, "writeTimeout", 1000);
+        config.useBinary = FRPC::Int(s.get("transferMode", FRPC::Int_t::FRPC_ZERO));
+        config.useHTTP10 = FRPC::Bool(s.get("useHTTP10", FRPC::Bool_t::FRPC_FALSE));
+        config.protocolVersion = parseProtocolVersion(s, "protocolVersion");
+        config.connectTimeout = getTimeout(s, "connectTimeout", 10000);
+        config.keepAlive = FRPC::Bool(s.get("keepAlive", FRPC::Bool_t::FRPC_FALSE));
+
+        return config;
+    }
 }
 
 namespace FRPC {
@@ -95,21 +111,6 @@ public:
           protocolVersion(config.protocolVersion),
           connector(new SimpleConnectorIPv6_t(url, config.connectTimeout,
                                           config.keepAlive))
-    {}
-
-    ServerProxyImpl_t(const std::string &server, const Struct_t &config)
-        : url(server,
-              FRPC::String(config.get("proxyUrl", String_t::FRPC_EMPTY))),
-          io(-1, getTimeout(config, "readTimeout", 10000),
-             getTimeout(config, "writeTimeout", 1000), -1, -1),
-          rpcTransferMode(FRPC::Int(config.get("transferMode",
-                                               Int_t::FRPC_ZERO))),
-          useHTTP10(FRPC::Bool(config.get("useHTTP10", Bool_t::FRPC_FALSE))),
-          serverSupportedProtocols(HTTPClient_t::XML_RPC),
-          protocolVersion(parseProtocolVersion(config, "protocolVersion")),
-          connector(new SimpleConnectorIPv6_t
-                    (url, getTimeout(config, "connectTimeout", 10000),
-                     FRPC::Bool(config.get("keepAlive", Bool_t::FRPC_FALSE))))
     {}
 
     /** Set new read timeout */
@@ -223,7 +224,7 @@ ServerProxy_t::ServerProxy_t(const std::string &server, const Config_t &config)
 {}
 
 ServerProxy_t::ServerProxy_t(const std::string &server, const Struct_t &config)
-    : sp(new ServerProxyImpl_t(server, config))
+    : sp(new ServerProxyImpl_t(server, configFromStruct(config)))
 {}
 
 
