@@ -152,6 +152,32 @@ namespace {
         }
     }
 
+    void waitConnectSocket(int& fd, const URL_t& url, const int& connectTimeout)
+    {
+        // create poll struct
+        pollfd pfd;
+        pfd.fd = fd;
+        pfd.events = POLLOUT;
+
+        // wait for connect completion or timeout
+        int ready = TEMP_FAILURE_RETRY(
+                ::poll(&pfd, 1, (connectTimeout < 0) ? -1 : connectTimeout));
+
+        if (ready <= 0) {
+            switch (ready) {
+            case 0:
+                throw HTTPError_t(
+                    HTTP_SYSCALL, "Timeout while connecting to %s.",
+                    url.getUrl().c_str());
+            default:
+                STRERROR_PRE();
+                throw HTTPError_t(
+                    HTTP_SYSCALL, "Cannot select on socket: <%d, %s>.",
+                    ERRNO, STRERROR(ERRNO));
+            }
+        }
+    }
+
 } // namespace
 
 SimpleConnector_t::SimpleConnector_t(const URL_t &url, int connectTimeout,
@@ -275,29 +301,7 @@ void SimpleConnector_t::connectSocket(int &fd) {
                                   ERRNO, STRERROR(ERRNO));
             }
 
-            // create poll struct
-            pollfd pfd;
-            pfd.fd = fd;
-            pfd.events = POLLOUT;
-
-            // wait for connect completion or timeout
-            int ready = TEMP_FAILURE_RETRY(
-                    ::poll(&pfd, 1, (connectTimeout < 0) ? -1 : connectTimeout));
-
-            if (ready <= 0) {
-                switch (ready) {
-                case 0:
-                    throw HTTPError_t(HTTP_SYSCALL,
-                                      "Timeout while connecting to %s.",
-                                      url.getUrl().c_str());
-
-                default:
-                    STRERROR_PRE();
-                    throw HTTPError_t(HTTP_SYSCALL,
-                                      "Cannot select on socket: <%d, %s>.",
-                                      ERRNO, STRERROR(ERRNO));
-                }
-            }
+            waitConnectSocket(fd, url, connectTimeout);
 
             checkSocket(fd);
         }
@@ -429,29 +433,7 @@ void SimpleConnectorIPv6_t::connectSocket(int &fd) {
                                   ERRNO, STRERROR(ERRNO));
             }
 
-            // create poll struct
-            pollfd pfd;
-            pfd.fd = fd;
-            pfd.events = POLLOUT;
-
-            // wait for connect completion or timeout
-            int ready = TEMP_FAILURE_RETRY(
-                    ::poll(&pfd, 1, (connectTimeout < 0) ? -1 : connectTimeout));
-
-            if (ready <= 0) {
-                switch (ready) {
-                case 0:
-                    throw HTTPError_t(HTTP_SYSCALL,
-                                      "Timeout while connecting to %s.",
-                                      url.getUrl().c_str());
-
-                default:
-                    STRERROR_PRE();
-                    throw HTTPError_t(HTTP_SYSCALL,
-                                      "Cannot select on socket: <%d, %s>.",
-                                      ERRNO, STRERROR(ERRNO));
-                }
-            }
+            waitConnectSocket(fd, url, connectTimeout);
 
             checkSocket(fd);
         }
