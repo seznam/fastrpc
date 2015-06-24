@@ -122,6 +122,22 @@ namespace {
         }
     }
 
+    void setNonBlockingSocket(int& fd)
+    {
+#ifdef WIN32
+        unsigned int flag = 1;
+        if (::ioctlsocket((SOCKET)fd, FIONBIO, &flag) < 0)
+#else //WIN32
+        if (::fcntl(fd, F_SETFL, O_NONBLOCK) < 0)
+#endif //WIN32
+        {
+            STRERROR_PRE();
+            throw HTTPError_t(
+                HTTP_SYSCALL, "Cannot set socket non-blocking: <%d, %s>.",
+                ERRNO, STRERROR(ERRNO));
+        }
+    }
+
 } // namespace
 
 SimpleConnector_t::SimpleConnector_t(const URL_t &url, int connectTimeout,
@@ -212,20 +228,7 @@ void SimpleConnector_t::connectSocket(int &fd) {
                               ERRNO, STRERROR(ERRNO));
         }
 
-#ifdef WIN32
-        unsigned int flag = 1;
-        if (::ioctlsocket((SOCKET)fd, FIONBIO, &flag) < 0)
-#else //WIN32
-
-        if (::fcntl(fd, F_SETFL, O_NONBLOCK) < 0)
-#endif //WIN32
-
-        {
-            STRERROR_PRE();
-            throw HTTPError_t(HTTP_SYSCALL,
-                              "Cannot set socket non-blocking: "
-                              "<%d, %s>.", ERRNO, STRERROR(ERRNO));
-        }
+        setNonBlockingSocket(fd);
 
         // set not-delayed IO (we are not telnet)
         int just_say_no = 1;
@@ -397,20 +400,7 @@ void SimpleConnectorIPv6_t::connectSocket(int &fd) {
                               ERRNO, STRERROR(ERRNO));
         }
 
-#ifdef WIN32
-        unsigned int flag = 1;
-        if (::ioctlsocket((SOCKET)fd, FIONBIO, &flag) < 0)
-#else //WIN32
-
-        if (::fcntl(fd, F_SETFL, O_NONBLOCK) < 0)
-#endif //WIN32
-
-        {
-            STRERROR_PRE();
-            throw HTTPError_t(HTTP_SYSCALL,
-                              "Cannot set socket non-blocking: "
-                              "<%d, %s>.", ERRNO, STRERROR(ERRNO));
-        }
+        setNonBlockingSocket(fd);
 
         // set not-delayed IO (we are not telnet)
         int just_say_no = 1;
