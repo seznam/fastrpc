@@ -95,6 +95,33 @@ namespace {
             return "Unknown DNS related error.";
         }
     }
+
+    void checkSocket(int &fd)
+    {
+        // check for connect status
+        socklen_t len = sizeof(int);
+        int status;
+#ifdef WIN32
+        if (::getsockopt(fd, SOL_SOCKET, SO_ERROR, (char*)&status, &len))
+#else //WIN32
+        if (::getsockopt(fd, SOL_SOCKET, SO_ERROR, &status, &len))
+#endif //WIN32
+        {
+            STRERROR_PRE();
+            throw HTTPError_t(
+                HTTP_SYSCALL, "Cannot get socket info: <%d, %s>.",
+                ERRNO, STRERROR(ERRNO));
+        }
+
+        // check for error
+        if (status) {
+            STRERROR_PRE();
+            throw HTTPError_t(
+                HTTP_SYSCALL, "Cannot connect socket: <%d, %s>.",
+                status, STRERROR(status));
+        }
+    }
+
 } // namespace
 
 SimpleConnector_t::SimpleConnector_t(const URL_t &url, int connectTimeout,
@@ -264,31 +291,7 @@ void SimpleConnector_t::connectSocket(int &fd) {
                 }
             }
 
-            // check for connect status
-            socklen_t len = sizeof(int);
-            int status;
-#ifdef WIN32
-
-            if (::getsockopt(fd, SOL_SOCKET, SO_ERROR, (char*)&status, &len))
-#else //WIN32
-
-            if (::getsockopt(fd, SOL_SOCKET, SO_ERROR, &status, &len))
-#endif //WIN32
-
-            {
-                STRERROR_PRE();
-                throw HTTPError_t(HTTP_SYSCALL,
-                                  "Cannot get socket info: <%d, %s>.",
-                                  ERRNO, STRERROR(ERRNO));
-            }
-
-            // check for error
-            if (status) {
-                STRERROR_PRE();
-                throw HTTPError_t(HTTP_SYSCALL,
-                                  "Cannot connect socket: <%d, %s>.",
-                                  status, STRERROR(status));
-            }
+            checkSocket(fd);
         }
 
         // connect OK => do not close the socket!
@@ -464,31 +467,7 @@ void SimpleConnectorIPv6_t::connectSocket(int &fd) {
                 }
             }
 
-            // check for connect status
-            socklen_t len = sizeof(int);
-            int status;
-#ifdef WIN32
-
-            if (::getsockopt(fd, SOL_SOCKET, SO_ERROR, (char*)&status, &len))
-#else //WIN32
-
-            if (::getsockopt(fd, SOL_SOCKET, SO_ERROR, &status, &len))
-#endif //WIN32
-
-            {
-                STRERROR_PRE();
-                throw HTTPError_t(HTTP_SYSCALL,
-                                  "Cannot get socket info: <%d, %s>.",
-                                  ERRNO, STRERROR(ERRNO));
-            }
-
-            // check for error
-            if (status) {
-                STRERROR_PRE();
-                throw HTTPError_t(HTTP_SYSCALL,
-                                  "Cannot connect socket: <%d, %s>.",
-                                  status, STRERROR(status));
-            }
+            checkSocket(fd);
         }
 
         // connect OK => do not close the socket!
