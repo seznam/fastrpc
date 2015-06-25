@@ -96,6 +96,18 @@ namespace {
 
         return config;
     }
+
+    FRPC::Connector_t* makeConnector(
+        const FRPC::URL_t &url,
+        const unsigned &connectTimeout,
+        const bool &keepAlive)
+    {
+        if (url.isUnix()) {
+            return new FRPC::SimpleConnectorUnix_t(
+               url, connectTimeout, keepAlive);
+        }
+        return new FRPC::SimpleConnectorIPv6_t(url, connectTimeout, keepAlive);
+    }
 }
 
 namespace FRPC {
@@ -109,7 +121,7 @@ public:
           rpcTransferMode(config.useBinary), useHTTP10(config.useHTTP10),
           serverSupportedProtocols(HTTPClient_t::XML_RPC),
           protocolVersion(config.protocolVersion),
-          connector(new SimpleConnectorIPv6_t(url, config.connectTimeout,
+          connector(makeConnector(url, config.connectTimeout,
                                           config.keepAlive))
     {}
 
