@@ -34,6 +34,7 @@
 #include "nonglibc.h"
 
 #include <sys/types.h>
+#include <sys/un.h>
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>
@@ -416,3 +417,73 @@ void SimpleConnectorIPv6_t::connectSocket(int &fd) {
     }
 }
 
+SimpleConnectorUnix_t::SimpleConnectorUnix_t(const URL_t &url, int connectTimeout,
+                                     bool keepAlive)
+    : Connector_t(url, connectTimeout, keepAlive)
+{ }
+
+SimpleConnectorUnix_t::~SimpleConnectorUnix_t()
+{ }
+
+void SimpleConnectorUnix_t::connectSocket(int &fd) {
+    // check socket
+    if (!keepAlive && (fd > -1)) {
+        TEMP_FAILURE_RETRY(::close(fd));
+        fd = -1;
+    }
+
+    // initialize closer (initially closes socket when valid)
+    SocketCloser_t closer(fd);
+
+    // check open socket whether the peer had not closed it
+    if (fd > -1) {
+        closer.release();
+
+        closeSocketIfPeerClosed(fd);
+    }
+
+    // if open socket is not availabe open new one
+    if (fd < 0) {
+        // otevøeme socket
+        if ((fd = ::socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
+            // oops! error
+            STRERROR_PRE();
+            throw HTTPError_t(HTTP_SYSCALL,
+                              "Cannot select on socketr: <%d, %s>.",
+                              ERRNO, STRERROR(ERRNO));
+        }
+
+        setNonBlockingSocket(fd);
+
+        struct sockaddr_un remote;
+        remote.sun_family = AF_UNIX;
+        strcpy(remote.sun_path, url.path.c_str());
+        int len = strlen(remote.sun_path) + sizeof(remote.sun_family);
+
+        // connect the socket
+        if (TEMP_FAILURE_RETRY(::connect(fd, (struct sockaddr *)&remote,
+                               len)) < 0)
+        {
+            switch (ERRNO) {
+            case EINPROGRESS:
+                // connection already in progress
+            case EALREADY:
+                // connection already in progress
+            case EWOULDBLOCK:
+                // connection launched on the background
+                break;
+            default:
+                STRERROR_PRE();
+                throw HTTPError_t(HTTP_SYSCALL,
+                                  "Cannot connect socket: <%d, %s>.",
+                                  ERRNO, STRERROR(ERRNO));
+            }
+
+            waitConnectSocket(fd, url, connectTimeout);
+            checkSocket(fd);
+        }
+
+        // connect OK => do not close the socket!
+        closer.release();
+    }
+}

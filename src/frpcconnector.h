@@ -109,6 +109,17 @@ private:
     struct addrinfo *addrInfo;
 };
 
+/** Simple unix socket connector.
+ */
+class FRPC_DLLEXPORT SimpleConnectorUnix_t : public Connector_t {
+public:
+    SimpleConnectorUnix_t(const URL_t &url, int connectTimeout, bool keepAlive);
+
+    virtual ~SimpleConnectorUnix_t();
+
+    virtual void connectSocket(int &fd);
+};
+
 } // namespace FRPC
 
 #endif // FRPCCONNECTOR
