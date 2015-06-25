@@ -178,6 +178,43 @@ namespace {
         }
     }
 
+    void closeSocketIfPeerClosed(int& fd)
+    {
+        // check for activity on socket
+        pollfd pfd;
+        pfd.fd = fd;
+        pfd.events = POLLIN;
+
+        // okam¾itý timeout
+        switch (TEMP_FAILURE_RETRY(::poll(&pfd, 1, 0))) {
+        case 0:
+            // OK
+            break;
+
+        case -1:
+            // some error on socket => close it
+            TEMP_FAILURE_RETRY(::close(fd));
+            fd = -1;
+            break;
+
+        default:
+            // check whether any data can be read from the socket
+            char buff;
+            switch (TEMP_FAILURE_RETRY(recv(fd, &buff, 1, MSG_PEEK))) {
+            case -1:
+            case 0:
+                // zavøeme socket
+                TEMP_FAILURE_RETRY(::close(fd));
+                fd = -1;
+                break;
+
+            default:
+                // OK
+                break;
+            }
+        }
+    }
+
 } // namespace
 
 SimpleConnector_t::SimpleConnector_t(const URL_t &url, int connectTimeout,
@@ -222,39 +259,7 @@ void SimpleConnector_t::connectSocket(int &fd) {
     if (fd > -1) {
         closer.release();
 
-        // check for activity on socket
-        pollfd pfd;
-        pfd.fd = fd;
-        pfd.events = POLLIN;
-
-        // okam¾itý timeout
-        switch (TEMP_FAILURE_RETRY(::poll(&pfd, 1, 0))) {
-        case 0:
-            // OK
-            break;
-
-        case -1:
-            // some error on socket => close it
-            TEMP_FAILURE_RETRY(::close(fd));
-            fd = -1;
-            break;
-
-        default:
-            // check whether any data can be read from the socket
-            char buff;
-            switch (TEMP_FAILURE_RETRY(recv(fd, &buff, 1, MSG_PEEK))) {
-            case -1:
-            case 0:
-                // zavøeme socket
-                TEMP_FAILURE_RETRY(::close(fd));
-                fd = -1;
-                break;
-
-            default:
-                // OK
-                break;
-            }
-        }
+        closeSocketIfPeerClosed(fd);
     }
 
     // if open socket is not availabe open new one
@@ -363,39 +368,7 @@ void SimpleConnectorIPv6_t::connectSocket(int &fd) {
     if (fd > -1) {
         closer.release();
 
-        // check for activity on socket
-        pollfd pfd;
-        pfd.fd = fd;
-        pfd.events = POLLIN;
-
-        // okam¾itý timeout
-        switch (TEMP_FAILURE_RETRY(::poll(&pfd, 1, 0))) {
-        case 0:
-            // OK
-            break;
-
-        case -1:
-            // some error on socket => close it
-            TEMP_FAILURE_RETRY(::close(fd));
-            fd = -1;
-            break;
-
-        default:
-            // check whether any data can be read from the socket
-            char buff;
-            switch (TEMP_FAILURE_RETRY(recv(fd, &buff, 1, MSG_PEEK))) {
-            case -1:
-            case 0:
-                // zavøeme socket
-                TEMP_FAILURE_RETRY(::close(fd));
-                fd = -1;
-                break;
-
-            default:
-                // OK
-                break;
-            }
-        }
+        closeSocketIfPeerClosed(fd);
     }
 
     // if open socket is not availabe open new one
