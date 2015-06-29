@@ -1,3 +1,9 @@
+python-fastrpc (5.0.9) testing; urgency=low
+
+  * Fixed parsing of protocol version.
+
+ -- Tomas Golembiovsky <tomas.golembiovsky@firma.seznam.cz>  Mon, 29 Jun 2015 19:44:43 +0200
+
 python-fastrpc (5.0.8) testing; urgency=medium
 
   *  allow access via __dict__ if hideAttributes=True (#10)

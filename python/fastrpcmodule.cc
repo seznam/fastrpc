@@ -2038,8 +2038,8 @@ PyObject* fastrpc_dumps(PyObject *, PyObject *args, PyObject *keywds) {
     int methodresponse = false;
     const char *encoding = "utf-8";
     int useBinary = false;
-    unsigned char protocolVersionMajor = 2;
-    unsigned char protocolVersionMinor = 1;
+    int protocolVersionMajor = 2;
+    int protocolVersionMinor = 1;
 
     if (!PyArg_ParseTupleAndKeywords(args, keywds,
                                      "O|zisiii:fastrpc.dumps", (char **)kwlist,
@@ -2048,6 +2048,11 @@ PyObject* fastrpc_dumps(PyObject *, PyObject *args, PyObject *keywds) {
                                      &protocolVersionMajor,
                                      &protocolVersionMinor))
         return 0;
+
+    if ((protocolVersionMajor < 0) || (protocolVersionMinor < 0)) {
+        PyErr_SetString(PyExc_RuntimeError, "Protocol version must not be negative");
+        return 0;
+    }
 
     // create writer
     StringWriter_t writer;
