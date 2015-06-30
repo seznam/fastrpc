@@ -186,6 +186,8 @@ namespace FRPC {
 
         bool sslUsed() const;
 
+        bool isUnix() const;
+
     private:
         void parse(const std::string &url);
         bool usesProxy;

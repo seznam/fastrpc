@@ -34,6 +34,7 @@
 #include "nonglibc.h"
 
 #include <sys/types.h>
+#include <sys/un.h>
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>
@@ -95,6 +96,126 @@ namespace {
             return "Unknown DNS related error.";
         }
     }
+
+    void checkSocket(int &fd)
+    {
+        // check for connect status
+        socklen_t len = sizeof(int);
+        int status;
+#ifdef WIN32
+        if (::getsockopt(fd, SOL_SOCKET, SO_ERROR, (char*)&status, &len))
+#else //WIN32
+        if (::getsockopt(fd, SOL_SOCKET, SO_ERROR, &status, &len))
+#endif //WIN32
+        {
+            STRERROR_PRE();
+            throw HTTPError_t(
+                HTTP_SYSCALL, "Cannot get socket info: <%d, %s>.",
+                ERRNO, STRERROR(ERRNO));
+        }
+
+        // check for error
+        if (status) {
+            STRERROR_PRE();
+            throw HTTPError_t(
+                HTTP_SYSCALL, "Cannot connect socket: <%d, %s>.",
+                status, STRERROR(status));
+        }
+    }
+
+    void setNonBlockingSocket(int& fd)
+    {
+#ifdef WIN32
+        unsigned int flag = 1;
+        if (::ioctlsocket((SOCKET)fd, FIONBIO, &flag) < 0)
+#else //WIN32
+        if (::fcntl(fd, F_SETFL, O_NONBLOCK) < 0)
+#endif //WIN32
+        {
+            STRERROR_PRE();
+            throw HTTPError_t(
+                HTTP_SYSCALL, "Cannot set socket non-blocking: <%d, %s>.",
+                ERRNO, STRERROR(ERRNO));
+        }
+    }
+
+    void setNonDelayedSocket(int& fd)
+    {
+        // set not-delayed IO (we are not telnet)
+        int just_say_no = 1;
+        if (::setsockopt(fd, IPPROTO_TCP, TCP_NODELAY,
+                         (char*) &just_say_no, sizeof(int)) < 0)
+        {
+            STRERROR_PRE();
+            throw HTTPError_t(
+                HTTP_SYSCALL, "Cannot set socket non-delaying: <%d, %s>.",
+                ERRNO, STRERROR(ERRNO));
+        }
+    }
+
+    void waitConnectSocket(int& fd, const URL_t& url, const int& connectTimeout)
+    {
+        // create poll struct
+        pollfd pfd;
+        pfd.fd = fd;
+        pfd.events = POLLOUT;
+
+        // wait for connect completion or timeout
+        int ready = TEMP_FAILURE_RETRY(
+                ::poll(&pfd, 1, (connectTimeout < 0) ? -1 : connectTimeout));
+
+        if (ready <= 0) {
+            switch (ready) {
+            case 0:
+                throw HTTPError_t(
+                    HTTP_SYSCALL, "Timeout while connecting to %s.",
+                    url.getUrl().c_str());
+            default:
+                STRERROR_PRE();
+                throw HTTPError_t(
+                    HTTP_SYSCALL, "Cannot select on socket: <%d, %s>.",
+                    ERRNO, STRERROR(ERRNO));
+            }
+        }
+    }
+
+    void closeSocketIfPeerClosed(int& fd)
+    {
+        // check for activity on socket
+        pollfd pfd;
+        pfd.fd = fd;
+        pfd.events = POLLIN;
+
+        // okam¾itý timeout
+        switch (TEMP_FAILURE_RETRY(::poll(&pfd, 1, 0))) {
+        case 0:
+            // OK
+            break;
+
+        case -1:
+            // some error on socket => close it
+            TEMP_FAILURE_RETRY(::close(fd));
+            fd = -1;
+            break;
+
+        default:
+            // check whether any data can be read from the socket
+            char buff;
+            switch (TEMP_FAILURE_RETRY(recv(fd, &buff, 1, MSG_PEEK))) {
+            case -1:
+            case 0:
+                // zavøeme socket
+                TEMP_FAILURE_RETRY(::close(fd));
+                fd = -1;
+                break;
+
+            default:
+                // OK
+                break;
+            }
+        }
+    }
+
 } // namespace
 
 SimpleConnector_t::SimpleConnector_t(const URL_t &url, int connectTimeout,
@@ -139,39 +260,7 @@ void SimpleConnector_t::connectSocket(int &fd) {
     if (fd > -1) {
         closer.release();
 
-        // check for activity on socket
-        pollfd pfd;
-        pfd.fd = fd;
-        pfd.events = POLLIN;
-
-        // okam¾itý timeout
-        switch (TEMP_FAILURE_RETRY(::poll(&pfd, 1, 0))) {
-        case 0:
-            // OK
-            break;
-
-        case -1:
-            // some error on socket => close it
-            TEMP_FAILURE_RETRY(::close(fd));
-            fd = -1;
-            break;
-
-        default:
-            // check whether any data can be read from the socket
-            char buff;
-            switch (TEMP_FAILURE_RETRY(recv(fd, &buff, 1, MSG_PEEK))) {
-            case -1:
-            case 0:
-                // zavøeme socket
-                TEMP_FAILURE_RETRY(::close(fd));
-                fd = -1;
-                break;
-
-            default:
-                // OK
-                break;
-            }
-        }
+        closeSocketIfPeerClosed(fd);
     }
 
     // if open socket is not availabe open new one
@@ -185,31 +274,9 @@ void SimpleConnector_t::connectSocket(int &fd) {
                               ERRNO, STRERROR(ERRNO));
         }
 
-#ifdef WIN32
-        unsigned int flag = 1;
-        if (::ioctlsocket((SOCKET)fd, FIONBIO, &flag) < 0)
-#else //WIN32
+        setNonBlockingSocket(fd);
 
-        if (::fcntl(fd, F_SETFL, O_NONBLOCK) < 0)
-#endif //WIN32
-
-        {
-            STRERROR_PRE();
-            throw HTTPError_t(HTTP_SYSCALL,
-                              "Cannot set socket non-blocking: "
-                              "<%d, %s>.", ERRNO, STRERROR(ERRNO));
-        }
-
-        // set not-delayed IO (we are not telnet)
-        int just_say_no = 1;
-        if (::setsockopt(fd, IPPROTO_TCP, TCP_NODELAY,
-                         (char*) &just_say_no, sizeof(int)) < 0)
-        {
-            STRERROR_PRE();
-            throw HTTPError_t(HTTP_SYSCALL,
-                              "Cannot set socket non-delaying: "
-                              "<%d, %s>.", ERRNO, STRERROR(ERRNO));
-        }
+        setNonDelayedSocket(fd);
 
         // peer address
         struct sockaddr_in addr;
@@ -240,55 +307,9 @@ void SimpleConnector_t::connectSocket(int &fd) {
                                   ERRNO, STRERROR(ERRNO));
             }
 
-            // create poll struct
-            pollfd pfd;
-            pfd.fd = fd;
-            pfd.events = POLLOUT;
+            waitConnectSocket(fd, url, connectTimeout);
 
-            // wait for connect completion or timeout
-            int ready = TEMP_FAILURE_RETRY(
-                    ::poll(&pfd, 1, (connectTimeout < 0) ? -1 : connectTimeout));
-
-            if (ready <= 0) {
-                switch (ready) {
-                case 0:
-                    throw HTTPError_t(HTTP_SYSCALL,
-                                      "Timeout while connecting to %s.",
-                                      url.getUrl().c_str());
-
-                default:
-                    STRERROR_PRE();
-                    throw HTTPError_t(HTTP_SYSCALL,
-                                      "Cannot select on socket: <%d, %s>.",
-                                      ERRNO, STRERROR(ERRNO));
-                }
-            }
-
-            // check for connect status
-            socklen_t len = sizeof(int);
-            int status;
-#ifdef WIN32
-
-            if (::getsockopt(fd, SOL_SOCKET, SO_ERROR, (char*)&status, &len))
-#else //WIN32
-
-            if (::getsockopt(fd, SOL_SOCKET, SO_ERROR, &status, &len))
-#endif //WIN32
-
-            {
-                STRERROR_PRE();
-                throw HTTPError_t(HTTP_SYSCALL,
-                                  "Cannot get socket info: <%d, %s>.",
-                                  ERRNO, STRERROR(ERRNO));
-            }
-
-            // check for error
-            if (status) {
-                STRERROR_PRE();
-                throw HTTPError_t(HTTP_SYSCALL,
-                                  "Cannot connect socket: <%d, %s>.",
-                                  status, STRERROR(status));
-            }
+            checkSocket(fd);
         }
 
         // connect OK => do not close the socket!
@@ -348,39 +369,7 @@ void SimpleConnectorIPv6_t::connectSocket(int &fd) {
     if (fd > -1) {
         closer.release();
 
-        // check for activity on socket
-        pollfd pfd;
-        pfd.fd = fd;
-        pfd.events = POLLIN;
-
-        // okam¾itý timeout
-        switch (TEMP_FAILURE_RETRY(::poll(&pfd, 1, 0))) {
-        case 0:
-            // OK
-            break;
-
-        case -1:
-            // some error on socket => close it
-            TEMP_FAILURE_RETRY(::close(fd));
-            fd = -1;
-            break;
-
-        default:
-            // check whether any data can be read from the socket
-            char buff;
-            switch (TEMP_FAILURE_RETRY(recv(fd, &buff, 1, MSG_PEEK))) {
-            case -1:
-            case 0:
-                // zavøeme socket
-                TEMP_FAILURE_RETRY(::close(fd));
-                fd = -1;
-                break;
-
-            default:
-                // OK
-                break;
-            }
-        }
+        closeSocketIfPeerClosed(fd);
     }
 
     // if open socket is not availabe open new one
@@ -394,31 +383,9 @@ void SimpleConnectorIPv6_t::connectSocket(int &fd) {
                               ERRNO, STRERROR(ERRNO));
         }
 
-#ifdef WIN32
-        unsigned int flag = 1;
-        if (::ioctlsocket((SOCKET)fd, FIONBIO, &flag) < 0)
-#else //WIN32
+        setNonBlockingSocket(fd);
 
-        if (::fcntl(fd, F_SETFL, O_NONBLOCK) < 0)
-#endif //WIN32
-
-        {
-            STRERROR_PRE();
-            throw HTTPError_t(HTTP_SYSCALL,
-                              "Cannot set socket non-blocking: "
-                              "<%d, %s>.", ERRNO, STRERROR(ERRNO));
-        }
-
-        // set not-delayed IO (we are not telnet)
-        int just_say_no = 1;
-        if (::setsockopt(fd, IPPROTO_TCP, TCP_NODELAY,
-                         (char*) &just_say_no, sizeof(int)) < 0)
-        {
-            STRERROR_PRE();
-            throw HTTPError_t(HTTP_SYSCALL,
-                              "Cannot set socket non-delaying: "
-                              "<%d, %s>.", ERRNO, STRERROR(ERRNO));
-        }
+        setNonDelayedSocket(fd);
 
         // connect the socket
         if (TEMP_FAILURE_RETRY(::connect(fd, addrInfo->ai_addr,
@@ -440,55 +407,9 @@ void SimpleConnectorIPv6_t::connectSocket(int &fd) {
                                   ERRNO, STRERROR(ERRNO));
             }
 
-            // create poll struct
-            pollfd pfd;
-            pfd.fd = fd;
-            pfd.events = POLLOUT;
+            waitConnectSocket(fd, url, connectTimeout);
 
-            // wait for connect completion or timeout
-            int ready = TEMP_FAILURE_RETRY(
-                    ::poll(&pfd, 1, (connectTimeout < 0) ? -1 : connectTimeout));
-
-            if (ready <= 0) {
-                switch (ready) {
-                case 0:
-                    throw HTTPError_t(HTTP_SYSCALL,
-                                      "Timeout while connecting to %s.",
-                                      url.getUrl().c_str());
-
-                default:
-                    STRERROR_PRE();
-                    throw HTTPError_t(HTTP_SYSCALL,
-                                      "Cannot select on socket: <%d, %s>.",
-                                      ERRNO, STRERROR(ERRNO));
-                }
-            }
-
-            // check for connect status
-            socklen_t len = sizeof(int);
-            int status;
-#ifdef WIN32
-
-            if (::getsockopt(fd, SOL_SOCKET, SO_ERROR, (char*)&status, &len))
-#else //WIN32
-
-            if (::getsockopt(fd, SOL_SOCKET, SO_ERROR, &status, &len))
-#endif //WIN32
-
-            {
-                STRERROR_PRE();
-                throw HTTPError_t(HTTP_SYSCALL,
-                                  "Cannot get socket info: <%d, %s>.",
-                                  ERRNO, STRERROR(ERRNO));
-            }
-
-            // check for error
-            if (status) {
-                STRERROR_PRE();
-                throw HTTPError_t(HTTP_SYSCALL,
-                                  "Cannot connect socket: <%d, %s>.",
-                                  status, STRERROR(status));
-            }
+            checkSocket(fd);
         }
 
         // connect OK => do not close the socket!
@@ -496,3 +417,73 @@ void SimpleConnectorIPv6_t::connectSocket(int &fd) {
     }
 }
 
+SimpleConnectorUnix_t::SimpleConnectorUnix_t(const URL_t &url, int connectTimeout,
+                                     bool keepAlive)
+    : Connector_t(url, connectTimeout, keepAlive)
+{ }
+
+SimpleConnectorUnix_t::~SimpleConnectorUnix_t()
+{ }
+
+void SimpleConnectorUnix_t::connectSocket(int &fd) {
+    // check socket
+    if (!keepAlive && (fd > -1)) {
+        TEMP_FAILURE_RETRY(::close(fd));
+        fd = -1;
+    }
+
+    // initialize closer (initially closes socket when valid)
+    SocketCloser_t closer(fd);
+
+    // check open socket whether the peer had not closed it
+    if (fd > -1) {
+        closer.release();
+
+        closeSocketIfPeerClosed(fd);
+    }
+
+    // if open socket is not availabe open new one
+    if (fd < 0) {
+        // otevøeme socket
+        if ((fd = ::socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
+            // oops! error
+            STRERROR_PRE();
+            throw HTTPError_t(HTTP_SYSCALL,
+                              "Cannot select on socketr: <%d, %s>.",
+                              ERRNO, STRERROR(ERRNO));
+        }
+
+        setNonBlockingSocket(fd);
+
+        struct sockaddr_un remote;
+        remote.sun_family = AF_UNIX;
+        strcpy(remote.sun_path, url.path.c_str());
+        int len = strlen(remote.sun_path) + sizeof(remote.sun_family);
+
+        // connect the socket
+        if (TEMP_FAILURE_RETRY(::connect(fd, (struct sockaddr *)&remote,
+                               len)) < 0)
+        {
+            switch (ERRNO) {
+            case EINPROGRESS:
+                // connection already in progress
+            case EALREADY:
+                // connection already in progress
+            case EWOULDBLOCK:
+                // connection launched on the background
+                break;
+            default:
+                STRERROR_PRE();
+                throw HTTPError_t(HTTP_SYSCALL,
+                                  "Cannot connect socket: <%d, %s>.",
+                                  ERRNO, STRERROR(ERRNO));
+            }
+
+            waitConnectSocket(fd, url, connectTimeout);
+            checkSocket(fd);
+        }
+
+        // connect OK => do not close the socket!
+        closer.release();
+    }
+}

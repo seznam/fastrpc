@@ -181,6 +181,7 @@ std::ostream& operator<<(std::ostream &os, const HTTPHeader_t &header)
 
 namespace {
     const std::string HTTP_SCHEMA("http://");
+    const std::string UNIX_SCHEMA("unix://");
 
     inline bool nocaseCmp(char l, char r) {
         return toupper(l) == toupper(r);
@@ -190,6 +191,7 @@ namespace {
 void URL_t::parse(const std::string &url) {
     static const std::string https_schema("https://");
     size_t hostStart = 0;
+    bool isUnix = false;
     // otestujeme url
     if ((url.length() >= HTTP_SCHEMA.length()) &&
         equal(HTTP_SCHEMA.begin(), HTTP_SCHEMA.end(),
@@ -202,9 +204,15 @@ void URL_t::parse(const std::string &url) {
     {
         hostStart = https_schema.length();
         isSSL = true;
+    } else if ((url.length() >= UNIX_SCHEMA.length()) &&
+        equal(UNIX_SCHEMA.begin(), UNIX_SCHEMA.end(),
+                url.begin(), nocaseCmp))
+    {
+        hostStart = UNIX_SCHEMA.length();
+        isUnix = true;
     } else {
         // oops, chyba -> zalogujeme
-        throw TypeError_t("URL '%s' is not an HTTP URL.", url.c_str());
+        throw TypeError_t("URL '%s': unknown scheme.", url.c_str());
     }
 
     // najdeme pozici prvního lomítka
@@ -248,6 +256,22 @@ void URL_t::parse(const std::string &url) {
             port = 80;
         }
     }
+
+    if (isUnix) {
+        if (!host.empty()) {
+            throw TypeError_t(
+                "Unix URL '%s' has non-empty host.",
+                url.c_str());
+        }
+        port = 0;
+    }
+}
+
+bool URL_t::isUnix() const
+{
+    // Sadly, there is no better way to distinguish unix socket without
+    // breaking binary compatibility.
+    return port == 0;
 }
 
 URL_t::URL_t(const std::string &url, const std::string &proxyVia)
