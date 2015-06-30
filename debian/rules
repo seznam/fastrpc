@@ -5,3 +5,6 @@
 
 %:
 	dh $@ --with autoreconf --parallel
+
+override_dh_strip:
+	dh_strip --dbg-package=libfastrpc5-dbg

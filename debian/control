@@ -16,6 +16,12 @@ Package: libfastrpc-dev
 Architecture: any
 Section: Seznam
 Depends: libfastrpc5 (= ${binary:Version}), ${misc:Depends}, libxml2-dev
-Description: Description: Development files for fastrpc library
+Description: Development files for fastrpc library
  Here are files necessary for developing new applications
  that use fastrpc library and its C/C++ interface.
+
+Package: libfastrpc5-dbg
+Architecture: any
+Section: Seznam
+Depends: libfastrpc5 (= ${binary:Version}), ${misc:Depends}
+Description: Debug symbols for fastrpc library.
