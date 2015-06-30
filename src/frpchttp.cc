@@ -204,12 +204,14 @@ void URL_t::parse(const std::string &url) {
     {
         hostStart = https_schema.length();
         isSSL = true;
+#ifndef WIN32
     } else if ((url.length() >= UNIX_SCHEMA.length()) &&
         equal(UNIX_SCHEMA.begin(), UNIX_SCHEMA.end(),
                 url.begin(), nocaseCmp))
     {
         hostStart = UNIX_SCHEMA.length();
         isUnix = true;
+#endif // !WIN32
     } else {
         // oops, chyba -> zalogujeme
         throw TypeError_t("URL '%s': unknown scheme.", url.c_str());

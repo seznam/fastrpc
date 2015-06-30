@@ -41,6 +41,10 @@
 #include <fcntl.h>
 #include <errno.h>
 
+#ifndef UNIX_PATH_MAX
+# define UNIX_PATH_MAX   108
+#endif
+
 #include "frpcplatform.h"
 #include "frpcconnector.h"
 #include "frpchttperror.h"
@@ -270,7 +274,7 @@ void SimpleConnector_t::connectSocket(int &fd) {
             // oops! error
             STRERROR_PRE();
             throw HTTPError_t(HTTP_SYSCALL,
-                              "Cannot select on socketr: <%d, %s>.",
+                              "Cannot select on socket: <%d, %s>.",
                               ERRNO, STRERROR(ERRNO));
         }
 
@@ -379,7 +383,7 @@ void SimpleConnectorIPv6_t::connectSocket(int &fd) {
             // oops! error
             STRERROR_PRE();
             throw HTTPError_t(HTTP_SYSCALL,
-                              "Cannot select on socketr: <%d, %s>.",
+                              "Cannot select on socket: <%d, %s>.",
                               ERRNO, STRERROR(ERRNO));
         }
 
@@ -417,6 +421,8 @@ void SimpleConnectorIPv6_t::connectSocket(int &fd) {
     }
 }
 
+#ifndef WIN32
+
 SimpleConnectorUnix_t::SimpleConnectorUnix_t(const URL_t &url, int connectTimeout,
                                      bool keepAlive)
     : Connector_t(url, connectTimeout, keepAlive)
@@ -449,7 +455,7 @@ void SimpleConnectorUnix_t::connectSocket(int &fd) {
             // oops! error
             STRERROR_PRE();
             throw HTTPError_t(HTTP_SYSCALL,
-                              "Cannot select on socketr: <%d, %s>.",
+                              "Cannot select on socket: <%d, %s>.",
                               ERRNO, STRERROR(ERRNO));
         }
 
@@ -457,12 +463,12 @@ void SimpleConnectorUnix_t::connectSocket(int &fd) {
 
         struct sockaddr_un remote;
         remote.sun_family = AF_UNIX;
-        strcpy(remote.sun_path, url.path.c_str());
-        int len = strlen(remote.sun_path) + sizeof(remote.sun_family);
+        strncpy(remote.sun_path, url.path.c_str(), UNIX_PATH_MAX);
+        remote.sun_path[UNIX_PATH_MAX-1] = 0;
 
         // connect the socket
         if (TEMP_FAILURE_RETRY(::connect(fd, (struct sockaddr *)&remote,
-                               len)) < 0)
+                               sizeof(remote))) < 0)
         {
             switch (ERRNO) {
             case EINPROGRESS:
@@ -487,3 +493,4 @@ void SimpleConnectorUnix_t::connectSocket(int &fd) {
         closer.release();
     }
 }
+#endif // !WIN32

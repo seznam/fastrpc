@@ -109,6 +109,8 @@ private:
     struct addrinfo *addrInfo;
 };
 
+#ifndef WIN32
+
 /** Simple unix socket connector.
  */
 class FRPC_DLLEXPORT SimpleConnectorUnix_t : public Connector_t {
@@ -119,6 +121,8 @@ public:
 
     virtual void connectSocket(int &fd);
 };
+
+#endif // !WIN32
 
 } // namespace FRPC
 
