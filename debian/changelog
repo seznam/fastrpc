@@ -1,4 +1,10 @@
-libfastrpc (5.0.11) UNRELEASED; urgency=low
+libfastrpc (5.0.12) UNRELEASED; urgency=low
+
+  * Fixed several typos.
+
+ -- Tomas Golembiovsky <tomas.golembiovsky@firma.seznam.cz>  Tue, 30 Jun 2015 13:22:13 +0200
+
+libfastrpc (5.0.11) testing; urgency=low
 
   * Generalized array operator.
 
