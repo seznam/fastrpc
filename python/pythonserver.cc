@@ -653,8 +653,7 @@ static PyMethodDef MethodRegistryObject_methods[] = {
 };
 
 static PyTypeObject MethodRegistryObject_Type = {
-    PyObject_HEAD_INIT(&PyType_Type)
-    0,                                      /*ob_size*/
+    PyVarObject_HEAD_INIT(NULL, 0)
     "MethodRegistry",                       /*tp_name*/
     sizeof (MethodRegistryObject),          /*tp_basicsize*/
     0,                                      /*tp_itemsize*/
@@ -693,7 +692,7 @@ static PyTypeObject MethodRegistryObject_Type = {
     (initproc)0,                            /* tp_init */
     PyType_GenericAlloc,                    /* tp_alloc */
     MethodRegistryObject_new,                       /* tp_new */
-    _PyObject_Del                           /* tp_free */
+    PyObject_Free                           /* tp_free */
 };
 
 
@@ -1968,8 +1967,7 @@ static PyMethodDef ServerObject_methods[] = {
 };
 
 static PyTypeObject ServerObject_Type = {
-    PyObject_HEAD_INIT(&PyType_Type)
-    0,                                      /*ob_size*/
+    PyVarObject_HEAD_INIT(NULL, 0)
     "Server",                               /*tp_name*/
     sizeof (ServerObject),                  /*tp_basicsize*/
     0,                                      /*tp_itemsize*/
@@ -2008,7 +2006,7 @@ static PyTypeObject ServerObject_Type = {
     0,                                      /* tp_init */
     PyType_GenericAlloc,                    /* tp_alloc */
     ServerObject_new,                       /* tp_new */
-    _PyObject_Del                           /* tp_free */
+    PyObject_Free                           /* tp_free */
 };
 
 /** free resources associated with a server object
@@ -2223,6 +2221,10 @@ namespace FRPC { namespace Python {
         if (!(emptyTuple = PyTuple_New(0))) return -1;
         if (!(emptyDict = PyDict_New())) return -1;
         if (!(emptyString = PyString_FromString(""))) return -1;
+
+        if ((PyType_Ready(&ServerObject_Type) < 0) ||
+            (PyType_Ready(&MethodRegistryObject_Type) < 0))
+            return -1;
 
         Py_INCREF(&ServerObject_Type);
         if (PyModule_AddObject
