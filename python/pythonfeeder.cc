@@ -74,7 +74,7 @@ long getLongAttr(PyObject *object, const char *name) {
     PyObjectWrapper_t attr(PyObject_GetAttrString(object, name));
     if (!attr) throw PyError_t();
 
-    long value = PyInt_AsLong(attr);
+    long value = PyLong_AsLong(attr);
     if ((value == -1) && PyErr_Occurred()) throw PyError_t();
 
     return value;
@@ -130,8 +130,8 @@ void Feeder_t::feedValue(PyObject *value)
         marshaller->packBool(PyObject_IsTrue(value));
     } else
 #endif
-    if (PyInt_Check(value)) {
-        marshaller->packInt(PyInt_AsLong(value));
+    if (PyLong_Check(value)) {
+        marshaller->packInt(PyLong_AsLong(value));
     } else if(PyLong_Check(value)) {
         size_t bits = _PyLong_NumBits(value);
         int sign = _PyLong_Sign(value);

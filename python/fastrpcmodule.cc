@@ -306,7 +306,7 @@ int TimeObject_init_getNow(DateTimeObject *self, bool nowShift) {
 }
 
 int TimeObject_init_parseInt(DateTimeObject *self, PyObject *pyValue) {
-    self->unixTime = PyInt_AsLong(pyValue);
+    self->unixTime = PyLong_AsLong(pyValue);
 
     tm *time_tm = localtime(&self->unixTime);
 
@@ -398,7 +398,7 @@ int DateTimeObject_init(DateTimeObject *self, PyObject *args, PyObject *)
     } else if (PyString_Check(pyValue)) {
         return TimeObject_init_parseString(self, pyValue);
 
-    } else if (PyInt_Check(pyValue)) {
+    } else if (PyLong_Check(pyValue)) {
 #warning remove this possibility in next major revision of fastrpc
         PyErr_WarnEx(PyExc_DeprecationWarning,
                "Deprecated call use LocalTime(int) or UTCtime(int) instead.", 1);
@@ -422,7 +422,7 @@ int LocalTimeObject_init(DateTimeObject *self, PyObject *args, PyObject *)
     if (!pyValue) {
         result = TimeObject_init_getNow(self, false);
 
-    } else if (PyInt_Check(pyValue)) {
+    } else if (PyLong_Check(pyValue)) {
         result = TimeObject_init_parseInt(self, pyValue);
 
     } else {
@@ -450,7 +450,7 @@ int UTCTimeObject_init(DateTimeObject *self, PyObject *args, PyObject *)
     if (!pyValue) {
         result = TimeObject_init_getNow(self, true);
 
-    } else if (PyInt_Check(pyValue)) {
+    } else if (PyLong_Check(pyValue)) {
         result = TimeObject_init_parseInt(self, pyValue);
 
     } else {
@@ -483,42 +483,42 @@ PyObject* DateTimeObject_getattr(DateTimeObject *self, char *name)
 
     if (!strcmp(name, "year"))
     {
-        return PyInt_FromLong(self->year);
+        return PyLong_FromLong(self->year);
     }
 
     if (!strcmp(name, "month"))
     {
-        return PyInt_FromLong(self->month);
+        return PyLong_FromLong(self->month);
     }
     if (!strcmp(name, "day"))
     {
-        return PyInt_FromLong(self->day);
+        return PyLong_FromLong(self->day);
     }
 
     if (!strcmp(name, "hour"))
     {
-        return PyInt_FromLong(self->hour);
+        return PyLong_FromLong(self->hour);
     }
 
     if (!strcmp(name, "min"))
     {
-        return PyInt_FromLong(self->min);
+        return PyLong_FromLong(self->min);
     }
     if (!strcmp(name, "sec"))
     {
-        return PyInt_FromLong(self->sec);
+        return PyLong_FromLong(self->sec);
     }
     if (!strcmp(name, "weekDay"))
     {
-        return PyInt_FromLong(self->weekDay);
+        return PyLong_FromLong(self->weekDay);
     }
     if (!strcmp(name, "unixTime"))
     {
-        return PyInt_FromLong(self->unixTime);
+        return PyLong_FromLong(self->unixTime);
     }
     if (!strcmp(name, "timeZone"))
     {
-        return PyInt_FromLong(self->timeZone);
+        return PyLong_FromLong(self->timeZone);
     }
     if (!strcmp(name, "value"))
     {
@@ -539,7 +539,7 @@ PyObject* DateTimeObject_getattr(DateTimeObject *self, char *name)
 }
 int DateTimeObject_setattr(DateTimeObject *self, char *name, PyObject *value)
 {
-    if(!PyInt_Check(value))
+    if(!PyLong_Check(value))
     {
         PyErr_Format(PyExc_AttributeError,
                      "New attribute must be int");
@@ -548,50 +548,50 @@ int DateTimeObject_setattr(DateTimeObject *self, char *name, PyObject *value)
 
     if (!strcmp(name, "year"))
     {
-        self->year = PyInt_AsLong(value);
+        self->year = PyLong_AsLong(value);
         return 0;
     }
 
     if (!strcmp(name, "month"))
     {
-        self->month = PyInt_AsLong(value);
+        self->month = PyLong_AsLong(value);
         return 0;
     }
     if (!strcmp(name, "day"))
     {
-        self->day = PyInt_AsLong(value);
+        self->day = PyLong_AsLong(value);
         return 0;
     }
 
     if (!strcmp(name, "hour"))
     {
-        self->hour = PyInt_AsLong(value);
+        self->hour = PyLong_AsLong(value);
         return 0;
     }
 
     if (!strcmp(name, "min"))
     {
-        self->min = PyInt_AsLong(value);
+        self->min = PyLong_AsLong(value);
         return 0;
     }
     if (!strcmp(name, "sec"))
     {
-        self->sec = PyInt_AsLong(value);
+        self->sec = PyLong_AsLong(value);
         return 0;
     }
     if (!strcmp(name, "weekDay"))
     {
-        self->weekDay = PyInt_AsLong(value);
+        self->weekDay = PyLong_AsLong(value);
         return 0;
     }
     if (!strcmp(name, "unixTime"))
     {
-        self->unixTime = PyInt_AsLong(value);
+        self->unixTime = PyLong_AsLong(value);
         return 0;
     }
     if (!strcmp(name, "timeZone"))
     {
-        self->timeZone = PyInt_AsLong(value);
+        self->timeZone = PyLong_AsLong(value);
         return 0;
     }
 
@@ -1132,7 +1132,7 @@ int BooleanObject_nonzero(BooleanObject *self)
 
 PyObject* BooleanObject_int(BooleanObject *self)
 {
-    return PyInt_FromLong(self->value == Py_True);
+    return PyLong_FromLong(self->value == Py_True);
 }
 
 namespace FRPC { namespace Python {
@@ -1696,7 +1696,7 @@ PyObject* ServerProxy_call(ServerProxyObject *self, PyObject *args, PyObject *kw
         return PyString_FromStringAndSize(url.path.data(), url.path.size());
 
     } else if (!strcmp(action, GET_PORT)) {
-        return PyInt_FromLong(url.port);
+        return PyLong_FromLong(url.port);
 
     } else if (!strcmp(action, GET_URL)) {
         std::string fullUrl(url.getUrl());
@@ -1735,7 +1735,7 @@ PyObject* ServerProxy_getattr(ServerProxyObject *self, char *name)
             if (!path) return 0;
             if (PyDict_SetItemString(dict, "path", path)) return 0;
 
-            PyObjectWrapper_t port(PyInt_FromLong(url.port));
+            PyObjectWrapper_t port(PyLong_FromLong(url.port));
             if (!port) return 0;
             if (PyDict_SetItemString(dict, "port", port)) return 0;
 
@@ -1766,7 +1766,7 @@ PyObject* ServerProxy_getattr(ServerProxyObject *self, char *name)
     } else if (!strcmp(name, "path")) {
         return PyString_FromStringAndSize(url.path.data(), url.path.size());
     } else if (!strcmp(name, "port")) {
-        return PyInt_FromLong(url.port);
+        return PyLong_FromLong(url.port);
     } else if (!strcmp(name, "url")) {
         std::string fullUrl(url.getUrl());
         return PyString_FromStringAndSize(fullUrl.data(), fullUrl.size());
@@ -2141,7 +2141,7 @@ PyObject* fastrpc_dumps(PyObject *, PyObject *args, PyObject *keywds) {
                 (PyObject_GetAttrString(params, "faultString"));
             if (!faultString) return 0;
 
-            if (!PyInt_Check(faultCode.get())) {
+            if (!PyLong_Check(faultCode.get())) {
                 PyErr_SetString(PyExc_TypeError,
                                 "Fault.faultCode is not an int");
                 return 0;
@@ -2152,7 +2152,7 @@ PyObject* fastrpc_dumps(PyObject *, PyObject *args, PyObject *keywds) {
             if (PyString_AsStringAndSize(faultString.get(), &str, &strSize))
                 return 0;
 
-            marshaller->packFault(PyInt_AsLong(faultCode.get()), str, strSize);
+            marshaller->packFault(PyLong_AsLong(faultCode.get()), str, strSize);
         } else {
             PyErr_SetString(PyExc_TypeError,
                             "Parameter params must be tuple or fastrpc.Fault "
@@ -2325,9 +2325,6 @@ int printPyFastRPCTree(PyObject *tree, std::ostringstream &out,
         if (value < 0) {
             return -1;
         } else out << (value ? "true" : "false");
-    } else if (PyInt_Check(tree)) {
-        // integer
-        out << PyInt_AS_LONG(tree);
     } else if (PyLong_Check(tree)) {
         Int_t::value_type i = PyLong_AsLongLong(tree);
         // check for error
