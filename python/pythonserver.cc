@@ -1917,12 +1917,12 @@ DECL_METHOD(MethodRegistryObject, system_multicall) {
 #endif
 
 static PyMemberDef ServerObject_members[] = {
-    {(char *)"registry",             T_OBJECT,    OFF(registry),        RO},
-    {(char *)"readTimeout",          T_INT,       OFF(readTimeout),     RO},
-    {(char *)"writeTimeout",         T_INT,       OFF(writeTimeout),    RO},
-    {(char *)"keepAlive",            T_INT,       OFF(keepAlive),       RO},
-    {(char *)"maxKeepalive",         T_INT,       OFF(maxKeepalive),    RO},
-    {(char *)"useBinary",            T_INT,       OFF(useBinary),       RO},
+    {(char *)"registry",             T_OBJECT,    OFF(registry),        READONLY},
+    {(char *)"readTimeout",          T_INT,       OFF(readTimeout),     READONLY},
+    {(char *)"writeTimeout",         T_INT,       OFF(writeTimeout),    READONLY},
+    {(char *)"keepAlive",            T_INT,       OFF(keepAlive),       READONLY},
+    {(char *)"maxKeepalive",         T_INT,       OFF(maxKeepalive),    READONLY},
+    {(char *)"useBinary",            T_INT,       OFF(useBinary),       READONLY},
     {(char *)"nativeBoolean",        T_BOOL,      OFF(nativeBoolean),   0},
     {(char *)"datetimeBuilder",      T_OBJECT,    OFF(datetimeBuilder), 0},
 
