@@ -91,7 +91,7 @@ extern "C"
         if (!PyNumber_Check(status)) {
             PyErr_Format(PyExc_TypeError,
                          "ProtocolError.status must be number, not %s.",
-                         status->ob_type->tp_name);
+                         Py_TYPE(status)->tp_name);
             return 0;
         }
 
@@ -100,7 +100,7 @@ extern "C"
             PyErr_Format(PyExc_TypeError,
                          "ProtocolError.statusMessage must be string "
                          "or unicode, not %s.",
-                         statusMessage->ob_type->tp_name);
+                         Py_TYPE(statusMessage)->tp_name);
             return 0;
         }
 
@@ -154,7 +154,7 @@ extern "C"
         {
             PyErr_Format(PyExc_TypeError,
                          "Fault.faultCode must be number, not %s.",
-                         faultCode->ob_type->tp_name);
+                         Py_TYPE(faultCode)->tp_name);
             return 0;
         }
 
@@ -163,7 +163,7 @@ extern "C"
             PyErr_Format(PyExc_TypeError,
                          "Fault.faultString must be string "
                          "or unicode, not %s.",
-                         faultString->ob_type->tp_name);
+                         Py_TYPE(faultString)->tp_name);
             return 0;
         }
 
@@ -218,7 +218,7 @@ extern "C"
             PyErr_Format(PyExc_TypeError,
                          "ResponseError.statusMessage must be string "
                          "or unicode, not %s.",
-                         statusMessage->ob_type->tp_name);
+                         Py_TYPE(statusMessage)->tp_name);
             return 0;
         }
 

@@ -2042,7 +2042,7 @@ PyObject* fastrpc_boolean(PyObject *, PyObject *args, PyObject *keywds) {
     {
         return PyErr_Format(PyExc_TypeError,
                             "truefalse must be sequence not %s.",
-                            truefalse->ob_type->tp_name);
+                            Py_TYPE(truefalse)->tp_name);
     }
 
     // get value at given index
@@ -2335,7 +2335,7 @@ int printPyFastRPCTree(PyObject *tree, std::ostringstream &out,
                        std::bitset<sizeof(unsigned long) * 8> pos)
 {
 
-    if ( tree->ob_type == Py_True->ob_type ||
+    if ( Py_TYPE(tree) == Py_TYPE(Py_True) ||
         PyBoolean_Check(tree) ) {
         // print Boolean
         int value = PyObject_IsTrue(tree);
@@ -2451,7 +2451,7 @@ int printPyFastRPCTree(PyObject *tree, std::ostringstream &out,
             if (printString(out, value, "", "", "", -1))
                 return -1;
         } else {
-            out << '<' << tree->ob_type->tp_name << '>';
+            out << '<' << Py_TYPE(tree)->tp_name << '>';
         }
     }
 

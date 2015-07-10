@@ -1299,7 +1299,7 @@ void MethodRegistryObject_dealloc(MethodRegistryObject *self) {
     Py_XDECREF(self->defaultMethodHelp);
     Py_XDECREF(self->defaultMethodSignature);
 
-    self->ob_type->tp_free(asObject(self));
+    Py_TYPE(self)->tp_free(asObject(self));
 }
 
 namespace {
@@ -1428,7 +1428,7 @@ DECL_METHOD_KWD(MethodRegistryObject, register) {
         return PyErr_Format(PyExc_TypeError,
                             "Callback object of method <%s> is of type <%s> "
                             "and is not callable.", name,
-                            callback->ob_type->tp_name);
+                            Py_TYPE(callback)->tp_name);
     }
 
     try {
@@ -1483,7 +1483,7 @@ DECL_METHOD_KWD(MethodRegistryObject, registerDefault) {
                                 "Callback object of %s method is of "
                                 "type <%s> and is not callable.",
                                 callback->name,
-                                callback->callback->ob_type->tp_name);
+                                Py_TYPE(callback)->tp_name);
         }
     }
 
@@ -1514,7 +1514,7 @@ DECL_METHOD(MethodRegistryObject, registerHead) {
         return PyErr_Format(PyExc_TypeError,
                             "Callback object of HTTP HEAD method is of "
                             "type <%s> and is not callable.",
-                            callback->ob_type->tp_name);
+                            Py_TYPE(callback)->tp_name);
     }
 
     // reasign head method
@@ -2020,7 +2020,7 @@ void ServerObject_dealloc(ServerObject *self) {
     Py_XDECREF(self->registry);
     delete self->server;
 
-    self->ob_type->tp_free(asObject(self));
+    Py_TYPE(self)->tp_free(asObject(self));
 }
 
 PyObject* ServerObject_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
