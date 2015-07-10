@@ -2600,7 +2600,7 @@ static struct PyModuleDef moduledef = {
 
 /** Initialize FRPC module
  */
-extern "C" DL_EXPORT(PyObject *) PyInit_fastrpc(void)
+PyMODINIT_FUNC PyInit_fastrpc(void)
 
 #else // PY_MAJOR_VERSION >= 3
 
@@ -2608,7 +2608,7 @@ extern "C" DL_EXPORT(PyObject *) PyInit_fastrpc(void)
 
 /** Initialize FRPC module
  */
-extern "C" DL_EXPORT(void) init_fastrpc(void)
+PyMODINIT_FUNC init_fastrpc(void)
 
 #endif // PY_MAJOR_VERSION >= 3
 
