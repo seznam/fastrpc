@@ -149,7 +149,7 @@ void Builder_t::buildFault(int errNumber, const char* errMsg, unsigned int size)
     if (isError())
         return;
     PyObject *args =Py_BuildValue("iNO",errNumber,
-                                  PyString_FromStringAndSize(errMsg,size),
+                                  PyUnicode_FromStringAndSize(errMsg,size),
                                   methodObject ? methodObject : Py_None);
     PyObject *fault = PyObject_Call(Fault, args, 0);
     //isFirst(fault);
@@ -238,7 +238,7 @@ void Builder_t::buildString(const char* data, unsigned int size) {
     if (utf8) {
         stringVal = PyUnicode_DecodeUTF8(data, size, "strict");
     } else {
-        stringVal = PyString_FromStringAndSize(const_cast<char*>(data), size);
+        stringVal = PyUnicode_FromStringAndSize(const_cast<char*>(data), size);
     }
 
     if (!stringVal)

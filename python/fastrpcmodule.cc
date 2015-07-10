@@ -329,8 +329,12 @@ int TimeObject_init_parseString(DateTimeObject *self, PyObject *pyValue) {
     short year;
     int timeZone;
     char month, day, hour, min, sec;
-    long len = PyString_Size(pyValue);
-    char *data = PyString_AsString(pyValue);
+
+    Py_ssize_t len;
+    char *data;
+    STR_ASSTRANDSIZE(pyValue, data, len) {
+        return 0;
+    }
 
     try {
 
@@ -395,7 +399,7 @@ int DateTimeObject_init(DateTimeObject *self, PyObject *args, PyObject *)
                "Deprecated call use LocalTime() or UTCtime() instead.", 1);
         return LocalTimeObject_init(self, args, NULL);
 
-    } else if (PyString_Check(pyValue)) {
+    } else if (PyUnicode_Check(pyValue)) {
         return TimeObject_init_parseString(self, pyValue);
 
     } else if (PyLong_Check(pyValue)) {
@@ -474,7 +478,7 @@ PyObject* DateTimeObject_repr(DateTimeObject *self)
                                            self->day, self->hour, self->min,
                                            self->sec, self->timeZone);
 
-    return PyString_FromString(dateTime.c_str());
+    return PyUnicode_FromString(dateTime.c_str());
 
 }
 
@@ -530,7 +534,7 @@ PyObject* DateTimeObject_getattr(DateTimeObject *self, char *name)
 
 
 
-        return PyString_FromString(dateTime.c_str());
+        return PyUnicode_FromString(dateTime.c_str());
     }
 
     // not found
@@ -776,7 +780,11 @@ int BinaryObject_init(BinaryObject *self, PyObject *args, PyObject *)
 {
     PyObject *pyValue = 0;
 
+#if PY_MAJOR_VERSION >= 3
+    if (!PyArg_ParseTuple(args,"|O!", &PyBytes_Type, &pyValue))
+#else
     if (!PyArg_ParseTuple(args,"|O!", &PyString_Type, &pyValue))
+#endif
         return -1;
 
     if (pyValue)
@@ -826,7 +834,7 @@ int BinaryObject_setattr(BinaryObject *self, char *name, PyObject *value)
                          "Can't set empty object");
             return -1;
         }
-        if(PyString_Check(value))
+        if(PyUnicode_Check(value))
         {
             Py_DECREF(self->value);
             self ->value  = value;
@@ -855,7 +863,7 @@ BinaryObject* newBinary(const char* data, long size)
     BinaryObject *self = PyObject_NEW(BinaryObject, &BinaryObject_Type);
     if (self == NULL)
         return NULL;
-    self->value = PyString_FromStringAndSize(data, size);
+    self->value = PyUnicode_FromStringAndSize(data, size);
     return self;
 }
 
@@ -1115,13 +1123,13 @@ BooleanObject_richcmp(PyObject *self, PyObject *other, int op)
  */
 PyObject* BooleanObject_repr(BooleanObject *self)
 {
-    return PyString_FromString(PyObject_IsTrue(self->value)? "Boolean: TRUE" :
+    return PyUnicode_FromString(PyObject_IsTrue(self->value)? "Boolean: TRUE" :
                                "Boolean: FALSE");
 }
 
 PyObject* BooleanObject_str(BooleanObject *self)
 {
-    return PyString_FromString(PyObject_IsTrue(self->value) ? "1" : "0");
+    return PyUnicode_FromString(PyObject_IsTrue(self->value) ? "1" : "0");
 }
 
 int BooleanObject_nonzero(BooleanObject *self)
@@ -1435,7 +1443,7 @@ PyObject* Method_getattr(MethodObject *self, char *name)
             if (!dict) return 0;
 
             PyObjectWrapper_t methodName
-                (PyString_FromStringAndSize(self->name.data(),
+                (PyUnicode_FromStringAndSize(self->name.data(),
                                             self->name.size()));
             if (!methodName) return 0;
             if (PyDict_SetItemString(dict, "method_name", methodName))
@@ -1494,7 +1502,7 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
 
     // parse arguments
     char *serverUrl;
-    int serverUrlLen;
+    Py_ssize_t serverUrlLen;
     int readTimeout = -1;
     int writeTimeout = -1;
     int connectTimeout = -1;
@@ -1552,8 +1560,10 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
         if (!value) {
             return 0;
         }
-        serverUrl = PyString_AsString(value.object);
-        serverUrlLen = PyString_Size(value.object);
+
+        STR_ASSTRANDSIZE(value.object, serverUrl, serverUrlLen) {
+            return 0;
+        }
 
         int i = 0;
         while (kwtypes[++i]) {
@@ -1575,7 +1585,12 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
             if (value) {
                 switch (kwtypes[i]) {
                     case 's':
+#if PY_MAJOR_VERSION >= 3
+                        Py_ssize_t len;
+                        kwvars[i] = strdupa(PyUnicode_AsUTF8AndSize(value.object, &len));
+#else
                         kwvars[i] = strdupa(PyString_AsString(value.object));
+#endif
                         break;
                     case 'i':
                         *(int*)kwvars[i] = PyLong_AsLong(value.object);
@@ -1690,21 +1705,21 @@ PyObject* ServerProxy_call(ServerProxyObject *self, PyObject *args, PyObject *kw
         if (self->proxyOk)
             self->proxy.closeConnection();
     } else if (!strcmp(action, GET_HOST)) {
-        return PyString_FromStringAndSize(url.host.data(), url.host.size());
+        return PyUnicode_FromStringAndSize(url.host.data(), url.host.size());
 
     } else if (!strcmp(action, GET_PATH)) {
-        return PyString_FromStringAndSize(url.path.data(), url.path.size());
+        return PyUnicode_FromStringAndSize(url.path.data(), url.path.size());
 
     } else if (!strcmp(action, GET_PORT)) {
         return PyLong_FromLong(url.port);
 
     } else if (!strcmp(action, GET_URL)) {
         std::string fullUrl(url.getUrl());
-        return PyString_FromStringAndSize(fullUrl.data(), fullUrl.size());
+        return PyUnicode_FromStringAndSize(fullUrl.data(), fullUrl.size());
 
     } else if (!strcmp(action, GET_LAST_CALL)) {
         const std::string &lastCall(self->proxy.getLastCall());
-        return PyString_FromStringAndSize(lastCall.data(), lastCall.size());
+        return PyUnicode_FromStringAndSize(lastCall.data(), lastCall.size());
     } else {
         PyErr_Format(PyExc_TypeError, "unknown action %s", action);
         return NULL;
@@ -1726,12 +1741,12 @@ PyObject* ServerProxy_getattr(ServerProxyObject *self, char *name)
             if (!dict) return 0;
 
             PyObjectWrapper_t host
-                (PyString_FromStringAndSize(url.host.data(), url.host.size()));
+                (PyUnicode_FromStringAndSize(url.host.data(), url.host.size()));
             if (!host) return 0;
             if (PyDict_SetItemString(dict, "host", host)) return 0;
 
             PyObjectWrapper_t path
-                (PyString_FromStringAndSize(url.path.data(), url.path.size()));
+                (PyUnicode_FromStringAndSize(url.path.data(), url.path.size()));
             if (!path) return 0;
             if (PyDict_SetItemString(dict, "path", path)) return 0;
 
@@ -1741,13 +1756,13 @@ PyObject* ServerProxy_getattr(ServerProxyObject *self, char *name)
 
             std::string fullUrl(url.getUrl());
             PyObjectWrapper_t pyfullUrl
-                (PyString_FromStringAndSize(fullUrl.data(), fullUrl.size()));
+                (PyUnicode_FromStringAndSize(fullUrl.data(), fullUrl.size()));
             if (!pyfullUrl) return 0;
             if (PyDict_SetItemString(dict, "url", pyfullUrl)) return 0;
 
             const std::string &lastCall(self->proxy.getLastCall());
             PyObjectWrapper_t pyLastCall
-                (PyString_FromStringAndSize(lastCall.data(), lastCall.size()));
+                (PyUnicode_FromStringAndSize(lastCall.data(), lastCall.size()));
             if (PyDict_SetItemString(dict, "last_call", pyLastCall)) return 0;
 
             return dict.inc();
@@ -1762,17 +1777,17 @@ PyObject* ServerProxy_getattr(ServerProxyObject *self, char *name)
     }
 
     if (!strcmp(name, "host")) {
-        return PyString_FromStringAndSize(url.host.data(), url.host.size());
+        return PyUnicode_FromStringAndSize(url.host.data(), url.host.size());
     } else if (!strcmp(name, "path")) {
-        return PyString_FromStringAndSize(url.path.data(), url.path.size());
+        return PyUnicode_FromStringAndSize(url.path.data(), url.path.size());
     } else if (!strcmp(name, "port")) {
         return PyLong_FromLong(url.port);
     } else if (!strcmp(name, "url")) {
         std::string fullUrl(url.getUrl());
-        return PyString_FromStringAndSize(fullUrl.data(), fullUrl.size());
+        return PyUnicode_FromStringAndSize(fullUrl.data(), fullUrl.size());
     } else if (!strcmp(name, "last_call")) {
         const std::string &lastCall(self->proxy.getLastCall());
-        return PyString_FromStringAndSize(lastCall.data(), lastCall.size());
+        return PyUnicode_FromStringAndSize(lastCall.data(), lastCall.size());
     }
 
     // return new method
@@ -2058,7 +2073,7 @@ namespace {
         virtual void flush() { /* noop */ }
 
         PyObject* getData() {
-            return PyString_FromStringAndSize(data.data(), data.size());
+            return PyUnicode_FromStringAndSize(data.data(), data.size());
         }
 
     private:
@@ -2149,8 +2164,9 @@ PyObject* fastrpc_dumps(PyObject *, PyObject *args, PyObject *keywds) {
 
             char *str;
             Py_ssize_t strSize;
-            if (PyString_AsStringAndSize(faultString.get(), &str, &strSize))
+            STR_ASSTRANDSIZE(faultString.get(), str, strSize) {
                 return 0;
+            }
 
             marshaller->packFault(PyLong_AsLong(faultCode.get()), str, strSize);
         } else {
@@ -2205,8 +2221,9 @@ PyObject* fastrpc_loads(PyObject *, PyObject *args) {
 
     char *dataStr;
     Py_ssize_t dataSize;
-    if (PyString_AsStringAndSize(data, &dataStr, &dataSize))
+    STR_ASSTRANDSIZE(data, dataStr, dataSize) {
         return 0;
+    }
 
     try {
         Builder_t builder(0, stringMode,
@@ -2287,7 +2304,7 @@ inline int printString(std::ostringstream &out, PyObject *obj,
     // 7bit string
     char *str;
     Py_ssize_t len;
-    if (PyString_AsStringAndSize(obj, &str, &len)) {
+    STR_ASSTRANDSIZE(obj, str, len) {
         // oops, cannot get string
         out << err;
         return -1;
@@ -2333,7 +2350,7 @@ int printPyFastRPCTree(PyObject *tree, std::ostringstream &out,
     } else if (PyFloat_Check(tree)) {
         // float
         out << PyFloat_AS_DOUBLE(tree);
-    } else if (PyString_Check(tree)) {
+    } else if (PyUnicode_Check(tree)) {
         if (printString(out, tree)) return -1;
     } else if (PyUnicode_Check(tree)) {
         // unicode string
@@ -2456,7 +2473,7 @@ PyObject* fastrpc_dumpTree(PyObject *, PyObject *args) {
     printPyFastRPCTree(value, out, level, names, pos);
 
     // OK
-    return PyString_FromStringAndSize(out.str().data(), out.str().size());
+    return PyUnicode_FromStringAndSize(out.str().data(), out.str().size());
 }
 
 /**************************************************************************/
@@ -2514,8 +2531,8 @@ namespace FRPC { namespace Python {
         if (!method || (method == Py_None)) {
             // no method
             formatString = (status
-                            ? PyString_FromString("<fastrpc.%s: %d, %s>")
-                            : PyString_FromString("<fastrpc.%s: %s>"));
+                            ? PyUnicode_FromString("<fastrpc.%s: %d, %s>")
+                            : PyUnicode_FromString("<fastrpc.%s: %s>"));
             if (!formatString) return 0;
 
             formatArgs =
@@ -2533,9 +2550,9 @@ namespace FRPC { namespace Python {
             MethodObject &methodObject(*method.get<MethodObject>());
 
             formatString = (status
-                            ? PyString_FromString("<fastrpc.%s: %d, %s "
+                            ? PyUnicode_FromString("<fastrpc.%s: %d, %s "
                                                   "[method %s() @ %s]>")
-                            : PyString_FromString("<fastrpc.%s: %s "
+                            : PyUnicode_FromString("<fastrpc.%s: %s "
                                                   "[method %s() @ %s]>"));
             if (!formatString) return 0;
 
@@ -2561,7 +2578,7 @@ namespace FRPC { namespace Python {
         }
 
         // do the format
-        return PyString_Format(formatString, formatArgs);
+        return PyUnicode_Format(formatString, formatArgs);
     }
 } } // namespace FRPC::Python
 
@@ -2703,7 +2720,7 @@ extern "C" DL_EXPORT(void) init_fastrpc(void)
     }
 
     // create empty string
-    emptyString = PyString_FromString("");
+    emptyString = PyUnicode_FromString("");
     if (!emptyString)
         INITERROR;
 }

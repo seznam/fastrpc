@@ -39,6 +39,16 @@
 
 #include "pyobjectwrapper.h"
 
+#if PY_MAJOR_VERSION >= 3
+# define STR_ASSTRANDSIZE(str, data, len) \
+    data = PyUnicode_AsUTF8AndSize(str, &len); \
+    if (data == NULL)
+#else
+# define STR_ASSTRANDSIZE(str, data, len) \
+    if (PyString_AsStringAndSize(str, &data, &len) < 0)
+#endif
+
+
 namespace FRPC { namespace Python {
 
     extern PyObject *Error;
@@ -62,7 +72,8 @@ namespace FRPC { namespace Python {
 
     struct BinaryObject {
         PyObject_HEAD                   /* python standard */
-        PyObject *value;                /* string value */
+        PyObject *value;                /* PyString in Python2 or
+                                           PyBytes in Python3 */
     };
 
     BinaryObject* newBinary(const char* data, long size);

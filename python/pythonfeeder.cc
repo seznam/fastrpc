@@ -157,21 +157,23 @@ void Feeder_t::feedValue(PyObject *value)
 
         char *str;
         Py_ssize_t strLen;
-        if (PyString_AsStringAndSize(bin->value, &str, &strLen))
+        STR_ASSTRANDSIZE(bin->value, str, strLen) {
             throw PyError_t();
+        }
 
         marshaller->packBinary(str, strLen);
     } else if (PyBoolean_Check(value)) {
         BooleanObject *boolean = reinterpret_cast<BooleanObject*>(value);
         marshaller->packBool(boolean->value == Py_True);
-    } else if (PyString_Check(value)) {
+    } else if (PyUnicode_Check(value)) {
         //is utf8 ?
         if (encoding == "utf-8")  {
             // get string and marshall it
             char *str;
             Py_ssize_t strLen;
-            if (PyString_AsStringAndSize(value, &str, &strLen))
+            STR_ASSTRANDSIZE(value, str, strLen) {
                 throw PyError_t();
+            }
 
             marshaller->packString(str, strLen);
         } else {
@@ -186,8 +188,9 @@ void Feeder_t::feedValue(PyObject *value)
             // get string and marshall it
             char *str;
             Py_ssize_t strLen;
-            if (PyString_AsStringAndSize(utf8, &str, &strLen))
+            STR_ASSTRANDSIZE(utf8, str, strLen) {
                 throw PyError_t();
+            }
 
             marshaller->packString(str, strLen);
         }
@@ -199,8 +202,9 @@ void Feeder_t::feedValue(PyObject *value)
         // get string and marshall it
         char *str;
         Py_ssize_t strLen;
-        if (PyString_AsStringAndSize(utf8, &str, &strLen))
+        STR_ASSTRANDSIZE(utf8, str, strLen) {
             throw PyError_t();
+        }
 
         marshaller->packString(str, strLen);
     } else if (PyList_Check(value)) {
@@ -225,7 +229,7 @@ void Feeder_t::feedValue(PyObject *value)
         marshaller->packStruct(argc);
 
         while (PyDict_Next(value, &pos, &key, &member)) {
-            if(!PyString_Check(key)) {
+            if(!PyUnicode_Check(key)) {
                 PyErr_SetString(PyExc_TypeError,
                                 "Key in Dictionary must be string.");
                 throw PyError_t();
@@ -233,8 +237,9 @@ void Feeder_t::feedValue(PyObject *value)
 
             char *str;
             Py_ssize_t strLen;
-            if (PyString_AsStringAndSize(key, &str, &strLen))
+            STR_ASSTRANDSIZE(key, str, strLen) {
                 throw PyError_t();
+            }
 
             marshaller->packStructMember(str, strLen);
             feedValue(member);
@@ -270,7 +275,12 @@ void Feeder_t::feedValue(PyObject *value)
 
         std::string objectRepr = "unknown";
         if (PyObjectWrapper_t repr = PyObject_Repr(value)) {
-            objectRepr.assign(PyString_AsString(repr));
+            Py_ssize_t len;
+            char *data;
+            STR_ASSTRANDSIZE(repr, data, len) {
+                throw PyError_t();
+            }
+            objectRepr.assign(data);
         }
 
         PyErr_Format(PyExc_TypeError, "Unknown type to marshall for object: %s",

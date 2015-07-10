@@ -56,7 +56,7 @@ extern "C"
 
     static PyObject* Error__repr__(PyObject *, PyObject *)
     {
-        return PyString_FromString("<fastrpc.Error>");
+        return PyUnicode_FromString("<fastrpc.Error>");
     }
 
     static PyMethodDef ErrorMethod_methods[] = {
@@ -95,7 +95,7 @@ extern "C"
             return 0;
         }
 
-        if (!(PyString_Check(statusMessage) || PyUnicode_Check(statusMessage)))
+        if (!(PyUnicode_Check(statusMessage) || PyUnicode_Check(statusMessage)))
         {
             PyErr_Format(PyExc_TypeError,
                          "ProtocolError.statusMessage must be string "
@@ -158,7 +158,7 @@ extern "C"
             return 0;
         }
 
-        if (!(PyString_Check(faultString) || PyUnicode_Check(faultString)))
+        if (!(PyUnicode_Check(faultString) || PyUnicode_Check(faultString)))
         {
             PyErr_Format(PyExc_TypeError,
                          "Fault.faultString must be string "
@@ -213,7 +213,7 @@ extern "C"
                               &method))
             return 0;
 
-        if (!(PyString_Check(statusMessage) || PyUnicode_Check(statusMessage)))
+        if (!(PyUnicode_Check(statusMessage) || PyUnicode_Check(statusMessage)))
         {
             PyErr_Format(PyExc_TypeError,
                          "ResponseError.statusMessage must be string "
