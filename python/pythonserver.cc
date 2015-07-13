@@ -824,7 +824,7 @@ PyObject* Server_t::serve(int fd, PyObjectWrapper_t addr) {
                              getException().c_str());
                     }
 
-                    long int r = PyLong_AsLong(result);
+                    long int r = PyInt_AsLong(result);
                     if ((r == -1) && PyErr_Occurred()) {
                         throw FRPC::HTTPError_t
                             (FRPC::HTTP_INTERNAL_SERVER_ERROR,
@@ -861,7 +861,7 @@ PyObject* Server_t::serve(int fd, PyObjectWrapper_t addr) {
                             (PyObject_GetAttrString(result, "faultCode"));
                         if (!pyFaultCode) throw PyError_t();
 
-                        long int faultCode = PyLong_AsLong(pyFaultCode);
+                        long int faultCode = PyInt_AsLong(pyFaultCode);
                         if ((faultCode == -1) && PyErr_Occurred())
                             throw PyError_t();
 

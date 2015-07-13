@@ -187,7 +187,7 @@ void Builder_t::buildInt(Int_t::value_type value) {
         integer = PyLong_FromLongLong(value);
     }
     else {
-        integer = PyLong_FromLong((long)value);
+        integer = PyInt_FromLong(int32_t(value));
     }
     if (!integer)
         setError();
