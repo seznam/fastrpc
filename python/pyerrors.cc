@@ -20,271 +20,368 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * $Id: pyerrors.cc,v 1.7 2011-02-16 12:04:07 volca Exp $
- *
  * AUTHOR      Vaclav Blazek <blazek@firma.seznam.cz>
  *
  * DESCRIPTION
  * Python FastRPC support. Errors.
  *
- * HISTORY
- *      2006-05-22 (vasek)
- *              Created
  */
 
 
 // Included first to get rid of the _POSIX_C_SOURCE warning
 #include <Python.h>
+#include <structmember.h>
 
 #include <string>
+#include <iostream>
 
 #include "fastrpcmodule.h"
 
 using namespace FRPC::Python;
 
+/* note these macros omit the last semicolon so the macro invocation may
+ * include it and not look strange.
+ */
+#define SimpleException(EXCNAME, EXCSTR, EXCDOC) \
+static PyTypeObject EXCNAME ## Exception = { \
+    PyVarObject_HEAD_INIT(NULL, 0) \
+    "fastrpc." # EXCNAME, \
+    sizeof(PyBaseExceptionObject), 0, \
+    ((PyTypeObject*)PyExc_BaseException)->tp_dealloc, 0, 0, 0, 0, 0, 0, \
+    0, 0, 0, 0, 0, 0, 0, 0, \
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, \
+    PyDoc_STR(EXCDOC), ((PyTypeObject*)PyExc_BaseException)->tp_traverse, \
+    ((PyTypeObject*)PyExc_BaseException)->tp_clear, 0, 0, 0, 0, 0, 0, 0, \
+    (PyTypeObject*)PyExc_Exception, 0, 0, 0, \
+    offsetof(PyBaseExceptionObject, dict), \
+    ((PyTypeObject*)PyExc_BaseException)->tp_init, 0, \
+    ((PyTypeObject*)PyExc_BaseException)->tp_new,\
+};
+
+#define ComplexException(EXCNAME, EXCSTORE, EXCMETHODS, EXCMEMBERS, \
+    EXCSTR, EXCDOC) \
+static PyTypeObject EXCNAME ## Exception = { \
+    PyVarObject_HEAD_INIT(NULL, 0) \
+    "fastrpc." # EXCNAME, \
+    sizeof(EXCSTORE ## Object), 0, \
+    (destructor)EXCSTORE ## _dealloc, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, \
+    (reprfunc)EXCSTR, 0, 0, 0, \
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, \
+    PyDoc_STR(EXCDOC), (traverseproc)EXCSTORE ## _traverse, \
+    (inquiry)EXCSTORE ## _clear, 0, 0, 0, 0, EXCMETHODS, \
+    EXCMEMBERS, 0, (PyTypeObject*)PyExc_Exception, \
+    0, 0, 0, offsetof(EXCSTORE ## Object, dict), \
+    (initproc)EXCSTORE ## _init, \
+}; \
+
 //******************************************************************
-/***Error */
+//***Error */
 //******************************************************************
-extern "C"
+
+static PyObject* Error_repr(PyObject * /*self*/)
 {
+    return PyUnicode_FromString("<fastrpc.Error>");
+}
 
-    static PyObject* Error__init__(PyObject *, PyObject *)
-    {
-        Py_INCREF(Py_None);
-        return Py_None;
-    }
+SimpleException(Error, Error_repr, "General FastRPC error exception");
 
-    static PyObject* Error__repr__(PyObject *, PyObject *)
-    {
-        return PyUnicode_FromString("<fastrpc.Error>");
-    }
-
-    static PyMethodDef ErrorMethod_methods[] = {
-                { "__init__", Error__init__,
-                  METH_VARARGS, "fastrpc.Error constuctor" },
-                { "__repr__", Error__repr__,
-                  METH_VARARGS, "print fastrpc.Error)" },
-                { "__str__", Error__repr__,
-                  METH_VARARGS, "print fastrpc.Error)" },
-                { NULL, NULL, 0, NULL } // sentinel
-            };
-
-} // extern "C"
 
 //********************************************************************
 //*****ProtocolError
 //********************************************************************
 
-extern "C"
+typedef struct {
+#if PY_MAJOR_VERSION >= 3
+    PyException_HEAD
+#else
+    PyObject_HEAD
+    PyObject *dict;
+    PyObject *args;
+    PyObject *message;
+#endif
+
+    PyObject *status;
+    PyObject *statusMessage;
+    PyObject *method;
+} ProtocolErrorObject;
+
+static int
+ProtocolError_init(ProtocolErrorObject *self, PyObject *args, PyObject *kwds)
 {
+    if (((PyTypeObject*)PyExc_BaseException)->tp_init((PyObject *)self, args, kwds) == -1)
+        return -1;
 
-    static PyObject* ProtocolError__init__(PyObject *self, PyObject *args)
-    {
-        PyObject *status = 0;
-        PyObject *statusMessage = 0;
-        PyObject *method = Py_None;
+    self->method = Py_None;
+    if (!PyArg_ParseTuple(args, "OOO|O:__init__",
+            &self->status, &self->statusMessage, &self->method))
+        return -1;
 
-        if (!PyArg_ParseTuple(args, "OOO|O:__init__", &self,
-                              &status, &statusMessage, &method))
-            return 0;
+    Py_XINCREF(self->status);
+    Py_XINCREF(self->statusMessage);
+    Py_XINCREF(self->method);
 
-        if (!PyNumber_Check(status)) {
-            PyErr_Format(PyExc_TypeError,
-                         "ProtocolError.status must be number, not %s.",
-                         Py_TYPE(status)->tp_name);
-            return 0;
-        }
-
-        if (!(PyUnicode_Check(statusMessage) || PyUnicode_Check(statusMessage)))
-        {
-            PyErr_Format(PyExc_TypeError,
-                         "ProtocolError.statusMessage must be string "
-                         "or unicode, not %s.",
-                         Py_TYPE(statusMessage)->tp_name);
-            return 0;
-        }
-
-        if (PyObject_SetAttrString(self, "status", status)
-            || PyObject_SetAttrString(self, "statusMessage", statusMessage)
-            || PyObject_SetAttrString(self, "method", method))
-            return 0;
-
-        Py_INCREF(Py_None);
-        return Py_None;
+    if (!PyNumber_Check(self->status)) {
+        PyErr_Format(PyExc_TypeError,
+            "ProtocolError.status must be number, not %s.",
+            Py_TYPE(self->status)->tp_name);
+        return -1;
     }
 
-    static PyObject* ProtocolError__repr__(PyObject *self, PyObject *args)
+#if PY_MAJOR_VERSION >= 3
+    if (!PyUnicode_Check(self->statusMessage))
+#else
+    if (!(PyString_Check(self->statusMessage) || PyUnicode_Check(self->statusMessage)))
+#endif
     {
-        self = PyTuple_GetItem(args, 0);
-        if (!self) return 0;
-
-        return errorRepr(self, "ProtocolError", "status", "statusMessage");
+        PyErr_Format(PyExc_TypeError,
+            "ProtocolError.statusMessage must be string "
+            "or unicode, not %s.",
+            Py_TYPE(self->statusMessage)->tp_name);
+        return -1;
     }
 
-    static PyMethodDef ProtocolErrorMethod_methods[] = {
-                { "__init__", ProtocolError__init__,
-                  METH_VARARGS, "fastrpc.ProtocolError constuctor" },
-                { "__repr__", ProtocolError__repr__,
-                  METH_VARARGS, "repr(ProtocolError)" },
-                { "__str__", ProtocolError__repr__,
-                  METH_VARARGS, "str(ProtocolError)" },
-                { NULL, NULL, 0, NULL } // sentinel
-            };
+    return 0;
+}
 
-} // extern "C"
+static int
+ProtocolError_clear(ProtocolErrorObject *self)
+{
+    Py_CLEAR(self->status);
+    Py_CLEAR(self->statusMessage);
+    Py_CLEAR(self->method);
+    return ((PyTypeObject*)PyExc_BaseException)->tp_clear((PyObject *)self);
+}
+
+static void
+ProtocolError_dealloc(ProtocolErrorObject *self)
+{
+    ProtocolError_clear(self);
+    Py_TYPE(self)->tp_free((PyObject *)self);
+}
+
+static int
+ProtocolError_traverse(ProtocolErrorObject *self, visitproc visit, void *arg)
+{
+    Py_VISIT(self->status);
+    Py_VISIT(self->statusMessage);
+    Py_VISIT(self->method);
+    return ((PyTypeObject*)PyExc_BaseException)->tp_traverse((PyObject *)self, visit, arg);
+}
+
+static PyObject *
+ProtocolError_repr(ProtocolErrorObject *self)
+{
+    return errorRepr((PyObject*)self, "ProtocolError", "status", "statusMessage");
+}
+
+
+static PyMemberDef ProtocolError_members[] = {
+    {"status", T_OBJECT_EX, offsetof(ProtocolErrorObject, status), 0,
+        PyDoc_STR("status code")},
+    {"statusMessage", T_OBJECT_EX, offsetof(ProtocolErrorObject, statusMessage), 0,
+        PyDoc_STR("status message string")},
+    {"method", T_OBJECT_EX, offsetof(ProtocolErrorObject, method), 0,
+        PyDoc_STR("Method that caused the exception.")},
+    {NULL}  /* Sentinel */
+};
+
+ComplexException(ProtocolError, ProtocolError, 0, ProtocolError_members,
+    "ProtocolError", "ProtocolError exception");
+
 
 //*************************************************************************
 //**Fault
 //*************************************************************************
 
-extern "C"
+typedef struct {
+#if PY_MAJOR_VERSION >= 3
+    PyException_HEAD
+#else
+    PyObject_HEAD
+    PyObject *dict;
+    PyObject *args;
+    PyObject *message;
+#endif
+
+    PyObject *faultCode;
+    PyObject *faultString;
+    PyObject *method;
+} FaultObject;
+
+static int
+Fault_init(FaultObject *self, PyObject *args, PyObject *kwds)
 {
+    if (((PyTypeObject*)PyExc_BaseException)->tp_init((PyObject *)self, args, kwds) == -1)
+        return -1;
 
-    static PyObject* Fault__init__(PyObject *self, PyObject *args)
+    self->method = Py_None;
+    if (!PyArg_ParseTuple(args, "OO|O:__init__",
+            &self->faultCode, &self->faultString, &self->method))
+        return -1;
+
+    Py_INCREF(self->faultCode);
+    Py_INCREF(self->faultString);
+    Py_INCREF(self->method);
+
+    if (!PyNumber_Check(self->faultCode))
     {
-        PyObject *faultCode;
-        PyObject *faultString;
-        PyObject *method = Py_None;
-
-        if (!PyArg_ParseTuple(args, "OOO|O:__init__", &self,
-                              &faultCode, &faultString, &method))
-            return 0;
-
-        if (!PyNumber_Check(faultCode))
-        {
-            PyErr_Format(PyExc_TypeError,
-                         "Fault.faultCode must be number, not %s.",
-                         Py_TYPE(faultCode)->tp_name);
-            return 0;
-        }
-
-        if (!(PyUnicode_Check(faultString) || PyUnicode_Check(faultString)))
-        {
-            PyErr_Format(PyExc_TypeError,
-                         "Fault.faultString must be string "
-                         "or unicode, not %s.",
-                         Py_TYPE(faultString)->tp_name);
-            return 0;
-        }
-
-        if (PyObject_SetAttrString(self, "faultCode", faultCode)
-            || PyObject_SetAttrString(self, "faultString", faultString)
-            || PyObject_SetAttrString(self, "method", method))
-            return 0;
-
-        Py_INCREF(Py_None);
-        return Py_None;
+        PyErr_Format(PyExc_TypeError,
+            "Fault.self->faultCode must be number, not %s.",
+            Py_TYPE(self->faultCode)->tp_name);
+        return -1;
     }
 
-    static PyObject* Fault__repr__(PyObject *self, PyObject *args)
+#if PY_MAJOR_VERSION >= 3
+    if (!PyUnicode_Check(self->faultString))
+#else
+    if (!(PyString_Check(self->faultString) || PyUnicode_Check(self->faultString)))
+#endif
     {
-        self = PyTuple_GetItem(args, 0);
-        if (!self)
-            return 0;
-
-        return errorRepr(self, "Fault", "faultCode", "faultString");
+        PyErr_Format(PyExc_TypeError,
+            "Fault.faultString must be string "
+            "or unicode, not %s.",
+            Py_TYPE(self->faultString)->tp_name);
+        return -1;
     }
 
-    static PyMethodDef FaultMethod_methods[] = {
-                { "__init__", Fault__init__,
-                  METH_VARARGS, "fastrpc.Fault constuctor" },
-                { "__repr__", Fault__repr__,
-                  METH_VARARGS, "repr(Fault)" },
-                { "__str__", Fault__repr__,
-                  METH_VARARGS, "str(Fault)" },
-                { NULL, NULL, 0, NULL } // sentinel
-            };
+    return 0;
+}
 
-} // extern "C"
+
+static int
+Fault_clear(FaultObject *self)
+{
+    Py_CLEAR(self->faultCode);
+    Py_CLEAR(self->faultString);
+    Py_CLEAR(self->method);
+    return ((PyTypeObject*)PyExc_BaseException)->tp_clear((PyObject *)self);
+}
+
+static void
+Fault_dealloc(FaultObject *self)
+{
+    Fault_clear(self);
+    Py_TYPE(self)->tp_free((PyObject *)self);
+}
+
+static int
+Fault_traverse(FaultObject *self, visitproc visit, void *arg)
+{
+    Py_VISIT(self->faultCode);
+    Py_VISIT(self->faultString);
+    Py_VISIT(self->method);
+    return ((PyTypeObject*)PyExc_BaseException)->tp_traverse((PyObject *)self, visit, arg);
+}
+
+
+static PyObject *
+Fault_repr(FaultObject *self)
+{
+    return errorRepr((PyObject*)self, "Fault", "faultCode", "faultString");
+}
+
+static PyMemberDef Fault_members[] = {
+    {"faultCode", T_OBJECT_EX, offsetof(FaultObject, faultCode), 0,
+        PyDoc_STR("fault code")},
+    {"faultString", T_OBJECT_EX, offsetof(FaultObject, faultString), 0,
+        PyDoc_STR("fault string")},
+    {"method", T_OBJECT_EX, offsetof(FaultObject, method), 0,
+        PyDoc_STR("Method that caused the exception.")},
+    {NULL}  /* Sentinel */
+};
+
+ComplexException(Fault, Fault, 0, Fault_members,
+                        Fault_repr, "Fault exception");
+
 
 //*************************************************************************
 //*ResponseError
 //*************************************************************************
-extern "C"
+
+typedef struct {
+#if PY_MAJOR_VERSION >= 3
+    PyException_HEAD
+#else
+    PyObject_HEAD
+    PyObject *dict;
+    PyObject *args;
+    PyObject *message;
+#endif
+
+    PyObject *statusMessage;
+    PyObject *method;
+} ResponseErrorObject;
+
+static int
+ResponseError_init(ResponseErrorObject *self, PyObject *args, PyObject *kwds)
 {
+    if (((PyTypeObject*)PyExc_BaseException)->tp_init((PyObject *)self, args, kwds) == -1)
+        return -1;
 
-    static PyObject* ResponseError__init__(PyObject *self, PyObject *args)
+    self->method = Py_None;
+    if (!PyArg_ParseTuple(args, "O|O:__init__",
+            &self->statusMessage, &self->method))
+        return -1;
+
+    Py_XINCREF(self->statusMessage);
+    Py_XINCREF(self->method);
+
+#if PY_MAJOR_VERSION >= 3
+    if (!PyUnicode_Check(self->statusMessage))
+#else
+    if (!(PyString_Check(self->statusMessage) || PyUnicode_Check(self->statusMessage)))
+#endif
     {
-
-        PyObject *statusMessage;
-        PyObject *method = Py_None;
-
-        if (!PyArg_ParseTuple(args, "OO|O:__init__", &self, &statusMessage,
-                              &method))
-            return 0;
-
-        if (!(PyUnicode_Check(statusMessage) || PyUnicode_Check(statusMessage)))
-        {
-            PyErr_Format(PyExc_TypeError,
-                         "ResponseError.statusMessage must be string "
-                         "or unicode, not %s.",
-                         Py_TYPE(statusMessage)->tp_name);
-            return 0;
-        }
-
-
-        if (PyObject_SetAttrString(self, "statusMessage", statusMessage)
-            || PyObject_SetAttrString(self, "method", method))
-            return 0;
-
-        Py_INCREF(Py_None);
-        return Py_None;
+        PyErr_Format(PyExc_TypeError,
+            "ResponseError.statusMessage must be string "
+            "or unicode, not %s.",
+            Py_TYPE(self->statusMessage)->tp_name);
+        return -1;
     }
 
-    static PyObject* ResponseError__repr__(PyObject *self, PyObject *args)
-    {
-        self = PyTuple_GetItem(args, 0);
-        if (!self) return 0;
+    return 0;
+}
 
-
-        return errorRepr(self, "ResponseError", 0, "statusMessage");
-    }
-
-    static PyMethodDef ResponseErrorMethod_methods[] = {
-                { "__init__", ResponseError__init__,
-                  METH_VARARGS, "fastrpc.ResponseError constuctor" },
-                { "__repr__", ResponseError__repr__,
-                  METH_VARARGS, "repr(ResponseError)" },
-                { "__str__", ResponseError__repr__,
-                  METH_VARARGS, "str(ResponseError)" },
-                { NULL, NULL, 0, NULL } // sentinel
-            };
-
-} // extern "C"
-
-namespace {
-PyObject* initException(PyObject *module, const char *name,
-                        const char *niceName, PyObject *base,
-                        PyMethodDef *methodDef)
+static int
+ResponseError_clear(ResponseErrorObject *self)
 {
-    // create runtime error
-    PyObject *Exception = PyErr_NewException((char *)niceName, base, 0);
-    if (!Exception)
-        return 0;
-
-    // populate runtime error class with its methods
-    for (PyMethodDef *md = methodDef; md->ml_name; ++md)
-    {
-        PyObjectWrapper_t func(PyCFunction_New(md, NULL));
-        if (!func)
-            return 0;
-
-        // turn the function into an unbound method
-        PyObjectWrapper_t method(PyMethod_New(func, NULL, Exception));
-        if (!method)
-            return 0;
-        if (PyObject_SetAttrString(Exception, md->ml_name, method))
-            return 0;
-    }
-
-    // add this exception into the fastrpc module
-    if (PyModule_AddObject(module, (char *)name, Exception))
-        return 0;
-
-    // OK
-    return Exception;
+    Py_CLEAR(self->statusMessage);
+    Py_CLEAR(self->method);
+    return ((PyTypeObject*)PyExc_BaseException)->tp_clear((PyObject *)self);
 }
+
+static void
+ResponseError_dealloc(ResponseErrorObject *self)
+{
+    ResponseError_clear(self);
+    Py_TYPE(self)->tp_free((PyObject *)self);
 }
+
+static int
+ResponseError_traverse(ResponseErrorObject *self, visitproc visit, void *arg)
+{
+    Py_VISIT(self->statusMessage);
+    Py_VISIT(self->method);
+    return ((PyTypeObject*)PyExc_BaseException)->tp_traverse((PyObject *)self, visit, arg);
+}
+
+static PyObject *
+ResponseError_repr(ResponseErrorObject *self)
+{
+    return errorRepr((PyObject*)self, "ResponseError", 0, "statusMessage");
+}
+
+
+static PyMemberDef ResponseError_members[] = {
+    {"statusMessage", T_OBJECT_EX, offsetof(ResponseErrorObject, statusMessage), 0,
+        PyDoc_STR("status message string")},
+    {"method", T_OBJECT_EX, offsetof(ResponseErrorObject, method), 0,
+        PyDoc_STR("Method that caused the exception.")},
+    {NULL}  /* Sentinel */
+};
+
+ComplexException(ResponseError, ResponseError, 0, ResponseError_members,
+    "ResponseError", "ResponseError exception");
 
 namespace FRPC { namespace Python {
 
@@ -297,32 +394,50 @@ namespace FRPC { namespace Python {
         /**************************************************************/
         //Error init
         /**************************************************************/
-        Error = initException(fastrpc_module, "Error", "fastrpc.Error",
-                              PyExc_Exception, ErrorMethod_methods);
-        if (!Error) return -1;
+        if (PyType_Ready(&ErrorException) < 0)
+            return -1;
+
+        Py_INCREF(&ErrorException);
+        if (PyModule_AddObject(fastrpc_module, "Error",
+                           reinterpret_cast<PyObject*>(&ErrorException)))
+            return -1;
+        Error = reinterpret_cast<PyObject*>(&ErrorException);
 
         /********************************************************************/
         //ProtocolError
         /**************************************************************/
-        ProtocolError = initException(fastrpc_module, "ProtocolError",
-                                      "fastrpc.ProtocolError",
-                                      Error, ProtocolErrorMethod_methods);
-        if (!ProtocolError) return -1;
+        if (PyType_Ready(&ProtocolErrorException) < 0)
+            return -1;
+
+        Py_INCREF(&ProtocolErrorException);
+        if (PyModule_AddObject(fastrpc_module, "ProtocolError",
+                           reinterpret_cast<PyObject*>(&ProtocolErrorException)))
+            return -1;
+        ProtocolError = reinterpret_cast<PyObject*>(&ProtocolErrorException);
 
         /********************************************************************/
-        //fault
+        //Fault
         /********************************************************************/
-        Fault = initException(fastrpc_module, "Fault", "fastrpc.Fault",
-                              Error, FaultMethod_methods);
-        if (!Fault) return -1;
+        if (PyType_Ready(&FaultException) < 0)
+            return -1;
+
+        Py_INCREF(&FaultException);
+        if (PyModule_AddObject(fastrpc_module, "Fault",
+                           reinterpret_cast<PyObject*>(&FaultException)))
+            return -1;
+        Fault = reinterpret_cast<PyObject*>(&FaultException);
 
         /********************************************************************/
         // ResponseError
         /**************************************************************/
-        ResponseError = initException(fastrpc_module, "ResponseError",
-                                      "fastrpc.ResponseError",
-                                      Error, ResponseErrorMethod_methods);
-        if (!ResponseError) return -1;
+        if (PyType_Ready(&ResponseErrorException) < 0)
+            return -1;
+
+        Py_INCREF(&ResponseErrorException);
+        if (PyModule_AddObject(fastrpc_module, "ResponseError",
+                           reinterpret_cast<PyObject*>(&ResponseErrorException)))
+            return -1;
+        ResponseError = reinterpret_cast<PyObject*>(&ResponseErrorException);
 
         return 0;
     }
