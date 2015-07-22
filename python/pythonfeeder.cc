@@ -74,7 +74,7 @@ long getLongAttr(PyObject *object, const char *name) {
     PyObjectWrapper_t attr(PyObject_GetAttrString(object, name));
     if (!attr) throw PyError_t();
 
-    long value = PyLong_AsLong(attr);
+    long value = PyInt_AsLong(attr);
     if ((value == -1) && PyErr_Occurred()) throw PyError_t();
 
     return value;
@@ -130,9 +130,12 @@ void Feeder_t::feedValue(PyObject *value)
         marshaller->packBool(PyObject_IsTrue(value));
     } else
 #endif
-    if (PyLong_Check(value)) {
-        marshaller->packInt(PyLong_AsLong(value));
-    } else if(PyLong_Check(value)) {
+#if PY_MAJOR_VERSION == 2
+    if (PyInt_Check(value)) {
+        marshaller->packInt(PyInt_AsLong(value));
+    } else
+#endif
+    if(PyLong_Check(value)) {
         size_t bits = _PyLong_NumBits(value);
         int sign = _PyLong_Sign(value);
         Int_t::value_type i;
@@ -165,15 +168,33 @@ void Feeder_t::feedValue(PyObject *value)
     } else if (PyBoolean_Check(value)) {
         BooleanObject *boolean = reinterpret_cast<BooleanObject*>(value);
         marshaller->packBool(boolean->value == Py_True);
+#if PY_MAJOR_VERSION >= 3
+    } else if (PyBytes_Check(value)) {
+        char *str;
+        Py_ssize_t strLen;
+        PyBytes_AsStringAndSize(value, &str, &strLen); \
+        if (str == NULL)
+            throw PyError_t();
+
+        marshaller->packString(str, strLen);
     } else if (PyUnicode_Check(value)) {
+        // get string and marshall it
+        char *str;
+        Py_ssize_t strLen;
+        str = PyUnicode_AsUTF8AndSize(value, &strLen); \
+        if (str == NULL)
+            throw PyError_t();
+
+        marshaller->packString(str, strLen);
+#else
+    } else if (PyString_Check(value)) {
         //is utf8 ?
         if (encoding == "utf-8")  {
             // get string and marshall it
             char *str;
             Py_ssize_t strLen;
-            STR_ASSTRANDSIZE(value, str, strLen) {
+            if (PyString_AsStringAndSize(value, &str, &strLen))
                 throw PyError_t();
-            }
 
             marshaller->packString(str, strLen);
         } else {
@@ -188,9 +209,8 @@ void Feeder_t::feedValue(PyObject *value)
             // get string and marshall it
             char *str;
             Py_ssize_t strLen;
-            STR_ASSTRANDSIZE(utf8, str, strLen) {
+            if (PyString_AsStringAndSize(utf8, &str, &strLen))
                 throw PyError_t();
-            }
 
             marshaller->packString(str, strLen);
         }
@@ -202,11 +222,11 @@ void Feeder_t::feedValue(PyObject *value)
         // get string and marshall it
         char *str;
         Py_ssize_t strLen;
-        STR_ASSTRANDSIZE(utf8, str, strLen) {
+        if (PyString_AsStringAndSize(utf8, &str, &strLen))
             throw PyError_t();
-        }
 
         marshaller->packString(str, strLen);
+#endif
     } else if (PyList_Check(value)) {
         int argc = PyList_GET_SIZE(value);
 

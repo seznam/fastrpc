@@ -37,17 +37,8 @@
 
 #include <Python.h>
 
+#include "pythoncompat.h"
 #include "pyobjectwrapper.h"
-
-#if PY_MAJOR_VERSION >= 3
-# define STR_ASSTRANDSIZE(str, data, len) \
-    data = PyUnicode_AsUTF8AndSize(str, &len); \
-    if (data == NULL)
-#else
-# define STR_ASSTRANDSIZE(str, data, len) \
-    if (PyString_AsStringAndSize(str, &data, &len) < 0)
-#endif
-
 
 namespace FRPC { namespace Python {
 

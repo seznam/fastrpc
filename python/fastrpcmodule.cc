@@ -393,13 +393,14 @@ int DateTimeObject_init(DateTimeObject *self, PyObject *args, PyObject *)
     if (!PyArg_ParseTuple(args, "|O", &pyValue))
         return -1;
 
+#if PY_MAJOR_VERSION == 2
     if (!pyValue) {
 #warning remove this possibility in next major revision of fastrpc
         PyErr_WarnEx(PyExc_DeprecationWarning,
                "Deprecated call use LocalTime() or UTCtime() instead.", 1);
         return LocalTimeObject_init(self, args, NULL);
 
-    } else if (PyUnicode_Check(pyValue)) {
+    } else if (PyString_Check(pyValue)) {
         return TimeObject_init_parseString(self, pyValue);
 
     } else if (PyInt_Check(pyValue)) {
@@ -408,8 +409,15 @@ int DateTimeObject_init(DateTimeObject *self, PyObject *args, PyObject *)
                "Deprecated call use LocalTime(int) or UTCtime(int) instead.", 1);
         return LocalTimeObject_init(self, args, NULL);
 
-    } else {
-        PyErr_Format(PyExc_TypeError, "Argument must be string");
+    } else
+#else
+    if (pyValue && PyUnicode_Check(pyValue)) {
+        return TimeObject_init_parseString(self, pyValue);
+    } else
+#endif
+    {
+        PyErr_SetString(PyExc_TypeError,
+            "DateTime expects either a string argument or two integers");
         return -1;
     }
 
@@ -621,13 +629,19 @@ time_t DateTimeObject_to_timestamp(DateTimeObject *datetime) {
 
 static PyObject* DateTimeObject_richcmp(PyObject *self, PyObject *other, int op)
 {
-    if (!PyObject_TypeCheck(self, &DateTimeObject_Type)) {
-        PyErr_SetString(PyExc_TypeError, "arg #1 is not a DateTime");
+    if (!PyObject_TypeCheck(self, &DateTimeObject_Type) &&
+        !PyObject_TypeCheck(self, &LocalTimeObject_Type) &&
+        !PyObject_TypeCheck(self, &UTCTimeObject_Type)) {
+        PyErr_Format(PyExc_TypeError, "arg #1 is not a DateTime, it is %s",
+                            Py_TYPE(self)->tp_name);
         return NULL;
     }
 
-    if (!PyObject_TypeCheck(other, &DateTimeObject_Type)) {
-        PyErr_SetString(PyExc_TypeError, "arg #2 is not a DateTime");
+    if (!PyObject_TypeCheck(other, &DateTimeObject_Type) &&
+        !PyObject_TypeCheck(other, &LocalTimeObject_Type) &&
+        !PyObject_TypeCheck(other, &UTCTimeObject_Type)) {
+        PyErr_Format(PyExc_TypeError, "arg #2 is not a DateTime, it is %s",
+                            Py_TYPE(other)->tp_name);
         return NULL;
     }
 
@@ -1502,7 +1516,7 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
 
     // parse arguments
     char *serverUrl;
-    Py_ssize_t serverUrlLen;
+    int serverUrlLen;
     int readTimeout = -1;
     int writeTimeout = -1;
     int connectTimeout = -1;
@@ -1561,9 +1575,11 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
             return 0;
         }
 
-        STR_ASSTRANDSIZE(value.object, serverUrl, serverUrlLen) {
+        Py_ssize_t slen;
+        STR_ASSTRANDSIZE(value.object, serverUrl, slen) {
             return 0;
         }
+        serverUrlLen = slen;
 
         int i = 0;
         while (kwtypes[++i]) {
@@ -2342,9 +2358,11 @@ int printPyFastRPCTree(PyObject *tree, std::ostringstream &out,
         if (value < 0) {
             return -1;
         } else out << (value ? "true" : "false");
+#if PY_MAJOR_VERSION == 2
     } else if (PyInt_Check(tree)) {
         // integer
         out << PyInt_AS_LONG(tree);
+#endif
     } else if (PyLong_Check(tree)) {
         Int_t::value_type i = PyLong_AsLongLong(tree);
         // check for error
@@ -2353,8 +2371,10 @@ int printPyFastRPCTree(PyObject *tree, std::ostringstream &out,
     } else if (PyFloat_Check(tree)) {
         // float
         out << PyFloat_AS_DOUBLE(tree);
-    } else if (PyUnicode_Check(tree)) {
+#if PY_MAJOR_VERSION == 2
+    } else if (PyString_Check(tree)) {
         if (printString(out, tree)) return -1;
+#endif
     } else if (PyUnicode_Check(tree)) {
         // unicode string
         PyObjectWrapper_t pystr =
@@ -2603,7 +2623,7 @@ static struct PyModuleDef moduledef = {
 
 /** Initialize FRPC module
  */
-PyMODINIT_FUNC PyInit_fastrpc(void)
+PyMODINIT_FUNC PyInit__fastrpc(void)
 
 #else // PY_MAJOR_VERSION >= 3
 
@@ -2726,5 +2746,9 @@ PyMODINIT_FUNC init_fastrpc(void)
     emptyString = PyUnicode_FromString("");
     if (!emptyString)
         INITERROR;
+
+#if PY_MAJOR_VERSION >= 3
+        return fastrpc_module;
+#endif
 }
 

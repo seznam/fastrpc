@@ -723,12 +723,6 @@ namespace {
         PyObjectWrapper_t message(PyUnicode_Format(format, args));
         if (!message) return "Cannot format exception";
 
-        // convert message to utf-8 if unicode string
-        if (PyUnicode_Check(message)) {
-            message = PyUnicode_AsEncodedString(message, "utf-8", "replace");
-            if (!message) return "Cannot decode exception from unicode";
-        }
-
         // fetch string as C string
         Py_ssize_t size;
         char *buf;

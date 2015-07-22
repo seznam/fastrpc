@@ -179,8 +179,12 @@ void Builder_t::buildFault(int errNumber, const std::string &errMsg) {
 void Builder_t::buildInt(Int_t::value_type value) {
     if (isError())
         return;
-    Int_t::value_type absValue = value < 0 ? -value :value;
     PyObject *integer = 0;
+
+#if PY_MAJOR_VERSION >= 3
+    integer = PyLong_FromLongLong(value);
+#else
+    Int_t::value_type absValue = value < 0 ? -value :value;
 
     if ((absValue & INT31_MASK)) {
 
@@ -189,6 +193,7 @@ void Builder_t::buildInt(Int_t::value_type value) {
     else {
         integer = PyInt_FromLong(int32_t(value));
     }
+#endif
     if (!integer)
         setError();
 
@@ -221,6 +226,16 @@ void Builder_t::buildMethodCall(const std::string &methodName1) {
 void Builder_t::buildString(const char* data, unsigned int size) {
     if (isError())
         return;
+
+    PyObject *stringVal;
+
+#if PY_MAJOR_VERSION >= 3
+    if (stringMode == STRING_MODE_STRING) {
+        stringVal = PyBytes_FromStringAndSize(data, size);
+    } else {
+        stringVal = PyUnicode_DecodeUTF8(data, size, "strict");
+    }
+#else
     bool utf8 = (stringMode == STRING_MODE_UNICODE);
 
     // check 8-bit string only iff mixed
@@ -233,13 +248,12 @@ void Builder_t::buildString(const char* data, unsigned int size) {
         }
     }
 
-    PyObject *stringVal;
-
     if (utf8) {
         stringVal = PyUnicode_DecodeUTF8(data, size, "strict");
     } else {
-        stringVal = PyUnicode_FromStringAndSize(const_cast<char*>(data), size);
+        stringVal = PyString_FromStringAndSize(const_cast<char*>(data), size);
     }
+#endif
 
     if (!stringVal)
         setError();
