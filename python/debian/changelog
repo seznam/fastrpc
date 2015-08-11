@@ -1,3 +1,9 @@
+python-fastrpc (5.1.0~rc1) testing; urgency=low
+
+  * Python 3 version.
+
+ -- Tomas Golembiovsky <tomas.golembiovsky@firma.seznam.cz>  Wed, 22 Jul 2015 16:34:11 +0200
+
 python-fastrpc (5.0.9) testing; urgency=low
 
   * Fixed parsing of protocol version.
