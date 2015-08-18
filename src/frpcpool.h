@@ -282,14 +282,14 @@ public:
 
     Struct_t& Struct();
     /**
-        @brief Create new  Struct_t with five items 
+        @brief Create new  Struct_t with one item
         @param key1  is a const std::string reference
         @param item1 is a Value_t reference
         @return reference to Struct_t
     */
     Struct_t& Struct(const std::string &key1, const Value_t &item1);
     /**
-        @brief Create new  Struct_t with five items 
+        @brief Create new  Struct_t with two items
         @param key1  is a const std::string reference
         @param item1 is a Value_t reference
         @param key2  is a const std::string reference
@@ -299,7 +299,7 @@ public:
     Struct_t& Struct(const std::string &key1, const Value_t &item1,
                      const std::string &key2, const Value_t &item2);
     /**
-        @brief Create new  Struct_t with five items 
+        @brief Create new  Struct_t with three items
         @param key1  is a const std::string reference
         @param item1 is a Value_t reference
         @param key2  is a const std::string reference
@@ -312,7 +312,7 @@ public:
                      const std::string &key2, const Value_t &item2,
                      const std::string &key3, const Value_t &item3);
     /**
-        @brief Create new  Struct_t with five items 
+        @brief Create new  Struct_t with four items
         @param key1  is a const std::string reference
         @param item1 is a Value_t reference
         @param key2  is a const std::string reference
@@ -328,7 +328,7 @@ public:
                      const std::string &key3, const Value_t &item3,
                      const std::string &key4, const Value_t &item4);
     /**
-        @brief Create new  Struct_t with five items 
+        @brief Create new  Struct_t with five items
         @param key1  is a const std::string reference
         @param item1 is a Value_t reference
         @param key2  is a const std::string reference
