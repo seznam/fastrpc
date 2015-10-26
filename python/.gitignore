@@ -1,7 +1,9 @@
+.pybuild/
 MANIFEST
 build*
 debian/files
 debian/python-fastrpc*
+debian/python3-fastrpc*
 dist
 *.pyc
 *.egg-info
