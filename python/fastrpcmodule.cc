@@ -2088,8 +2088,16 @@ namespace {
 
         virtual void flush() { /* noop */ }
 
-        PyObject* getData() {
-            return PyUnicode_FromStringAndSize(data.data(), data.size());
+        PyObject* getData(bool binary) {
+#if PY_MAJOR_VERSION >= 3
+            if (binary) {
+                return PyBytes_FromStringAndSize(data.data(), data.size());
+            } else {
+                return PyUnicode_FromStringAndSize(data.data(), data.size());
+            }
+#else
+            return PyString_FromStringAndSize(data.data(), data.size());
+#endif
         }
 
     private:
@@ -2215,7 +2223,7 @@ PyObject* fastrpc_dumps(PyObject *, PyObject *args, PyObject *keywds) {
     }
 
     // return mashalled string
-    return writer.getData();
+    return writer.getData(useBinary);
 }
 
 static char fastrpc_loads__doc__[] =
@@ -2237,9 +2245,19 @@ PyObject* fastrpc_loads(PyObject *, PyObject *args) {
 
     char *dataStr;
     Py_ssize_t dataSize;
+#if PY_MAJOR_VERSION >= 3
+    if (PyBytes_Check(data)) {
+        if (PyBytes_AsStringAndSize(data, &dataStr, &dataSize) < 0) {
+            return 0;
+        }
+    } else STR_ASSTRANDSIZE(data, dataStr, dataSize) {
+        return 0;
+    }
+#else
     STR_ASSTRANDSIZE(data, dataStr, dataSize) {
         return 0;
     }
+#endif
 
     try {
         Builder_t builder(0, stringMode,
