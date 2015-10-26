@@ -10,3 +10,11 @@ export PYBUILD_NAME = fastrpc
 override_dh_auto_test:
 	dh_auto_test
 	./setup.py test
+
+override_dh_strip:
+	dh_strip --dbg-package=python-fastrpc-dbg
+	mkdir -p $(CURDIR)/debian/python3-fastrpc-dbg/usr/lib/debug/usr/lib/python3/dist-packages
+	mv $(CURDIR)/debian/python-fastrpc-dbg/usr/lib/debug/usr/lib/python3/dist-packages/* \
+	    $(CURDIR)/debian/python3-fastrpc-dbg/usr/lib/debug/usr/lib/python3/dist-packages
+	rm -r $(CURDIR)/debian/python-fastrpc-dbg/usr/lib/debug/usr/lib/python3
+

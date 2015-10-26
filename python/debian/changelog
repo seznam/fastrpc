@@ -1,6 +1,7 @@
-python-fastrpc (5.1.0~rc2) UNRELEASED; urgency=low
+python-fastrpc (5.1.0~rc2) testing; urgency=low
 
   * Fixed UnicodeDecodeError in dumps().
+  * Building packages with debug symbols.
 
  -- Tomas Golembiovsky <tomas.golembiovsky@firma.seznam.cz>  Mon, 26 Oct 2015 14:55:23 +0100
 
