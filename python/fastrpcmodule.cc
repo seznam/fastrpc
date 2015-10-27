@@ -97,7 +97,7 @@ PyObject *FRPC::Python::mxDateTime = 0;
 PyObject *FRPC::Python::dateTimeDateTime = 0;
 
 // support constants
-static PyObject *emptyString = 0;
+static PyObject *emptyBinary = 0;
 
 /**************************************************************************/
 /* Python DateTime declaration                                            */
@@ -785,7 +785,7 @@ PyObject* BinaryObject_new(PyTypeObject *type, PyObject *, PyObject *)
         return 0;
 
     // fill defaults (what if __init__ doesn't get called
-    self->value = emptyString;
+    self->value = emptyBinary;
     Py_INCREF(self->value);
     return reinterpret_cast<PyObject*>(self);
 }
@@ -2761,8 +2761,12 @@ PyMODINIT_FUNC init_fastrpc(void)
     }
 
     // create empty string
-    emptyString = PyUnicode_FromString("");
-    if (!emptyString)
+#if PY_MAJOR_VERSION >= 3
+    emptyBinary = PyBytes_FromString("", 0);
+#else
+    emptyBinary = PyString_FromString("");
+#endif
+    if (!emptyBinary)
         INITERROR;
 
 #if PY_MAJOR_VERSION >= 3

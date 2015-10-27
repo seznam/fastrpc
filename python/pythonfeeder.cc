@@ -160,7 +160,12 @@ void Feeder_t::feedValue(PyObject *value)
 
         char *str;
         Py_ssize_t strLen;
-        STR_ASSTRANDSIZE(bin->value, str, strLen) {
+#if PY_MAJOR_VERSION >= 3
+        if (PyBytes_AsStringAndSize(bin->value, &str, &strLen) == -1)
+#else
+        if (PyString_AsStringAndSize(bin->value, &str, &strLen) == -1)
+#endif
+        {
             throw PyError_t();
         }
 

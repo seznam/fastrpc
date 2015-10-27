@@ -1,3 +1,9 @@
+python-fastrpc (5.1.0~rc3) UNRELEASED; urgency=low
+
+  * Fixed inconsistent types in Binary.
+
+ -- Tomas Golembiovsky <tomas.golembiovsky@firma.seznam.cz>  Tue, 27 Oct 2015 15:47:03 +0100
+
 python-fastrpc (5.1.0~rc2) testing; urgency=low
 
   * Fixed UnicodeDecodeError in dumps().
