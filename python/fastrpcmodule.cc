@@ -2762,7 +2762,7 @@ PyMODINIT_FUNC init_fastrpc(void)
 
     // create empty string
 #if PY_MAJOR_VERSION >= 3
-    emptyBinary = PyBytes_FromString("", 0);
+    emptyBinary = PyBytes_FromString("");
 #else
     emptyBinary = PyString_FromString("");
 #endif
