@@ -155,6 +155,7 @@ void Feeder_t::feedValue(PyObject *value)
                                  dateTime->hour, dateTime->min, dateTime->sec,
                                  dateTime->weekDay, dateTime->unixTime,
                                  dateTime->timeZone);
+#ifdef HAVE_BINARY
     } else if (PyBinary_Check(value)) {
         BinaryObject *bin = reinterpret_cast<BinaryObject*>(value);
 
@@ -170,6 +171,7 @@ void Feeder_t::feedValue(PyObject *value)
         }
 
         marshaller->packBinary(str, strLen);
+#endif
     } else if (PyBoolean_Check(value)) {
         BooleanObject *boolean = reinterpret_cast<BooleanObject*>(value);
         marshaller->packBool(boolean->value == Py_True);
@@ -181,7 +183,7 @@ void Feeder_t::feedValue(PyObject *value)
         if (str == NULL)
             throw PyError_t();
 
-        marshaller->packString(str, strLen);
+        marshaller->packBinary(str, strLen);
     } else if (PyUnicode_Check(value)) {
         // get string and marshall it
         char *str;

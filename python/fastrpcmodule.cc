@@ -97,7 +97,9 @@ PyObject *FRPC::Python::mxDateTime = 0;
 PyObject *FRPC::Python::dateTimeDateTime = 0;
 
 // support constants
+#ifdef HAVE_BINARY
 static PyObject *emptyBinary = 0;
+#endif
 
 /**************************************************************************/
 /* Python DateTime declaration                                            */
@@ -121,9 +123,6 @@ extern "C"
                                       *value);
 }
 
-/*
-* map characterstics of a boolean
-*/
 namespace FRPC { namespace Python {
 PyTypeObject DateTimeObject_Type =
     {
@@ -712,6 +711,7 @@ DateTimeObject* newDateTime(short year, char month, char day, char hour, char
 
 } } // namespace FRPC::Python
 
+#ifdef HAVE_BINARY
 extern "C"
 {
     static PyObject* BinaryObject_new(PyTypeObject *self, PyObject *args,
@@ -727,9 +727,6 @@ extern "C"
 
 namespace FRPC { namespace Python {
 
-/*
-* map characterstics of a boolean
-*/
 PyTypeObject BinaryObject_Type =
     {
         PyVarObject_HEAD_INIT(NULL, 0)
@@ -882,6 +879,7 @@ BinaryObject* newBinary(const char* data, long size)
 }
 
 } } // namespace FRPC::Python
+#endif
 
 /**************************************************************************/
 /* Python Bool declaration                                                */
@@ -2392,7 +2390,6 @@ int printPyFastRPCTree(PyObject *tree, std::ostringstream &out,
 #if PY_MAJOR_VERSION == 2
     } else if (PyString_Check(tree)) {
         if (printString(out, tree)) return -1;
-#endif
     } else if (PyUnicode_Check(tree)) {
         // unicode string
         PyObjectWrapper_t pystr =
@@ -2400,6 +2397,10 @@ int printPyFastRPCTree(PyObject *tree, std::ostringstream &out,
         if (!pystr) return -1;
         if (printString(out, pystr, "u\"", "\"", "<UNICODE>"))
             return -1;
+#else
+    } else if (PyUnicode_Check(tree)) {
+        if (printString(out, tree)) return -1;
+#endif
     } else if (PyTuple_Check(tree) || PyList_Check(tree)) {
         // list or tuple
         out << '(';
@@ -2479,12 +2480,20 @@ int printPyFastRPCTree(PyObject *tree, std::ostringstream &out,
         }
         if (printString(out, value, "", "", "<DATETIME>", -1))
             return -1;
+#ifdef HAVE_BINARY
     } else if (PyBinary_Check(tree)) {
-        // print DateTime
         PyObjectWrapper_t data(PyObject_GetAttrString(tree, "data"));
         if (!data) return -1;
         if (printString(out, data, "b\"", "\"", "<BASE64>", 10, true))
             return -1;
+#endif
+#if PY_MAJOR_VERSION >= 3
+    } else if (PyBytes_Check(tree)) {
+        PyObjectWrapper_t data(PyUnicode_FromFormat("%S", tree));
+        if (!data) return -1;
+        if (printString(out, data, "", "", "<BASE64>", 10, false))
+            return -1;
+#endif
     } else {
         // other, unsupported type
         PyObjectWrapper_t value(PyObject_Repr(tree));
@@ -2670,7 +2679,9 @@ PyMODINIT_FUNC init_fastrpc(void)
     if ((PyType_Ready(&DateTimeObject_Type) < 0) ||
         (PyType_Ready(&LocalTimeObject_Type) < 0) ||
         (PyType_Ready(&UTCTimeObject_Type) < 0) ||
+#ifdef HAVE_BINARY
         (PyType_Ready(&BinaryObject_Type) < 0) ||
+#endif
         (PyType_Ready(&BooleanObject_Type) < 0) ||
         (PyType_Ready(&ServerProxy_Type) < 0))
         INITERROR;
@@ -2688,10 +2699,12 @@ PyMODINIT_FUNC init_fastrpc(void)
     if (PyModule_AddObject(fastrpc_module, "UTCTime",
                            reinterpret_cast<PyObject*>(&UTCTimeObject_Type)))
         INITERROR;
+#ifdef HAVE_BINARY
     Py_INCREF(&BinaryObject_Type);
     if (PyModule_AddObject(fastrpc_module, "Binary",
                            reinterpret_cast<PyObject*>(&BinaryObject_Type)))
         INITERROR;
+#endif
     Py_INCREF(&BooleanObject_Type);
     if (PyModule_AddObject(fastrpc_module, "Boolean",
                            reinterpret_cast<PyObject*>(&BooleanObject_Type)))
@@ -2761,6 +2774,7 @@ PyMODINIT_FUNC init_fastrpc(void)
     }
 
     // create empty string
+#ifdef HAVE_BINARY
 #if PY_MAJOR_VERSION >= 3
     emptyBinary = PyBytes_FromString("");
 #else
@@ -2768,6 +2782,7 @@ PyMODINIT_FUNC init_fastrpc(void)
 #endif
     if (!emptyBinary)
         INITERROR;
+#endif
 
 #if PY_MAJOR_VERSION >= 3
         return fastrpc_module;

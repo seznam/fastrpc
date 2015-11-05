@@ -62,10 +62,15 @@ StringMode_t parseStringMode(const char *stringMode) {
 } // namespace FRPC::Python
 
 void Builder_t::buildMethodResponse() {}
+
 void Builder_t::buildBinary(const char* data, unsigned int size) {
     if (isError())
         return;
+#ifdef HAVE_BINARY
     PyObject *binary = reinterpret_cast<PyObject*>(newBinary(data, size));
+#else
+    PyObject *binary = PyBytes_FromStringAndSize(data, size);
+#endif
 
     if (!binary)
         setError();
@@ -77,8 +82,12 @@ void Builder_t::buildBinary(const char* data, unsigned int size) {
 void Builder_t::buildBinary(const std::string &data) {
     if (isError())
         return;
+#ifdef HAVE_BINARY
     PyObject *binary = reinterpret_cast<PyObject*>(newBinary(data.data(),
                        data.size()));
+#else
+    PyObject *binary = PyBytes_FromStringAndSize(data.data(), data.size());
+#endif
     if (!binary)
         setError();
 
@@ -230,11 +239,15 @@ void Builder_t::buildString(const char* data, unsigned int size) {
     PyObject *stringVal;
 
 #if PY_MAJOR_VERSION >= 3
+# ifdef HAVE_BINARY
     if (stringMode == STRING_MODE_STRING) {
         stringVal = PyBytes_FromStringAndSize(data, size);
     } else {
         stringVal = PyUnicode_DecodeUTF8(data, size, "strict");
     }
+# else
+    stringVal = PyUnicode_DecodeUTF8(data, size, "strict");
+# endif
 #else
     bool utf8 = (stringMode == STRING_MODE_UNICODE);
 

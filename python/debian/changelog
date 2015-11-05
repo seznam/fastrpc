@@ -1,6 +1,7 @@
-python-fastrpc (5.1.0~rc3) UNRELEASED; urgency=low
+python-fastrpc (5.1.0~rc3) testing; urgency=low
 
-  * Fixed inconsistent types in Binary.
+  * Removed Binary type from Python 3 module.
+  * Ignoring the sringMode in Python3 module.
 
  -- Tomas Golembiovsky <tomas.golembiovsky@firma.seznam.cz>  Tue, 27 Oct 2015 15:47:03 +0100
 
