@@ -1667,8 +1667,8 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
     catch (const HTTPError_t &httpError)
     {
         Py_DECREF(proxy);
-        PyObject *args = Py_BuildValue
-            ("is", httpError.errorNum(), httpError.message().c_str());
+        PyObjectWrapper_t args(Py_BuildValue
+            ("is", httpError.errorNum(), httpError.message().c_str()));
         if (!args) return 0;
         PyErr_SetObject(ProtocolError, args);
         return 0;

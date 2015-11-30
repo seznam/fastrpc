@@ -112,7 +112,7 @@ ProtocolError_init(ProtocolErrorObject *self, PyObject *args, PyObject *kwds)
         return -1;
 
     self->method = Py_None;
-    if (!PyArg_ParseTuple(args, "OOO|O:__init__",
+    if (!PyArg_ParseTuple(args, "OO|O:__init__",
             &self->status, &self->statusMessage, &self->method))
         return -1;
 
