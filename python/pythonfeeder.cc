@@ -225,9 +225,9 @@ void Feeder_t::feedValue(PyObject *value)
         marshaller->packStruct(argc);
 
         while (PyDict_Next(value, &pos, &key, &member)) {
-            if(!PyString_Check(key)) {
+            if(!PyString_Check(key) && !PyUnicode_Check(key)) {
                 PyErr_SetString(PyExc_TypeError,
-                                "Key in Dictionary must be string.");
+                                "Key in Dictionary must be either string or unicode.");
                 throw PyError_t();
             }
 
