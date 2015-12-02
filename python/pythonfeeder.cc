@@ -231,9 +231,16 @@ void Feeder_t::feedValue(PyObject *value)
                 throw PyError_t();
             }
 
+            PyObjectWrapper_t skey(key, true);
+            if (PyUnicode_Check(key)) {
+                skey = PyObjectWrapper_t(PyUnicode_AsUTF8String(key));
+                if (!skey)
+                    throw PyError_t();
+            }
+
             char *str;
             Py_ssize_t strLen;
-            if (PyString_AsStringAndSize(key, &str, &strLen))
+            if (PyString_AsStringAndSize(skey, &str, &strLen))
                 throw PyError_t();
 
             marshaller->packStructMember(str, strLen);
