@@ -62,10 +62,15 @@ StringMode_t parseStringMode(const char *stringMode) {
 } // namespace FRPC::Python
 
 void Builder_t::buildMethodResponse() {}
+
 void Builder_t::buildBinary(const char* data, unsigned int size) {
     if (isError())
         return;
+#ifdef HAVE_BINARY
     PyObject *binary = reinterpret_cast<PyObject*>(newBinary(data, size));
+#else
+    PyObject *binary = PyBytes_FromStringAndSize(data, size);
+#endif
 
     if (!binary)
         setError();
@@ -77,8 +82,12 @@ void Builder_t::buildBinary(const char* data, unsigned int size) {
 void Builder_t::buildBinary(const std::string &data) {
     if (isError())
         return;
+#ifdef HAVE_BINARY
     PyObject *binary = reinterpret_cast<PyObject*>(newBinary(data.data(),
                        data.size()));
+#else
+    PyObject *binary = PyBytes_FromStringAndSize(data.data(), data.size());
+#endif
     if (!binary)
         setError();
 
@@ -149,7 +158,7 @@ void Builder_t::buildFault(int errNumber, const char* errMsg, unsigned int size)
     if (isError())
         return;
     PyObject *args =Py_BuildValue("iNO",errNumber,
-                                  PyString_FromStringAndSize(errMsg,size),
+                                  PyUnicode_FromStringAndSize(errMsg,size),
                                   methodObject ? methodObject : Py_None);
     PyObject *fault = PyObject_Call(Fault, args, 0);
     //isFirst(fault);
@@ -179,8 +188,12 @@ void Builder_t::buildFault(int errNumber, const std::string &errMsg) {
 void Builder_t::buildInt(Int_t::value_type value) {
     if (isError())
         return;
-    Int_t::value_type absValue = value < 0 ? -value :value;
     PyObject *integer = 0;
+
+#if PY_MAJOR_VERSION >= 3
+    integer = PyLong_FromLongLong(value);
+#else
+    Int_t::value_type absValue = value < 0 ? -value :value;
 
     if ((absValue & INT31_MASK)) {
 
@@ -189,6 +202,7 @@ void Builder_t::buildInt(Int_t::value_type value) {
     else {
         integer = PyInt_FromLong(int32_t(value));
     }
+#endif
     if (!integer)
         setError();
 
@@ -221,6 +235,20 @@ void Builder_t::buildMethodCall(const std::string &methodName1) {
 void Builder_t::buildString(const char* data, unsigned int size) {
     if (isError())
         return;
+
+    PyObject *stringVal;
+
+#if PY_MAJOR_VERSION >= 3
+# ifdef HAVE_BINARY
+    if (stringMode == STRING_MODE_STRING) {
+        stringVal = PyBytes_FromStringAndSize(data, size);
+    } else {
+        stringVal = PyUnicode_DecodeUTF8(data, size, "strict");
+    }
+# else
+    stringVal = PyUnicode_DecodeUTF8(data, size, "strict");
+# endif
+#else
     bool utf8 = (stringMode == STRING_MODE_UNICODE);
 
     // check 8-bit string only iff mixed
@@ -233,13 +261,12 @@ void Builder_t::buildString(const char* data, unsigned int size) {
         }
     }
 
-    PyObject *stringVal;
-
     if (utf8) {
         stringVal = PyUnicode_DecodeUTF8(data, size, "strict");
     } else {
         stringVal = PyString_FromStringAndSize(const_cast<char*>(data), size);
     }
+#endif
 
     if (!stringVal)
         setError();

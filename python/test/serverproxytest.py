@@ -1,7 +1,11 @@
 #!/usr/bin/python
 import fastrpc
 import unittest
-import ConfigParser
+import sys
+if sys.version_info.major >= 3:
+    import configparser
+else:
+    import ConfigParser as configparser
 from fastrpc import ProtocolError
 
 
@@ -114,7 +118,7 @@ class ServerProxyTest(unittest.TestCase):
 
     def test_configparser(self):
         section = "eggplant"
-        config_parser = ConfigParser.ConfigParser()
+        config_parser = configparser.ConfigParser()
         config_parser.add_section(section)
         config_parser.set(section, "serverUrl", self.url)
 
@@ -132,13 +136,19 @@ class ServerProxyTest(unittest.TestCase):
         self.assertEqual(client_hide_false.__dict__['path'], self.path)
         self.assertEqual(client_hide_false.__dict__['port'], self.port)
         self.assertEqual(client_hide_false.__dict__['url'], self.url)
-        self.assertIsInstance(client_hide_false.__dict__['last_call'], str)
+        if sys.version_info.major >= 3:
+            self.assertIsInstance(client_hide_false.__dict__['last_call'], str)
+        else:
+            self.assertIsInstance(client_hide_false.__dict__['last_call'], (str, unicode))
 
         self.assertEqual(client_hide_true.__dict__['host'], self.host)
         self.assertEqual(client_hide_true.__dict__['path'], self.path)
         self.assertEqual(client_hide_true.__dict__['port'], self.port)
         self.assertEqual(client_hide_true.__dict__['url'], self.url)
-        self.assertIsInstance(client_hide_true.__dict__['last_call'], str)
+        if sys.version_info.major >= 3:
+            self.assertIsInstance(client_hide_true.__dict__['last_call'], str)
+        else:
+            self.assertIsInstance(client_hide_true.__dict__['last_call'], (str, unicode))
 
 if __name__ == '__main__':
     unittest.main()

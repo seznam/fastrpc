@@ -218,7 +218,7 @@ namespace {
             }
 
             // append
-            PyObjectWrapper_t pymember(PyString_FromString(member.c_str()));
+            PyObjectWrapper_t pymember(PyUnicode_FromString(member.c_str()));
             if (!pymember) return 0;
             if (PyList_Append(current, pymember)) return 0;
         }
@@ -230,8 +230,9 @@ namespace {
     PyObject *stringToSignature(PyObject *signature) {
         Py_ssize_t size;
         char *buffer;
-        if (PyString_AsStringAndSize(signature, &buffer, &size) == -1)
+        STR_ASSTRANDSIZE(signature, buffer, size) {
             return 0;
+        }
         return stringToSignature(std::string(buffer, size));
     }
 
@@ -342,7 +343,7 @@ namespace {
         if (!formatArgs) return 0;
 
         PyObjectWrapper_t message =
-            PyString_Format(Fault_message_format, formatArgs);
+            PyUnicode_Format(Fault_message_format, formatArgs);
         if (!message) return 0;
 
         PyObjectWrapper_t faultArgs =
@@ -386,7 +387,7 @@ namespace {
         PyObjectWrapper_t faultString
             (PyObject_GetAttrString(fault, "faultString"));
         if (!faultString)
-            faultString = PyString_FromString("<cannot fetch>");
+            faultString = PyUnicode_FromString("<cannot fetch>");
         // we've got Fault => convert to structure
         return Py_BuildValue("{s:O,s:O}",
                              "faultCode", faultCode.object,
@@ -408,7 +409,7 @@ namespace {
         if (!formatArgs) return 0;
 
         PyObjectWrapper_t message =
-            PyString_Format(Fault_message_format, formatArgs);
+            PyUnicode_Format(Fault_message_format, formatArgs);
         if (!message) return 0;
 
         return Py_BuildValue("{s:l,s:O}",
@@ -431,13 +432,13 @@ namespace {
         if (!formatArgs) throw PyError_t();
 
         PyObjectWrapper_t pyMessage =
-            PyString_Format(Fault_message_format, formatArgs);
+            PyUnicode_Format(Fault_message_format, formatArgs);
 
         char *faultStgring;
         Py_ssize_t faultStringSize;
-        if (PyString_AsStringAndSize(pyMessage, &faultStgring,
-                                     &faultStringSize))
+        STR_ASSTRANDSIZE(pyMessage, faultStgring, faultStringSize) {
             throw PyError_t();
+        }
 
         // OK
         return FRPC::Fault_t(faultCode,
@@ -653,8 +654,7 @@ static PyMethodDef MethodRegistryObject_methods[] = {
 };
 
 static PyTypeObject MethodRegistryObject_Type = {
-    PyObject_HEAD_INIT(&PyType_Type)
-    0,                                      /*ob_size*/
+    PyVarObject_HEAD_INIT(NULL, 0)
     "MethodRegistry",                       /*tp_name*/
     sizeof (MethodRegistryObject),          /*tp_basicsize*/
     0,                                      /*tp_itemsize*/
@@ -693,7 +693,7 @@ static PyTypeObject MethodRegistryObject_Type = {
     (initproc)0,                            /* tp_init */
     PyType_GenericAlloc,                    /* tp_alloc */
     MethodRegistryObject_new,                       /* tp_new */
-    _PyObject_Del                           /* tp_free */
+    PyObject_Free                           /* tp_free */
 };
 
 
@@ -712,7 +712,7 @@ namespace {
         PyErr_Fetch(type.addr(), value.addr(), tb.addr());
 
         // prepar exception for format
-        PyObjectWrapper_t format(PyString_FromString("%s: %s"));
+        PyObjectWrapper_t format(PyUnicode_FromString("%s: %s"));
         if (!format) return "Cannot format exception";
 
         PyObjectWrapper_t args
@@ -720,19 +720,15 @@ namespace {
         if (!args) return "Cannot format exception";
 
         // format exception
-        PyObjectWrapper_t message(PyString_Format(format, args));
+        PyObjectWrapper_t message(PyUnicode_Format(format, args));
         if (!message) return "Cannot format exception";
-
-        // convert message to utf-8 if unicode string
-        if (PyUnicode_Check(message)) {
-            message = PyUnicode_AsEncodedString(message, "utf-8", "replace");
-            if (!message) return "Cannot decode exception from unicode";
-        }
 
         // fetch string as C string
         Py_ssize_t size;
         char *buf;
-        PyString_AsStringAndSize(message, &buf, &size);
+        STR_ASSTRANDSIZE(message, buf, size) {
+            return 0;
+        }
 
         // OK
         return std::string(buf, size);
@@ -868,10 +864,11 @@ PyObject* Server_t::serve(int fd, PyObjectWrapper_t addr) {
                         if (!pyFaultString) throw PyError_t();
                         char *faultString;
                         Py_ssize_t faultStringSize;
-                        if (PyString_AsStringAndSize(pyFaultString,
-                                                     &faultString,
-                                                     &faultStringSize))
+                        STR_ASSTRANDSIZE(pyFaultString,
+                                                     faultString,
+                                                     faultStringSize) {
                             throw PyError_t();
+                        }
 
                         marshaller->packFault(faultCode, faultString,
                                               faultStringSize);
@@ -1222,8 +1219,8 @@ PyObject *Server_t::headersToPyList(const FRPC::HTTPHeader_t &headers, const std
     }
     for (FRPC::HTTPHeader_t::const_iterator i(headers.begin()); i != headers.end(); ++i) {
         if (name.empty() || name == i->first) {
-            PyObjectWrapper_t key(PyString_FromString(i->first.c_str()));
-            PyObjectWrapper_t value(PyString_FromString(i->second.c_str()));
+            PyObjectWrapper_t key(PyUnicode_FromString(i->first.c_str()));
+            PyObjectWrapper_t value(PyUnicode_FromString(i->second.c_str()));
             if (!key || !value) {
                 PyErr_SetString(PyExc_MemoryError, "Failed to allocate key/value");
                 return 0;
@@ -1296,7 +1293,7 @@ void MethodRegistryObject_dealloc(MethodRegistryObject *self) {
     Py_XDECREF(self->defaultMethodHelp);
     Py_XDECREF(self->defaultMethodSignature);
 
-    self->ob_type->tp_free(asObject(self));
+    Py_TYPE(self)->tp_free(asObject(self));
 }
 
 namespace {
@@ -1425,7 +1422,7 @@ DECL_METHOD_KWD(MethodRegistryObject, register) {
         return PyErr_Format(PyExc_TypeError,
                             "Callback object of method <%s> is of type <%s> "
                             "and is not callable.", name,
-                            callback->ob_type->tp_name);
+                            Py_TYPE(callback)->tp_name);
     }
 
     try {
@@ -1480,7 +1477,7 @@ DECL_METHOD_KWD(MethodRegistryObject, registerDefault) {
                                 "Callback object of %s method is of "
                                 "type <%s> and is not callable.",
                                 callback->name,
-                                callback->callback->ob_type->tp_name);
+                                Py_TYPE(callback)->tp_name);
         }
     }
 
@@ -1511,7 +1508,7 @@ DECL_METHOD(MethodRegistryObject, registerHead) {
         return PyErr_Format(PyExc_TypeError,
                             "Callback object of HTTP HEAD method is of "
                             "type <%s> and is not callable.",
-                            callback->ob_type->tp_name);
+                            Py_TYPE(callback)->tp_name);
     }
 
     // reasign head method
@@ -1694,7 +1691,7 @@ DECL_METHOD(MethodRegistryObject, system_listMethods) {
     for (MethodLookup_t::const_iterator ilookup = self->lookup->begin();
          ilookup != self->lookup->end(); ++ilookup, ++i) {
         // create python method name
-        PyObject *name = PyString_FromStringAndSize(ilookup->first.data(),
+        PyObject *name = PyUnicode_FromStringAndSize(ilookup->first.data(),
                                                     ilookup->first.length());
         if (!name) return 0;
         if (PyList_Append(result, name)) {
@@ -1740,7 +1737,7 @@ DECL_METHOD(MethodRegistryObject, system_methodSignature) {
                 (PyObject_CallFunction(self->defaultMethodSignature,
                                        (char *)"(s)", name));
             // check for error or non-string signature
-            if (!signature || !PyString_Check(signature))
+            if (!signature || !PyUnicode_Check(signature))
                 return signature.inc();
 
             // string => convert to array of arrays
@@ -1870,8 +1867,9 @@ DECL_METHOD(MethodRegistryObject, system_multicall) {
             continue;
         }
 
-        char *name = PyString_AsString(methodName);
-        if (!name) {
+        Py_ssize_t len;
+        char *name;
+        STR_ASSTRANDSIZE(methodName, name, len) {
             PyObjectWrapper_t type;
             PyObjectWrapper_t value;
             PyObjectWrapper_t traceback;
@@ -1913,12 +1911,12 @@ DECL_METHOD(MethodRegistryObject, system_multicall) {
 #endif
 
 static PyMemberDef ServerObject_members[] = {
-    {(char *)"registry",             T_OBJECT,    OFF(registry),        RO},
-    {(char *)"readTimeout",          T_INT,       OFF(readTimeout),     RO},
-    {(char *)"writeTimeout",         T_INT,       OFF(writeTimeout),    RO},
-    {(char *)"keepAlive",            T_INT,       OFF(keepAlive),       RO},
-    {(char *)"maxKeepalive",         T_INT,       OFF(maxKeepalive),    RO},
-    {(char *)"useBinary",            T_INT,       OFF(useBinary),       RO},
+    {(char *)"registry",             T_OBJECT,    OFF(registry),        READONLY},
+    {(char *)"readTimeout",          T_INT,       OFF(readTimeout),     READONLY},
+    {(char *)"writeTimeout",         T_INT,       OFF(writeTimeout),    READONLY},
+    {(char *)"keepAlive",            T_INT,       OFF(keepAlive),       READONLY},
+    {(char *)"maxKeepalive",         T_INT,       OFF(maxKeepalive),    READONLY},
+    {(char *)"useBinary",            T_INT,       OFF(useBinary),       READONLY},
     {(char *)"nativeBoolean",        T_BOOL,      OFF(nativeBoolean),   0},
     {(char *)"datetimeBuilder",      T_OBJECT,    OFF(datetimeBuilder), 0},
 
@@ -1968,8 +1966,7 @@ static PyMethodDef ServerObject_methods[] = {
 };
 
 static PyTypeObject ServerObject_Type = {
-    PyObject_HEAD_INIT(&PyType_Type)
-    0,                                      /*ob_size*/
+    PyVarObject_HEAD_INIT(NULL, 0)
     "Server",                               /*tp_name*/
     sizeof (ServerObject),                  /*tp_basicsize*/
     0,                                      /*tp_itemsize*/
@@ -2008,7 +2005,7 @@ static PyTypeObject ServerObject_Type = {
     0,                                      /* tp_init */
     PyType_GenericAlloc,                    /* tp_alloc */
     ServerObject_new,                       /* tp_new */
-    _PyObject_Del                           /* tp_free */
+    PyObject_Free                           /* tp_free */
 };
 
 /** free resources associated with a server object
@@ -2017,7 +2014,7 @@ void ServerObject_dealloc(ServerObject *self) {
     Py_XDECREF(self->registry);
     delete self->server;
 
-    self->ob_type->tp_free(asObject(self));
+    Py_TYPE(self)->tp_free(asObject(self));
 }
 
 PyObject* ServerObject_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
@@ -2170,11 +2167,12 @@ namespace {
         : name(name), callback(callback, true), signature(signature, true),
           help(help, true), context(context, true), names(names, true), pos(pos)
     {
-        if (PyString_Check(signature)) {
+        if (PyUnicode_Check(signature)) {
             char *sig;
             Py_ssize_t sigSize;
-            if (PyString_AsStringAndSize(signature, &sig, &sigSize))
+            STR_ASSTRANDSIZE(signature, sig, sigSize) {
                 throw PyError_t();
+            }
             if (!(this->signature =
                   stringToSignature(std::string(sig, sigSize))))
                 throw PyError_t();
@@ -2187,7 +2185,7 @@ namespace {
         : name(name), callback(callback, true), signature(), help(),
           context(context, true), names(0), pos(0)
     {
-        if (!(this->help = PyString_FromStringAndSize
+        if (!(this->help = PyUnicode_FromStringAndSize
               (help.data(), help.size())))
             throw PyError_t();
 
@@ -2222,7 +2220,11 @@ namespace FRPC { namespace Python {
         // initialize empty helper structures
         if (!(emptyTuple = PyTuple_New(0))) return -1;
         if (!(emptyDict = PyDict_New())) return -1;
-        if (!(emptyString = PyString_FromString(""))) return -1;
+        if (!(emptyString = PyUnicode_FromString(""))) return -1;
+
+        if ((PyType_Ready(&ServerObject_Type) < 0) ||
+            (PyType_Ready(&MethodRegistryObject_Type) < 0))
+            return -1;
 
         Py_INCREF(&ServerObject_Type);
         if (PyModule_AddObject
@@ -2237,7 +2239,7 @@ namespace FRPC { namespace Python {
             return -1;
 
         // create Fault format string
-        if (!(Fault_message_format = PyString_FromString("%s%s: %s")))
+        if (!(Fault_message_format = PyUnicode_FromString("%s%s: %s")))
             return -1;
 
         // OK

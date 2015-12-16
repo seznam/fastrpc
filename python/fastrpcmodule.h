@@ -37,7 +37,12 @@
 
 #include <Python.h>
 
+#include "pythoncompat.h"
 #include "pyobjectwrapper.h"
+
+#if PY_MAJOR_VERSION == 2
+# define HAVE_BINARY
+#endif
 
 namespace FRPC { namespace Python {
 
@@ -58,14 +63,17 @@ namespace FRPC { namespace Python {
         ~PyError_t() {}
     };
 
+#ifdef HAVE_BINARY
     extern PyTypeObject BinaryObject_Type;
 
     struct BinaryObject {
         PyObject_HEAD                   /* python standard */
-        PyObject *value;                /* string value */
+        PyObject *value;                /* PyString in Python2 or
+                                           PyBytes in Python3 */
     };
 
     BinaryObject* newBinary(const char* data, long size);
+#endif
 
 
     extern PyTypeObject BooleanObject_Type;
@@ -106,8 +114,10 @@ namespace FRPC { namespace Python {
                            || PyObject_TypeCheck(op, &LocalTimeObject_Type) \
                            || PyObject_TypeCheck(op, &UTCTimeObject_Type))
 #define PyDateTime_CheckExact(op) ((op)->ob_type == &DateTimeObject_Type)
+#ifdef HAVE_BINARY
 #define PyBinary_Check(op) PyObject_TypeCheck(op, &BinaryObject_Type)
 #define PyBinary_CheckExact(op) ((op)->ob_type == &BinaryObject_Type)
+#endif
 #define PyBoolean_Check(op) PyObject_TypeCheck(op, &BooleanObject_Type)
 #define PyBoolean_CheckExact(op) ((op)->ob_type == &BooleanObject_Type)
 #define PyFault_Check(op) PyObject_TypeCheck(op, &Fault)

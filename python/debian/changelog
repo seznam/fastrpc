@@ -1,8 +1,30 @@
-python-fastrpc (5.0.10) UNRELEASED; urgency=low
+python-fastrpc (5.1.0) UNRELEASED; urgency=low
 
+  * Fixed constructor of ProtocolError exception.
+  * Fixed str/repr functions in exceptions.
   * Support Unicode strings as dictionary keys.
 
- -- Tomas Golembiovsky <tomas.golembiovsky@firma.seznam.cz>  Wed, 02 Dec 2015 17:21:48 +0100
+ -- Tomas Golembiovsky <tomas.golembiovsky@firma.seznam.cz>  Fri, 27 Nov 2015 17:44:55 +0100
+
+python-fastrpc (5.1.0~rc3) testing; urgency=low
+
+  * Removed Binary type from Python 3 module.
+  * Ignoring the sringMode in Python3 module.
+
+ -- Tomas Golembiovsky <tomas.golembiovsky@firma.seznam.cz>  Tue, 27 Oct 2015 15:47:03 +0100
+
+python-fastrpc (5.1.0~rc2) testing; urgency=low
+
+  * Fixed UnicodeDecodeError in dumps().
+  * Building packages with debug symbols.
+
+ -- Tomas Golembiovsky <tomas.golembiovsky@firma.seznam.cz>  Mon, 26 Oct 2015 14:55:23 +0100
+
+python-fastrpc (5.1.0~rc1) testing; urgency=low
+
+  * Python 3 version.
+
+ -- Tomas Golembiovsky <tomas.golembiovsky@firma.seznam.cz>  Wed, 22 Jul 2015 16:34:11 +0200
 
 python-fastrpc (5.0.9) testing; urgency=low
 

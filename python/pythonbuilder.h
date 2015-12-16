@@ -239,7 +239,7 @@ public:
         }
 
         // return method
-        return PyString_FromStringAndSize(methodName->data(),
+        return PyUnicode_FromStringAndSize(methodName->data(),
                                           methodName->size());
     }
 

@@ -97,7 +97,9 @@ PyObject *FRPC::Python::mxDateTime = 0;
 PyObject *FRPC::Python::dateTimeDateTime = 0;
 
 // support constants
-static PyObject *emptyString = 0;
+#ifdef HAVE_BINARY
+static PyObject *emptyBinary = 0;
+#endif
 
 /**************************************************************************/
 /* Python DateTime declaration                                            */
@@ -114,22 +116,17 @@ extern "C"
     static int UTCTimeObject_init(DateTimeObject *self, PyObject *args,
                                    PyObject *kwds);
     static void DateTimeObject_dealloc(DateTimeObject *self);
-    //static int DateTimeObject_cmp(BooleanObject *self, BooleanObject *other);
-    static int DateTimeObject_Compare(DateTimeObject *self, DateTimeObject *other);
+    static PyObject* DateTimeObject_richcmp(PyObject *self, PyObject *other, int op);
     static PyObject* DateTimeObject_repr(DateTimeObject *self);
     static PyObject* DateTimeObject_getattr(DateTimeObject *self, char *name);
     static int DateTimeObject_setattr(DateTimeObject *self, char *name, PyObject
                                       *value);
 }
 
-/*
-* map characterstics of a boolean
-*/
 namespace FRPC { namespace Python {
 PyTypeObject DateTimeObject_Type =
     {
-        PyObject_HEAD_INIT(&PyType_Type)
-        0,
+        PyVarObject_HEAD_INIT(NULL, 0)
         "DateTime",
         sizeof(DateTimeObject),
         0,
@@ -137,7 +134,7 @@ PyTypeObject DateTimeObject_Type =
         0,                                      /* tp_print */
         (getattrfunc)DateTimeObject_getattr,      /* tp_getattr */
         (setattrfunc)DateTimeObject_setattr,      /* tp_setattr */
-        (cmpfunc)DateTimeObject_Compare,                 /* tp_compare */
+        0,                                      /* tp_compare */
         (reprfunc)DateTimeObject_repr,            /* tp_repr */
         0,                                      /* tp_as_newDateTime->weekDay
                                                                 =number */
@@ -153,7 +150,7 @@ PyTypeObject DateTimeObject_Type =
         0,                                      /* tp_doc */
         0,                                      /* tp_traverse */
         0,                                      /* tp_clear */
-        0,                                      /* tp_richcompare */
+        DateTimeObject_richcmp,                 /* tp_richcompare */
         0,                                      /* tp_weaklistoffset */
         0,                                      /* tp_iter */
         0,                                      /* tp_iternext */
@@ -168,13 +165,12 @@ PyTypeObject DateTimeObject_Type =
         (initproc)DateTimeObject_init,          /* tp_init */
         PyType_GenericAlloc,                    /* tp_alloc */
         DateTimeObject_new,                     /* tp_new */
-        _PyObject_Del                           /* tp_free */
+        PyObject_Free                           /* tp_free */
     };
 
 PyTypeObject LocalTimeObject_Type =
     {
-        PyObject_HEAD_INIT(&PyType_Type)
-        0,
+        PyVarObject_HEAD_INIT(NULL, 0)
         "LocalTime",
         sizeof(DateTimeObject),
         0,
@@ -182,7 +178,7 @@ PyTypeObject LocalTimeObject_Type =
         0,                                      /* tp_print */
         (getattrfunc)DateTimeObject_getattr,      /* tp_getattr */
         (setattrfunc)DateTimeObject_setattr,      /* tp_setattr */
-        (cmpfunc)DateTimeObject_Compare,                 /* tp_compare */
+        0,                                      /* tp_compare */
         (reprfunc)DateTimeObject_repr,            /* tp_repr */
         0,                                      /* tp_as_newDateTime->weekDay
                                                                 =number */
@@ -198,7 +194,7 @@ PyTypeObject LocalTimeObject_Type =
         0,                                      /* tp_doc */
         0,                                      /* tp_traverse */
         0,                                      /* tp_clear */
-        0,                                      /* tp_richcompare */
+        DateTimeObject_richcmp,                 /* tp_richcompare */
         0,                                      /* tp_weaklistoffset */
         0,                                      /* tp_iter */
         0,                                      /* tp_iternext */
@@ -213,13 +209,12 @@ PyTypeObject LocalTimeObject_Type =
         (initproc)LocalTimeObject_init,         /* tp_init */
         PyType_GenericAlloc,                    /* tp_alloc */
         DateTimeObject_new,                     /* tp_new */
-        _PyObject_Del                           /* tp_free */
+        PyObject_Free                           /* tp_free */
     };
 
 PyTypeObject UTCTimeObject_Type =
     {
-        PyObject_HEAD_INIT(&PyType_Type)
-        0,
+        PyVarObject_HEAD_INIT(NULL, 0)
         "UTCTime",
         sizeof(DateTimeObject),
         0,
@@ -227,7 +222,7 @@ PyTypeObject UTCTimeObject_Type =
         0,                                      /* tp_print */
         (getattrfunc)DateTimeObject_getattr,      /* tp_getattr */
         (setattrfunc)DateTimeObject_setattr,      /* tp_setattr */
-        (cmpfunc)DateTimeObject_Compare,                 /* tp_compare */
+        0,                                      /* tp_compare */
         (reprfunc)DateTimeObject_repr,            /* tp_repr */
         0,                                      /* tp_as_newDateTime->weekDay
                                                                 =number */
@@ -243,7 +238,7 @@ PyTypeObject UTCTimeObject_Type =
         0,                                      /* tp_doc */
         0,                                      /* tp_traverse */
         0,                                      /* tp_clear */
-        0,                                      /* tp_richcompare */
+        DateTimeObject_richcmp,                 /* tp_richcompare */
         0,                                      /* tp_weaklistoffset */
         0,                                      /* tp_iter */
         0,                                      /* tp_iternext */
@@ -258,7 +253,7 @@ PyTypeObject UTCTimeObject_Type =
         (initproc)UTCTimeObject_init,           /* tp_init */
         PyType_GenericAlloc,                    /* tp_alloc */
         DateTimeObject_new,                     /* tp_new */
-        _PyObject_Del                           /* tp_free */
+        PyObject_Free                           /* tp_free */
     };
 
 
@@ -333,8 +328,12 @@ int TimeObject_init_parseString(DateTimeObject *self, PyObject *pyValue) {
     short year;
     int timeZone;
     char month, day, hour, min, sec;
-    long len = PyString_Size(pyValue);
-    char *data = PyString_AsString(pyValue);
+
+    Py_ssize_t len;
+    char *data;
+    STR_ASSTRANDSIZE(pyValue, data, len) {
+        return 0;
+    }
 
     try {
 
@@ -393,6 +392,7 @@ int DateTimeObject_init(DateTimeObject *self, PyObject *args, PyObject *)
     if (!PyArg_ParseTuple(args, "|O", &pyValue))
         return -1;
 
+#if PY_MAJOR_VERSION == 2
     if (!pyValue) {
 #warning remove this possibility in next major revision of fastrpc
         PyErr_WarnEx(PyExc_DeprecationWarning,
@@ -408,8 +408,15 @@ int DateTimeObject_init(DateTimeObject *self, PyObject *args, PyObject *)
                "Deprecated call use LocalTime(int) or UTCtime(int) instead.", 1);
         return LocalTimeObject_init(self, args, NULL);
 
-    } else {
-        PyErr_Format(PyExc_TypeError, "Argument must be string");
+    } else
+#else
+    if (pyValue && PyUnicode_Check(pyValue)) {
+        return TimeObject_init_parseString(self, pyValue);
+    } else
+#endif
+    {
+        PyErr_SetString(PyExc_TypeError,
+            "DateTime expects either a string argument or two integers");
         return -1;
     }
 
@@ -469,7 +476,7 @@ int UTCTimeObject_init(DateTimeObject *self, PyObject *args, PyObject *)
 
 void DateTimeObject_dealloc(DateTimeObject *self)
 {
-    self->ob_type->tp_free(reinterpret_cast<PyObject *>(self));
+    Py_TYPE(self)->tp_free(reinterpret_cast<PyObject *>(self));
 }
 
 PyObject* DateTimeObject_repr(DateTimeObject *self)
@@ -478,7 +485,7 @@ PyObject* DateTimeObject_repr(DateTimeObject *self)
                                            self->day, self->hour, self->min,
                                            self->sec, self->timeZone);
 
-    return PyString_FromString(dateTime.c_str());
+    return PyUnicode_FromString(dateTime.c_str());
 
 }
 
@@ -534,7 +541,7 @@ PyObject* DateTimeObject_getattr(DateTimeObject *self, char *name)
 
 
 
-        return PyString_FromString(dateTime.c_str());
+        return PyUnicode_FromString(dateTime.c_str());
     }
 
     // not found
@@ -618,17 +625,44 @@ time_t DateTimeObject_to_timestamp(DateTimeObject *datetime) {
     return mktime(&timeinfo) - datetime->timeZone;
 }
 
-int DateTimeObject_Compare(DateTimeObject *self, DateTimeObject *other)
+
+static PyObject* DateTimeObject_richcmp(PyObject *self, PyObject *other, int op)
 {
-    time_t self_timestemp = DateTimeObject_to_timestamp(self);
-    time_t other_timestemp = DateTimeObject_to_timestamp(other);
+    if (!PyObject_TypeCheck(self, &DateTimeObject_Type) &&
+        !PyObject_TypeCheck(self, &LocalTimeObject_Type) &&
+        !PyObject_TypeCheck(self, &UTCTimeObject_Type)) {
+        PyErr_Format(PyExc_TypeError, "arg #1 is not a DateTime, it is %s",
+                            Py_TYPE(self)->tp_name);
+        return NULL;
+    }
 
-    if (self_timestemp > other_timestemp)
-        return 1;
-    else if (self_timestemp < other_timestemp)
-        return -1;
+    if (!PyObject_TypeCheck(other, &DateTimeObject_Type) &&
+        !PyObject_TypeCheck(other, &LocalTimeObject_Type) &&
+        !PyObject_TypeCheck(other, &UTCTimeObject_Type)) {
+        PyErr_Format(PyExc_TypeError, "arg #2 is not a DateTime, it is %s",
+                            Py_TYPE(other)->tp_name);
+        return NULL;
+    }
 
-    return 0;
+    time_t self_timestemp = DateTimeObject_to_timestamp(
+        reinterpret_cast<DateTimeObject*>(self));
+    time_t other_timestemp = DateTimeObject_to_timestamp(
+        reinterpret_cast<DateTimeObject*>(other));
+
+    PyObject *result;
+    int c;
+    switch (op) {
+        case Py_LT: c = self_timestemp <  other_timestemp; break;
+        case Py_LE: c = self_timestemp <= other_timestemp; break;
+        case Py_EQ: c = self_timestemp == other_timestemp; break;
+        case Py_NE: c = self_timestemp != other_timestemp; break;
+        case Py_GT: c = self_timestemp >  other_timestemp; break;
+        case Py_GE: c = self_timestemp >= other_timestemp; break;
+    }
+
+    result = c ? Py_True : Py_False;
+    Py_INCREF(result);
+    return result;
 }
 
 namespace FRPC { namespace Python {
@@ -677,6 +711,7 @@ DateTimeObject* newDateTime(short year, char month, char day, char hour, char
 
 } } // namespace FRPC::Python
 
+#ifdef HAVE_BINARY
 extern "C"
 {
     static PyObject* BinaryObject_new(PyTypeObject *self, PyObject *args,
@@ -692,13 +727,9 @@ extern "C"
 
 namespace FRPC { namespace Python {
 
-/*
-* map characterstics of a boolean
-*/
 PyTypeObject BinaryObject_Type =
     {
-        PyObject_HEAD_INIT(&PyType_Type)
-        0,
+        PyVarObject_HEAD_INIT(NULL, 0)
         "Binary",
         sizeof(BinaryObject),
         0,
@@ -736,7 +767,7 @@ PyTypeObject BinaryObject_Type =
         (initproc)BinaryObject_init,            /* tp_init */
         PyType_GenericAlloc,                    /* tp_alloc */
         BinaryObject_new,                       /* tp_new */
-        _PyObject_Del                           /* tp_free */
+        PyObject_Free                           /* tp_free */
     };
 
 } } // namespace FRPC::Python
@@ -751,7 +782,7 @@ PyObject* BinaryObject_new(PyTypeObject *type, PyObject *, PyObject *)
         return 0;
 
     // fill defaults (what if __init__ doesn't get called
-    self->value = emptyString;
+    self->value = emptyBinary;
     Py_INCREF(self->value);
     return reinterpret_cast<PyObject*>(self);
 }
@@ -760,7 +791,11 @@ int BinaryObject_init(BinaryObject *self, PyObject *args, PyObject *)
 {
     PyObject *pyValue = 0;
 
+#if PY_MAJOR_VERSION >= 3
+    if (!PyArg_ParseTuple(args,"|O!", &PyBytes_Type, &pyValue))
+#else
     if (!PyArg_ParseTuple(args,"|O!", &PyString_Type, &pyValue))
+#endif
         return -1;
 
     if (pyValue)
@@ -777,7 +812,7 @@ int BinaryObject_init(BinaryObject *self, PyObject *args, PyObject *)
 void BinaryObject_dealloc(BinaryObject *self)
 {
     Py_XDECREF(self->value);
-    self->ob_type->tp_free(reinterpret_cast<PyObject *>(self));
+    Py_TYPE(self)->tp_free(reinterpret_cast<PyObject *>(self));
 }
 
 PyObject* BinaryObject_repr(BinaryObject *self)
@@ -810,7 +845,7 @@ int BinaryObject_setattr(BinaryObject *self, char *name, PyObject *value)
                          "Can't set empty object");
             return -1;
         }
-        if(PyString_Check(value))
+        if(PyUnicode_Check(value))
         {
             Py_DECREF(self->value);
             self ->value  = value;
@@ -839,11 +874,12 @@ BinaryObject* newBinary(const char* data, long size)
     BinaryObject *self = PyObject_NEW(BinaryObject, &BinaryObject_Type);
     if (self == NULL)
         return NULL;
-    self->value = PyString_FromStringAndSize(data, size);
+    self->value = PyUnicode_FromStringAndSize(data, size);
     return self;
 }
 
 } } // namespace FRPC::Python
+#endif
 
 /**************************************************************************/
 /* Python Bool declaration                                                */
@@ -857,13 +893,12 @@ extern "C"
     static int BooleanObject_init(BooleanObject *self, PyObject *args,
                                   PyObject *kwds);
     static void BooleanObject_dealloc(BooleanObject *self);
-    static int BooleanObject_cmp(BooleanObject *self, BooleanObject *other);
+    static PyObject* BooleanObject_richcmp(PyObject *self, PyObject *other, int op);
     static PyObject* BooleanObject_repr(BooleanObject *self);
     static PyObject* BooleanObject_str(BooleanObject *self);
     static PyObject* BooleanObject_getattr(BooleanObject *self, char *name);
     static int BooleanObject_setattr(BooleanObject *self, char *name, PyObject*
                                      value);
-
     static int BooleanObject_nonzero(BooleanObject *self);
     static PyObject* BooleanObject_int(BooleanObject *self);
 }
@@ -872,30 +907,38 @@ static PyNumberMethods Boolean_AsNumber = {
             0,                                  /* nb_add */
             0,                                  /* nb_subtract */
             0,                                  /* nb_multiply */
+#if PY_MAJOR_VERSION == 2
             0,                                  /* nb_divide */
+#endif
             0,                                  /* nb_remainder */
             0,                                  /* nb_divmod */
             0,                                  /* nb_power */
             0,                                  /* nb_negative */
             0,                                  /* nb_positive */
             0,                                  /* nb_absolute */
-            (inquiry)BooleanObject_nonzero,     /* nb_nonzero */
+            (inquiry)BooleanObject_nonzero,     /* nb_nonzero / nb_bool */
             0,                                  /* nb_invert */
             0,                                  /* nb_lshift */
             0,                                  /* nb_rshift */
             0,                                  /* nb_and */
             0,                                  /* nb_xor */
             0,                                  /* nb_or */
+#if PY_MAJOR_VERSION == 2
             0,                                  /* nb_coerce */
+#endif
             (unaryfunc)BooleanObject_int,       /* nb_int */
-            0,                                  /* nb_long */
+            0,                                  /* nb_long / nb_reserved */
             0,                                  /* nb_float */
+#if PY_MAJOR_VERSION == 2
             0,                                  /* nb_oct */
             0,                                  /* nb_hex */
+#endif
             0,                                  /* nb_inplace_add */
             0,                                  /* nb_inplace_subtract */
             0,                                  /* nb_inplace_multiply */
+#if PY_MAJOR_VERSION == 2
             0,                                  /* nb_inplace_divide */
+#endif
             0,                                  /* nb_inplace_remainder */
             0,                                  /* nb_inplace_power */
             0,                                  /* nb_inplace_lshift */
@@ -906,7 +949,8 @@ static PyNumberMethods Boolean_AsNumber = {
             0,                                  /* nb_floor_divide */
             0,                                  /* nb_true_divide */
             0,                                  /* nb_inplace_floor_divide */
-            0                                   /* nb_inplace_true_divide */
+            0,                                  /* nb_inplace_true_divide */
+            0                                   /* nb_index */
         };
 
 
@@ -917,8 +961,7 @@ namespace FRPC { namespace Python {
  */
 PyTypeObject BooleanObject_Type =
     {
-        PyObject_HEAD_INIT(&PyType_Type)
-        0,
+        PyVarObject_HEAD_INIT(NULL, 0)
         "Boolean",
         sizeof(BooleanObject),
         0,
@@ -926,7 +969,7 @@ PyTypeObject BooleanObject_Type =
         0,                                      /* tp_print */
         (getattrfunc)BooleanObject_getattr,     /* tp_getattr */
         (setattrfunc)BooleanObject_setattr,     /* tp_setattr */
-        (cmpfunc)BooleanObject_cmp,             /* tp_compare */
+        0,                                      /* tp_compare */
         (reprfunc)BooleanObject_repr,           /* tp_repr */
         &Boolean_AsNumber,                      /* tp_as_number */
         0,                                      /* tp_as_sequence */
@@ -941,7 +984,7 @@ PyTypeObject BooleanObject_Type =
         0,                                      /* tp_doc */
         0,                                      /* tp_traverse */
         0,                                      /* tp_clear */
-        0,                                      /* tp_richcompare */
+        BooleanObject_richcmp,                  /* tp_richcompare */
         0,                                      /* tp_weaklistoffset */
         0,                                      /* tp_iter */
         0,                                      /* tp_iternext */
@@ -956,7 +999,7 @@ PyTypeObject BooleanObject_Type =
         (initproc)BooleanObject_init,           /* tp_init */
         PyType_GenericAlloc,                    /* tp_alloc */
         BooleanObject_new,                      /* tp_new */
-        _PyObject_Del                           /* tp_free */
+        PyObject_Free                           /* tp_free */
     };
 
 
@@ -968,7 +1011,7 @@ PyTypeObject BooleanObject_Type =
 void BooleanObject_dealloc(BooleanObject *self)
 {
     Py_XDECREF(self->value);
-    self->ob_type->tp_free(reinterpret_cast<PyObject *>(self));
+    Py_TYPE(self)->tp_free(reinterpret_cast<PyObject *>(self));
 }
 
 PyObject* BooleanObject_new(PyTypeObject *type, PyObject *, PyObject *)
@@ -1052,15 +1095,38 @@ int BooleanObject_setattr(BooleanObject *self, char *name, PyObject* value)
 /*
  * boolean comparison
  */
-int BooleanObject_cmp(BooleanObject *self, BooleanObject *other)
+static PyObject *
+BooleanObject_richcmp(PyObject *self, PyObject *other, int op)
 {
-    if (self->value == other->value)
-        return 0;
+    if (!PyObject_TypeCheck(self, &BooleanObject_Type)) {
+        PyErr_SetString(PyExc_TypeError, "arg #1 is not a Boolean");
+        return NULL;
+    }
 
+    if (!PyObject_TypeCheck(other, &BooleanObject_Type)) {
+        PyErr_SetString(PyExc_TypeError, "arg #2 is not a Boolean");
+        return NULL;
+    }
 
-    if ((self->value == Py_True) && (other->value == Py_False))
-        return 1;
-    return -1;
+    time_t self_value =
+        reinterpret_cast<BooleanObject*>(self)->value == Py_True ? 1 : 0;
+    time_t other_value =
+        reinterpret_cast<BooleanObject*>(other)->value == Py_True ? 1 : 0;
+
+    PyObject *result;
+    int c;
+    switch (op) {
+        case Py_LT: c = self_value <  other_value; break;
+        case Py_LE: c = self_value <= other_value; break;
+        case Py_EQ: c = self_value == other_value; break;
+        case Py_NE: c = self_value != other_value; break;
+        case Py_GT: c = self_value >  other_value; break;
+        case Py_GE: c = self_value >= other_value; break;
+    }
+
+    result = c ? Py_True : Py_False;
+    Py_INCREF(result);
+    return result;
 }
 
 
@@ -1069,13 +1135,13 @@ int BooleanObject_cmp(BooleanObject *self, BooleanObject *other)
  */
 PyObject* BooleanObject_repr(BooleanObject *self)
 {
-    return PyString_FromString(PyObject_IsTrue(self->value)? "Boolean: TRUE" :
+    return PyUnicode_FromString(PyObject_IsTrue(self->value)? "Boolean: TRUE" :
                                "Boolean: FALSE");
 }
 
 PyObject* BooleanObject_str(BooleanObject *self)
 {
-    return PyString_FromString(PyObject_IsTrue(self->value) ? "1" : "0");
+    return PyUnicode_FromString(PyObject_IsTrue(self->value) ? "1" : "0");
 }
 
 int BooleanObject_nonzero(BooleanObject *self)
@@ -1264,8 +1330,7 @@ extern "C"
 
 static PyTypeObject ServerProxy_Type =
     {
-        PyObject_HEAD_INIT(&ServerProxy_Type)
-        0,                                 /*ob_size*/
+        PyVarObject_HEAD_INIT(NULL, 0)
         "ServerProxy",                     /*tp_name*/
         sizeof (ServerProxyObject),        /*tp_basicsize*/
         0,                                 /*tp_itemsize*/
@@ -1319,8 +1384,7 @@ extern "C"
 
 static PyTypeObject Method_Type =
     {
-        PyObject_HEAD_INIT(&Method_Type)
-        0,                                 /*ob_size*/
+        PyVarObject_HEAD_INIT(NULL, 0)
         "Method",                          /*tp_name*/
         sizeof (MethodObject),             /*tp_basicsize*/
         0,                                 /*tp_itemsize*/
@@ -1391,7 +1455,7 @@ PyObject* Method_getattr(MethodObject *self, char *name)
             if (!dict) return 0;
 
             PyObjectWrapper_t methodName
-                (PyString_FromStringAndSize(self->name.data(),
+                (PyUnicode_FromStringAndSize(self->name.data(),
                                             self->name.size()));
             if (!methodName) return 0;
             if (PyDict_SetItemString(dict, "method_name", methodName))
@@ -1508,8 +1572,12 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
         if (!value) {
             return 0;
         }
-        serverUrl = PyString_AsString(value.object);
-        serverUrlLen = PyString_Size(value.object);
+
+        Py_ssize_t slen;
+        STR_ASSTRANDSIZE(value.object, serverUrl, slen) {
+            return 0;
+        }
+        serverUrlLen = slen;
 
         int i = 0;
         while (kwtypes[++i]) {
@@ -1531,7 +1599,12 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
             if (value) {
                 switch (kwtypes[i]) {
                     case 's':
+#if PY_MAJOR_VERSION >= 3
+                        Py_ssize_t len;
+                        kwvars[i] = strdupa(PyUnicode_AsUTF8AndSize(value.object, &len));
+#else
                         kwvars[i] = strdupa(PyString_AsString(value.object));
+#endif
                         break;
                     case 'i':
                         *(int*)kwvars[i] = PyLong_AsLong(value.object);
@@ -1594,8 +1667,8 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
     catch (const HTTPError_t &httpError)
     {
         Py_DECREF(proxy);
-        PyObject *args = Py_BuildValue
-            ("is", httpError.errorNum(), httpError.message().c_str());
+        PyObjectWrapper_t args(Py_BuildValue
+            ("is", httpError.errorNum(), httpError.message().c_str()));
         if (!args) return 0;
         PyErr_SetObject(ProtocolError, args);
         return 0;
@@ -1646,21 +1719,21 @@ PyObject* ServerProxy_call(ServerProxyObject *self, PyObject *args, PyObject *kw
         if (self->proxyOk)
             self->proxy.closeConnection();
     } else if (!strcmp(action, GET_HOST)) {
-        return PyString_FromStringAndSize(url.host.data(), url.host.size());
+        return PyUnicode_FromStringAndSize(url.host.data(), url.host.size());
 
     } else if (!strcmp(action, GET_PATH)) {
-        return PyString_FromStringAndSize(url.path.data(), url.path.size());
+        return PyUnicode_FromStringAndSize(url.path.data(), url.path.size());
 
     } else if (!strcmp(action, GET_PORT)) {
         return PyInt_FromLong(url.port);
 
     } else if (!strcmp(action, GET_URL)) {
         std::string fullUrl(url.getUrl());
-        return PyString_FromStringAndSize(fullUrl.data(), fullUrl.size());
+        return PyUnicode_FromStringAndSize(fullUrl.data(), fullUrl.size());
 
     } else if (!strcmp(action, GET_LAST_CALL)) {
         const std::string &lastCall(self->proxy.getLastCall());
-        return PyString_FromStringAndSize(lastCall.data(), lastCall.size());
+        return PyUnicode_FromStringAndSize(lastCall.data(), lastCall.size());
     } else {
         PyErr_Format(PyExc_TypeError, "unknown action %s", action);
         return NULL;
@@ -1682,12 +1755,12 @@ PyObject* ServerProxy_getattr(ServerProxyObject *self, char *name)
             if (!dict) return 0;
 
             PyObjectWrapper_t host
-                (PyString_FromStringAndSize(url.host.data(), url.host.size()));
+                (PyUnicode_FromStringAndSize(url.host.data(), url.host.size()));
             if (!host) return 0;
             if (PyDict_SetItemString(dict, "host", host)) return 0;
 
             PyObjectWrapper_t path
-                (PyString_FromStringAndSize(url.path.data(), url.path.size()));
+                (PyUnicode_FromStringAndSize(url.path.data(), url.path.size()));
             if (!path) return 0;
             if (PyDict_SetItemString(dict, "path", path)) return 0;
 
@@ -1697,13 +1770,13 @@ PyObject* ServerProxy_getattr(ServerProxyObject *self, char *name)
 
             std::string fullUrl(url.getUrl());
             PyObjectWrapper_t pyfullUrl
-                (PyString_FromStringAndSize(fullUrl.data(), fullUrl.size()));
+                (PyUnicode_FromStringAndSize(fullUrl.data(), fullUrl.size()));
             if (!pyfullUrl) return 0;
             if (PyDict_SetItemString(dict, "url", pyfullUrl)) return 0;
 
             const std::string &lastCall(self->proxy.getLastCall());
             PyObjectWrapper_t pyLastCall
-                (PyString_FromStringAndSize(lastCall.data(), lastCall.size()));
+                (PyUnicode_FromStringAndSize(lastCall.data(), lastCall.size()));
             if (PyDict_SetItemString(dict, "last_call", pyLastCall)) return 0;
 
             return dict.inc();
@@ -1718,17 +1791,17 @@ PyObject* ServerProxy_getattr(ServerProxyObject *self, char *name)
     }
 
     if (!strcmp(name, "host")) {
-        return PyString_FromStringAndSize(url.host.data(), url.host.size());
+        return PyUnicode_FromStringAndSize(url.host.data(), url.host.size());
     } else if (!strcmp(name, "path")) {
-        return PyString_FromStringAndSize(url.path.data(), url.path.size());
+        return PyUnicode_FromStringAndSize(url.path.data(), url.path.size());
     } else if (!strcmp(name, "port")) {
         return PyInt_FromLong(url.port);
     } else if (!strcmp(name, "url")) {
         std::string fullUrl(url.getUrl());
-        return PyString_FromStringAndSize(fullUrl.data(), fullUrl.size());
+        return PyUnicode_FromStringAndSize(fullUrl.data(), fullUrl.size());
     } else if (!strcmp(name, "last_call")) {
         const std::string &lastCall(self->proxy.getLastCall());
-        return PyString_FromStringAndSize(lastCall.data(), lastCall.size());
+        return PyUnicode_FromStringAndSize(lastCall.data(), lastCall.size());
     }
 
     // return new method
@@ -1983,7 +2056,7 @@ PyObject* fastrpc_boolean(PyObject *, PyObject *args, PyObject *keywds) {
     {
         return PyErr_Format(PyExc_TypeError,
                             "truefalse must be sequence not %s.",
-                            truefalse->ob_type->tp_name);
+                            Py_TYPE(truefalse)->tp_name);
     }
 
     // get value at given index
@@ -2013,8 +2086,16 @@ namespace {
 
         virtual void flush() { /* noop */ }
 
-        PyObject* getData() {
+        PyObject* getData(bool binary) {
+#if PY_MAJOR_VERSION >= 3
+            if (binary) {
+                return PyBytes_FromStringAndSize(data.data(), data.size());
+            } else {
+                return PyUnicode_FromStringAndSize(data.data(), data.size());
+            }
+#else
             return PyString_FromStringAndSize(data.data(), data.size());
+#endif
         }
 
     private:
@@ -2105,8 +2186,9 @@ PyObject* fastrpc_dumps(PyObject *, PyObject *args, PyObject *keywds) {
 
             char *str;
             Py_ssize_t strSize;
-            if (PyString_AsStringAndSize(faultString.get(), &str, &strSize))
+            STR_ASSTRANDSIZE(faultString.get(), str, strSize) {
                 return 0;
+            }
 
             marshaller->packFault(PyInt_AsLong(faultCode.get()), str, strSize);
         } else {
@@ -2139,7 +2221,7 @@ PyObject* fastrpc_dumps(PyObject *, PyObject *args, PyObject *keywds) {
     }
 
     // return mashalled string
-    return writer.getData();
+    return writer.getData(useBinary);
 }
 
 static char fastrpc_loads__doc__[] =
@@ -2161,8 +2243,19 @@ PyObject* fastrpc_loads(PyObject *, PyObject *args) {
 
     char *dataStr;
     Py_ssize_t dataSize;
-    if (PyString_AsStringAndSize(data, &dataStr, &dataSize))
+#if PY_MAJOR_VERSION >= 3
+    if (PyBytes_Check(data)) {
+        if (PyBytes_AsStringAndSize(data, &dataStr, &dataSize) < 0) {
+            return 0;
+        }
+    } else STR_ASSTRANDSIZE(data, dataStr, dataSize) {
         return 0;
+    }
+#else
+    STR_ASSTRANDSIZE(data, dataStr, dataSize) {
+        return 0;
+    }
+#endif
 
     try {
         Builder_t builder(0, stringMode,
@@ -2243,7 +2336,7 @@ inline int printString(std::ostringstream &out, PyObject *obj,
     // 7bit string
     char *str;
     Py_ssize_t len;
-    if (PyString_AsStringAndSize(obj, &str, &len)) {
+    STR_ASSTRANDSIZE(obj, str, len) {
         // oops, cannot get string
         out << err;
         return -1;
@@ -2274,16 +2367,18 @@ int printPyFastRPCTree(PyObject *tree, std::ostringstream &out,
                        std::bitset<sizeof(unsigned long) * 8> pos)
 {
 
-    if ( tree->ob_type == Py_True->ob_type ||
+    if ( Py_TYPE(tree) == Py_TYPE(Py_True) ||
         PyBoolean_Check(tree) ) {
         // print Boolean
         int value = PyObject_IsTrue(tree);
         if (value < 0) {
             return -1;
         } else out << (value ? "true" : "false");
+#if PY_MAJOR_VERSION == 2
     } else if (PyInt_Check(tree)) {
         // integer
         out << PyInt_AS_LONG(tree);
+#endif
     } else if (PyLong_Check(tree)) {
         Int_t::value_type i = PyLong_AsLongLong(tree);
         // check for error
@@ -2292,6 +2387,7 @@ int printPyFastRPCTree(PyObject *tree, std::ostringstream &out,
     } else if (PyFloat_Check(tree)) {
         // float
         out << PyFloat_AS_DOUBLE(tree);
+#if PY_MAJOR_VERSION == 2
     } else if (PyString_Check(tree)) {
         if (printString(out, tree)) return -1;
     } else if (PyUnicode_Check(tree)) {
@@ -2301,6 +2397,10 @@ int printPyFastRPCTree(PyObject *tree, std::ostringstream &out,
         if (!pystr) return -1;
         if (printString(out, pystr, "u\"", "\"", "<UNICODE>"))
             return -1;
+#else
+    } else if (PyUnicode_Check(tree)) {
+        if (printString(out, tree)) return -1;
+#endif
     } else if (PyTuple_Check(tree) || PyList_Check(tree)) {
         // list or tuple
         out << '(';
@@ -2380,12 +2480,20 @@ int printPyFastRPCTree(PyObject *tree, std::ostringstream &out,
         }
         if (printString(out, value, "", "", "<DATETIME>", -1))
             return -1;
+#ifdef HAVE_BINARY
     } else if (PyBinary_Check(tree)) {
-        // print DateTime
         PyObjectWrapper_t data(PyObject_GetAttrString(tree, "data"));
         if (!data) return -1;
         if (printString(out, data, "b\"", "\"", "<BASE64>", 10, true))
             return -1;
+#endif
+#if PY_MAJOR_VERSION >= 3
+    } else if (PyBytes_Check(tree)) {
+        PyObjectWrapper_t data(PyUnicode_FromFormat("%S", tree));
+        if (!data) return -1;
+        if (printString(out, data, "", "", "<BASE64>", 10, false))
+            return -1;
+#endif
     } else {
         // other, unsupported type
         PyObjectWrapper_t value(PyObject_Repr(tree));
@@ -2393,7 +2501,7 @@ int printPyFastRPCTree(PyObject *tree, std::ostringstream &out,
             if (printString(out, value, "", "", "", -1))
                 return -1;
         } else {
-            out << '<' << tree->ob_type->tp_name << '>';
+            out << '<' << Py_TYPE(tree)->tp_name << '>';
         }
     }
 
@@ -2415,7 +2523,7 @@ PyObject* fastrpc_dumpTree(PyObject *, PyObject *args) {
     printPyFastRPCTree(value, out, level, names, pos);
 
     // OK
-    return PyString_FromStringAndSize(out.str().data(), out.str().size());
+    return PyUnicode_FromStringAndSize(out.str().data(), out.str().size());
 }
 
 /**************************************************************************/
@@ -2473,8 +2581,8 @@ namespace FRPC { namespace Python {
         if (!method || (method == Py_None)) {
             // no method
             formatString = (status
-                            ? PyString_FromString("<fastrpc.%s: %d, %s>")
-                            : PyString_FromString("<fastrpc.%s: %s>"));
+                            ? PyUnicode_FromString("<fastrpc.%s: %d, %s>")
+                            : PyUnicode_FromString("<fastrpc.%s: %s>"));
             if (!formatString) return 0;
 
             formatArgs =
@@ -2492,9 +2600,9 @@ namespace FRPC { namespace Python {
             MethodObject &methodObject(*method.get<MethodObject>());
 
             formatString = (status
-                            ? PyString_FromString("<fastrpc.%s: %d, %s "
+                            ? PyUnicode_FromString("<fastrpc.%s: %d, %s "
                                                   "[method %s() @ %s]>")
-                            : PyString_FromString("<fastrpc.%s: %s "
+                            : PyUnicode_FromString("<fastrpc.%s: %s "
                                                   "[method %s() @ %s]>"));
             if (!formatString) return 0;
 
@@ -2520,47 +2628,91 @@ namespace FRPC { namespace Python {
         }
 
         // do the format
-        return PyString_Format(formatString, formatArgs);
+        return PyUnicode_Format(formatString, formatArgs);
     }
 } } // namespace FRPC::Python
 
+#if PY_MAJOR_VERSION >= 3
+
+static struct PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT,
+        "_fastrpc",
+        NULL,
+        -1, // TODO: verify that we have module state in global variables
+        frpc_methods,
+        NULL,
+        NULL, //myextension_traverse,
+        NULL, //myextension_clear,
+        NULL
+};
+
+#define INITERROR return NULL
+
 /** Initialize FRPC module
  */
-extern "C" DL_EXPORT(void) init_fastrpc(void)
+PyMODINIT_FUNC PyInit__fastrpc(void)
+
+#else // PY_MAJOR_VERSION >= 3
+
+#define INITERROR return
+
+/** Initialize FRPC module
+ */
+PyMODINIT_FUNC init_fastrpc(void)
+
+#endif // PY_MAJOR_VERSION >= 3
+
 {
     /* Create the module and add the functions */
+#if PY_MAJOR_VERSION >= 3
+    PyObject *fastrpc_module = PyModule_Create(&moduledef);
+#else
     PyObject *fastrpc_module = Py_InitModule("_fastrpc", frpc_methods);
+#endif
     if (!fastrpc_module)
-        return;
+        INITERROR;
 
     /**************************************************************/
     // Add types
     /**************************************************************/
+
+    if ((PyType_Ready(&DateTimeObject_Type) < 0) ||
+        (PyType_Ready(&LocalTimeObject_Type) < 0) ||
+        (PyType_Ready(&UTCTimeObject_Type) < 0) ||
+#ifdef HAVE_BINARY
+        (PyType_Ready(&BinaryObject_Type) < 0) ||
+#endif
+        (PyType_Ready(&BooleanObject_Type) < 0) ||
+        (PyType_Ready(&ServerProxy_Type) < 0))
+        INITERROR;
+
     Py_INCREF(&DateTimeObject_Type);
     if (PyModule_AddObject(fastrpc_module, "DateTime",
                            reinterpret_cast<PyObject*>(&DateTimeObject_Type)))
-        return;
+        INITERROR;
 
     Py_INCREF(&LocalTimeObject_Type);
     if (PyModule_AddObject(fastrpc_module, "LocalTime",
                            reinterpret_cast<PyObject*>(&LocalTimeObject_Type)))
-        return;
+        INITERROR;
     Py_INCREF(&UTCTimeObject_Type);
     if (PyModule_AddObject(fastrpc_module, "UTCTime",
                            reinterpret_cast<PyObject*>(&UTCTimeObject_Type)))
-        return;
+        INITERROR;
+#ifdef HAVE_BINARY
     Py_INCREF(&BinaryObject_Type);
     if (PyModule_AddObject(fastrpc_module, "Binary",
                            reinterpret_cast<PyObject*>(&BinaryObject_Type)))
-        return;
+        INITERROR;
+#endif
     Py_INCREF(&BooleanObject_Type);
     if (PyModule_AddObject(fastrpc_module, "Boolean",
                            reinterpret_cast<PyObject*>(&BooleanObject_Type)))
-        return;
+        INITERROR;
 
     // initialize server support
     if (FRPC::Python::initServer(fastrpc_module))
-        return;
+        INITERROR;
 
     // initialize errors
     initErrors(fastrpc_module);
@@ -2570,16 +2722,16 @@ extern "C" DL_EXPORT(void) init_fastrpc(void)
     /********************************************************************/
     if (PyModule_AddIntConstant(fastrpc_module, "ON_SUPPORT_ON_KEEP_ALIVE",
                                 Proxy_t::BINARY_ON_SUPPORT_ON_KEEP_ALIVE))
-        return;
+        INITERROR;
     if (PyModule_AddIntConstant(fastrpc_module, "ON_SUPPORT",
                                 Proxy_t::BINARY_ON_SUPPORT))
-        return;
+        INITERROR;
     if (PyModule_AddIntConstant(fastrpc_module, "ALWAYS",
                                 Proxy_t::BINARY_ALWAYS))
-        return;
+        INITERROR;
     if (PyModule_AddIntConstant(fastrpc_module, "NEVER",
                                 Proxy_t::BINARY_NEVER))
-        return;
+        INITERROR;
 
     /********************************************************************/
     // Add False/True Boolean constants
@@ -2589,22 +2741,22 @@ extern "C" DL_EXPORT(void) init_fastrpc(void)
         if (PyModule_AddObject(fastrpc_module, "False", False))
         {
             Py_DECREF(False);
-            return;
+            INITERROR;
         }
     }
     else
-        return;
+        INITERROR;
 
     if (PyObject *True = reinterpret_cast<PyObject*>(newBoolean(true)))
     {
         if (PyModule_AddObject(fastrpc_module, "True", True))
         {
             Py_DECREF(True);
-            return;
+            INITERROR;
         }
     }
     else
-        return;
+        INITERROR;
 
     // import datetime modules
     PyObject *module = 0;
@@ -2622,8 +2774,18 @@ extern "C" DL_EXPORT(void) init_fastrpc(void)
     }
 
     // create empty string
-    emptyString = PyString_FromString("");
-    if (!emptyString)
-        return;
+#ifdef HAVE_BINARY
+#if PY_MAJOR_VERSION >= 3
+    emptyBinary = PyBytes_FromString("");
+#else
+    emptyBinary = PyString_FromString("");
+#endif
+    if (!emptyBinary)
+        INITERROR;
+#endif
+
+#if PY_MAJOR_VERSION >= 3
+        return fastrpc_module;
+#endif
 }
 

@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import sys
 import fastrpc
 import unittest
 
@@ -21,8 +22,12 @@ class ServerTest(unittest.TestCase):
         self.assertTrue(self.preread_called)
 
     def test_preread_raised(self):
-        fault_string = "Unhandled exception in preread " \
-                       "<type 'exceptions.ValueError'>: something"
+        if sys.version_info.major >= 3:
+            fault_string = "Unhandled exception in preread " \
+                        "<class 'ValueError'>: something"
+        else:
+            fault_string = "Unhandled exception in preread " \
+                        "<type 'exceptions.ValueError'>: something"
 
         def preread():
             raise ValueError("something")
@@ -32,7 +37,7 @@ class ServerTest(unittest.TestCase):
         try:
             server.serve(0)
             raise Exception("error expected")
-        except fastrpc.Fault, exc:
+        except fastrpc.Fault as exc:
             self.assertEqual(exc.faultString, fault_string)
             pass
 

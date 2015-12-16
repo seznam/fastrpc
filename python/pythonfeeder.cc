@@ -130,9 +130,12 @@ void Feeder_t::feedValue(PyObject *value)
         marshaller->packBool(PyObject_IsTrue(value));
     } else
 #endif
+#if PY_MAJOR_VERSION == 2
     if (PyInt_Check(value)) {
         marshaller->packInt(PyInt_AsLong(value));
-    } else if(PyLong_Check(value)) {
+    } else
+#endif
+    if(PyLong_Check(value)) {
         size_t bits = _PyLong_NumBits(value);
         int sign = _PyLong_Sign(value);
         Int_t::value_type i;
@@ -152,18 +155,45 @@ void Feeder_t::feedValue(PyObject *value)
                                  dateTime->hour, dateTime->min, dateTime->sec,
                                  dateTime->weekDay, dateTime->unixTime,
                                  dateTime->timeZone);
+#ifdef HAVE_BINARY
     } else if (PyBinary_Check(value)) {
         BinaryObject *bin = reinterpret_cast<BinaryObject*>(value);
 
         char *str;
         Py_ssize_t strLen;
-        if (PyString_AsStringAndSize(bin->value, &str, &strLen))
+#if PY_MAJOR_VERSION >= 3
+        if (PyBytes_AsStringAndSize(bin->value, &str, &strLen) == -1)
+#else
+        if (PyString_AsStringAndSize(bin->value, &str, &strLen) == -1)
+#endif
+        {
             throw PyError_t();
+        }
 
         marshaller->packBinary(str, strLen);
+#endif
     } else if (PyBoolean_Check(value)) {
         BooleanObject *boolean = reinterpret_cast<BooleanObject*>(value);
         marshaller->packBool(boolean->value == Py_True);
+#if PY_MAJOR_VERSION >= 3
+    } else if (PyBytes_Check(value)) {
+        char *str;
+        Py_ssize_t strLen;
+        PyBytes_AsStringAndSize(value, &str, &strLen); \
+        if (str == NULL)
+            throw PyError_t();
+
+        marshaller->packBinary(str, strLen);
+    } else if (PyUnicode_Check(value)) {
+        // get string and marshall it
+        char *str;
+        Py_ssize_t strLen;
+        str = PyUnicode_AsUTF8AndSize(value, &strLen); \
+        if (str == NULL)
+            throw PyError_t();
+
+        marshaller->packString(str, strLen);
+#else
     } else if (PyString_Check(value)) {
         //is utf8 ?
         if (encoding == "utf-8")  {
@@ -203,6 +233,7 @@ void Feeder_t::feedValue(PyObject *value)
             throw PyError_t();
 
         marshaller->packString(str, strLen);
+#endif
     } else if (PyList_Check(value)) {
         int argc = PyList_GET_SIZE(value);
 
@@ -225,6 +256,14 @@ void Feeder_t::feedValue(PyObject *value)
         marshaller->packStruct(argc);
 
         while (PyDict_Next(value, &pos, &key, &member)) {
+#if PY_MAJOR_VERSION >= 3
+            if(!PyUnicode_Check(key)) {
+                PyErr_SetString(PyExc_TypeError,
+                                "Key in Dictionary must be a string.");
+                throw PyError_t();
+            }
+            PyObjectWrapper_t skey(key, true);
+#else
             if(!PyString_Check(key) && !PyUnicode_Check(key)) {
                 PyErr_SetString(PyExc_TypeError,
                                 "Key in Dictionary must be either string or unicode.");
@@ -237,11 +276,13 @@ void Feeder_t::feedValue(PyObject *value)
                 if (!skey)
                     throw PyError_t();
             }
+#endif
 
             char *str;
             Py_ssize_t strLen;
-            if (PyString_AsStringAndSize(skey, &str, &strLen))
+            STR_ASSTRANDSIZE(key, str, strLen) {
                 throw PyError_t();
+            }
 
             marshaller->packStructMember(str, strLen);
             feedValue(member);
@@ -277,7 +318,12 @@ void Feeder_t::feedValue(PyObject *value)
 
         std::string objectRepr = "unknown";
         if (PyObjectWrapper_t repr = PyObject_Repr(value)) {
-            objectRepr.assign(PyString_AsString(repr));
+            Py_ssize_t len;
+            char *data;
+            STR_ASSTRANDSIZE(repr, data, len) {
+                throw PyError_t();
+            }
+            objectRepr.assign(data);
         }
 
         PyErr_Format(PyExc_TypeError, "Unknown type to marshall for object: %s",
