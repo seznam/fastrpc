@@ -5,8 +5,8 @@ import unittest
 
 
 class ServerTest(unittest.TestCase):
-    def test_prepead(self):
-        self.prepead_called = False
+    def test_preread(self):
+        self.preread_called = False
 
         def preread():
             self.preread_called = True
