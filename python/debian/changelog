@@ -1,6 +1,7 @@
 python-fastrpc (5.1.0) UNRELEASED; urgency=low
 
   * Fixed constructor of ProtocolError exception.
+  * Fixed str/repr functions in exceptions.
 
  -- Tomas Golembiovsky <tomas.golembiovsky@firma.seznam.cz>  Fri, 27 Nov 2015 17:44:55 +0100
 

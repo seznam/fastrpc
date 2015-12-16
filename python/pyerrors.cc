@@ -42,14 +42,15 @@ using namespace FRPC::Python;
 /* note these macros omit the last semicolon so the macro invocation may
  * include it and not look strange.
  */
-#define SimpleException(EXCNAME, EXCSTR, EXCDOC) \
+#define SimpleException(EXCNAME, EXCREPR, EXCDOC) \
 static PyTypeObject EXCNAME ## Exception = { \
     PyVarObject_HEAD_INIT(NULL, 0) \
     "fastrpc." # EXCNAME, \
     sizeof(PyBaseExceptionObject), 0, \
-    ((PyTypeObject*)PyExc_BaseException)->tp_dealloc, 0, 0, 0, 0, 0, 0, \
-    0, 0, 0, 0, 0, 0, 0, 0, \
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, \
+    ((PyTypeObject*)PyExc_BaseException)->tp_dealloc, 0, 0, 0, 0, \
+    (reprfunc)EXCREPR, 0, 0, 0, 0, 0, \
+    (reprfunc)EXCREPR, 0, 0, 0, \
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_GC, \
     PyDoc_STR(EXCDOC), ((PyTypeObject*)PyExc_BaseException)->tp_traverse, \
     ((PyTypeObject*)PyExc_BaseException)->tp_clear, 0, 0, 0, 0, 0, 0, 0, \
     (PyTypeObject*)PyExc_Exception, 0, 0, 0, \
@@ -59,14 +60,15 @@ static PyTypeObject EXCNAME ## Exception = { \
 };
 
 #define ComplexException(EXCNAME, EXCSTORE, EXCMETHODS, EXCMEMBERS, \
-    EXCSTR, EXCDOC) \
+    EXCDOC) \
 static PyTypeObject EXCNAME ## Exception = { \
     PyVarObject_HEAD_INIT(NULL, 0) \
     "fastrpc." # EXCNAME, \
     sizeof(EXCSTORE ## Object), 0, \
-    (destructor)EXCSTORE ## _dealloc, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, \
-    (reprfunc)EXCSTR, 0, 0, 0, \
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, \
+    (destructor)EXCSTORE ## _dealloc, 0, 0, 0, 0, \
+    (reprfunc)EXCSTORE ## _repr, 0, 0, 0, 0, 0, \
+    (reprfunc)EXCSTORE ## _repr, 0, 0, 0, \
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_GC, \
     PyDoc_STR(EXCDOC), (traverseproc)EXCSTORE ## _traverse, \
     (inquiry)EXCSTORE ## _clear, 0, 0, 0, 0, EXCMETHODS, \
     EXCMEMBERS, 0, (PyTypeObject*)PyExc_Exception, \
@@ -186,7 +188,7 @@ static PyMemberDef ProtocolError_members[] = {
 };
 
 ComplexException(ProtocolError, ProtocolError, 0, ProtocolError_members,
-    "ProtocolError", "ProtocolError exception");
+    "ProtocolError exception");
 
 
 //*************************************************************************
@@ -290,8 +292,7 @@ static PyMemberDef Fault_members[] = {
     {NULL}  /* Sentinel */
 };
 
-ComplexException(Fault, Fault, 0, Fault_members,
-                        Fault_repr, "Fault exception");
+ComplexException(Fault, Fault, 0, Fault_members, "Fault exception");
 
 
 //*************************************************************************
@@ -381,7 +382,7 @@ static PyMemberDef ResponseError_members[] = {
 };
 
 ComplexException(ResponseError, ResponseError, 0, ResponseError_members,
-    "ResponseError", "ResponseError exception");
+    "ResponseError exception");
 
 namespace FRPC { namespace Python {
 
