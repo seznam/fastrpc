@@ -1,4 +1,4 @@
-python-fastrpc (5.1.0) UNRELEASED; urgency=low
+python-fastrpc (5.1.0) testing; urgency=low
 
   * Fixed constructor of ProtocolError exception.
   * Fixed str/repr functions in exceptions.

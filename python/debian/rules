@@ -14,7 +14,9 @@ override_dh_auto_test:
 override_dh_strip:
 	dh_strip --dbg-package=python-fastrpc-dbg
 	mkdir -p $(CURDIR)/debian/python3-fastrpc-dbg/usr/lib/debug/usr/lib/python3/dist-packages
-	mv $(CURDIR)/debian/python-fastrpc-dbg/usr/lib/debug/usr/lib/python3/dist-packages/* \
-	    $(CURDIR)/debian/python3-fastrpc-dbg/usr/lib/debug/usr/lib/python3/dist-packages
-	rm -r $(CURDIR)/debian/python-fastrpc-dbg/usr/lib/debug/usr/lib/python3
+	if [ -d $(CURDIR)/debian/python-fastrpc-dbg/usr/lib/debug/usr/lib/python3 ] ; then \
+	    mv -v $(CURDIR)/debian/python-fastrpc-dbg/usr/lib/debug/usr/lib/python3/dist-packages/* \
+	    $(CURDIR)/debian/python3-fastrpc-dbg/usr/lib/debug/usr/lib/python3/dist-packages ; \
+	fi
+	rm -vfr $(CURDIR)/debian/python-fastrpc-dbg/usr/lib/debug/usr/lib/python3
 
