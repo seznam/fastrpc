@@ -9,16 +9,16 @@ Build-Depends:
  python-all-dev (>= 2.6.6-3~),
  python-debian,
  python-setuptools,
+ python3-all-dev,
+ python3-setuptools,
+ python3-debian,
 # NOTE: we depend on Python >= 3.3, but on Wheezy there is only Python 3.2.
 # However, we want to have single build specs for both Jessie and Wheezy. For
 # this reason we drop the version restriction here and put it into the package
 # Depends field.
- python3-all-dev,
- python3-setuptools,
- python3-debian,
 Standards-Version: 3.9.1
 X-Python-Version: >= 2.7
-X-Python3-Version: >= 3.2
+X-Python3-Version: >= 3.3
 
 Package: python-fastrpc
 Section: python

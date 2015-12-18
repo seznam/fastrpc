@@ -6,11 +6,6 @@ export PYBUILD_NAME = fastrpc
 %:
 	dh $@ --with=python2,python3 --buildsystem=pybuild
 
-# http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=641314
-override_dh_auto_test:
-	dh_auto_test
-	./setup.py test
-
 override_dh_strip:
 	dh_strip --dbg-package=python-fastrpc-dbg
 	mkdir -p $(CURDIR)/debian/python3-fastrpc-dbg/usr/lib/debug/usr/lib/python3/dist-packages
