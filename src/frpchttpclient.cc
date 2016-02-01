@@ -100,6 +100,28 @@ struct SocketCloser_t {
     bool doClose;
 };
 
+// just replaces newline whitespace characters with spaces
+std::string cleanup_header_value(const std::string &input) {
+    std::string clensed;
+    clensed.reserve(input.size());
+    for (std::string::const_iterator ic = input.begin(),
+                                   iend = input.end();
+         ic != iend;
+         ++ic)
+    {
+        switch (*ic) {
+        case '\r':
+        case '\n':
+            clensed.append(' ', 1);
+            break;
+        default:
+            clensed.append(*ic, 1);
+
+        }
+    }
+    return clensed;
+}
+
 } // namespace
 
 namespace FRPC {
@@ -308,6 +330,11 @@ void HTTPClient_t::sendRequest(bool last) {
         os.os << HTTP_HEADER_CONNECTION
               << (connector->getKeepAlive() ? ": keep-alive" : ": close")
         << "\r\n";
+
+        if (!forward.empty()) {
+            os.os << HTTP_HEADER_X_FORWARDED_FOR << ": "
+                  << cleanup_header_value(forward) << "\r\n";
+        }
 
         // write content-length or content-transfer-encoding when we can send
         // content

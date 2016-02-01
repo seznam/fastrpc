@@ -118,6 +118,7 @@ namespace FRPC {
     const std::string HTTP_HEADER_CACHE_CONTROL("Cache-Control");
     const std::string HTTP_HEADER_CACHE_PRAGMA("Pragma");
     const std::string HTTP_HEADER_ALLOW("Allow");
+    const std::string HTTP_HEADER_X_FORWARDED_FOR("X-Forwarded-For");
     const std::string HTTP_ACCEPT_RANGES("Accept-Ranges");
     
     class FRPC_DLLEXPORT HTTPHeader_t {

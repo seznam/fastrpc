@@ -140,6 +140,10 @@ public:
         connector->setTimeout(timeout);
     }
 
+    void setForwardHeader(const std::string &fwd) {
+        forwarded = fwd;
+    }
+
     const URL_t& getURL() {
         return url;
     }
@@ -168,6 +172,7 @@ private:
     unsigned int serverSupportedProtocols;
     ProtocolVersion_t protocolVersion;
     std::auto_ptr<Connector_t> connector;
+    std::string forwarded;
 };
 
 Marshaller_t* ServerProxyImpl_t::createMarshaller(HTTPClient_t &client) {
@@ -248,6 +253,10 @@ Value_t& ServerProxyImpl_t::call(Pool_t &pool, const std::string &methodName,
                                  const Array_t &params)
 {
     HTTPClient_t client(io, url, connector.get(), useHTTP10);
+
+    if (!forwarded.empty())
+        client.setForwardHeader(forwarded);
+
     TreeBuilder_t builder(pool);
     std::auto_ptr<Marshaller_t>marshaller(createMarshaller(client));
     TreeFeeder_t feeder(*marshaller);
@@ -280,6 +289,10 @@ void ServerProxyImpl_t::call(DataBuilder_t &builder, const std::string &methodNa
                                  const Array_t &params)
 {
     HTTPClient_t client(io, url, connector.get(), useHTTP10);
+
+    if (!forwarded.empty())
+        client.setForwardHeader(forwarded);
+
     std::auto_ptr<Marshaller_t>marshaller(createMarshaller(client));
     TreeFeeder_t feeder(*marshaller);
 
@@ -311,6 +324,10 @@ Value_t& ServerProxyImpl_t::call(Pool_t &pool, const char *methodName,
                                  va_list args)
 {
     HTTPClient_t client(io, url, connector.get(), useHTTP10);
+
+    if (!forwarded.empty())
+        client.setForwardHeader(forwarded);
+
     TreeBuilder_t builder(pool);
     std::auto_ptr<Marshaller_t>marshaller(createMarshaller(client));
     TreeFeeder_t feeder(*marshaller);
@@ -372,6 +389,10 @@ void ServerProxy_t::setWriteTimeout(int timeout) {
 
 void ServerProxy_t::setConnectTimeout(int timeout) {
     sp->setConnectTimeout(timeout);
+}
+
+void ServerProxy_t::setForwardHeader(const std::string &fwd) {
+    sp->setForwardHeader(fwd);
 }
 
 const URL_t& ServerProxy_t::getURL() {
