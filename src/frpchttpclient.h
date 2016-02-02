@@ -149,6 +149,10 @@ public:
     */
     void readResponse(DataBuilder_t &builder);
 
+    /** used on proxy servers to set the x-forwarded-for header used for 
+     *  request origin tracking */
+    void setForwardHeader(const std::string &fwd) { forward = fwd; }
+
 private:
     void sendRequest(bool last = false );
     HTTPClient_t();
@@ -170,6 +174,7 @@ private:
     UnMarshaller_t *unmarshaller;
     bool useHTTP10;
     ProtocolVersion_t protocolVersion;
+    std::string forward;
 };
 
 } // namespace FRPC
