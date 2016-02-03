@@ -13,6 +13,7 @@ debian/autoreconf.before
 debian/files
 debian/libfastrpc-dev*
 debian/libfastrpc5*
+debian/libfastrpc6*
 debian/tmp
 depcomp
 install-sh
