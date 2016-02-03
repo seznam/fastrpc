@@ -1,3 +1,9 @@
+libfastrpc (6.0.0) testing; urgency=low
+
+  * Implemented X-Forwarded-For header for proxy ip origin info tunelling
+
+ -- Filip Volejnik <filip.volejnik@firma.seznam.cz>  Wed, 3 Feb 2016 08:25:00 +0200
+
 libfastrpc (5.0.12) testing; urgency=low
 
   * Fixed several typos.
