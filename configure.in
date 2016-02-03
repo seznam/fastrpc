@@ -124,9 +124,9 @@ dnl ------------------------------------------------------------------------
 # This version number needs to be changed in several different ways for each
 # release. Please read the libtool documentation (info libtool 'Updating
 # version info') before touching this.
-FASTRPC_MAJOR=4
+FASTRPC_MAJOR=6
 FASTRPC_MINOR=1
-VERSION_INFO="-version-info 10:0:1"
+VERSION_INFO="-version-info 11:0:0"
 
 AC_ARG_ENABLE(optimization,[  --enable-optimization compile optimized without debug logging],[
     case "${enableval}" in
