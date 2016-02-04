@@ -1,3 +1,10 @@
+libfastrpc (6.0.2) testing; urgency=low
+
+  * fix: the header value was borked
+  * v6.0.1
+
+ -- Filip Volejnik <filip.volejnik@firma.seznam.cz>  Thu, 04 Feb 2016 09:44:58 +0100
+
 libfastrpc (6.0.1) testing; urgency=low
 
   * Renamed the lib/package to libfastrpc6
