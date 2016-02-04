@@ -112,10 +112,10 @@ std::string cleanup_header_value(const std::string &input) {
         switch (*ic) {
         case '\r':
         case '\n':
-            clensed.append(' ', 1);
+            clensed.push_back(' ');
             break;
         default:
-            clensed.append(*ic, 1);
+            clensed.push_back(*ic);
 
         }
     }
