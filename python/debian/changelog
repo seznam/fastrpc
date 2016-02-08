@@ -1,3 +1,9 @@
+python-fastrpc (6.0.2) testing; urgency=low
+
+  * Rebuilt against fastrpc 6.0.2
+
+ -- Filip Volejnik <filip.volejnik@firma.seznam.cz>  Mon, 08 Feb 2016 10:30:00 +0100
+
 python-fastrpc (5.1.1) testing; urgency=low
 
   * Fixed Python3 build.
