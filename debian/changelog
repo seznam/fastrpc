@@ -1,3 +1,9 @@
+libfastrpc (7.0.0~1) testing; urgency=low
+
+  * renamed the debian package
+
+ -- Filip Volejnik <filip.volejnik@firma.seznam.cz>  Tue, 09 Feb 2016 10:15:00 +0100
+
 libfastrpc (7.0.0) testing; urgency=low
 
   * rised version to remove the version collision with old fastrpc6 branch
