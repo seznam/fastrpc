@@ -1,3 +1,9 @@
+python-fastrpc (7.0.1) testing; urgency=low
+
+  * Rebuilt against fastrpc 7.0.1
+
+ -- Filip Volejnik <filip.volejnik@firma.seznam.cz>  Tue, 09 Feb 2016 12:32:00 +0100
+
 python-fastrpc (6.0.2~1) testing; urgency=low
 
   * Fix for prev. build - linkage was still against fastrpc5
