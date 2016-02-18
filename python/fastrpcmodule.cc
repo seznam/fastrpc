@@ -845,7 +845,7 @@ int BinaryObject_setattr(BinaryObject *self, char *name, PyObject *value)
                          "Can't set empty object");
             return -1;
         }
-        if(PyUnicode_Check(value))
+        if(PyString_Check(value))
         {
             Py_DECREF(self->value);
             self ->value  = value;
@@ -874,7 +874,7 @@ BinaryObject* newBinary(const char* data, long size)
     BinaryObject *self = PyObject_NEW(BinaryObject, &BinaryObject_Type);
     if (self == NULL)
         return NULL;
-    self->value = PyUnicode_FromStringAndSize(data, size);
+    self->value = PyString_FromStringAndSize(data, size);
     return self;
 }
 

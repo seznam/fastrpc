@@ -1,3 +1,10 @@
+python-fastrpc (7.0.2) testing; urgency=low
+
+  * Fixed type inconsistency for Binary type.
+  * Fixed dependency of debug package.
+
+ -- Tomas Golembiovsky <tomas.golembiovsky@firma.seznam.cz>  Wed, 17 Feb 2016 17:36:27 +0100
+
 python-fastrpc (7.0.1) testing; urgency=low
 
   * Rebuilt against fastrpc 7.0.1

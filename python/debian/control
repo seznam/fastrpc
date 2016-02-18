@@ -37,7 +37,7 @@ Description: Fastrpc -- RPC using XML and Binary protocol
 Package: python-fastrpc-dbg
 Section: python
 Architecture: any
-Depends: python3-fastrpc (= ${binary:Version})
+Depends: python-fastrpc (= ${binary:Version})
 Description: Fastrpc -- debug symbols.
  Fastrpc is a powerful and easy to use framework for the creation of
  distributed applications.
