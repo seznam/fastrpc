@@ -36,7 +36,7 @@
 
 
 # warn on all
-AM_CXXFLAGS = -Wall -g -fPIC $(DEPS_CFLAGS) ${CXXEXTRAFLAGS}
+AM_CXXFLAGS = -Wall -fPIC $(DEPS_CFLAGS) ${CXXEXTRAFLAGS}
 
 # extra compiler options
 AM_CPPFLAGS = -D_ISOC99_SOURCE -D__ENABLE_WSTRING=1

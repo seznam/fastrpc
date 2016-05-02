@@ -39,4 +39,4 @@ SUBDIRS = src
 EXTRA_DIST = debian/libfastrpc.control 
 
 pkgconfigdir=@libdir@/pkgconfig
-pkgconfig_DATA=libfastrpc.pc
+pkgconfig_DATA=libfastrpc8.pc
