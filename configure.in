@@ -147,6 +147,6 @@ AC_CONFIG_FILES([src/frpcversion.h
     Makefile
     src/Makefile
     version
-    libfastrpc.pc])
+    libfastrpc8.pc])
 
 AC_OUTPUT()
