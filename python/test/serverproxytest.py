@@ -152,7 +152,7 @@ class ServerProxyTest(unittest.TestCase):
 
     def test_reprstr(self):
         client = fastrpc.ServerProxy(self.url)
-        self.assertTrue(str(type(client.foo)).startswith("<type 'Method"))
+        self.assertTrue(str(type(client.foo)).endswith(" 'Method'>"))
 
 
 if __name__ == '__main__':
