@@ -126,7 +126,7 @@ extern "C"
 namespace FRPC { namespace Python {
 PyTypeObject DateTimeObject_Type =
     {
-        PyVarObject_HEAD_INIT(NULL, 0)
+        PyVarObject_HEAD_INIT(&PyType_Type, 0)
         "DateTime",
         sizeof(DateTimeObject),
         0,
@@ -170,7 +170,7 @@ PyTypeObject DateTimeObject_Type =
 
 PyTypeObject LocalTimeObject_Type =
     {
-        PyVarObject_HEAD_INIT(NULL, 0)
+        PyVarObject_HEAD_INIT(&PyType_Type, 0)
         "LocalTime",
         sizeof(DateTimeObject),
         0,
@@ -214,7 +214,7 @@ PyTypeObject LocalTimeObject_Type =
 
 PyTypeObject UTCTimeObject_Type =
     {
-        PyVarObject_HEAD_INIT(NULL, 0)
+        PyVarObject_HEAD_INIT(&PyType_Type, 0)
         "UTCTime",
         sizeof(DateTimeObject),
         0,
@@ -729,7 +729,7 @@ namespace FRPC { namespace Python {
 
 PyTypeObject BinaryObject_Type =
     {
-        PyVarObject_HEAD_INIT(NULL, 0)
+        PyVarObject_HEAD_INIT(&PyType_Type, 0)
         "Binary",
         sizeof(BinaryObject),
         0,
@@ -961,7 +961,7 @@ namespace FRPC { namespace Python {
  */
 PyTypeObject BooleanObject_Type =
     {
-        PyVarObject_HEAD_INIT(NULL, 0)
+        PyVarObject_HEAD_INIT(&PyType_Type, 0)
         "Boolean",
         sizeof(BooleanObject),
         0,
@@ -1330,7 +1330,7 @@ extern "C"
 
 static PyTypeObject ServerProxy_Type =
     {
-        PyVarObject_HEAD_INIT(NULL, 0)
+        PyVarObject_HEAD_INIT(&PyType_Type, 0)
         "ServerProxy",                     /*tp_name*/
         sizeof (ServerProxyObject),        /*tp_basicsize*/
         0,                                 /*tp_itemsize*/
@@ -1384,7 +1384,7 @@ extern "C"
 
 static PyTypeObject Method_Type =
     {
-        PyVarObject_HEAD_INIT(NULL, 0)
+        PyVarObject_HEAD_INIT(&PyType_Type, 0)
         "Method",                          /*tp_name*/
         sizeof (MethodObject),             /*tp_basicsize*/
         0,                                 /*tp_itemsize*/
