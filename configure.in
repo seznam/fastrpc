@@ -147,7 +147,6 @@ AC_CONFIG_FILES([src/frpcversion.h
     Makefile
     src/Makefile
     version
-    libfastrpc.pc
-    python/fastrpc_version_info.py])
+    libfastrpc.pc])
 
 AC_OUTPUT()
