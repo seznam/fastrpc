@@ -1,3 +1,9 @@
+libfastrpc (7.0.3) testing; urgency=low
+
+  * Raised version number to avoid conflict with python-fastrpc tag
+
+ -- Filip Volejnik <filip.volejnik@firma.seznam.cz>  Tue, 03 May 2016 10:27:47 +0100
+
 libfastrpc (7.0.2) testing; urgency=low
 
   * Fixed python3 test failure
