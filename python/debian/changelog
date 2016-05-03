@@ -1,3 +1,12 @@
+python-fastrpc (7.0.3) testing; urgency=low
+
+  * Fixed python3 test failure
+  * Fixed ob_type
+  * Custom type objects should inherit from PyTypeType
+  * Fixed Binary type, fixed dependency of debug package.
+
+ -- Filip Volejnik <filip.volejnik@firma.seznam.cz>  Tue, 03 May 2016 10:26:16 +0100
+
 python-fastrpc (7.0.2-1) UNRELEASED; urgency=medium
 
   * Rebuild with libfastrpc7
