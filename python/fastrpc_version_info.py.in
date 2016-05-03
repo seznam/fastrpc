@@ -1,0 +1,3 @@
+# versioning info file. Gets preprocessed to include the current configured version of frpc
+
+version="@PACKAGE_VERSION@"
