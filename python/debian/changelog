@@ -11,7 +11,7 @@ python-fastrpc (7.0.2-1) UNRELEASED; urgency=medium
 
   * Rebuild with libfastrpc7
 
- -- Luboš Vondra <lubos.vondra@firma.seznam.cz>  Mon, 11 Apr 2016 14:13:34 +0200
+ -- Lubos Vondra <lubos.vondra@firma.seznam.cz>  Mon, 11 Apr 2016 14:13:34 +0200
 
 python-fastrpc (7.0.2) testing; urgency=low
 
