@@ -4,6 +4,21 @@ libfastrpc (8.0.0) UNRELEASED; urgency=low
 
  -- Filip Volejnik <filip.volejnik@firma.seznam.cz>  Tue, 29 Apr 2016 10:00:00 +0100
 
+libfastrpc (7.0.3) testing; urgency=low
+
+  * Raised version number to avoid conflict with python-fastrpc tag
+
+ -- Filip Volejnik <filip.volejnik@firma.seznam.cz>  Tue, 03 May 2016 10:27:47 +0100
+
+libfastrpc (7.0.2) testing; urgency=low
+
+  * Fixed python3 test failure
+  * Fixed ob_type
+  * Custom type objects should inherit from PyTypeType
+  * Fixed Binary type, fixed dependency of debug package.
+
+ -- Filip Volejnik <filip.volejnik@firma.seznam.cz>  Tue, 03 May 2016 10:26:16 +0100
+
 libfastrpc (7.0.1) testing; urgency=low
 
   * rised major of the lib to remove inter-package conflict with frpc6

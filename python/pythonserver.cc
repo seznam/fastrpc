@@ -654,7 +654,7 @@ static PyMethodDef MethodRegistryObject_methods[] = {
 };
 
 static PyTypeObject MethodRegistryObject_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0)
+    PyVarObject_HEAD_INIT(&PyType_Type, 0)
     "MethodRegistry",                       /*tp_name*/
     sizeof (MethodRegistryObject),          /*tp_basicsize*/
     0,                                      /*tp_itemsize*/
@@ -1966,7 +1966,7 @@ static PyMethodDef ServerObject_methods[] = {
 };
 
 static PyTypeObject ServerObject_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0)
+    PyVarObject_HEAD_INIT(&PyType_Type, 0)
     "Server",                               /*tp_name*/
     sizeof (ServerObject),                  /*tp_basicsize*/
     0,                                      /*tp_itemsize*/
@@ -2247,4 +2247,3 @@ namespace FRPC { namespace Python {
     }
 
 } } // namespace FRPC::Python
-

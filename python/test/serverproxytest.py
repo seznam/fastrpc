@@ -150,5 +150,10 @@ class ServerProxyTest(unittest.TestCase):
         else:
             self.assertIsInstance(client_hide_true.__dict__['last_call'], (str, unicode))
 
+    def test_reprstr(self):
+        client = fastrpc.ServerProxy(self.url)
+        self.assertTrue(str(type(client.foo)).endswith(" 'Method'>"))
+
+
 if __name__ == '__main__':
     unittest.main()
