@@ -64,9 +64,7 @@ void BinUnMarshaller_t::unMarshall(const char *data, unsigned int size, char typ
 }
 
 void BinUnMarshaller_t::unMarshallInternal(const char *data, unsigned int size, char type) {
-    char magic[]={0xCA, 0x11};
-
-
+    unsigned char magic[]={0xCA, 0x11};
 
     while (true) {
         if (readData(data, size) != 0 )
