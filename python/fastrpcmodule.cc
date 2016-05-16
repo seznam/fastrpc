@@ -409,11 +409,18 @@ int DateTimeObject_init(DateTimeObject *self, PyObject *args, PyObject *)
         return LocalTimeObject_init(self, args, NULL);
 
     } else
-#else
-    if (pyValue && PyUnicode_Check(pyValue)) {
-        return TimeObject_init_parseString(self, pyValue);
-    } else
 #endif
+    if (pyValue && PyUnicode_Check(pyValue)) {
+        #if PY_MAJOR_VERSION == 2
+        PyObject *utf = PyUnicode_AsUTF8String(pyValue);
+        if (utf) {
+            TimeObject_init_parseString(self, utf);
+            Py_DECREF(utf);
+        }
+        #else
+        return TimeObject_init_parseString(self, pyValue);
+        #endif
+    } else
     {
         PyErr_SetString(PyExc_TypeError,
             "DateTime expects either a string argument or two integers");
