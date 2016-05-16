@@ -28,6 +28,47 @@ class GenericDatetypeTests(unittest.TestCase):
         self.assertTrue(self.datetype(1408967233) < self.datetype(1408967234))
         self.assertTrue(self.datetype(1) < self.datetype(1408967234))
 
+    def test_othertype_comparable(self):
+        """ test ==, != against other types """
+        d0 = self.datetype(0)
+        d1 = self.datetype(1)
+
+        self.assertFalse(d0 == "19700101T01:00:00+0000")
+        self.assertTrue(d0  != "19700101T01:00:00+0000")
+
+        self.assertTrue(d0 != True)
+        self.assertTrue(d0 != False)
+        self.assertTrue(d0 != "")
+        self.assertTrue(d0 != "True")
+        self.assertTrue(d1 != True)
+        self.assertTrue(d1 != False)
+        self.assertTrue(d1 != "")
+        self.assertTrue(d1 != "True")
+        self.assertFalse(d0 == True)
+        self.assertFalse(d0 == False)
+        self.assertFalse(d0 == "")
+        self.assertFalse(d0 == "True")
+        self.assertFalse(d1 == True)
+        self.assertFalse(d1 == False)
+        self.assertFalse(d1 == "")
+        self.assertFalse(d1 == "True")
+
+        # gt, lt ... etc throw
+        excepted = False
+        try:
+            d1 < ""
+        except:
+            excepted = True
+        self.assertTrue(excepted)
+
+        # gt, lt ... etc throw
+        excepted = False
+        try:
+            d1 > ""
+        except:
+            excepted = True
+        self.assertTrue(excepted)
+
     def test_init(self):
         self._factory()
         self.datetype(123)

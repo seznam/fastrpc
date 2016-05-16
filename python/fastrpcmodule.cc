@@ -630,7 +630,15 @@ static PyObject* DateTimeObject_richcmp(PyObject *self, PyObject *other, int op)
 {
     if (!PyObject_TypeCheck(self, &DateTimeObject_Type) &&
         !PyObject_TypeCheck(self, &LocalTimeObject_Type) &&
-        !PyObject_TypeCheck(self, &UTCTimeObject_Type)) {
+        !PyObject_TypeCheck(self, &UTCTimeObject_Type))
+    {
+        // allow for eq/neq comparability of datetime objects against any other
+        // type
+        if (op == Py_EQ)
+            Py_RETURN_FALSE;
+        if (op == Py_NE)
+            Py_RETURN_TRUE;
+
         PyErr_Format(PyExc_TypeError, "arg #1 is not a DateTime, it is %s",
                             Py_TYPE(self)->tp_name);
         return NULL;
@@ -638,7 +646,13 @@ static PyObject* DateTimeObject_richcmp(PyObject *self, PyObject *other, int op)
 
     if (!PyObject_TypeCheck(other, &DateTimeObject_Type) &&
         !PyObject_TypeCheck(other, &LocalTimeObject_Type) &&
-        !PyObject_TypeCheck(other, &UTCTimeObject_Type)) {
+        !PyObject_TypeCheck(other, &UTCTimeObject_Type))
+    {
+        if (op == Py_EQ)
+            Py_RETURN_FALSE;
+        if (op == Py_NE)
+            Py_RETURN_TRUE;
+
         PyErr_Format(PyExc_TypeError, "arg #2 is not a DateTime, it is %s",
                             Py_TYPE(other)->tp_name);
         return NULL;
@@ -685,7 +699,7 @@ DateTimeObject* newDateTime(short year, char month, char day, char hour, char
     self->timeZone = timeZone;
     if(unixTime != -1)
        return self;
-    //compute unix timestamp and weekday
+    //compute unix timestamp and weekay
     tm time_tm;
     memset(reinterpret_cast<void*>(&time_tm), 0, sizeof(tm));
     time_tm.tm_year = year - 1900;
@@ -1098,22 +1112,41 @@ int BooleanObject_setattr(BooleanObject *self, char *name, PyObject* value)
 static PyObject *
 BooleanObject_richcmp(PyObject *self, PyObject *other, int op)
 {
-    if (!PyObject_TypeCheck(self, &BooleanObject_Type)) {
-        PyErr_SetString(PyExc_TypeError, "arg #1 is not a Boolean");
+    int self_value  = 0;
+    int other_value = 0;
+
+    if (PyObject_TypeCheck(self, &BooleanObject_Type)) {
+        self_value = reinterpret_cast<BooleanObject*>(self)->value == Py_True ? 1 : 0;
+    } else if (PyBool_Check(self)) {
+        self_value = (self == Py_True) ? 1 : 0;
+    } else {
+        // non-boolean type. Only == and != work, and should just say values
+        // differ all the time.
+        if (op == Py_EQ)
+            Py_RETURN_FALSE;
+        if (op == Py_NE)
+            Py_RETURN_TRUE;
+
+        PyErr_Format(PyExc_TypeError, "arg #1 is not Boolean, it's %.100s()",
+                     self->ob_type->tp_name);
         return NULL;
     }
 
-    if (!PyObject_TypeCheck(other, &BooleanObject_Type)) {
-        PyErr_SetString(PyExc_TypeError, "arg #2 is not a Boolean");
+    if (PyObject_TypeCheck(other, &BooleanObject_Type)) {
+        other_value = reinterpret_cast<BooleanObject*>(other)->value == Py_True ? 1 : 0;
+    } else if (PyBool_Check(other)) {
+        other_value = (other == Py_True) ? 1 : 0;
+    } else {
+        if (op == Py_EQ)
+            Py_RETURN_FALSE;
+        if (op == Py_NE)
+            Py_RETURN_TRUE;
+
+        PyErr_Format(PyExc_TypeError, "arg #2 is not a Boolean it's %.100s()",
+                     other->ob_type->tp_name);
         return NULL;
     }
 
-    time_t self_value =
-        reinterpret_cast<BooleanObject*>(self)->value == Py_True ? 1 : 0;
-    time_t other_value =
-        reinterpret_cast<BooleanObject*>(other)->value == Py_True ? 1 : 0;
-
-    PyObject *result;
     int c;
     switch (op) {
         case Py_LT: c = self_value <  other_value; break;
@@ -1124,7 +1157,7 @@ BooleanObject_richcmp(PyObject *self, PyObject *other, int op)
         case Py_GE: c = self_value >= other_value; break;
     }
 
-    result = c ? Py_True : Py_False;
+    PyObject *result = c ? Py_True : Py_False;
     Py_INCREF(result);
     return result;
 }
@@ -2788,4 +2821,3 @@ PyMODINIT_FUNC init_fastrpc(void)
         return fastrpc_module;
 #endif
 }
-
