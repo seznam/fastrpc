@@ -299,10 +299,10 @@ void BinMarshaller_t::packMethodResponse() {
 
 void BinMarshaller_t::packMagic() {
 
-    char magic[]={0xCA,0x11,0x00,0x00};
+    unsigned char magic[]={0xCA,0x11,0x00,0x00};
     magic[2] = protocolVersion.versionMajor;
     magic[3] = protocolVersion.versionMinor;
-    writer.write(magic,4);
+    writer.write(reinterpret_cast<char *>(magic),4);
 
 }
 

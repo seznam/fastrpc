@@ -91,7 +91,7 @@ UnMarshaller_t* UnMarshaller_t::create(const char* data, unsigned int size,
                                        DataBuilder_t& dataBuilder)
 {
     UnMarshaller_t *unMarshaller;
-    char magic[]={0xCA, 0x11};
+    unsigned char magic[]={0xCA, 0x11};
 
     if(size < 4)
     {
