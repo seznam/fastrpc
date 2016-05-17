@@ -20,6 +20,9 @@ class GenericDatetypeTests(unittest.TestCase):
     def _factory(self):
         return self.datetype()
 
+    def test_convert_unicode(self):
+        self.assertEqual(DateTime(DateTime("2016-01-02").value), DateTime("2016-01-02"))
+
     def test_compare(self):
         """ test <,>,=
         """
