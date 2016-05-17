@@ -33,8 +33,8 @@ class GenericDatetypeTests(unittest.TestCase):
 
     def test_othertype_comparable(self):
         """ test ==, != against other types """
-        d0 = self.datetype(0)
-        d1 = self.datetype(1)
+        d0 = DateTime("19700101T01:00:00+0000")
+        d1 = DateTime("19710101T01:00:00+0000")
 
         self.assertFalse(d0 == "19700101T01:00:00+0000")
         self.assertTrue(d0  != "19700101T01:00:00+0000")
