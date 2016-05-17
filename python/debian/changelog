@@ -1,3 +1,13 @@
+python-fastrpc (7.0.4) testing; urgency=low
+
+  * unicode value to ctor passing fix test
+  * formatting changes
+  * Allow utf8 datetime construction in python2, closes #25
+  * Fixes to comparability of datetime and boolean types. Fixes #26, #22
+  * removed special characters
+
+ -- Filip Volejnik <filip.volejnik@firma.seznam.cz>  Tue, 17 May 2016 08:52:54 +0100
+
 python-fastrpc (7.0.3) testing; urgency=low
 
   * Fixed python3 test failure
