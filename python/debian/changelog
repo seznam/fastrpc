@@ -1,3 +1,9 @@
+python-fastrpc (7.0.4-1) testing; urgency=low
+
+  * fix for python3 version of the test
+
+ -- Filip Volejnik <filip.volejnik@firma.seznam.cz>  Tue, 17 May 2016 09:03:55 +0100
+
 python-fastrpc (7.0.4) testing; urgency=low
 
   * unicode value to ctor passing fix test
