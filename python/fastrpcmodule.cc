@@ -411,15 +411,15 @@ int DateTimeObject_init(DateTimeObject *self, PyObject *args, PyObject *)
     } else
 #endif
     if (pyValue && PyUnicode_Check(pyValue)) {
-        #if PY_MAJOR_VERSION == 2
+#if PY_MAJOR_VERSION == 2
         PyObject *utf = PyUnicode_AsUTF8String(pyValue);
         if (utf) {
             TimeObject_init_parseString(self, utf);
             Py_DECREF(utf);
         }
-        #else
+#else
         return TimeObject_init_parseString(self, pyValue);
-        #endif
+#endif
     } else
     {
         PyErr_SetString(PyExc_TypeError,
@@ -1778,14 +1778,14 @@ PyObject* ServerProxy_call(ServerProxyObject *self, PyObject *args, PyObject *kw
         PyErr_Format(PyExc_TypeError, "unknown action %s", action);
         return NULL;
     }
-    
+
     Py_RETURN_NONE;
 }
 
 PyObject* ServerProxy_getattr(ServerProxyObject *self, char *name)
 {
-    
-    // check for __dict__ before checking hideAttributes, 
+
+    // check for __dict__ before checking hideAttributes,
     // so __dict__ will be accessible regardless of hideAttributes
     const URL_t &url = self->proxy.getURL();
     if (!strncmp(name, "__", 2)) {
