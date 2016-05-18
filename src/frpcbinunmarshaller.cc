@@ -39,7 +39,16 @@
 #define FRPC_GET_DATA_TYPE( data ) (data >> 3)
 #define FRPC_GET_DATA_TYPE_INFO( data ) (data & 0x07 )
 namespace FRPC {
+namespace {
 
+/** Decodes zigzag encoded unsigned int back to signed int.
+ */
+int64_t zigzagDecode(uint64_t u) {
+    int64_t n = static_cast<int64_t>(u);
+    return static_cast<int64_t>((n >> 1) ^ (-(n & 1)));
+}
+
+} // namespace
 
 
 
@@ -527,4 +536,3 @@ void BinUnMarshaller_t::unMarshallInternal(const char *data, unsigned int size, 
 }
 
 }
-
