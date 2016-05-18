@@ -111,7 +111,7 @@ MethodRegistry_t::MethodRegistry_t(Callbacks_t *callbacks, bool introspectionEna
         registerMethod("system.methodSignature",boundMethod(&MethodRegistry_t::methodSignature,
                        *this), "A:s", "Return given method signature");
 
-        registerMethod("system.multicall",boundMethod(&MethodRegistry_t::muticall,
+        registerMethod("system.multicall",boundMethod(&MethodRegistry_t::multicall,
                        *this), "A:A", "Call given methods");
     }
 
@@ -494,7 +494,7 @@ Value_t& MethodRegistry_t::methodSignature(Pool_t &pool, Array_t &params)
     }
     return array;
 }
-Value_t& MethodRegistry_t::muticall(Pool_t &pool, Array_t &params)
+Value_t& MethodRegistry_t::multicall(Pool_t &pool, Array_t &params)
 {
     if(params.size() != 1)
         throw Fault_t(FRPC_TYPE_ERROR,"Method required 1 argument but %d argumet(s) given",
