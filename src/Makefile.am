@@ -42,7 +42,7 @@ AM_CXXFLAGS = -Wall -fPIC $(DEPS_CFLAGS) ${CXXEXTRAFLAGS}
 AM_CPPFLAGS = -D_ISOC99_SOURCE -D__ENABLE_WSTRING=1
 
 # install these headers
-pkginclude_HEADERS = frpc.h frpcvalue.h frpcarray.h frpcstruct.h frpcbinary.h frpcdatetime.h \
+include_HEADERS = frpc.h frpcvalue.h frpcarray.h frpcstruct.h frpcbinary.h frpcdatetime.h \
                   frpcstring.h frpcbool.h frpcint.h frpcdouble.h frpcpool.h \
                   frpcerror.h frpckeyerror.h frpctypeerror.h frpcindexerror.h \
                   frpcstreamerror.h frpclenerror.h frpcserverproxy.h frpcdatabuilder.h \
