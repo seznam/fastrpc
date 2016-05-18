@@ -1600,7 +1600,6 @@ bool unpack_string_pair(PyObject *o, std::pair<std::string, std::string> &res)
         return false;
     }
 
-    // ... TODO ...
     // parse the two strings
     std::string first, second;
 
