@@ -267,6 +267,44 @@ struct DateTimeData_t
     }
 };
 
+// the datetime data structure used since protocol version 3
+struct DateTimeDataV3_t
+{
+    DateTimeInternal_t dateTime;
+    char data[14];
+    DateTimeDataV3_t()
+    {
+        memset(data,0,sizeof(data));
+    }
+
+    void pack()
+    {
+        data[0] = dateTime.timeZone;
+
+        memcpy(&data[1],reinterpret_cast<char*>(&dateTime.unixTime), 8);
+        data[ 9] = (dateTime.sec & 0x1f) << 3 | (dateTime.weekDay & 0x07);
+        data[10] = ((dateTime.minute & 0x3f) << 1) | ((dateTime.sec & 0x20) >> 5)
+                  | ((dateTime.hour & 0x01) << 7);
+        data[11] = ((dateTime.hour & 0x1e) >> 1) | ((dateTime.day & 0x0f) << 4);
+        data[12] = ((dateTime.day & 0x1f) >> 4) | ((dateTime.month & 0x0f) << 1)
+                  | ((dateTime.year & 0x07) << 5);
+        data[13] = ((dateTime.year & 0x07f8) >> 3);
+    }
+
+    void unpack()
+    {
+        dateTime.year  = (data[13] << 3) | ((data[12] & 0xe0) >> 5);
+        dateTime.month = (data[12] & 0x1e) >> 1;
+        dateTime.day = ((data[12] & 0x01) << 4) |(((data[11] & 0xf0) >> 4));
+        dateTime.hour = ((data[11] & 0x0f) << 1) | ((data[10] & 0x80) >> 7);
+        dateTime.minute = ((data[10] & 0x7e) >> 1);
+        dateTime.sec = ((data[10] & 0x01) << 5) | ((data[9] & 0xf8) >> 3);
+        dateTime.weekDay = (data[9] & 0x07);
+        memcpy(reinterpret_cast<char*>(&dateTime.unixTime),&data[1], 8);
+        dateTime.timeZone = data[0];
+    }
+};
+
 const unsigned int HTTP_BALLAST = 1 << 10;
 const unsigned int  BUFFER_SIZE = (1 << 16) - HTTP_BALLAST;
 const size_t MAX_LEN = 20;

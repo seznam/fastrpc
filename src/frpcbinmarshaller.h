@@ -78,7 +78,7 @@ private:
 
     BinMarshaller_t();
 
-    inline unsigned int getNumberSize(unsigned int size){
+    inline unsigned int getNumberSize(unsigned int size) {
         if (protocolVersion.versionMajor < 2)
             return size;
         return size + 1;
