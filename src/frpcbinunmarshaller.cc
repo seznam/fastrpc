@@ -87,8 +87,7 @@ void BinUnMarshaller_t::unMarshallInternal(const char *data, unsigned int size, 
             }
             protocolVersion.versionMajor = mainBuff.data()[2];
             protocolVersion.versionMinor = mainBuff.data()[3];
-            if (protocolVersion.versionMajor > 2) {
-
+            if (protocolVersion.versionMajor > 3) {
                 //unsupeorted protocol version
                 throw StreamError_t("Unsupported protocol version !!!");
             }
@@ -185,8 +184,13 @@ void BinUnMarshaller_t::unMarshallInternal(const char *data, unsigned int size, 
                 case INT: {
                     internalType = INT;
                     dataWanted = FRPC_GET_DATA_TYPE_INFO(mainBuff[0]);
-                    if (dataWanted > 4 || !dataWanted)
-                        throw StreamError_t("Size of int is 0 or > 4 !!!");
+                    if (protocolVersion.versionMajor > 2) {
+                        if (dataWanted > 8 || !dataWanted)
+                            throw StreamError_t("Size of int is 0 or > 8 !!!");
+                    } else {
+                        if (dataWanted > 4 || !dataWanted)
+                            throw StreamError_t("Size of int is 0 or > 4 !!!");
+                    }
                     mainBuff.erase();
 #ifdef _DEBUG
 		    printf("int lenght:%d\n",dataWanted);
@@ -369,13 +373,21 @@ void BinUnMarshaller_t::unMarshallInternal(const char *data, unsigned int size, 
         }
         break;
         case INT: {
-            //unpack value
-            Number32_t value(mainBuff.data(), mainBuff.size());
-            if (mainInternalType == FAULT)
-                errNo = value.number;
-            else
-                dataBuilder.buildInt(value.number);
-
+            if (protocolVersion.versionMajor > 2) {
+                Number_t value(mainBuff.data(), mainBuff.size());
+                value.number = zigzagDecode(value.number);
+                if (mainInternalType == FAULT)
+                    errNo = value.number;
+                else
+                    dataBuilder.buildInt(value.number);
+            } else {
+                //unpack value
+                Number32_t value(mainBuff.data(), mainBuff.size());
+                if (mainInternalType == FAULT)
+                    errNo = value.number;
+                else
+                    dataBuilder.buildInt(value.number);
+            }
             internalType = NONE;
             dataWanted = 1;
             //decrement member count
