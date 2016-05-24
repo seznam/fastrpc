@@ -43,9 +43,9 @@ namespace {
 
 /** Decodes zigzag encoded unsigned int back to signed int.
  */
-int64_t zigzagDecode(uint64_t u) {
-    int64_t n = static_cast<int64_t>(u);
-    return static_cast<int64_t>((n >> 1) ^ (-(n & 1)));
+int64_t zigzagDecode(int64_t s) {
+    uint64_t n = static_cast<uint64_t>(s);
+    return static_cast<int64_t>((n >> 1) ^ (-(s & 1)));
 }
 
 } // namespace
@@ -183,11 +183,10 @@ void BinUnMarshaller_t::unMarshallInternal(const char *data, unsigned int size, 
                 break;
                 case INT: {
                     internalType = INT;
-                    dataWanted = FRPC_GET_DATA_TYPE_INFO(mainBuff[0]);
                     if (protocolVersion.versionMajor > 2) {
-                        if (dataWanted > 8 || !dataWanted)
-                            throw StreamError_t("Size of int is 0 or > 8 !!!");
+                        dataWanted = FRPC_GET_DATA_TYPE_INFO(mainBuff[0]) + 1;
                     } else {
+                        dataWanted = FRPC_GET_DATA_TYPE_INFO(mainBuff[0]);
                         if (dataWanted > 4 || !dataWanted)
                             throw StreamError_t("Size of int is 0 or > 4 !!!");
                     }
@@ -220,7 +219,11 @@ void BinUnMarshaller_t::unMarshallInternal(const char *data, unsigned int size, 
                 break;
                 case DATETIME: {
                     internalType = DATETIME;
-                    dataWanted = 10;
+                    if (protocolVersion.versionMajor > 2) {
+                        dataWanted = 14;
+                    } else {
+                        dataWanted = 10;
+                    }
                     mainBuff.erase();
 #ifdef _DEBUG
                     printf("datetime size 10 \n");
@@ -459,36 +462,70 @@ void BinUnMarshaller_t::unMarshallInternal(const char *data, unsigned int size, 
         }
         break;
         case DATETIME: {
-            DateTimeData_t dateTime;
+            if (protocolVersion.versionMajor > 2) {
+                DateTimeDataV3_t dateTime;
 
-            memcpy(dateTime.data, mainBuff.data(), 10);
-            //unpack
-            dateTime.unpack();
+                memcpy(dateTime.data, mainBuff.data(), 14);
+                //unpack
+                dateTime.unpack();
 
-            if (dateTime.dateTime.year || dateTime.dateTime.month
+                if (dateTime.dateTime.year || dateTime.dateTime.month
+                    || dateTime.dateTime.day || dateTime.dateTime.hour
+                    || dateTime.dateTime.minute || dateTime.dateTime.sec)
+                {
+                    //call builder
+                    dataBuilder.buildDateTime(dateTime.dateTime.year + 1600,
+                                              dateTime.dateTime.month,
+                                              dateTime.dateTime.day,
+                                              dateTime.dateTime.hour,
+                                              dateTime.dateTime.minute,
+                                              dateTime.dateTime.sec,
+                                              dateTime.dateTime.weekDay,
+                                              dateTime.dateTime.unixTime,
+                                              dateTime.dateTime.timeZone * 15 * 60);
+                } else {
+                    dataBuilder.buildDateTime(dateTime.dateTime.year,
+                                              dateTime.dateTime.month,
+                                              dateTime.dateTime.day,
+                                              dateTime.dateTime.hour,
+                                              dateTime.dateTime.minute,
+                                              dateTime.dateTime.sec,
+                                              dateTime.dateTime.weekDay,
+                                              dateTime.dateTime.unixTime,
+                                              dateTime.dateTime.timeZone * 15 * 60);
+                }
+            } else { // protocol v 2.x or earlier
+                DateTimeData_t dateTime;
+
+                memcpy(dateTime.data, mainBuff.data(), 10);
+                //unpack
+                dateTime.unpack();
+
+                if (dateTime.dateTime.year || dateTime.dateTime.month
                     || dateTime.dateTime.day || dateTime.dateTime.hour
                     || dateTime.dateTime.minute || dateTime.dateTime.sec) {
 
-                //call builder
-                dataBuilder.buildDateTime(dateTime.dateTime.year + 1600,
-                                          dateTime.dateTime.month,
-                                          dateTime.dateTime.day,
-                                          dateTime.dateTime.hour,
-                                          dateTime.dateTime.minute,
-                                          dateTime.dateTime.sec,
-                                          dateTime.dateTime.weekDay,
-                                          dateTime.dateTime.unixTime,
-                                          dateTime.dateTime.timeZone * 15 * 60);
-            } else {
-                dataBuilder.buildDateTime(dateTime.dateTime.year,
-                                          dateTime.dateTime.month,
-                                          dateTime.dateTime.day,
-                                          dateTime.dateTime.hour,
-                                          dateTime.dateTime.minute,
-                                          dateTime.dateTime.sec,
-                                          dateTime.dateTime.weekDay,
-                                          dateTime.dateTime.unixTime,
-                                          dateTime.dateTime.timeZone * 15 * 60);
+                    //call builder
+                    dataBuilder.buildDateTime(dateTime.dateTime.year + 1600,
+                                              dateTime.dateTime.month,
+                                              dateTime.dateTime.day,
+                                              dateTime.dateTime.hour,
+                                              dateTime.dateTime.minute,
+                                              dateTime.dateTime.sec,
+                                              dateTime.dateTime.weekDay,
+                                              dateTime.dateTime.unixTime,
+                                              dateTime.dateTime.timeZone * 15 * 60);
+                } else {
+                    dataBuilder.buildDateTime(dateTime.dateTime.year,
+                                              dateTime.dateTime.month,
+                                              dateTime.dateTime.day,
+                                              dateTime.dateTime.hour,
+                                              dateTime.dateTime.minute,
+                                              dateTime.dateTime.sec,
+                                              dateTime.dateTime.weekDay,
+                                              dateTime.dateTime.unixTime,
+                                              dateTime.dateTime.timeZone * 15 * 60);
+                }
             }
             internalType = NONE;
             dataWanted = 1;

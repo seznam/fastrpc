@@ -541,12 +541,16 @@ ProtocolVersion_t::ProtocolVersion_t(unsigned char versionMajor,
         :versionMajor(versionMajor),versionMinor(versionMinor) {}
 
 ProtocolVersion_t::ProtocolVersion_t()
-        :versionMajor(FRPC_MAJOR_VERSION),versionMinor(FRPC_MINOR_VERSION) {}
+        :versionMajor(FRPC_MAJOR_VERSION_DEFAULT),
+         versionMinor(FRPC_MINOR_VERSION_DEFAULT)
+{}
+
 /*ProtocolVersion_t& ProtocolVersion_t::operator=(const ProtocolVersion_t& other ) {
     this->versionMajor = other.versionMajor;
     this->versionMinor = other.versionMinor;
     return *this;
 }*/
+
 } // namespace FRPC
 
 //some constants
@@ -567,4 +571,3 @@ const FRPC::Binary_t &FRPC::Binary_t::FRPC_EMPTY = pool.Binary("");
 const FRPC::DateTime_t &FRPC::DateTime_t::FRPC_EPOCH = pool.DateTime(0, 0);
 const FRPC::DateTime_t &
     FRPC::DateTime_t::FRPC_NULL = pool.DateTime(0, 0, 0, 0, 0, 0, 0, -1, 0);
-

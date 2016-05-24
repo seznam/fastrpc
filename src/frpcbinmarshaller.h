@@ -125,7 +125,6 @@ private:
                 return LONG56;
 
             return LONG64;
-
         }
     }
 

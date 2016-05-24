@@ -35,6 +35,7 @@
 #include <memory.h>
 #include <sstream>
 #include <frpcint.h>
+#include <frpcstreamerror.h>
 
 #include <sys/param.h>
 
@@ -53,8 +54,13 @@
 #endif /* __BYTE_ORDER */
 
 
-#define FRPC_MAJOR_VERSION 2
+#define FRPC_MAJOR_VERSION 3
 #define FRPC_MINOR_VERSION 1
+
+// We use this to intentionally downgrade the emitted frpc stream
+// so that we can have a comfortable 2 phase transition to new protocol version.
+#define FRPC_MAJOR_VERSION_DEFAULT 2
+#define FRPC_MINOR_VERSION_DEFAULT 1
 
 #define SWAP_BYTE(byte1,byte2)  \
          byte1 = byte1 ^ byte2; \
@@ -281,7 +287,16 @@ struct DateTimeDataV3_t
     {
         data[0] = dateTime.timeZone;
 
-        memcpy(&data[1],reinterpret_cast<char*>(&dateTime.unixTime), 8);
+        int64_t time64 = dateTime.unixTime;
+
+        if (sizeof(time_t) > sizeof(time64)) {
+            if (dateTime.unixTime != time64) {
+                throw StreamError_t(
+                        "Protocol can't transfer the timestamp value");
+            }
+        }
+
+        memcpy(&data[1],reinterpret_cast<char*>(&time64), 8);
         data[ 9] = (dateTime.sec & 0x1f) << 3 | (dateTime.weekDay & 0x07);
         data[10] = ((dateTime.minute & 0x3f) << 1) | ((dateTime.sec & 0x20) >> 5)
                   | ((dateTime.hour & 0x01) << 7);
@@ -300,7 +315,17 @@ struct DateTimeDataV3_t
         dateTime.minute = ((data[10] & 0x7e) >> 1);
         dateTime.sec = ((data[10] & 0x01) << 5) | ((data[9] & 0xf8) >> 3);
         dateTime.weekDay = (data[9] & 0x07);
-        memcpy(reinterpret_cast<char*>(&dateTime.unixTime),&data[1], 8);
+        int64_t time64 = 0;
+        memcpy(reinterpret_cast<char*>(&time),&data[1], 8);
+        dateTime.unixTime = time64;
+
+        if (sizeof(time_t) < sizeof(time64)) {
+            if (dateTime.unixTime != time64) {
+                throw StreamError_t(
+                        "time_t can't hold the received timestamp value");
+            }
+        }
+
         dateTime.timeZone = data[0];
     }
 };

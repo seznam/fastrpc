@@ -55,7 +55,12 @@ namespace {
  * ...
  */
 uint64_t zigzagEncode(int64_t n) {
-    return static_cast<uint64_t>((n << 1) ^ (n >> 63));
+    // the right shift has to be arithmetic
+    // negative numbers become all binary 1s
+    // positive numbers become all binary 0s
+    // effectively inverting bits of the result in
+    // case of negative number
+    return ((n << 1) ^ (n >> 63));
 }
 
 } // namespace
@@ -231,13 +236,13 @@ void BinMarshaller_t::packInt(Int_t::value_type value) {
         unsigned int numType = getNumberType(
                 static_cast<Int_t::value_type>(zig));
         //pack type
-        char type = FRPC_DATA_TYPE(INT,numType);
+        char type = FRPC_DATA_TYPE(INT, numType);
         //pack number value
-        Number32_t  number(zig);
+        Number_t number(zig);
 
         //write type
-        writer.write(&type,1);
-        writer.write(number.data,getNumberSize(numType));
+        writer.write(&type, 1);
+        writer.write(number.data, getNumberSize(numType));
 
     } else if (protocolVersion.versionMajor > 1) {
 
@@ -248,7 +253,7 @@ void BinMarshaller_t::packInt(Int_t::value_type value) {
             Number_t  number(-value);
             //write type
             writer.write(&type,1);
-            writer.write(number.data,getNumberSize(numType));
+            writer.write(number.data, getNumberSize(numType));
 
         } else { //positive int8
             unsigned int numType = getNumberType(value);
@@ -256,7 +261,7 @@ void BinMarshaller_t::packInt(Int_t::value_type value) {
             Number_t  number(value);
             //write type
             writer.write(&type,1);
-            writer.write(number.data,getNumberSize(numType));
+            writer.write(number.data, getNumberSize(numType));
 
         }
 
@@ -269,7 +274,7 @@ void BinMarshaller_t::packInt(Int_t::value_type value) {
 
         //write type
         writer.write(&type,1);
-        writer.write(number.data,getNumberSize(numType));
+        writer.write(number.data, getNumberSize(numType));
     }
 
 
