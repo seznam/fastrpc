@@ -35,10 +35,10 @@
 #
 
 # initialize autoconf
-AC_INIT(fastrpc, 8.0.0, fastrpc@firma.seznam.cz)
+AC_INIT([fastrpc], [8.0.0], fastrpc@firma.seznam.cz)
 
 # initialize automake(use AC_INIT's arguments)
-AM_INIT_AUTOMAKE(AC_PACKAGE_NAME, AC_PACKAGE_VERSION)
+AM_INIT_AUTOMAKE([subdir-objects])
 
 AC_CONFIG_MACRO_DIR([m4])
 

@@ -316,7 +316,7 @@ struct DateTimeDataV3_t
         dateTime.sec = ((data[10] & 0x01) << 5) | ((data[9] & 0xf8) >> 3);
         dateTime.weekDay = (data[9] & 0x07);
         int64_t time64 = 0;
-        memcpy(reinterpret_cast<char*>(&time),&data[1], 8);
+        memcpy(reinterpret_cast<char*>(&time64),&data[1], 8);
         dateTime.unixTime = time64;
 
         if (sizeof(time_t) < sizeof(time64)) {
