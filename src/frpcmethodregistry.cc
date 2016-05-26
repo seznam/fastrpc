@@ -534,16 +534,16 @@ Value_t& MethodRegistry_t::multicall(Pool_t &pool, Array_t &params)
                 }
                 else
                 {
-                    array.append(pool.Array(defaultMethod->call(pool,
+                    array.append(defaultMethod->call(pool,
                                             String(strct["methodName"]).getString(),
-                                            Array(strct["params"]))));
+                                            Array(strct["params"])));
                 }
 
             }
             else
             {
-                array.append(pool.Array(pos->second.method->call(pool,
-                                        Array(strct["params"]))));
+                array.append(pos->second.method->call(pool,
+                                        Array(strct["params"])));
 
             }
 
