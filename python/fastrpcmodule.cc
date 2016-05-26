@@ -412,10 +412,9 @@ int DateTimeObject_init(DateTimeObject *self, PyObject *args, PyObject *)
 #endif
     if (pyValue && PyUnicode_Check(pyValue)) {
 #if PY_MAJOR_VERSION == 2
-        PyObject *utf = PyUnicode_AsUTF8String(pyValue);
-        if (utf) {
-            TimeObject_init_parseString(self, utf);
-            Py_DECREF(utf);
+        PyObjectWrapper_t utf(PyUnicode_AsUTF8String(pyValue));
+        if (utf.get()) {
+            TimeObject_init_parseString(self, utf.get());
         }
 #else
         return TimeObject_init_parseString(self, pyValue);
@@ -1534,45 +1533,23 @@ PyObject* Method_getattr(MethodObject *self, char *name)
 
 namespace {
 
-/// a decref guard to avoid leaking python references on exceptions
-struct ObjectGuard_t {
-    /// constructs an object with increased owned reference
-    ObjectGuard_t(PyObject *o) : value(o) {}
-
-    ObjectGuard_t(const ObjectGuard_t &other) :
-        value(other.value)
-    {
-        Py_INCREF(value);
-    }
-
-    ~ObjectGuard_t() {
-        Py_DECREF(value);
-        value = 0x0;
-    }
-
-    PyObject *get() { return value; }
-    PyObject *operator*() { return value; }
-private:
-    PyObject *value;
-};
-
 /** converts pyobject to string, returns true if succesful
  *  otherwise it sets PyErr and returns false.
  */
 bool get_string(PyObject *s, std::string &tgt) {
+#if PY_MAJOR_VERSION < 3
     if (PyString_Check(s)) {
         tgt = PyString_AsString(s);
         return true;
     }
-#if PY_MAJOR_VERSION >= 3
-    else if (PyUnicode_Check(s)) {
+#else
+    if (PyUnicode_Check(s)) {
         Py_ssize_t len;
-        const char * ptr = PyUnicode_AsUTF8AndSize(s, len);
+        const char * ptr = PyUnicode_AsUTF8AndSize(s, &len);
         tgt.assign(ptr, len);
         return true;
     }
 #endif
-
     PyErr_Format(PyExc_TypeError,
                  "Expected string, found %s.",
                  Py_TYPE(s)->tp_name);
@@ -1629,7 +1606,7 @@ bool feed_headers(PyObject *hdrs, Proxy_t &proxy, bool callScope) {
     // iterate over the sequence, insert headers
     const Py_ssize_t len = PySequence_Size(hdrs);
     for (Py_ssize_t idx = 0; idx < len; ++idx) {
-        ObjectGuard_t header(PySequence_GetItem(hdrs, idx));
+        PyObjectWrapper_t header(PySequence_GetItem(hdrs, idx));
 
         // is this a tuple? unpack two strings from this
         std::pair<std::string, std::string> hp;
