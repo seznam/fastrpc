@@ -1844,7 +1844,7 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
                                     useHTTP10, proxyVia, stringMode,
                                     ProtocolVersion_t(protocolVersionMajor,
                                             protocolVersionMinor),
-                                    nativeBoolean != 0 ? PyObject_IsTrue(nativeBoolean) : false,
+                                    nativeBoolean != 0 ? PyObject_IsTrue(nativeBoolean) : true,
                                     datetimeBuilder, preCall, postCall);
         proxy->proxyOk = true;
 
@@ -2453,7 +2453,7 @@ PyObject* fastrpc_loads(PyObject *, PyObject *args) {
 
     try {
         Builder_t builder(0, stringMode,
-                nativeBoolean != 0 ? PyObject_IsTrue(nativeBoolean) : false,
+                nativeBoolean != 0 ? PyObject_IsTrue(nativeBoolean) : true,
                 datetimeBuilder);
 
         std::auto_ptr<UnMarshaller_t> unmarshaller

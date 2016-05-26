@@ -76,7 +76,7 @@ public:
          STRUCT=10,ARRAY,NULLTYPE,METHOD_CALL=13,METHOD_RESPONSE,FAULT,
          MEMBER_NAME = 100,METHOD_NAME,METHOD_NAME_LEN,MAGIC,MAIN };
 
-    Builder_t(PyObject *methodObject, StringMode_t stringMode, bool nativeBoolean = false, PyObject *datetimeBuilder = 0)
+    Builder_t(PyObject *methodObject, StringMode_t stringMode, bool nativeBoolean = true, PyObject *datetimeBuilder = 0)
         : FRPC::DataBuilderWithNull_t(), first(true), error(false), retValue(Py_None),
           methodObject(methodObject), methodName(0), stringMode(stringMode), nativeBoolean(nativeBoolean),
           datetimeBuilder(datetimeBuilder)
@@ -128,7 +128,7 @@ public:
     {
         if(isError())
             return false;
-        
+
         if(first)
         {
             Py_XDECREF(retValue);
@@ -140,11 +140,11 @@ public:
     }
     inline bool isMember( PyObject* value )
     {
-        
-        
+
+
         if(isError())
             return false;
-    
+
         if(entityStorage.size() < 1)
             return false;
         switch(entityStorage.back().type)
