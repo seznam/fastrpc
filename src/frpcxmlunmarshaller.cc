@@ -232,7 +232,7 @@ XmlUnMarshaller_t::XmlUnMarshaller_t(DataBuilder_t & dataBuilder)
           dataBuilder(dataBuilder),
           internalType(NONE),
           mainInternalType(NONE),
-          internalValue(0),
+          faultCode(0),
           versionCheck(true)
 {
     memset(&callbacks, 0, sizeof(xmlSAXHandler));
@@ -258,9 +258,8 @@ XmlUnMarshaller_t::~XmlUnMarshaller_t() {
 
 void XmlUnMarshaller_t::finish() {
     unMarshall(0,0,NONE);
-    if (internalType !=NONE )
+    if (internalType != NONE)
         throw StreamError_t("Stream not complete");
-
 }
 
 ProtocolVersion_t XmlUnMarshaller_t::getProtocolVersion() {
@@ -499,7 +498,7 @@ void XmlUnMarshaller_t::setValueType(const char *name) {
     case METHOD_CALL:
     case METHOD_RESPONSE:
         mainInternalType = type;
-        if (mainInternalType != wantType && wantType != TYPE_ANY ) {
+        if (mainInternalType != wantType && wantType != TYPE_ANY) {
             if (mainInternalType != TYPE_FAULT || wantType != TYPE_METHOD_RESPONSE) {
                 throw StreamError_t("Bad main Type !!!");
             }
@@ -554,7 +553,7 @@ void XmlUnMarshaller_t::setValueData(const char *data, unsigned int len) {
         }
         if (mainInternalType == FAULT)
             //it is errNum
-            internalValue = value;
+            faultCode = value;
         else
             //build int
             dataBuilder.buildInt(value);
@@ -563,8 +562,7 @@ void XmlUnMarshaller_t::setValueData(const char *data, unsigned int len) {
     break;
     case STRING: {
         if (mainInternalType == FAULT) {
-            dataBuilder.buildFault(internalValue, data, len);
-            //mainInternalType = NONE;
+            faultString = std::string(data, len);
         } else {
             dataBuilder.buildString(data, len);
         }
@@ -609,17 +607,22 @@ void XmlUnMarshaller_t::setValueData(const char *data, unsigned int len) {
     }
 
     }
-
-
 }
 void XmlUnMarshaller_t::closeEntity(const char *name) {
-    char type;
+    char type = getValueType(name);
     internalType = NONE;
 
-    if (mainInternalType == FAULT)
-        return;
+    if (mainInternalType == FAULT) {
+        if (type == FAULT) {
+            dataBuilder.buildFault(faultCode, faultString);
+            faultCode = 0;
+            faultString.clear();
+        }
 
-    switch (type = getValueType(name)) {
+        return;
+    }
+
+    switch (type) {
     case STRUCT:
         dataBuilder.closeStruct();
         break;
