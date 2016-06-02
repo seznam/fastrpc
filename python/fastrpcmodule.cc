@@ -2194,7 +2194,8 @@ extern "C"
     static PyObject* fastrpc_dumps(PyObject *self, PyObject *args,
                                    PyObject *keywds);
 
-    static PyObject* fastrpc_loads(PyObject *self, PyObject *args);
+    static PyObject* fastrpc_loads(PyObject *self, PyObject *args,
+                                   PyObject *keywds);
 }
 
 static char fastrpc_boolean__doc__[] =
@@ -2397,16 +2398,34 @@ PyObject* fastrpc_dumps(PyObject *, PyObject *args, PyObject *keywds) {
 
 static char fastrpc_loads__doc__[] =
     "Convert an XML-RPC packet to unmarshalled data plus a method\n"
-    "name (None if not present).\n";
+    "name (None if not present).\n"
+    "Takes optional parameters:\n"
+    " * stringMode ('string', 'unicode', 'mixed')\n"
+    " * nativeBoolean (True/False, defaults to True)\n"
+    " * datetimeBuilder (callable that converts datetime components to python object)\n"
+    " * useBinary (True/False/None - Defaults to None, which means 'detect')\n";
 
-PyObject* fastrpc_loads(PyObject *, PyObject *args) {
+PyObject* fastrpc_loads(PyObject *, PyObject *args, PyObject *keywds) {
+    static const char *kwlist[] = {"data",
+                                   "stringMode",
+                                   "nativeBoolean",
+                                   "datetimeBuilder",
+                                   "useBinary",
+                                   0};
+
     // parse arguments
     PyObject *data;
     char *stringMode_ = 0;
     PyObject *nativeBoolean = 0;
     PyObject *datetimeBuilder = 0;
+    PyObject *useBinary = 0;
 
-    if (!PyArg_ParseTuple(args, "O|sOO:fastrpc.loads", &data, &stringMode_, &nativeBoolean, &datetimeBuilder))
+    if (!PyArg_ParseTupleAndKeywords(
+                args, keywds,
+                "O|sOOO:fastrpc.loads", (char **)kwlist,
+                &data,
+                &stringMode_,
+                &nativeBoolean, &datetimeBuilder, &useBinary))
         return 0;
 
     StringMode_t stringMode = parseStringMode(stringMode_);
@@ -2433,8 +2452,22 @@ PyObject* fastrpc_loads(PyObject *, PyObject *args) {
                 nativeBoolean != 0 ? PyObject_IsTrue(nativeBoolean) : true,
                 datetimeBuilder);
 
-        std::auto_ptr<UnMarshaller_t> unmarshaller
-            (UnMarshaller_t::create(dataStr, dataSize, builder));
+        std::auto_ptr<UnMarshaller_t> unmarshaller;
+
+        // Use detection if useBinary is unspecified or None
+        if (!useBinary || useBinary == Py_None) {
+            unmarshaller.reset(
+                    UnMarshaller_t::create(dataStr, dataSize, builder));
+        } else {
+            unmarshaller.reset(
+                    UnMarshaller_t::create((PyObject_IsTrue(useBinary)
+                                            ? Marshaller_t::BINARY_RPC
+                                            : Marshaller_t::XML_RPC),
+                                           builder));
+
+            unmarshaller->unMarshall(dataStr, dataSize,
+                                     FRPC::UnMarshaller_t::TYPE_ANY);
+        }
 
         // check for error (exception already raised)
         PyObject *umdata = builder.getUnMarshaledData();
@@ -2723,7 +2756,7 @@ static PyMethodDef frpc_methods[] =
         }, {
             "loads",
             (PyCFunction) fastrpc_loads,
-            METH_VARARGS,
+            METH_VARARGS | METH_KEYWORDS,
             fastrpc_loads__doc__
         }, {
             "dumpTree",
