@@ -35,7 +35,7 @@
 #
 
 # initialize autoconf
-AC_INIT([fastrpc], [7.0.3], fastrpc@firma.seznam.cz)
+AC_INIT([fastrpc], [8.0.0], fastrpc@firma.seznam.cz)
 
 # initialize automake(use AC_INIT's arguments)
 AM_INIT_AUTOMAKE([subdir-objects])
@@ -116,7 +116,7 @@ dnl ------------------------------------------------------------------------
 # version info') before touching this.
 FASTRPC_MAJOR=8
 FASTRPC_MINOR=0
-VERSION_INFO="-version-info 12:0:0"
+VERSION_INFO="-version-info 13:0:0"
 
 AC_ARG_ENABLE(optimization,[  --enable-optimization compile optimized without debug logging],[
     case "${enableval}" in
