@@ -1,3 +1,54 @@
+libfastrpc (8.0.0-rc1) testing; urgency=low
+
+  * rolling back the 8.0 versioning, will be re-added in rc1 release
+  * missing include added
+  * Missing protocol test added
+  * Allow kwargs in loads. Added new optional parameter useBinary (True, False, None) that specifies if the loads should enforce binary decoding.
+  * Fix for #33 - don't depend on xml node ordering when building a fault object.
+  * Cleanup, formatting
+  * Fix for #24. Removed the enclosing, one element array from the result structure
+  * fixes to the python3 version of the python bindings
+  * Switched the nativeBoolean to be true by default, meaning fastrpc will implicitly use native python bool as a default
+  * renamed configure.in to configure.ac
+  * added tests for base64 and protocol changes, runnable via 'make check'
+  * #28 finished the changes needed to implement the new protocol version
+  * Implemented zigzag int decoding. Rised the maximal protocol major version handled by decoder
+  * pc file rename fix
+  * Revert "versioned pc file"
+  * 
+  * This reverts commit 570eb77375dba169590490dd15cb803f579fdc44.
+  * Revert "versioned dev package"
+  * 
+  * This reverts commit 5048b882b02b0f1feced60b3d137b8a3bcb77d79.
+  * removed todo, that part was already implemented
+  * Missed this rename
+  * Untested: implementation of custom headers in python bindings
+  * adding zigzagDecode routine (to be used by int decoder for protocol version 3)
+  * Typo fix
+  * Preparations for protocol change. Datetime packing/unpacking implemented (untested)
+  * INSTALL file update
+  * #! python7.0.5
+  * #! python7.0.4-1
+  * fix for python3 version of the test
+  * #! python7.0.4
+  * unicode value to ctor passing fix test
+  * formatting changes
+  * Allow utf8 datetime construction in python2, closes #25
+  * Fixes for gcc 6.x
+  * Fixes to comparability of datetime and boolean types. Fixes #26, #22
+  * Fixes for new gcc narrowing checks
+  * removed special characters
+  * v7.0.3
+  * Manual reimplementation of d4392cb25989b9913e6bbe06281ffeeaeb82c6e8, 920f2f2617b17cab1a89eebf4a892fca500b507b
+  * library name link fixed
+  * missing include sstream
+  * versioned dev package
+  * Vcs info
+  * versioned pc file
+  * WIP: merged the custom headers code into master branch, preparations for version 8
+
+ -- Filip Volejnik <filip.volejnik@firma.seznam.cz>  Thu, 02 Jun 2016 14:42:41 +0100
+
 libfastrpc (7.0.3) testing; urgency=low
 
   * Raised version number to avoid conflict with python-fastrpc tag
