@@ -1,6 +1,7 @@
 #include <string>
 #include <limits>
 #include <iostream>
+#include <cstdlib>
 
 #include "frpc.h"
 #include "frpcwriter.h"
