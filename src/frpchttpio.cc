@@ -234,7 +234,7 @@ std::string HTTPIO_t::readLineOpt(bool checkLimit, bool optional)
             {
                 throw ProtocolError_t::format
                 (HTTP_LINE_TOO_LONG,
-                 "Security limit exceeded: line is too long ('%u' > '%d')",
+                 "Security limit exceeded: line is too long ('%zd' > '%d')",
                  lineBuff.length() + toRead,
                  lineSizeLimit);
             }
@@ -281,7 +281,7 @@ std::string HTTPIO_t::readLineOpt(bool checkLimit, bool optional)
             {
                 throw ProtocolError_t::format
                     (HTTP_LINE_TOO_LONG, "Security limit exceeded: line "
-                                         "is too long ('%u' > '%d')",
+                                         "is too long ('%zd' > '%d')",
                  lineBuff.length() + toRead,
                  lineSizeLimit);
             }

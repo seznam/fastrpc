@@ -196,8 +196,8 @@ void String_t::validateBytes(const std::string::value_type *pData,
         }
 
         throw TypeError_t::format(
-                "Cannot create FRPC::String_t from given data. Size %u bytes, "
-                "failed at %u, first %u bytes in hex = %s",
+                "Cannot create FRPC::String_t from given data. Size %zd bytes, "
+                "failed at %zd, first %zd bytes in hex = %s",
                 dataSize, curSize,
                 std::min(dataSize, static_cast<std::string::size_type>(20)),
                 fmt.str().c_str());

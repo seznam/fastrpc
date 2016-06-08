@@ -48,7 +48,7 @@ Struct_t::Struct_t(const Struct_t::pair &value) {
 
 Struct_t::Struct_t(const std::string &key, const Value_t &value) {
     if (key.size() > 255) {
-        throw LenError_t::format("Size of member name must be max 255 not %d.",
+        throw LenError_t::format("Size of member name must be max 255 not %zd.",
                                  key.size());
     }
     structData.insert(value_type(key,const_cast<Value_t *>(&value)));
@@ -124,7 +124,7 @@ Struct_t& Struct_t::append(const Struct_t::pair &value) {
 Struct_t& Struct_t::append(const Struct_t::key_type &key,
                            const Value_t &value) {
     if (key.size() > 255) {
-        throw LenError_t::format("Size of member name must be max 255 not %d.",
+        throw LenError_t::format("Size of member name must be max 255 not %zd.",
                                  key.size());
     }
 

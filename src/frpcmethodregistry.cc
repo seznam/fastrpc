@@ -406,7 +406,7 @@ Value_t& MethodRegistry_t::listMethods(Pool_t &pool, Array_t &params)
     if(params.size() != 0)
         throw Fault_t::format(
                 FRPC_TYPE_ERROR,
-                "Method required 0 arguments but %d argumet(s) given",
+                "Method required 0 arguments but %zd argumet(s) given",
                 params.size());
 
     Array_t &retArray = pool.Array();
@@ -425,7 +425,7 @@ Value_t& MethodRegistry_t::methodHelp(Pool_t &pool, Array_t &params)
     if(params.size() != 1)
         throw Fault_t::format(
                 FRPC_TYPE_ERROR,
-                "Method required 1 argument but %d argumet(s) given",
+                "Method required 1 argument but %zd argumet(s) given",
                 params.size());
 
     params.checkItems("s");
@@ -448,7 +448,7 @@ Value_t& MethodRegistry_t::methodSignature(Pool_t &pool, Array_t &params)
     if(params.size() != 1)
         throw Fault_t::format(
             FRPC_TYPE_ERROR,
-            "Method required 1 argument but %d argumet(s) given",
+            "Method required 1 argument but %zd argumet(s) given",
             params.size());
 
     params.checkItems("s");
@@ -513,7 +513,7 @@ Value_t& MethodRegistry_t::multicall(Pool_t &pool, Array_t &params)
     if(params.size() != 1)
         throw Fault_t::format(
             FRPC_TYPE_ERROR,
-            "Method required 1 argument but %d argumet(s) given",
+            "Method required 1 argument but %zd argumet(s) given",
             params.size());
 
     params.checkItems("A");

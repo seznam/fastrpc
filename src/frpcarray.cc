@@ -136,7 +136,7 @@ bool Array_t::empty() const
 Value_t& Array_t::operator[] (Array_t::size_type index)
 {
     if(index >= arrayData.size())
-        throw(IndexError_t::format("index %d is out of range 0 - %d.", index,
+        throw(IndexError_t::format("index %zd is out of range 0 - %zd.", index,
                                    arrayData.size()));
 
     return *(arrayData[index]);
@@ -145,7 +145,7 @@ Value_t& Array_t::operator[] (Array_t::size_type index)
 const Value_t& Array_t::operator[] (Array_t::size_type index) const
 {
     if(index >= arrayData.size())
-        throw(IndexError_t::format("index %d is out of range 0 - %d.", index,
+        throw(IndexError_t::format("index %zd is out of range 0 - %zd.", index,
                                    arrayData.size()));
 
     return *(arrayData[index]);
@@ -160,8 +160,8 @@ void Array_t::checkItems(const std::string &items) const
         }
     }
 
-    if(arrayData.size() !=  itemsSize) {
-        throw LenError_t::format("Array must have %d parameters.",
+    if(arrayData.size() != itemsSize) {
+        throw LenError_t::format("Array must have %zd parameters.",
                                  items.size());
     }
 
