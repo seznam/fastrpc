@@ -37,7 +37,7 @@
 
 #include <frpcdatabuilder.h>
 #include <frpc.h>
-
+#include <frpcfault.h>
 
 namespace FRPC
 {
@@ -131,18 +131,25 @@ public:
         entityStorage.pop_back();*/
         return true;
     }
+
     inline Value_t& getUnMarshaledData()
     {
+        if (!retValue)
+            throw Fault_t(getUnMarshaledErrorNumber(),
+                          getUnMarshaledErrorMessage());
         return *retValue;
     }
+
     inline Value_t* getUnMarshaledDataPtr()
     {
         return retValue;
     }
+
     inline const std::string getUnMarshaledMethodName()
     {
         return methodName;
     }
+
     inline const std::string getUnMarshaledErrorMessage()
     {
         if(errMsg.size() != 0)
@@ -150,6 +157,7 @@ public:
         else
             return "No data unmarshalled";
     }
+
     inline long getUnMarshaledErrorNumber()
     {
         return errNum;

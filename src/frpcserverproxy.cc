@@ -282,11 +282,8 @@ Value_t& ServerProxyImpl_t::call(Pool_t &pool, const std::string &methodName,
     client.readResponse(builder);
     serverSupportedProtocols = client.getSupportedProtocols();
     protocolVersion = client.getProtocolVersion();
-    if (&(builder.getUnMarshaledData()) == 0)
-        throw  Fault_t(builder.getUnMarshaledErrorNumber(),
-                       builder.getUnMarshaledErrorMessage());
 
-    // OK, return unmarshalled data
+    // OK, return unmarshalled data (throws fault if NULL)
     return builder.getUnMarshaledData();
 }
 
@@ -353,11 +350,8 @@ Value_t& ServerProxyImpl_t::call(Pool_t &pool, const char *methodName,
     client.readResponse(builder);
     serverSupportedProtocols = client.getSupportedProtocols();
     protocolVersion = client.getProtocolVersion();
-    if(&(builder.getUnMarshaledData()) == 0)
-        throw  Fault_t(builder.getUnMarshaledErrorNumber(),
-                       builder.getUnMarshaledErrorMessage());
 
-    // OK, return unmarshalled data
+    // OK, return unmarshalled data (throws fault if NULL)
     return builder.getUnMarshaledData();
 }
 
