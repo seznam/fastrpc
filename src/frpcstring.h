@@ -22,13 +22,13 @@
  *
  * FILE          $Id: frpcstring.h,v 1.7 2008-05-05 12:52:00 burlog Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #ifndef FRPCSTRING_H
 #define FRPCSTRING_H
@@ -56,7 +56,7 @@ public:
     virtual ~String_t();
     /**
         @brief Getting type of value
-        @return  @b unsigned @b short always 
+        @return  @b unsigned @b short always
         @li @b Binary_t::TYPE - identificator of binary value
     */
     virtual unsigned short getType() const
@@ -74,22 +74,22 @@ public:
         return "string";
     }
 
-    /** 
+    /**
         @brief Get data itself. Data are not "\0"-terminated.
-        @return Pointer to the binary data. 
+        @return Pointer to the binary data.
     */
     std::string::size_type size() const;
 
-    /** 
+    /**
         @brief Get data itself. Data are not "\0"-terminated.
-        @return Pointer to the binary data. 
+        @return Pointer to the binary data.
     */
 
     const std::string::value_type* data() const;
 
     /**
         @brief Get binary data as STL string.
-        @return Binary data as string. 
+        @return Binary data as string.
     */
     //FIXME: const std::string&
     std::string getString() const;
@@ -102,12 +102,12 @@ public:
 
     /**
         @brief Get binary data as C string.
-        @return Binary data as C string. 
+        @return Binary data as C string.
     */
     const char* c_str() const;
 
     /**
-        @brief Method to clone/copy Binary_t 
+        @brief Method to clone/copy Binary_t
         @param newPool is reference of Pool_t which is used for allocate objects
     */
     virtual Value_t& clone(Pool_t &newPool) const;
@@ -141,7 +141,7 @@ private:
     /**
         @brief Constructor  from pointer to data and data size
         @param pool  -  is a reference to Pool_t used for allocating
-        @param pData - is a unsigned char pointer to data 
+        @param pData - is a unsigned char pointer to data
         @param dataSize - is a size of data in bytes
     */
     String_t(std::string::value_type *pData, std::string::size_type dataSize);
@@ -162,37 +162,39 @@ private:
 };
 /**
     @brief Inline method
-    
-    Used to retype Value_t to String_t 
+
+    Used to retype Value_t to String_t
     @return  If Value_t  can  retype to String_t return reference to String_t
     @n If Value_t can't retype to Int_t: throw exception TypeError_t
-    
+
 */
 inline FRPC_DLLEXPORT String_t& String(Value_t &value)
 {
     String_t *string_v = dynamic_cast<String_t*>(&value);
 
     if(!string_v)
-        throw TypeError_t("Type is %s but not string",value.getTypeName());
-    
+        throw TypeError_t::format("Type is %s but not string",
+                                  value.getTypeName());
+
     return *string_v;
 }
 
 /**
     @brief Inline method
-    
-    Used to retype Value_t to String_t 
+
+    Used to retype Value_t to String_t
     @return  If Value_t  can  retype to String_t return reference to String_t
     @n If Value_t can't retype to Int_t: throw exception TypeError_t
-    
+
 */
 inline FRPC_DLLEXPORT const String_t& String(const Value_t &value)
 {
     const String_t *string_v = dynamic_cast<const String_t*>(&value);
 
     if(!string_v)
-        throw TypeError_t("Type is %s but not string",value.getTypeName());
-    
+        throw TypeError_t::format("Type is %s but not string",
+                                  value.getTypeName());
+
     return *string_v;
 }
 

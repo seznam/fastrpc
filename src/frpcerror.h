@@ -46,31 +46,15 @@ namespace FRPC {
 @brief API Error
 @author Miroslav Talasek
 */
-class FRPC_DLLEXPORT Error_t:public std::exception {
+class FRPC_DLLEXPORT Error_t : public std::exception {
 public:
 
-    /**
-        @brief Constructor from format string and arguments
-        @param format is const char* format string 
-        @param ... is other arguments
-    */
-    Error_t(const char *format, ...) {
+    Error_t(const std::string &msg) : msg(msg) {}
 
-        // open variadic arguments
-        va_list valist;
-        va_start(valist, format);
+    /** Constructs the Error_t object from format string and parameters.
+     */
+    static Error_t format(const char *format, ...) __attribute__((format(printf, 1, 2)));
 
-        // format message
-        char buf[1024];
-        vsnprintf(buf, sizeof(buf), format, valist);
-
-        // close variadic arguments
-        va_end(valist);
-
-        // return formated message
-        msg = buf;
-
-    }
     /**
         @brief Getting error message
         @return std::string is error message
@@ -78,7 +62,7 @@ public:
     virtual const char * what () const throw() {
         return msg.c_str();
     }
-    
+
     const std::string message() {
         return msg;
     }
@@ -90,6 +74,7 @@ public:
         @brief Default destructor
     */
     ~Error_t() throw();
+
 protected:
     /**
         @brief Default constructor

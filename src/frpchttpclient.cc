@@ -187,16 +187,18 @@ void HTTPClient_t::readResponse(DataBuilder_t &builder) {
                 // invalid request line
                 // get rid of old method
                 //lastMethod.erase();
-                throw HTTPError_t(HTTP_VALUE, "Bad HTTP request: '%s'.",
-                                  line.substr(0, 30).c_str());
+                throw HTTPError_t::format(
+                        HTTP_VALUE, "Bad HTTP request: '%s'.",
+                        line.substr(0, 30).c_str());
             }
 
             protocol =  header[0];
             // save request line parts
             if ((protocol != "HTTP/1.0") && (protocol != "HTTP/1.1")) {
-                throw HTTPError_t(HTTP_VALUE,
-                                  "Bad HTTP protocol version or type: '%s'.",
-                                  header[0].c_str());
+                throw HTTPError_t::format(
+                        HTTP_VALUE,
+                        "Bad HTTP protocol version or type: '%s'.",
+                        header[0].c_str());
             }
 
             std::istringstream is(header[1].c_str());
@@ -204,7 +206,8 @@ void HTTPClient_t::readResponse(DataBuilder_t &builder) {
             is >> status;
 
             if (status != 200) {
-                throw HTTPError_t(status, "%s",header[2].c_str());
+                // Note: Was a %s format of the c_str, without any other text?!
+                throw HTTPError_t(status, header[2]);
             }
 
             break;
@@ -298,10 +301,10 @@ void HTTPClient_t::sendRequest(bool last) {
 
         }
 
-        addHeader(os, HTTP_HEADER_ACCEPT, ACCEPTED); 
+        addHeader(os, HTTP_HEADER_ACCEPT, ACCEPTED);
 
         //append connection header
-        addHeader(os, HTTP_HEADER_CONNECTION, (connector->getKeepAlive() ? KEEPALIVE : CLOSE)); 
+        addHeader(os, HTTP_HEADER_CONNECTION, (connector->getKeepAlive() ? KEEPALIVE : CLOSE));
 
         // write content-length or content-transfer-encoding when we can send
         // content
@@ -350,7 +353,7 @@ void HTTPClient_t::sendRequest(bool last) {
                 queryStorage.back().append("\r\n0\r\n\r\n");
             }else{
                 queryStorage.back().append("\r\n");
-            }            
+            }
 
             // write chunk
             httpIO.sendData(queryStorage.back().data(),

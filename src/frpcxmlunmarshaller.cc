@@ -305,7 +305,7 @@ void XmlUnMarshaller_t::unMarshall(
         } else
             msg = error_mapping[code];
 
-        throw StreamError_t("Parser error:< %s >", msg);
+        throw StreamError_t::format("Parser error: < %s >", msg);
     }
 
     switch (exception) {

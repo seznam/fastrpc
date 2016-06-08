@@ -285,10 +285,12 @@ void BinMarshaller_t::packMethodCall(const char* methodName,
 
     //pack type
     char type = FRPC_DATA_TYPE(METHOD_CALL,0);
+
     //check conditions
     if ( size > 255 || size == 0)
-        throw LenError_t("Lenght of method name is %d not in interval (1-255)",
-                         size);
+        throw LenError_t::format(
+            "Lenght of method name is %d not in interval (1-255)", size);
+
     int8_t realSize = int8_t(size);
     //magic
     packMagic();
@@ -340,8 +342,8 @@ void BinMarshaller_t::packStructMember(const char* memberName,
 
 
     if (size > 255 || size == 0)
-        throw LenError_t("Lenght of member name is %d not in interval (1-255)",
-                         size);
+        throw LenError_t::format(
+            "Lenght of member name is %d not in interval (1-255)", size);
 
     //write member name
     int8_t realSize = int8_t(size);

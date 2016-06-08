@@ -22,13 +22,13 @@
  *
  * FILE          $Id: frpckeyerror.h,v 1.3 2007-05-18 15:29:45 mirecta Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #ifndef FRPCFRPCKEYERROR_H
 #define FRPCFRPCKEYERROR_H
@@ -45,29 +45,10 @@ namespace FRPC
 class FRPC_DLLEXPORT KeyError_t : public Error_t
 {
 public:
+    KeyError_t(const std::string &msg) : Error_t(msg) {}
 
-    /**
-        @brief Constructor from format string and arguments
-        @param format is const char* format string 
-        @param ... is other arguments
-    */
-    KeyError_t(const char *format, ...):Error_t()
-    {
-        // open variadic arguments
-        va_list valist;
-        va_start(valist, format);
+    static KeyError_t format(const char *format, ...) __attribute__((format(printf, 1, 2)));
 
-        // format message
-        char buf[1024];
-        vsnprintf(buf, sizeof(buf), format, valist);
-
-        // close variadic arguments
-        va_end(valist);
-
-        // return formated message
-        msg = buf;
-
-    }
     /**
         @brief Default destructor
     */

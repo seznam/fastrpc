@@ -219,16 +219,18 @@ void Server_t::readRequest(DataBuilder_t &builder,
                 // invalid request line
                 // get rid of old method
                 //lastMethod.erase();
-                throw HTTPError_t(HTTP_BAD_REQUEST, "Bad HTTP request: '%s'.",
-                                  line.substr(0, 30).c_str());
+                throw HTTPError_t::format(
+                        HTTP_BAD_REQUEST, "Bad HTTP request: '%s'.",
+                        line.substr(0, 30).c_str());
             }
             protocol =  header[2];
             // save request line parts
             if(protocol != "HTTP/1.1" && protocol != "HTTP/1.0")
             {
-                throw HTTPError_t(HTTP_HTTP_VERSION_NOT_SUPPORTED,
-                                  "Bad HTTP protocol version or type: '%s'.",
-                                  header[2].c_str());
+                throw HTTPError_t::format(
+                        HTTP_HTTP_VERSION_NOT_SUPPORTED,
+                        "Bad HTTP protocol version or type: '%s'.",
+                        header[2].c_str());
             }
 
             uriPath = header[1];

@@ -22,16 +22,16 @@
  *
  * FILE          $Id: frpcarray.h,v 1.7 2008-05-05 12:52:00 burlog Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * Copyright (C) Seznam.cz a.s. 2005
  * All Rights Reserved
  *
  * HISTORY
- *       
+ *
  */
 #ifndef FRPCFRPCARRAY_H
 #define FRPCFRPCARRAY_H
@@ -75,7 +75,7 @@ public:
     */
     virtual ~Array_t();
     /**
-       @brief Method to clone/copy Array_t 
+       @brief Method to clone/copy Array_t
        @param newPool is reference of Pool_t which is used for allocate objects
      * @return reference to new Array_t as Value_t
     */
@@ -83,7 +83,7 @@ public:
     virtual Value_t& clone(Pool_t &newPool) const;
     /**
         @brief Getting type of value
-        @return  @b unsigned @b short always 
+        @return  @b unsigned @b short always
         @li @b Array_t::TYPE - identificator of array value
     */
     virtual unsigned short getType() const
@@ -144,37 +144,37 @@ public:
         @return bool
         @li @b TRUE if the Array_t is empty @n
         @li @b FALSE if the Array_t isn't empty
-        
+
     */
     bool empty() const;
     /**
         @brief delete all items in Array_t
     */
     void clear();
-    
+
     /**
-        @brief reserve memory for Array_t 
+        @brief reserve memory for Array_t
         @param size is new size
     */
     void reserve(size_type size);
-    
+
     /**
        @brief return cacacity of Array_t
        @return size_type capacity of Array_t
     */
-    
+
     size_type capacity();
-    
-    /**
-        @brief append Value_t to end of Array_t
-        @param value is new Value_t 
-    */
-    void push_back(const Value_t &value);
-    
+
     /**
         @brief append Value_t to end of Array_t
         @param value is new Value_t
-        @return Array_t& reference with apended value 
+    */
+    void push_back(const Value_t &value);
+
+    /**
+        @brief append Value_t to end of Array_t
+        @param value is new Value_t
+        @return Array_t& reference with apended value
     */
     Array_t& append(const Value_t &value);
     /**
@@ -187,19 +187,19 @@ public:
         @li @b  B - binary
         @li @b  D - dateTime
         @li @b  A - array
-        @li @b  S - struct  
-        
+        @li @b  S - struct
+
         If items not correct function throw TypeError_t.
       @n This method is using for checking input parameters in methods.
-    */  
+    */
     void checkItems(const std::string &items) const;
-    
+
     ///static member
     static const Array_t &FRPC_EMPTY;
 private:
-    
+
     /**
-        @brief Costructor empty Array_t 
+        @brief Costructor empty Array_t
         @param pool is a reference to Pool_t used for allocating
     */
     Array_t();
@@ -214,11 +214,11 @@ private:
     std::vector<Value_t*> arrayData;///Internal array data
 
 };
-/** 
+/**
     @brief Inline method
-    
+
     Used to retype Value_t to Array_t
-    @param value is reference to Value_t 
+    @param value is reference to Value_t
     @return  If Value_t  can  retype to Array_t return reference to Array_t
     @n If Value_t can't retype to Array_t throw exception TypeError_t
 */
@@ -227,15 +227,16 @@ inline FRPC_DLLEXPORT Array_t& Array(Value_t &value)
     Array_t *array = dynamic_cast<Array_t*>(&value);
 
     if(!array)
-        throw TypeError_t("Type is %s but not array",value.getTypeName());
+        throw TypeError_t::format("Type is %s but not array",
+                                  value.getTypeName());
     return *array;
 }
 
-/** 
+/**
     @brief Inline method
-    
+
     Used to retype Value_t to Array_t
-    @param value is reference to Value_t 
+    @param value is reference to Value_t
     @return  If Value_t  can  retype to Array_t return reference to Array_t
     @n If Value_t can't retype to Array_t throw exception TypeError_t
 */
@@ -244,7 +245,8 @@ inline FRPC_DLLEXPORT const Array_t& Array(const Value_t &value)
     const Array_t *array = dynamic_cast<const Array_t*>(&value);
 
     if(!array)
-        throw TypeError_t("Type is %s but not array",value.getTypeName());
+        throw TypeError_t::format("Type is %s but not array",
+                                  value.getTypeName());
     return *array;
 }
 

@@ -22,13 +22,13 @@
  *
  * FILE          $Id: frpcstreamerror.h,v 1.3 2007-05-18 15:29:46 mirecta Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #ifndef FRPCFRPCSTREAMERROR_H
 #define FRPCFRPCSTREAMERROR_H
@@ -39,34 +39,15 @@ namespace FRPC
 {
 
 /**
-@brief StreamError_t used in Unmarshall 
+@brief StreamError_t used in Unmarshall
 @author Miroslav Talasek
 */
 class FRPC_DLLEXPORT StreamError_t : public Error_t
 {
 public:
-    /**
-        @brief Constructor from format string and arguments
-        @param format is const char* format string 
-        @param ... is other arguments 
-    */
-    
-    StreamError_t(const char *format, ...):Error_t()
-    {
-        // open variadic arguments
-        va_list valist;
-        va_start(valist, format);
+    StreamError_t(const std::string &msg) : Error_t(msg) {}
 
-        // format message
-        char buf[1024];
-        vsnprintf(buf, sizeof(buf), format, valist);
-
-        // close variadic arguments
-        va_end(valist);
-
-        // return formated message
-        msg = buf;
-    }
+    static StreamError_t format(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
 
     ~StreamError_t() throw();
 private:

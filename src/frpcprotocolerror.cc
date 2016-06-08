@@ -22,13 +22,13 @@
  *
  * FILE          $Id: frpcprotocolerror.cc,v 1.3 2007-05-18 15:29:45 mirecta Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #include "frpcprotocolerror.h"
 
@@ -37,6 +37,23 @@ namespace FRPC
 
 ProtocolError_t::ProtocolError_t()
 {}
+
+ProtocolError_t ProtocolError_t::format(int errNum, const char *format, ...) {
+    // open variadic arguments
+    va_list valist;
+    va_start(valist, format);
+
+    // format message
+    char buf[1024];
+    vsnprintf(buf, sizeof(buf), format, valist);
+
+    // close variadic arguments
+    va_end(valist);
+
+    // return formated message
+    return ProtocolError_t(errNum, buf);
+}
+
 
 
 ProtocolError_t::~ProtocolError_t() throw ()

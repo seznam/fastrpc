@@ -22,13 +22,13 @@
  *
  * FILE          $Id: frpcdouble.h,v 1.8 2011-02-11 08:56:17 burlog Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #ifndef FRPCDOUBLE_H
 #define FRPCDOUBLE_H
@@ -57,7 +57,7 @@ public:
     virtual ~Double_t();
     /**
     @brief Getting type of value
-    @return  @b unsigned @b short always 
+    @return  @b unsigned @b short always
     @li @b Double_t::TYPE - identificator of double value
     */
     virtual unsigned short getType() const
@@ -76,7 +76,7 @@ public:
 
     /**
     @brief Getting internal double value
-    @return  @b double - internal value 
+    @return  @b double - internal value
     */
     value_type getValue() const
     {
@@ -86,13 +86,13 @@ public:
     /**
         @brief Operator double const
     */
-    inline operator value_type () const 
+    inline operator value_type () const
     {
         return value;
     }
 
     /**
-        @brief Method for clone/copy Double_t 
+        @brief Method for clone/copy Double_t
         @param newPool is reference of Pool_t which is used for allocate objects
     */
     virtual Value_t& clone(Pool_t &newPool) const;
@@ -118,8 +118,8 @@ private:
 
 /**
     @brief Inline method
-    
-    Used to retype Value_t to Double_t 
+
+    Used to retype Value_t to Double_t
     @return  If Value_t  can  retype to Double_t return reference to Double_t
     @n If Value_t can't retype to Double_t throw exception TypeError_t
 */
@@ -128,15 +128,16 @@ inline FRPC_DLLEXPORT Double_t& Double(Value_t &value)
     Double_t *double_v = dynamic_cast<Double_t*>(&value);
 
     if(!double_v)
-        throw TypeError_t("Type is %s but not double",value.getTypeName());
-    
+        throw TypeError_t::format("Type is %s but not double",
+                                  value.getTypeName());
+
     return *double_v;
 }
 
 /**
     @brief Inline method
-    
-    Used to retype Value_t to Double_t 
+
+    Used to retype Value_t to Double_t
     @return  If Value_t  can  retype to Double_t return reference to Double_t
     @n If Value_t can't retype to Double_t throw exception TypeError_t
 */
@@ -145,8 +146,9 @@ inline FRPC_DLLEXPORT const Double_t& Double(const Value_t &value)
     const Double_t *double_v = dynamic_cast<const Double_t*>(&value);
 
     if(!double_v)
-        throw TypeError_t("Type is %s but not double",value.getTypeName());
-    
+        throw TypeError_t::format("Type is %s but not double",
+                                  value.getTypeName());
+
     return *double_v;
 }
 

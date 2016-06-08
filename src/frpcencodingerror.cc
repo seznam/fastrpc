@@ -22,19 +22,35 @@
  *
  * FILE          $Id: frpcencodingerror.cc,v 1.3 2007-05-18 15:29:45 mirecta Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #include "frpcencodingerror.h"
 
 namespace FRPC
 {
 
+EncodingError_t EncodingError_t::format(const char *format, ...)
+{
+    // open variadic arguments
+    va_list valist;
+    va_start(valist, format);
+
+    // format message
+    char buf[1024];
+    vsnprintf(buf, sizeof(buf), format, valist);
+
+    // close variadic arguments
+    va_end(valist);
+
+    // return formated message
+    return EncodingError_t(buf);
+}
 
 
 

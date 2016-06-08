@@ -22,13 +22,13 @@
  *
  * FILE          $Id: frpcbinary.h,v 1.7 2008-05-05 12:52:00 burlog Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #ifndef FRPCBINARY_H
 #define FRPCBINARY_H
@@ -57,7 +57,7 @@ public:
 
     /**
         @brief Getting type of value
-        @return  @b unsigned @b short always 
+        @return  @b unsigned @b short always
         @li @b Binary_t::TYPE - identificator of binary value
     */
     virtual unsigned short getType() const
@@ -74,22 +74,22 @@ public:
     {
         return "binary";
     }
-    
-    /** 
+
+    /**
         @brief Get data itself. Data are not "\0"-terminated.
-        @return Pointer to the binary data. 
+        @return Pointer to the binary data.
     */
     std::string::size_type size() const;
 
-    /** 
+    /**
         @brief Get data itself. Data are not "\0"-terminated.
-        @return Pointer to the binary data. 
+        @return Pointer to the binary data.
     */
     const std::string::value_type* data() const;
 
     /**
         @brief Get binary data as STL string.
-        @return Binary data as string. 
+        @return Binary data as string.
     */
     std::string getString() const;
 
@@ -100,7 +100,7 @@ public:
     const std::string& getValue() const;
 
     /**
-        @brief Method to clone/copy Binary_t 
+        @brief Method to clone/copy Binary_t
         @param newPool is reference of Pool_t which is used for allocate objects
     */
     virtual Value_t& clone(Pool_t &newPool) const;
@@ -122,7 +122,7 @@ private:
     /**
         @brief Constructor  from pointer to data and data size
         @param pool  -  is a reference to Pool_t used for allocating
-        @param pData - is a unsigned char pointer to data 
+        @param pData - is a unsigned char pointer to data
         @param dataSize - is a size of data in bytes
     */
     Binary_t(std::string::value_type *pData, std::string::size_type dataSize);
@@ -138,8 +138,8 @@ private:
 
 /**
     @brief Inline method
-    
-    Used to retype Value_t to Binary_t 
+
+    Used to retype Value_t to Binary_t
     @return  If Value_t  can  retype to Binary_t return reference to Binary_t
     @n If Value_t can't retype to Binary_t throw exception TypeError_t
 */
@@ -148,14 +148,15 @@ inline FRPC_DLLEXPORT Binary_t& Binary(Value_t &value)
     Binary_t *binary = dynamic_cast<Binary_t*>(&value);
 
     if(!binary)
-        throw TypeError_t("Type is %s but not binary",value.getTypeName());
+        throw TypeError_t::format("Type is %s but not binary",
+                                  value.getTypeName());
     return *binary;
 }
 
 /**
     @brief Inline method
-    
-    Used to retype Value_t to Binary_t 
+
+    Used to retype Value_t to Binary_t
     @return  If Value_t  can  retype to Binary_t return reference to Binary_t
     @n If Value_t can't retype to Binary_t throw exception TypeError_t
 */
@@ -164,7 +165,8 @@ inline FRPC_DLLEXPORT const Binary_t& Binary(const Value_t &value)
     const Binary_t *binary = dynamic_cast<const Binary_t*>(&value);
 
     if(!binary)
-        throw TypeError_t("Type is %s but not binary",value.getTypeName());
+        throw TypeError_t::format("Type is %s but not binary",
+                                  value.getTypeName());
     return *binary;
 }
 

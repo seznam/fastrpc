@@ -206,11 +206,15 @@ int MethodRegistry_t::processCall(const std::string &clientIP, const std::string
         throw;
 
     } catch (const std::exception &e) {
-        Fault_t fault(FRPC_INTERNAL_ERROR,
-                      "Caught std::exception<%s> while dispatching "
-                      "method call.", e.what());
+        Fault_t fault = Fault_t::format(
+                FRPC_INTERNAL_ERROR,
+                "Caught std::exception<%s> while dispatching "
+                "method call.", e.what());
+
         if (callbacks)
-            callbacks->postProcess(methodName, clientIP, params, fault, timeD.diff());
+            callbacks->postProcess(methodName, clientIP, params,
+                                   fault, timeD.diff());
+
         marshaller->packFault(fault.errorNum(),fault.message().c_str());
         marshaller->flush();
 
@@ -219,7 +223,8 @@ int MethodRegistry_t::processCall(const std::string &clientIP, const std::string
                       "Caught unknown exception while dispatching "
                       "method call.");
         if (callbacks)
-            callbacks->postProcess(methodName, clientIP, params, fault, timeD.diff());
+            callbacks->postProcess(methodName, clientIP, params,
+                                   fault, timeD.diff());
         marshaller->packFault(fault.errorNum(),fault.message().c_str());
         marshaller->flush();
     }
@@ -245,8 +250,9 @@ Value_t& MethodRegistry_t::processCall(const std::string &clientIP,
 
             // if not default method generate fault
             if (!defaultMethod)
-                throw Fault_t(FRPC_NO_SUCH_METHOD_ERROR, "Method %s not found",
-                              methodName.c_str());
+                throw Fault_t::format(
+                        FRPC_NO_SUCH_METHOD_ERROR, "Method %s not found",
+                        methodName.c_str());
 
             result = &(defaultMethod->call(pool, methodName,params));
             if (callbacks)
@@ -398,8 +404,10 @@ int MethodRegistry_t::headCall()
 Value_t& MethodRegistry_t::listMethods(Pool_t &pool, Array_t &params)
 {
     if(params.size() != 0)
-        throw Fault_t(FRPC_TYPE_ERROR,"Method required 0 arguments but %d argumet(s) given",
-                      params.size());
+        throw Fault_t::format(
+                FRPC_TYPE_ERROR,
+                "Method required 0 arguments but %d argumet(s) given",
+                params.size());
 
     Array_t &retArray = pool.Array();
 
@@ -415,8 +423,10 @@ Value_t& MethodRegistry_t::listMethods(Pool_t &pool, Array_t &params)
 Value_t& MethodRegistry_t::methodHelp(Pool_t &pool, Array_t &params)
 {
     if(params.size() != 1)
-        throw Fault_t(FRPC_TYPE_ERROR,"Method required 1 argument but %d argumet(s) given",
-                      params.size());
+        throw Fault_t::format(
+                FRPC_TYPE_ERROR,
+                "Method required 1 argument but %d argumet(s) given",
+                params.size());
 
     params.checkItems("s");
 
@@ -425,8 +435,10 @@ Value_t& MethodRegistry_t::methodHelp(Pool_t &pool, Array_t &params)
                 String(params[0]).getString());
 
     if(pos == methodMap.end())
-        throw Fault_t(FRPC_NO_SUCH_METHOD_ERROR,"Method %s not found",
-                      String(params[0]).getString().c_str());
+        throw Fault_t::format(
+                FRPC_NO_SUCH_METHOD_ERROR,
+                "Method %s not found",
+                String(params[0]).getString().c_str());
 
     return pool.String(pos->second.help);
 }
@@ -434,8 +446,10 @@ Value_t& MethodRegistry_t::methodHelp(Pool_t &pool, Array_t &params)
 Value_t& MethodRegistry_t::methodSignature(Pool_t &pool, Array_t &params)
 {
     if(params.size() != 1)
-        throw Fault_t(FRPC_TYPE_ERROR,"Method required 1 argument but %d argumet(s) given",
-                      params.size());
+        throw Fault_t::format(
+            FRPC_TYPE_ERROR,
+            "Method required 1 argument but %d argumet(s) given",
+            params.size());
 
     params.checkItems("s");
 
@@ -443,8 +457,8 @@ Value_t& MethodRegistry_t::methodSignature(Pool_t &pool, Array_t &params)
                 String(params[0]).getString());
 
     if(pos == methodMap.end())
-        throw Fault_t(FRPC_NO_SUCH_METHOD_ERROR,"Method %s not found",
-                      String(params[0]).getString().c_str());
+        throw Fault_t::format(FRPC_NO_SUCH_METHOD_ERROR, "Method %s not found",
+                              String(params[0]).getString().c_str());
 
     //build array signature
     Array_t &array = pool.Array();
@@ -497,20 +511,24 @@ Value_t& MethodRegistry_t::methodSignature(Pool_t &pool, Array_t &params)
 Value_t& MethodRegistry_t::multicall(Pool_t &pool, Array_t &params)
 {
     if(params.size() != 1)
-        throw Fault_t(FRPC_TYPE_ERROR,"Method required 1 argument but %d argumet(s) given",
-                      params.size());
+        throw Fault_t::format(
+            FRPC_TYPE_ERROR,
+            "Method required 1 argument but %d argumet(s) given",
+            params.size());
 
     params.checkItems("A");
 
     Array_t &array = pool.Array();
 
-    for(Array_t::const_iterator pos = Array(params[0]).begin(); pos != Array(params[0]).end();
-            ++pos)
+    for (Array_t::const_iterator pos = Array(params[0]).begin();
+         pos != Array(params[0]).end();
+         ++pos)
     {
         if((*pos)->getType() != Struct_t::TYPE)
         {
-            array.append(pool.Struct("faultCode",pool.Int(FRPC_TYPE_ERROR),
-                                     "faultString",pool.String("Parameter must be struct")));
+            array.append(pool.Struct("faultCode", pool.Int(FRPC_TYPE_ERROR),
+                                     "faultString",
+                                     pool.String("Parameter must be struct")));
             continue;
         }
 
@@ -519,29 +537,24 @@ Value_t& MethodRegistry_t::multicall(Pool_t &pool, Array_t &params)
 
             Struct_t &strct = Struct(**pos);
 
-            std::map<std::string, RegistryEntry_t>::const_iterator pos = methodMap.find(
-                        String(strct["methodName"]).getString());
+            std::map<std::string, RegistryEntry_t>::const_iterator pos =
+                methodMap.find(String(strct["methodName"]).getString());
 
-            if(pos == methodMap.end())
-            {
-
+            if (pos == methodMap.end()) {
                 //if default method registered call it
-                if(!defaultMethod)
-                {
-                    throw Fault_t(FRPC_NO_SUCH_METHOD_ERROR,"Method %s not found",
-                                  String(strct["methodName"]).getString().c_str());
+                if (!defaultMethod) {
+                    throw Fault_t::format(
+                            FRPC_NO_SUCH_METHOD_ERROR,
+                            "Method %s not found",
+                            String(strct["methodName"]).getString().c_str());
 
-                }
-                else
-                {
-                    array.append(defaultMethod->call(pool,
-                                            String(strct["methodName"]).getString(),
-                                            Array(strct["params"])));
+                } else {
+                    array.append(defaultMethod->call(
+                        pool, String(strct["methodName"]).getString(),
+                        Array(strct["params"])));
                 }
 
-            }
-            else
-            {
+            } else {
                 array.append(pos->second.method->call(pool,
                                         Array(strct["params"])));
 
@@ -550,33 +563,35 @@ Value_t& MethodRegistry_t::multicall(Pool_t &pool, Array_t &params)
         }
         catch(const TypeError_t &typeError)
         {
-            array.append(pool.Struct("faultCode",pool.Int(FRPC_TYPE_ERROR),
-                                     "faultString",pool.String(typeError.message())));
+            array.append(pool.Struct("faultCode", pool.Int(FRPC_TYPE_ERROR),
+                                     "faultString",
+                                     pool.String(typeError.message())));
         }
         catch(const LenError_t &lenError)
         {
-            array.append(pool.Struct("faultCode",pool.Int(FRPC_TYPE_ERROR),
-                                     "faultString",pool.String(lenError.message())));
+            array.append(pool.Struct("faultCode", pool.Int(FRPC_TYPE_ERROR),
+                                     "faultString",
+                                     pool.String(lenError.message())));
         }
         catch(const KeyError_t &keyError)
         {
-            array.append(pool.Struct("faultCode",pool.Int(FRPC_INDEX_ERROR),
-                                     "faultString",pool.String(keyError.message())));
+            array.append(pool.Struct("faultCode", pool.Int(FRPC_INDEX_ERROR),
+                                     "faultString",
+                                     pool.String(keyError.message())));
         }
         catch(const IndexError_t &indexError)
         {
-            array.append(pool.Struct("faultCode",pool.Int(FRPC_INDEX_ERROR),
-                                     "faultString",pool.String(indexError.message())));
+            array.append(pool.Struct("faultCode", pool.Int(FRPC_INDEX_ERROR),
+                                     "faultString",
+                                     pool.String(indexError.message())));
 
         }
         catch(const Fault_t &fault)
         {
-
-            array.append(pool.Struct("faultCode",pool.Int(fault.errorNum()),
-                                     "faultString",pool.String(fault.message())));
+            array.append(pool.Struct("faultCode", pool.Int(fault.errorNum()),
+                                     "faultString",
+                                     pool.String(fault.message())));
         }
-
-
     }
 
     return array;

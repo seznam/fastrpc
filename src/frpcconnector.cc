@@ -113,17 +113,17 @@ namespace {
 #endif //WIN32
         {
             STRERROR_PRE();
-            throw HTTPError_t(
-                HTTP_SYSCALL, "Cannot get socket info: <%d, %s>.",
-                ERRNO, STRERROR(ERRNO));
+            throw HTTPError_t::format(
+                    HTTP_SYSCALL, "Cannot get socket info: <%d, %s>.",
+                    ERRNO, STRERROR(ERRNO));
         }
 
         // check for error
         if (status) {
             STRERROR_PRE();
-            throw HTTPError_t(
-                HTTP_SYSCALL, "Cannot connect socket: <%d, %s>.",
-                status, STRERROR(status));
+            throw HTTPError_t::format(
+                    HTTP_SYSCALL, "Cannot connect socket: <%d, %s>.",
+                    status, STRERROR(status));
         }
     }
 
@@ -137,9 +137,9 @@ namespace {
 #endif //WIN32
         {
             STRERROR_PRE();
-            throw HTTPError_t(
-                HTTP_SYSCALL, "Cannot set socket non-blocking: <%d, %s>.",
-                ERRNO, STRERROR(ERRNO));
+            throw HTTPError_t::format(
+                    HTTP_SYSCALL, "Cannot set socket non-blocking: <%d, %s>.",
+                    ERRNO, STRERROR(ERRNO));
         }
     }
 
@@ -151,9 +151,9 @@ namespace {
                          (char*) &just_say_no, sizeof(int)) < 0)
         {
             STRERROR_PRE();
-            throw HTTPError_t(
-                HTTP_SYSCALL, "Cannot set socket non-delaying: <%d, %s>.",
-                ERRNO, STRERROR(ERRNO));
+            throw HTTPError_t::format(
+                    HTTP_SYSCALL, "Cannot set socket non-delaying: <%d, %s>.",
+                    ERRNO, STRERROR(ERRNO));
         }
     }
 
@@ -171,14 +171,14 @@ namespace {
         if (ready <= 0) {
             switch (ready) {
             case 0:
-                throw HTTPError_t(
-                    HTTP_SYSCALL, "Timeout while connecting to %s.",
-                    url.getUrl().c_str());
+                throw HTTPError_t::format(
+                        HTTP_SYSCALL, "Timeout while connecting to %s.",
+                        url.getUrl().c_str());
             default:
                 STRERROR_PRE();
-                throw HTTPError_t(
-                    HTTP_SYSCALL, "Cannot select on socket: <%d, %s>.",
-                    ERRNO, STRERROR(ERRNO));
+                throw HTTPError_t::format(
+                        HTTP_SYSCALL, "Cannot select on socket: <%d, %s>.",
+                        ERRNO, STRERROR(ERRNO));
             }
         }
     }
@@ -239,9 +239,10 @@ SimpleConnector_t::SimpleConnector_t(const URL_t &url, int connectTimeout,
 
     if (!he) {
         // oops
-        throw HTTPError_t(HTTP_DNS, "Cannot resolve host '%s': <%d, %s>.",
-                          url.host.c_str(), errcode,
-                          host_strerror(errcode));
+        throw HTTPError_t::format(HTTP_DNS,
+                                  "Cannot resolve host '%s': <%d, %s>.",
+                                  url.host.c_str(), errcode,
+                                  host_strerror(errcode));
     }
 
     // remember IP address
@@ -273,9 +274,10 @@ void SimpleConnector_t::connectSocket(int &fd) {
         if ((fd = ::socket(PF_INET, SOCK_STREAM, 0)) < 0) {
             // oops! error
             STRERROR_PRE();
-            throw HTTPError_t(HTTP_SYSCALL,
-                              "Cannot select on socket: <%d, %s>.",
-                              ERRNO, STRERROR(ERRNO));
+            throw HTTPError_t::format(
+                    HTTP_SYSCALL,
+                    "Cannot select on socket: <%d, %s>.",
+                    ERRNO, STRERROR(ERRNO));
         }
 
         setNonBlockingSocket(fd);
@@ -306,9 +308,10 @@ void SimpleConnector_t::connectSocket(int &fd) {
 
             default:
                 STRERROR_PRE();
-                throw HTTPError_t(HTTP_SYSCALL,
-                                  "Cannot connect socket: <%d, %s>.",
-                                  ERRNO, STRERROR(ERRNO));
+                throw HTTPError_t::format(
+                        HTTP_SYSCALL,
+                        "Cannot connect socket: <%d, %s>.",
+                        ERRNO, STRERROR(ERRNO));
             }
 
             waitConnectSocket(fd, url, connectTimeout);
@@ -347,9 +350,10 @@ SimpleConnectorIPv6_t::SimpleConnectorIPv6_t(const URL_t &url, int connectTimeou
     errcode = getaddrinfo(host.c_str(), port, &hints, &addrInfo);
     if ( errcode != 0 ) {
         // oops
-        throw HTTPError_t(HTTP_DNS, "Cannot resolve host '%s'('%s'): <%d, %s>.",
-                          url.host.c_str(), host.c_str(), errcode,
-                          gai_strerror(errcode));
+        throw HTTPError_t::format(
+                HTTP_DNS, "Cannot resolve host '%s'('%s'): <%d, %s>.",
+                url.host.c_str(), host.c_str(), errcode,
+                gai_strerror(errcode));
     }
 
 }
@@ -382,9 +386,10 @@ void SimpleConnectorIPv6_t::connectSocket(int &fd) {
         if ((fd = ::socket(addrInfo->ai_family, SOCK_STREAM, 0)) < 0) {
             // oops! error
             STRERROR_PRE();
-            throw HTTPError_t(HTTP_SYSCALL,
-                              "Cannot select on socket: <%d, %s>.",
-                              ERRNO, STRERROR(ERRNO));
+            throw HTTPError_t::format(
+                    HTTP_SYSCALL,
+                    "Cannot select on socket: <%d, %s>.",
+                    ERRNO, STRERROR(ERRNO));
         }
 
         setNonBlockingSocket(fd);
@@ -406,9 +411,10 @@ void SimpleConnectorIPv6_t::connectSocket(int &fd) {
 
             default:
                 STRERROR_PRE();
-                throw HTTPError_t(HTTP_SYSCALL,
-                                  "Cannot connect socket: <%d, %s>.",
-                                  ERRNO, STRERROR(ERRNO));
+                throw HTTPError_t::format(
+                        HTTP_SYSCALL,
+                        "Cannot connect socket: <%d, %s>.",
+                        ERRNO, STRERROR(ERRNO));
             }
 
             waitConnectSocket(fd, url, connectTimeout);
@@ -454,9 +460,10 @@ void SimpleConnectorUnix_t::connectSocket(int &fd) {
         if ((fd = ::socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
             // oops! error
             STRERROR_PRE();
-            throw HTTPError_t(HTTP_SYSCALL,
-                              "Cannot select on socket: <%d, %s>.",
-                              ERRNO, STRERROR(ERRNO));
+            throw HTTPError_t::format(
+                    HTTP_SYSCALL,
+                    "Cannot select on socket: <%d, %s>.",
+                    ERRNO, STRERROR(ERRNO));
         }
 
         setNonBlockingSocket(fd);
@@ -480,9 +487,9 @@ void SimpleConnectorUnix_t::connectSocket(int &fd) {
                 break;
             default:
                 STRERROR_PRE();
-                throw HTTPError_t(HTTP_SYSCALL,
-                                  "Cannot connect socket: <%d, %s>.",
-                                  ERRNO, STRERROR(ERRNO));
+                throw HTTPError_t::format(HTTP_SYSCALL,
+                                          "Cannot connect socket: <%d, %s>.",
+                                          ERRNO, STRERROR(ERRNO));
             }
 
             waitConnectSocket(fd, url, connectTimeout);
