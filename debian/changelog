@@ -1,3 +1,13 @@
+libfastrpc (8.0.0-rc2) testing; urgency=low
+
+  * Fixing format string warnings.
+  * Transitioned to explicit {Error_t,...}::format call for va_args style exceptions. Fixes possible nasty implicit casting errors.
+  * Don't ever return a nullptr as reference.
+  * Throws Fault_t as it should when unmarshalled data
+  * is null and value is requested by reference.
+
+ -- Filip Volejnik <filip.volejnik@firma.seznam.cz>  Mon, 13 Jun 2016 10:51:57 +0100
+
 libfastrpc (8.0.0-rc1) testing; urgency=low
 
   * rolling back the 8.0 versioning, will be re-added in rc1 release
