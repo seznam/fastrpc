@@ -812,7 +812,7 @@ PyObject* Server_t::serve(int fd, PyObjectWrapper_t addr) {
                         (PyObject_CallFunctionObjArgs
                          (serverObject->registry->headMethod, 0));
                     if (!result) {
-                        throw FRPC::HTTPError_t
+                        throw FRPC::HTTPError_t::format
                             (FRPC::HTTP_INTERNAL_SERVER_ERROR,
                              "Error while running head method: <%s>.",
                              getException().c_str());
@@ -820,7 +820,7 @@ PyObject* Server_t::serve(int fd, PyObjectWrapper_t addr) {
 
                     long int r = PyInt_AsLong(result);
                     if ((r == -1) && PyErr_Occurred()) {
-                        throw FRPC::HTTPError_t
+                        throw FRPC::HTTPError_t::format
                             (FRPC::HTTP_INTERNAL_SERVER_ERROR,
                              "Head should return number: <%s>.",
                              getException().c_str());
@@ -879,7 +879,7 @@ PyObject* Server_t::serve(int fd, PyObjectWrapper_t addr) {
                     marshaller->flush();
                 } catch (const PyError_t &) {
                     // oops error during processing result
-                    throw FRPC::HTTPError_t
+                    throw FRPC::HTTPError_t::format
                         (FRPC::HTTP_INTERNAL_SERVER_ERROR,
                          "Error while dispatching call: <%s>.",
                          getException().c_str());
@@ -945,7 +945,7 @@ void Server_t::readRequest(FRPC::DataBuilder_t &builder) {
                 // invalid request line
                 // get rid of old method
                 //lastMethod.erase();
-                throw FRPC::HTTPError_t
+                throw FRPC::HTTPError_t::format
                     (FRPC::HTTP_BAD_REQUEST, "Bad HTTP request: '%s'.",
                      line.substr(0, 30).c_str());
             }
@@ -953,7 +953,7 @@ void Server_t::readRequest(FRPC::DataBuilder_t &builder) {
             protocol =  header[2];
             // save request line parts
             if ((protocol != "HTTP/1.1") && (protocol != "HTTP/1.0")){
-                throw FRPC::HTTPError_t
+                throw FRPC::HTTPError_t::format
                     (FRPC::HTTP_HTTP_VERSION_NOT_SUPPORTED,
                      "Bad HTTP protocol version or type: '%s'.",
                      header[2].c_str());
