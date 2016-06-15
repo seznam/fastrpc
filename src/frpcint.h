@@ -22,13 +22,13 @@
  *
  * FILE          $Id: frpcint.h,v 1.9 2008-05-05 12:52:00 burlog Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #ifndef FRPCINT_H
 #define FRPCINT_H
@@ -50,9 +50,9 @@ class FRPC_DLLEXPORT Int_t : public Value_t
 {
     friend class Pool_t;
 public:
-    
+
     typedef int64_t value_type;
-    
+
     /**
     @brief Destructor
     */
@@ -61,7 +61,7 @@ public:
 
     /**
     @brief Getting type of value
-    @return  @b unsigned @b short always 
+    @return  @b unsigned @b short always
     @li @b Int_t::type - identificator of inteeger value
     */
     virtual unsigned short getType() const
@@ -81,7 +81,7 @@ public:
 
     /**
     @brief Getting internal integer value
-    @return   @b long - internal value 
+    @return   @b long - internal value
     */
     value_type getValue() const
     {
@@ -97,12 +97,12 @@ public:
     }
 
     /**
-        @brief Method for clone/copy Double_t 
+        @brief Method for clone/copy Double_t
         @param newPool is reference of Pool_t which is used for allocate objects
     */
     virtual Value_t& clone(Pool_t &newPool) const;
-    
-    ///staic 
+
+    ///staic
     static const Int_t &FRPC_ZERO;
     static const Int_t &FRPC_MINUS_ONE;
 
@@ -127,35 +127,37 @@ private:
 };
 /**
     @brief Inline method
-    
-    Used to retype Value_t to Int_t 
+
+    Used to retype Value_t to Int_t
     @return  If Value_t  can  retype to Int_t return reference to  Int_t
     @n If Value_t can't retype to Int_t: throw exception TypeError_t
-    
+
 */
 inline FRPC_DLLEXPORT Int_t& Int(Value_t &value)
 {
     Int_t *integer = dynamic_cast<Int_t*>(&value);
 
     if(!integer)
-        throw TypeError_t("Type is %s but not int",value.getTypeName());
+        throw TypeError_t::format("Type is %s but not int",
+                                  value.getTypeName());
     return *integer;
 }
 
 /**
     @brief Inline method
-    
-    Used to retype Value_t to Int_t 
+
+    Used to retype Value_t to Int_t
     @return  If Value_t  can  retype to Int_t return reference to  Int_t
     @n If Value_t can't retype to Int_t: throw exception TypeError_t
-    
+
 */
 inline FRPC_DLLEXPORT const Int_t& Int(const Value_t &value)
 {
     const Int_t *integer = dynamic_cast<const Int_t*>(&value);
 
     if(!integer)
-        throw TypeError_t("Type is %s but not int",value.getTypeName());
+        throw TypeError_t::format("Type is %s but not int",
+                                  value.getTypeName());
     return *integer;
 }
 };

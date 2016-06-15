@@ -22,13 +22,13 @@
  *
  * FILE          $Id: frpcstring.cc,v 1.5 2007-05-24 11:28:29 mirecta Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #include "frpcstring.h"
 #include "frpcpool.h"
@@ -73,13 +73,13 @@ String_t::String_t(const std::wstring &value_w)
 #ifdef WIN32
 
     LPCWSTR wszValue = value_w.c_str();
-    int iMultiByteValueLen = WideCharToMultiByte(CP_UTF8, NULL, wszValue, 
+    int iMultiByteValueLen = WideCharToMultiByte(CP_UTF8, NULL, wszValue,
                                                 value_w.length(), NULL, 0, NULL, NULL);
 
     LPSTR szValue = new char [iMultiByteValueLen + 1];
     memset (szValue, 0, iMultiByteValueLen + 1);
-    if (iMultiByteValueLen == WideCharToMultiByte(CP_UTF8, NULL, wszValue, 
-                                                value_w.length(), szValue, 
+    if (iMultiByteValueLen == WideCharToMultiByte(CP_UTF8, NULL, wszValue,
+                                                value_w.length(), szValue,
                                                 iMultiByteValueLen + 1, NULL, NULL))
         value = szValue;
     else
@@ -96,20 +96,20 @@ String_t::operator std::wstring () const
 #ifdef WIN32
     std::wstring _value_w(L"");
     LPCSTR szValue = value.c_str();
-    int iWideCharValueLen = MultiByteToWideChar(CP_UTF8, NULL, szValue, 
+    int iWideCharValueLen = MultiByteToWideChar(CP_UTF8, NULL, szValue,
                                                 value.length(), NULL, 0);
 
     LPWSTR wszValue = new wchar_t [iWideCharValueLen + 1];
     memset ((LPVOID)wszValue, 0, (iWideCharValueLen + 1) * sizeof(wchar_t));
-    if (iWideCharValueLen == MultiByteToWideChar(CP_UTF8, NULL, szValue, 
-                                                value.length(), wszValue, 
+    if (iWideCharValueLen == MultiByteToWideChar(CP_UTF8, NULL, szValue,
+                                                value.length(), wszValue,
                                                 iWideCharValueLen + 1))
         _value_w = wszValue;
     else
         throw TypeError_t("Cannot convert %s from widechar to multibyte.", value.c_str());
 
     delete wszValue;
-    
+
     return _value_w;
 #else //WIN32
     std::wstring _value_w(L"");
@@ -149,9 +149,9 @@ Value_t& String_t::clone(Pool_t &newPool) const
     return newPool.String(value);
 }
 
-void String_t::validateBytes(const std::string::value_type *pData, std::string::size_type dataSize)
+void String_t::validateBytes(const std::string::value_type *pData,
+                             std::string::size_type dataSize)
 {
-
     if ( LibConfig_t::getInstance()->getStringValidationPolicy() == false )
         return;
 
@@ -166,7 +166,8 @@ void String_t::validateBytes(const std::string::value_type *pData, std::string::
     bool isValid = true;
 
     while ((at != end) && (isValid == true)) {
-        rest = ::std::min(static_cast<unsigned long>(end - at), static_cast<unsigned long int>(4));
+        rest = ::std::min(static_cast<unsigned long>(end - at),
+                          static_cast<unsigned long int>(4));
         r = mbrtowc(&w, at, rest, &state);
         if ( r <= 0 ) {
             isValid = false;
@@ -184,11 +185,22 @@ void String_t::validateBytes(const std::string::value_type *pData, std::string::
     }
 
     if ( isValid == false ) {
-    std::stringstream fmt;
-        for (std::string::size_type i = 0; i < std::min(dataSize, static_cast<std::string::size_type>(20)); i++)
-            fmt << std::hex << std::setw(2) << std::setfill('0') << static_cast<int> (pData[i]);
-        throw TypeError_t("Cannot create FRPC::String_t from given data. Size %u bytes, failed at %u, first %u bytes in hex = %s",
-            dataSize, curSize, std::min(dataSize, static_cast<std::string::size_type>(20)), fmt.str().c_str());
+        std::stringstream fmt;
+
+        for (std::string::size_type i = 0;
+             i < std::min(dataSize, static_cast<std::string::size_type>(20));
+             i++)
+        {
+            fmt << std::hex << std::setw(2) << std::setfill('0')
+                << static_cast<int>(pData[i]);
+        }
+
+        throw TypeError_t::format(
+                "Cannot create FRPC::String_t from given data. Size %zd bytes, "
+                "failed at %zd, first %zd bytes in hex = %s",
+                dataSize, curSize,
+                std::min(dataSize, static_cast<std::string::size_type>(20)),
+                fmt.str().c_str());
     }
 
     return;

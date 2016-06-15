@@ -22,20 +22,35 @@
  *
  * FILE          $Id: frpcfault.cc,v 1.4 2007-05-21 15:10:12 mirecta Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #include "frpcfault.h"
 
 namespace FRPC
 {
 
+Fault_t Fault_t::format(int errNum, const char *format, ...)
+{
+    // open variadic arguments
+    va_list valist;
+    va_start(valist, format);
 
+    // format message
+    char buf[1024];
+    vsnprintf(buf, sizeof(buf), format, valist);
+
+    // close variadic arguments
+    va_end(valist);
+
+    // return formated message
+    return Fault_t(errNum, buf);
+}
 
 
 Fault_t::~Fault_t() throw()
@@ -43,4 +58,3 @@ Fault_t::~Fault_t() throw()
 
 
 }
-

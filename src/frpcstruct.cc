@@ -48,8 +48,8 @@ Struct_t::Struct_t(const Struct_t::pair &value) {
 
 Struct_t::Struct_t(const std::string &key, const Value_t &value) {
     if (key.size() > 255) {
-        throw LenError_t("Size of member name must be max 255 not %d.",
-                         key.size() );
+        throw LenError_t::format("Size of member name must be max 255 not %zd.",
+                                 key.size());
     }
     structData.insert(value_type(key,const_cast<Value_t *>(&value)));
 }
@@ -124,8 +124,8 @@ Struct_t& Struct_t::append(const Struct_t::pair &value) {
 Struct_t& Struct_t::append(const Struct_t::key_type &key,
                            const Value_t &value) {
     if (key.size() > 255) {
-        throw LenError_t("Size of member name must be max 255 not %d.",
-                         key.size() );
+        throw LenError_t::format("Size of member name must be max 255 not %zd.",
+                                 key.size());
     }
 
     std::pair<Struct_t::iterator, bool>
@@ -180,7 +180,7 @@ Value_t& Struct_t::operator[] (const Struct_t::key_type &key) {
     iterator istructData;
 
     if ((istructData = structData.find(key)) == structData.end())
-        throw KeyError_t("Key \"%s\" does not exist.",key.c_str());
+        throw KeyError_t::format("Key \"%s\" does not exist.", key.c_str());
 
     return *(istructData->second);
 }
@@ -189,7 +189,7 @@ const Value_t& Struct_t::operator[] (const Struct_t::key_type &key) const {
     const_iterator istructData;
 
     if ((istructData = structData.find(key)) == structData.end())
-        throw KeyError_t("Key \"%s\" does not exist.",key.c_str());
+        throw KeyError_t::format("Key \"%s\" does not exist.", key.c_str());
 
     return *(istructData->second);
 }

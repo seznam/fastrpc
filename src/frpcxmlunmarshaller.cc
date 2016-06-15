@@ -46,104 +46,80 @@ using namespace FRPC;
 extern "C" {
 
     static void startDocumentXML(void *p) {
-        // printf("Start Dokument\n");
     }
 
     static void endDocumentXML(void *p) {
-        // printf("End Dokument\n");
     }
 
     static void startElementXML(void *p, const xmlChar *name, const xmlChar **attrs) {
-        //ak nieje uz chyba
-        if ( reinterpret_cast<XmlUnMarshaller_t*>(p)->
-                exception != XmlUnMarshaller_t::EXC_NONE) {
-            return ;
+        XmlUnMarshaller_t *unm = reinterpret_cast<XmlUnMarshaller_t*>(p);
+
+        // Just stop processing if error happenend
+        if (unm->exception != XmlUnMarshaller_t::EXC_NONE) {
+            return;
         }
 
         try {
-            reinterpret_cast<XmlUnMarshaller_t*>(p)->setValueType((const char*)name);
-            reinterpret_cast<XmlUnMarshaller_t*>(p)->localBuffer.erase();
+            unm->setValueType((const char*)name);
+            unm->localBuffer.erase();
         } catch (const StreamError_t &e) {
-            reinterpret_cast<XmlUnMarshaller_t*>
-            (p)->exception = XmlUnMarshaller_t::EXC_STREAM;
-            reinterpret_cast<XmlUnMarshaller_t*>
-            (p)->exErrMsg = e.message();
+            unm->exception = XmlUnMarshaller_t::EXC_STREAM;
+            unm->exErrMsg = e.message();
         }
         catch (std::bad_alloc &e) {
-            reinterpret_cast<XmlUnMarshaller_t*>
-            (p)->exception = XmlUnMarshaller_t::EXC_BAD_ALLOC;
+            unm->exception = XmlUnMarshaller_t::EXC_BAD_ALLOC;
         } catch (...) {
-            reinterpret_cast<XmlUnMarshaller_t*>
-            (p)->exception = XmlUnMarshaller_t::EXC_UNKNOWN;
-            reinterpret_cast<XmlUnMarshaller_t*>
-            (p)->exErrMsg = "Unknown error";
+            unm->exception = XmlUnMarshaller_t::EXC_UNKNOWN;
+            unm->exErrMsg = "Unknown error";
         }
     }
 
     static void endElementXML(void *p, const xmlChar *name) {
-        //ak nieje uz chyba
-        if ( reinterpret_cast<XmlUnMarshaller_t*>(p)->
-                exception != XmlUnMarshaller_t::EXC_NONE) {
+        XmlUnMarshaller_t *unm = reinterpret_cast<XmlUnMarshaller_t*>(p);
+
+        // Just stop processing if error happenend
+        if (unm->exception != XmlUnMarshaller_t::EXC_NONE) {
             return ;
         }
 
         try {
-            reinterpret_cast<XmlUnMarshaller_t*>(p)->
-            setValueData(reinterpret_cast<XmlUnMarshaller_t*>(p)->
-                         localBuffer.data(),
-                         reinterpret_cast<XmlUnMarshaller_t*>(p)->
-                         localBuffer.size());
+            unm->setValueData(unm->localBuffer.data(),
+                              unm->localBuffer.size());
 
-            reinterpret_cast<XmlUnMarshaller_t*>(p)->closeEntity((const char*)name);
-            //printf("Koniec: %s\n",name);
+            unm->closeEntity((const char*)name);
         } catch (const StreamError_t &e) {
-            reinterpret_cast<XmlUnMarshaller_t*>
-            (p)->exception = XmlUnMarshaller_t::EXC_STREAM;
-            reinterpret_cast<XmlUnMarshaller_t*>
-            (p)->exErrMsg = e.message();
-        }
-        catch (std::bad_alloc &e) {
-            reinterpret_cast<XmlUnMarshaller_t*>
-            (p)->exception = XmlUnMarshaller_t::EXC_BAD_ALLOC;
+            unm->exception = XmlUnMarshaller_t::EXC_STREAM;
+            unm->exErrMsg = e.message();
+        } catch (std::bad_alloc &e) {
+            unm->exception = XmlUnMarshaller_t::EXC_BAD_ALLOC;
         } catch (...) {
-            reinterpret_cast<XmlUnMarshaller_t*>
-            (p)->exception = XmlUnMarshaller_t::EXC_UNKNOWN;
-            reinterpret_cast<XmlUnMarshaller_t*>
-            (p)->exErrMsg = "Unknown error";
+            unm->exception = XmlUnMarshaller_t::EXC_UNKNOWN;
+            unm->exErrMsg = "Unknown error";
         }
 
     }
 
     static void charactersXML(void *p, const xmlChar *ch, int len) {
-        //ak nieje uz chyba
-        if ( reinterpret_cast<XmlUnMarshaller_t*>(p)->
-                exception != XmlUnMarshaller_t::EXC_NONE) {
+        XmlUnMarshaller_t *unm = reinterpret_cast<XmlUnMarshaller_t*>(p);
+
+        // Just stop processing if error happenend
+        if (unm->exception != XmlUnMarshaller_t::EXC_NONE) {
             return ;
         }
         try {
-            reinterpret_cast<XmlUnMarshaller_t*>(p)->
-            localBuffer.append(reinterpret_cast<const char*>(ch),len);
+            unm->localBuffer.append(reinterpret_cast<const char*>(ch),len);
         } catch (const StreamError_t &e) {
-            reinterpret_cast<XmlUnMarshaller_t*>
-            (p)->exception = XmlUnMarshaller_t::EXC_STREAM;
-            reinterpret_cast<XmlUnMarshaller_t*>
-            (p)->exErrMsg = e.message();
-
-
-        }
-        catch (std::bad_alloc &e) {
-            reinterpret_cast<XmlUnMarshaller_t*>
-            (p)->exception = XmlUnMarshaller_t::EXC_BAD_ALLOC;
+            unm->exception = XmlUnMarshaller_t::EXC_STREAM;
+            unm->exErrMsg = e.message();
+        } catch (std::bad_alloc &e) {
+            unm->exception = XmlUnMarshaller_t::EXC_BAD_ALLOC;
         } catch (...) {
-            reinterpret_cast<XmlUnMarshaller_t*>
-            (p)->exception = XmlUnMarshaller_t::EXC_UNKNOWN;
-            reinterpret_cast<XmlUnMarshaller_t*>
-            (p)->exErrMsg = "Unknown error";
+            unm->exception = XmlUnMarshaller_t::EXC_UNKNOWN;
+            unm->exErrMsg = "Unknown error";
         }
-
     }
-
 }
+
 namespace {
 const char *error_mapping[] = {
                                   "No error",
@@ -252,11 +228,15 @@ const char *error_mapping[] = {
                               };
 }
 XmlUnMarshaller_t::XmlUnMarshaller_t(DataBuilder_t & dataBuilder)
-        :exception(0),dataBuilder(dataBuilder),internalType(NONE)
-        , mainInternalType(NONE),internalValue(0),versionCheck(true) {
-
-
+        : exception(0),
+          dataBuilder(dataBuilder),
+          internalType(NONE),
+          mainInternalType(NONE),
+          faultCode(0),
+          versionCheck(true)
+{
     memset(&callbacks, 0, sizeof(xmlSAXHandler));
+
     //callbacks.initialized = XML_SAX2_MAGIC;
     callbacks.startDocument = (startDocumentSAXFunc)&startDocumentXML;
     callbacks.endDocument =  (endDocumentSAXFunc)&endDocumentXML;
@@ -266,35 +246,31 @@ XmlUnMarshaller_t::XmlUnMarshaller_t(DataBuilder_t & dataBuilder)
 
     parser =  xmlCreatePushParserCtxt(&callbacks,this,0,0,0);
 
-
 //    xmlCtxtResetPush(parser,0,0,0,"UTF-8");
-
 
     if (!parser)
         throw Error_t("Failed to create Xml parser");
-
 }
-
-
 
 XmlUnMarshaller_t::~XmlUnMarshaller_t() {
-
     xmlFreeParserCtxt(parser);
 }
+
 void XmlUnMarshaller_t::finish() {
-
     unMarshall(0,0,NONE);
-    if (internalType !=NONE )
+    if (internalType != NONE)
         throw StreamError_t("Stream not complete");
-
 }
 
 ProtocolVersion_t XmlUnMarshaller_t::getProtocolVersion() {
     return protocolVersion;
 }
 
-void XmlUnMarshaller_t::unMarshall( const char *data, unsigned int size, char type) {
-
+void XmlUnMarshaller_t::unMarshall(
+        const char *data,
+        unsigned int size,
+        char type)
+{
     int terminate = (size == 0)?1:0;
     wantType = type;
     //try obtain version from xml
@@ -314,8 +290,6 @@ void XmlUnMarshaller_t::unMarshall( const char *data, unsigned int size, char ty
         }
         versionCheck = false;
     }
-    //printf("%s",data);
-    //fflush(stdout);
 
     // xmlSwitchEncoding(parser, XML_CHAR_ENCODING_UTF8);
     /* xmlSwitchEncoding(parser,XML_CHAR_ENCODING_NONE);
@@ -323,15 +297,15 @@ void XmlUnMarshaller_t::unMarshall( const char *data, unsigned int size, char ty
      xmlSwitchToEncoding(parser,
     xmlGetCharEncodingHandler(XML_CHAR_ENCODING_UTF8));  */
 
-    if (xmlParseChunk(parser, data, size , terminate)) {
+    if (xmlParseChunk(parser, data, size, terminate)) {
         const char *msg;
         long code =  parser->errNo;
         if (code < 0 || code >= static_cast<long>(sizeof(error_mapping))) {
-            msg =  "Unknown";
+            msg = "Unknown";
         } else
-            msg =  error_mapping[code];
+            msg = error_mapping[code];
 
-        throw StreamError_t("Parser error:< %s >",msg);
+        throw StreamError_t::format("Parser error: < %s >", msg);
     }
 
     switch (exception) {
@@ -349,11 +323,10 @@ void XmlUnMarshaller_t::unMarshall( const char *data, unsigned int size, char ty
     default:
         break;
     }
-
-
 }
 
 namespace {
+
 inline char getValueType(const char *name) {
     long len = strlen(name);
     if (len < 2)
@@ -480,12 +453,10 @@ inline char getValueType(const char *name) {
     }
     return NONE;
 }
-}
+
+} // namespace
 
 void XmlUnMarshaller_t::setValueType(const char *name) {
-
-
-
     char type;
     switch (type = getValueType(name)) {
     case INT:
@@ -527,7 +498,7 @@ void XmlUnMarshaller_t::setValueType(const char *name) {
     case METHOD_CALL:
     case METHOD_RESPONSE:
         mainInternalType = type;
-        if (mainInternalType != wantType && wantType != TYPE_ANY ) {
+        if (mainInternalType != wantType && wantType != TYPE_ANY) {
             if (mainInternalType != TYPE_FAULT || wantType != TYPE_METHOD_RESPONSE) {
                 throw StreamError_t("Bad main Type !!!");
             }
@@ -542,13 +513,6 @@ void XmlUnMarshaller_t::setValueType(const char *name) {
 }
 
 void XmlUnMarshaller_t::setValueData(const char *data, unsigned int len) {
-
-
-//     if (len == 1) {
-//         if (data[0] == '\n') {
-//             return;
-//         }
-//     }
     switch (internalType) {
     case NONE: {}
     break;
@@ -589,7 +553,7 @@ void XmlUnMarshaller_t::setValueData(const char *data, unsigned int len) {
         }
         if (mainInternalType == FAULT)
             //it is errNum
-            internalValue = value;
+            faultCode = value;
         else
             //build int
             dataBuilder.buildInt(value);
@@ -598,8 +562,7 @@ void XmlUnMarshaller_t::setValueData(const char *data, unsigned int len) {
     break;
     case STRING: {
         if (mainInternalType == FAULT) {
-            dataBuilder.buildFault(internalValue, data, len);
-            //mainInternalType = NONE;
+            faultString = std::string(data, len);
         } else {
             dataBuilder.buildString(data, len);
         }
@@ -644,17 +607,22 @@ void XmlUnMarshaller_t::setValueData(const char *data, unsigned int len) {
     }
 
     }
-
-
 }
 void XmlUnMarshaller_t::closeEntity(const char *name) {
-    char type;
+    char type = getValueType(name);
     internalType = NONE;
 
-    if (mainInternalType == FAULT)
-        return;
+    if (mainInternalType == FAULT) {
+        if (type == FAULT) {
+            dataBuilder.buildFault(faultCode, faultString);
+            faultCode = 0;
+            faultString.clear();
+        }
 
-    switch (type = getValueType(name)) {
+        return;
+    }
+
+    switch (type) {
     case STRUCT:
         dataBuilder.closeStruct();
         break;

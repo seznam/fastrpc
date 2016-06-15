@@ -137,7 +137,6 @@ public:
         @brief Marshall a string  type
         @param value pointer to string data must ending with special character "\0"
         @param size size of string data. Second variant of method obtain size with using strlen()
-    :major(FRPC_MAJOR_VERSION),minor(FRPC_MINOR_VERSION){}
         If marshaller is create as binary  using method Binary(FastRPC)
         or if created as XML using method XML(Xml-RPC)
     */

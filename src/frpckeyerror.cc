@@ -35,10 +35,25 @@
 namespace FRPC {
 
 
+KeyError_t KeyError_t::format(const char *format, ...)
+{
+    // open variadic arguments
+    va_list valist;
+    va_start(valist, format);
+
+    // format message
+    char buf[1024];
+    vsnprintf(buf, sizeof(buf), format, valist);
+
+    // close variadic arguments
+    va_end(valist);
+
+    // return formated message
+    return KeyError_t(buf);
+}
 
 
 KeyError_t::~KeyError_t() throw () {}
 
 
 }
-

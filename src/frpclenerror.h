@@ -22,13 +22,13 @@
  *
  * FILE          $Id: frpclenerror.h,v 1.3 2007-05-18 15:29:45 mirecta Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #ifndef FRPCFRPCLENERROR_H
 #define FRPCFRPCLENERROR_H
@@ -40,36 +40,15 @@ namespace FRPC
 
 /**
 
-@brief Error data(string) length 
+@brief Error data(string) length
 @author Miroslav Talasek
 */
 class FRPC_DLLEXPORT LenError_t : public Error_t
 {
 public:
-     /**
-        @brief Constructor from format string and arguments
-        @param format is const char* format string 
-        @param ... is other arguments
-    */
-    
-    LenError_t(const char *format, ...):Error_t()
-    {
-        // open variadic arguments
-        va_list valist;
-        va_start(valist, format);
+    LenError_t(const std::string &msg) : Error_t(msg) {}
 
-        // format message
-        char buf[1024];
-        vsnprintf(buf, sizeof(buf), format, valist);
-
-        // close variadic arguments
-        va_end(valist);
-
-        // return formated message
-        msg = buf;
-
-    }
-    
+    static LenError_t format(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
 
     ~LenError_t() throw();
 private:

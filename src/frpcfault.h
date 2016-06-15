@@ -44,49 +44,37 @@ namespace FRPC {
 /**
 @author Miroslav Talasek
 */
-class FRPC_DLLEXPORT Fault_t:public std::exception {
+class FRPC_DLLEXPORT Fault_t : public std::exception {
 public:
-    Fault_t(int errNum, const std::string &errMsg):errNum(errNum),
-            errMsg(errMsg) {}
-
-    Fault_t(int errNum, const char *format, ...):errNum(errNum) {
-        // open variadic arguments
-        va_list valist;
-        va_start(valist, format);
-
-        // format message
-        char buf[1024];
-        vsnprintf(buf, sizeof(buf), format, valist);
-
-        // close variadic arguments
-        va_end(valist);
-
-        // return formated message
-        errMsg = buf;
-
-
-    }
+    Fault_t(int errNum, const std::string &errMsg)
+        : errNum(errNum),
+          errMsg(errMsg)
+    {}
 
     ~Fault_t() throw();
+
     int errorNum() {
         return errNum;
     }
-    
+
+    /// Creates a fault with specified formatted string.
+    static Fault_t format(int errNum, const char *format, ...) __attribute__((format(printf, 2, 3)));
+
     const std::string& message() {
         return errMsg;
     }
-    int errorNum()   const {
+    int errorNum() const {
         return errNum;
     }
 
     const std::string& message() const {
         return errMsg;
     }
-    
-    virtual const char * what () const throw ()  { 
+
+    virtual const char * what () const throw () {
         return  errMsg.c_str();
     }
-    
+
 private:
     Fault_t();
     int errNum;

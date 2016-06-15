@@ -42,6 +42,7 @@
 #include <frpcconnector.h>
 #include <list>
 #include <frpc.h>
+#include <sstream>
 
 
 
@@ -78,9 +79,7 @@ private:
     unsigned int type;
 };
 
-/**
-@author Miroslav Talasek
-*/
+
 class FRPC_DLLEXPORT HTTPClient_t : public Writer_t {
 public:
     HTTPClient_t(HTTPIO_t &httpIO, URL_t &url, Connector_t *connector,
@@ -149,9 +148,24 @@ public:
     */
     void readResponse(DataBuilder_t &builder);
 
-    /** used on proxy servers to set the x-forwarded-for header used for 
-     *  request origin tracking */
-    void setForwardHeader(const std::string &fwd) { forward = fwd; }
+    static const std::string HOST;
+    static const std::string POST;
+    static const std::string HTTP10;
+    static const std::string HTTP11;
+    static const std::string TYPE_XML;
+    static const std::string TYPE_FRPC;
+    static const std::string ACCEPTED;
+    static const std::string CLOSE;
+    static const std::string KEEPALIVE;
+
+    typedef std::pair<std::string, std::string> Header_t;
+    typedef std::vector<Header_t> HeaderVector_t;
+
+    template <typename T>
+    void addCustomRequestHeader(const std::string& name, const T& value);
+    void addCustomRequestHeader(const Header_t& header);
+    void addCustomRequestHeader(const HeaderVector_t& headers);
+    void deleteCustomRequestHeaders();
 
 private:
     void sendRequest(bool last = false );
@@ -174,7 +188,8 @@ private:
     UnMarshaller_t *unmarshaller;
     bool useHTTP10;
     ProtocolVersion_t protocolVersion;
-    std::string forward;
+
+    std::ostringstream m_customRequestHeaders;
 };
 
 } // namespace FRPC

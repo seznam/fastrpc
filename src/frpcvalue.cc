@@ -22,13 +22,13 @@
  *
  * FILE          $Id: frpcvalue.cc,v 1.3 2010-04-21 08:48:03 edois Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #include "frpcvalue.h"
 #include "frpcnull.h"
@@ -36,20 +36,30 @@
 namespace FRPC
 {
 
-Value_t& Value_t::operator[] (std::vector<Value_t*>::size_type index){
-  throw TypeError_t("Type of object is %s but array operator used.", this->getTypeName());
+Value_t& Value_t::operator[](std::vector<Value_t*>::size_type index) {
+    throw TypeError_t::format("Type of object is %s but array operator used.",
+                              this->getTypeName());
 }
 
-const Value_t& Value_t::operator[] (std::vector<Value_t*>::size_type index) const {
-  throw TypeError_t("Type of object is %s but array operator used.", this->getTypeName());
+const Value_t& Value_t::operator[](
+    std::vector<Value_t*>::size_type index) const
+{
+    throw TypeError_t::format("Type of object is %s but array operator used.",
+                              this->getTypeName());
 }
 
-Value_t& Value_t::operator[] (const std::map<std::string,Value_t*>::key_type &key){
-  throw TypeError_t("Type of object is %s but struct operator used.", this->getTypeName());
+Value_t& Value_t::operator[](
+    const std::map<std::string, Value_t*>::key_type& key)
+{
+    throw TypeError_t::format("Type of object is %s but struct operator used.",
+                              this->getTypeName());
 }
 
-const Value_t& Value_t::operator[] (const std::map<std::string,Value_t*>::key_type &key) const{
-  throw TypeError_t("Type of object is %s but struct operator used.", this->getTypeName());
+const Value_t& Value_t::operator[](
+    const std::map<std::string, Value_t*>::key_type& key) const
+{
+    throw TypeError_t::format("Type of object is %s but struct operator used.",
+                              this->getTypeName());
 }
 
 Value_t::~Value_t()
@@ -61,7 +71,3 @@ bool Value_t::isNull() const
 }
 
 }
-
-
-
-

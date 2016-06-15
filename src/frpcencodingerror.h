@@ -22,53 +22,31 @@
  *
  * FILE          $Id: frpcencodingerror.h,v 1.3 2007-05-18 15:29:45 mirecta Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #ifndef FRPCFRPCENCODINGERROR_H
 #define FRPCFRPCENCODINGERROR_H
 
 #include <frpcerror.h>
 
-namespace FRPC
-{
+namespace FRPC {
 
 /**
-@brief encoding error used in marshaling 
+@brief encoding error used in marshaling
 @author Miroslav Talasek
 */
-class FRPC_DLLEXPORT EncodingError_t : public Error_t
-{
+class FRPC_DLLEXPORT EncodingError_t : public Error_t {
 public:
+    EncodingError_t(const std::string msg) : Error_t(msg) {}
 
-    /**
-       @brief Constructor from format string and arguments
-       @param format is const char* format string 
-       @param ... is other arguments
-    */
+    static EncodingError_t format(const char *format, ...) __attribute__((format(printf, 1, 2)));
 
-    EncodingError_t(const char *format, ...):Error_t()
-    {
-        // open variadic arguments
-        va_list valist;
-        va_start(valist, format);
-
-        // format message
-        char buf[1024];
-        vsnprintf(buf, sizeof(buf), format, valist);
-
-        // close variadic arguments
-        va_end(valist);
-
-        // return formated message
-        msg = buf;
-
-    }
     /**
         @brief Default destructor
     */
@@ -79,10 +57,8 @@ private:
         @brief Default constructor is disabled
     */
     EncodingError_t();
-
-
 };
 
-};
+}
 
 #endif

@@ -128,7 +128,8 @@ inline FRPC_DLLEXPORT Bool_t& Bool(Value_t &value)
     Bool_t *boolean = dynamic_cast<Bool_t*>(&value);
 
     if(!boolean)
-        throw TypeError_t("Type is %s but not bool",value.getTypeName());
+        throw TypeError_t::format("Type is %s but not bool",
+                                  value.getTypeName());
 
     return *boolean;
 }
@@ -138,7 +139,8 @@ inline FRPC_DLLEXPORT const Bool_t& Bool(const Value_t &value)
     const Bool_t *boolean = dynamic_cast<const Bool_t*>(&value);
 
     if(!boolean)
-        throw TypeError_t("Type is %s but not bool",value.getTypeName());
+        throw TypeError_t::format("Type is %s but not bool",
+                                  value.getTypeName());
 
     return *boolean;
 }

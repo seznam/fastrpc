@@ -36,7 +36,7 @@
 
 
 # warn on all
-AM_CXXFLAGS = -Wall -g -fPIC $(DEPS_CFLAGS) ${CXXEXTRAFLAGS}
+AM_CXXFLAGS = -Wall -fPIC $(DEPS_CFLAGS) ${CXXEXTRAFLAGS}
 
 # extra compiler options
 AM_CPPFLAGS = -D_ISOC99_SOURCE -D__ENABLE_WSTRING=1
@@ -79,9 +79,13 @@ libfastrpc_la_SOURCES = frpcvalue.cc frpcarray.cc frpcstruct.cc frpcbinary.cc fr
 # with these flags (version info etc.)
 libfastrpc_la_LDFLAGS = @VERSION_INFO@ $(DEPS_LIBS)
 
+check_PROGRAMS=test-base64 test-protocol
+test_base64_SOURCES=../test/base64.cc
+test_protocol_SOURCES=../test/protocol.cc
+test_base64_LDADD=libfastrpc.la
+test_protocol_LDADD=libfastrpc.la
 
-# test program
-#noinst_PROGRAMS =
+TESTS=test-base64 test-protocol
 
 #doc:
     #doxygen

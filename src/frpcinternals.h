@@ -35,6 +35,7 @@
 #include <memory.h>
 #include <sstream>
 #include <frpcint.h>
+#include <frpcstreamerror.h>
 
 #include <sys/param.h>
 
@@ -53,8 +54,13 @@
 #endif /* __BYTE_ORDER */
 
 
-#define FRPC_MAJOR_VERSION 2
+#define FRPC_MAJOR_VERSION 3
 #define FRPC_MINOR_VERSION 1
+
+// We use this to intentionally downgrade the emitted frpc stream
+// so that we can have a comfortable 2 phase transition to new protocol version.
+#define FRPC_MAJOR_VERSION_DEFAULT 2
+#define FRPC_MINOR_VERSION_DEFAULT 1
 
 #define SWAP_BYTE(byte1,byte2)  \
          byte1 = byte1 ^ byte2; \
@@ -263,6 +269,63 @@ struct DateTimeData_t
         dateTime.weekDay = (data[5] & 0x07);
         memcpy(reinterpret_cast<char*>(&unixTime),&data[1], 4 );
         dateTime.unixTime = unixTime;
+        dateTime.timeZone = data[0];
+    }
+};
+
+// the datetime data structure used since protocol version 3
+struct DateTimeDataV3_t
+{
+    DateTimeInternal_t dateTime;
+    char data[14];
+    DateTimeDataV3_t()
+    {
+        memset(data,0,sizeof(data));
+    }
+
+    void pack()
+    {
+        data[0] = dateTime.timeZone;
+
+        int64_t time64 = dateTime.unixTime;
+
+        if (sizeof(time_t) > sizeof(time64)) {
+            if (dateTime.unixTime != time64) {
+                throw StreamError_t(
+                        "Protocol can't transfer the timestamp value");
+            }
+        }
+
+        memcpy(&data[1],reinterpret_cast<char*>(&time64), 8);
+        data[ 9] = (dateTime.sec & 0x1f) << 3 | (dateTime.weekDay & 0x07);
+        data[10] = ((dateTime.minute & 0x3f) << 1) | ((dateTime.sec & 0x20) >> 5)
+                  | ((dateTime.hour & 0x01) << 7);
+        data[11] = ((dateTime.hour & 0x1e) >> 1) | ((dateTime.day & 0x0f) << 4);
+        data[12] = ((dateTime.day & 0x1f) >> 4) | ((dateTime.month & 0x0f) << 1)
+                  | ((dateTime.year & 0x07) << 5);
+        data[13] = ((dateTime.year & 0x07f8) >> 3);
+    }
+
+    void unpack()
+    {
+        dateTime.year  = (data[13] << 3) | ((data[12] & 0xe0) >> 5);
+        dateTime.month = (data[12] & 0x1e) >> 1;
+        dateTime.day = ((data[12] & 0x01) << 4) |(((data[11] & 0xf0) >> 4));
+        dateTime.hour = ((data[11] & 0x0f) << 1) | ((data[10] & 0x80) >> 7);
+        dateTime.minute = ((data[10] & 0x7e) >> 1);
+        dateTime.sec = ((data[10] & 0x01) << 5) | ((data[9] & 0xf8) >> 3);
+        dateTime.weekDay = (data[9] & 0x07);
+        int64_t time64 = 0;
+        memcpy(reinterpret_cast<char*>(&time64),&data[1], 8);
+        dateTime.unixTime = time64;
+
+        if (sizeof(time_t) < sizeof(time64)) {
+            if (dateTime.unixTime != time64) {
+                throw StreamError_t(
+                        "time_t can't hold the received timestamp value");
+            }
+        }
+
         dateTime.timeZone = data[0];
     }
 };

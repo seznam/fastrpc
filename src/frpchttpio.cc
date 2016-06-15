@@ -193,8 +193,9 @@ std::string HTTPIO_t::readLineOpt(bool checkLimit, bool optional)
         case -1:
             // other error
             STRERROR_PRE();
-            throw ProtocolError_t(HTTP_SYSCALL, "Syscall error: <%d, %s>.",
-                              ERRNO, STRERROR(ERRNO));
+            throw ProtocolError_t::format(HTTP_SYSCALL,
+                                          "Syscall error: <%d, %s>.",
+                                          ERRNO, STRERROR(ERRNO));
         }
 
         // pøeèteme data ze socketu, ale neostraníme je z receive bufferu
@@ -213,8 +214,9 @@ std::string HTTPIO_t::readLineOpt(bool checkLimit, bool optional)
         case -1:
             // other error
             STRERROR_PRE();
-            throw ProtocolError_t(HTTP_SYSCALL, "Syscall error: <%d, %s>.",
-                              ERRNO, STRERROR(ERRNO));
+            throw ProtocolError_t::format(HTTP_SYSCALL,
+                                          "Syscall error: <%d, %s>.",
+                                          ERRNO, STRERROR(ERRNO));
         }
 
         noBytes = false;
@@ -230,9 +232,9 @@ std::string HTTPIO_t::readLineOpt(bool checkLimit, bool optional)
                     ((lineBuff.length() + toRead)
                      > static_cast<unsigned int>(lineSizeLimit)))
             {
-                throw ProtocolError_t
-                (HTTP_LINE_TOO_LONG,"Security limit exceeded: line "
-                 "is too long ('%u' > '%d')",
+                throw ProtocolError_t::format
+                (HTTP_LINE_TOO_LONG,
+                 "Security limit exceeded: line is too long ('%zd' > '%d')",
                  lineBuff.length() + toRead,
                  lineSizeLimit);
             }
@@ -248,8 +250,9 @@ std::string HTTPIO_t::readLineOpt(bool checkLimit, bool optional)
             case -1:
                 // other error
                 STRERROR_PRE();
-                throw ProtocolError_t(HTTP_SYSCALL, "Syscall error: <%d, %s>.",
-                                  ERRNO, STRERROR(ERRNO));
+                throw ProtocolError_t::format(HTTP_SYSCALL,
+                                              "Syscall error: <%d, %s>.",
+                                              ERRNO, STRERROR(ERRNO));
 
             default:
                 // vyèteme v¹echny znaky vèetnì <LF>, øe»ezec prøilepíme
@@ -276,9 +279,9 @@ std::string HTTPIO_t::readLineOpt(bool checkLimit, bool optional)
                     ((lineBuff.length() + toRead)
                      > static_cast<unsigned int>(lineSizeLimit)))
             {
-                throw ProtocolError_t
-                (HTTP_LINE_TOO_LONG, "Security limit exceeded: line "
-                 "is too long ('%u' > '%d')",
+                throw ProtocolError_t::format
+                    (HTTP_LINE_TOO_LONG, "Security limit exceeded: line "
+                                         "is too long ('%zd' > '%d')",
                  lineBuff.length() + toRead,
                  lineSizeLimit);
             }
@@ -289,13 +292,14 @@ std::string HTTPIO_t::readLineOpt(bool checkLimit, bool optional)
             case 0:
                 // protìjsí strana zavøela spojení
                 throw ProtocolError_t(HTTP_CLOSED,
-                                  "Connection closed by foreign host");
+                                      "Connection closed by foreign host");
 
             case -1:
                 // other error
                 STRERROR_PRE();
-                throw ProtocolError_t(HTTP_SYSCALL, "Syscall error: <%d, %s>.",
-                                  ERRNO, STRERROR(ERRNO));
+                throw ProtocolError_t::format(HTTP_SYSCALL,
+                                              "Syscall error: <%d, %s>.",
+                                              ERRNO, STRERROR(ERRNO));
 
             default:
                 // pøilepíme øetìzec na konec øádky a jdeme na dal¹í ètení
@@ -332,8 +336,9 @@ void HTTPIO_t::sendData(const char *data, size_t length, bool watchForResponse)
         case -1:
             // other error
             STRERROR_PRE();
-            throw ProtocolError_t(HTTP_SYSCALL, "Syscall error: <%d, %s>.",
-                              ERRNO, STRERROR(ERRNO));
+            throw ProtocolError_t::format(HTTP_SYSCALL,
+                                          "Syscall error: <%d, %s>.",
+                                          ERRNO, STRERROR(ERRNO));
         }
 
         // watch for read data if asked to do so
@@ -356,8 +361,9 @@ void HTTPIO_t::sendData(const char *data, size_t length, bool watchForResponse)
             }
             // other error
             STRERROR_PRE();
-            throw ProtocolError_t(HTTP_SYSCALL, "Syscall error: <%d, %s>.",
-                              ERRNO, STRERROR(ERRNO));
+            throw ProtocolError_t::format(HTTP_SYSCALL,
+                                          "Syscall error: <%d, %s>.",
+                                          ERRNO, STRERROR(ERRNO));
 
         default:
             // pøipravíme zapisování dal¹ích dat
@@ -386,10 +392,10 @@ void HTTPIO_t::readBlock(long int contentLength_, DataSink_t &data)
 
     // check if content fits the max block size
     if ((bodySizeLimit >= 0) && (contentLength_ > bodySizeLimit))
-        throw ProtocolError_t
-        (HTTP_BODY_TOO_LONG, "Security limit exceeded: line "
-         "is too long ('%ld' > '%d')",
-         contentLength_, bodySizeLimit);
+        throw ProtocolError_t::format
+            (HTTP_BODY_TOO_LONG, "Security limit exceeded: line "
+                                 "is too long ('%ld' > '%d')",
+             contentLength_, bodySizeLimit);
 
     // buffer pro ètení ze socketu.
     char buff[HTTP_BUFF_LENGTH];
@@ -412,8 +418,9 @@ void HTTPIO_t::readBlock(long int contentLength_, DataSink_t &data)
         case -1:
             // other error
             STRERROR_PRE();
-            throw ProtocolError_t(HTTP_SYSCALL, "Syscall error: <%d, %s>.",
-                              ERRNO, STRERROR(ERRNO));
+            throw ProtocolError_t::format(HTTP_SYSCALL,
+                                          "Syscall error: <%d, %s>.",
+                                          ERRNO, STRERROR(ERRNO));
         }
 
         // pøeèteme data ze socketu
@@ -432,8 +439,9 @@ void HTTPIO_t::readBlock(long int contentLength_, DataSink_t &data)
         case -1:
             // other error
             STRERROR_PRE();
-            throw ProtocolError_t(HTTP_SYSCALL, "Syscall error: <%d, %s>.",
-                              ERRNO, STRERROR(ERRNO));
+            throw ProtocolError_t::format(HTTP_SYSCALL,
+                                          "Syscall error: <%d, %s>.",
+                                          ERRNO, STRERROR(ERRNO));
 
         default:
             // pøilepíme data na konec dosud pøeètených dat
@@ -442,10 +450,10 @@ void HTTPIO_t::readBlock(long int contentLength_, DataSink_t &data)
             // test for maxblocksize
             if (bodySizeLimit >= 0 && data.written()
                     > static_cast<unsigned long int>(bodySizeLimit))
-                throw ProtocolError_t
-                (HTTP_BODY_TOO_LONG, "Security limit exceeded: content "
-                 "is too large (%u > %d)",
-                 data.written(), bodySizeLimit);
+                throw ProtocolError_t::format
+                    (HTTP_BODY_TOO_LONG, "Security limit exceeded: content "
+                                         "is too large (%u > %d)",
+                     data.written(), bodySizeLimit);
 
             data.write(buff, bytes);
             // pokud ji¾ není co zapsat -> konec
@@ -477,15 +485,17 @@ void HTTPIO_t::readHeader(HTTPHeader_t &header, bool optional)
         // parse header line
         if (getHeaderValue(line, name, value))
             // oops, nìkdo nám poslal binec...
-            throw ProtocolError_t(HTTP_VALUE, "Invalid header line '%s'/",
-                              line.substr(0, 30).c_str());
+            throw ProtocolError_t::format(HTTP_VALUE,
+                                          "Invalid header line '%s'/",
+                                          line.substr(0, 30).c_str());
         if (name.empty())
         {
             // continuing line
             if (header.empty())
                 // but no line to attach
-                throw ProtocolError_t(HTTP_VALUE, "Invalid header line '%s'/",
-                                  line.substr(0, 30).c_str());
+                throw ProtocolError_t::format(HTTP_VALUE,
+                                              "Invalid header line '%s'/",
+                                              line.substr(0, 30).c_str());
 
             header.appendValue(value);
         }
@@ -503,8 +513,9 @@ long int HTTPIO_t::readChunkSize()
     long int chunkSize;
     if (!(is >> std::hex >> chunkSize) || (chunkSize < 0))
         // reading of chunk size failed
-        throw ProtocolError_t(HTTP_VALUE, "Bad chunk size: '%s'.",
-                          line.substr(0, 30).c_str());
+        throw ProtocolError_t::format(HTTP_VALUE,
+                                      "Bad chunk size: '%s'.",
+                                      line.substr(0, 30).c_str());
     return chunkSize;
 }
 
@@ -517,11 +528,11 @@ void HTTPIO_t::readChunkedContent(HTTPHeader_t &header, DataSink_t &data)
         if ((bodySizeLimit >= 0) &&
                 ((data.written() + chunkSize)
                  > static_cast<unsigned int>(bodySizeLimit)))
-            throw ProtocolError_t
-            (HTTP_BODY_TOO_LONG, "Security limit exceeded: line "
-             "is too long ('%ld > %d)",
-             data.written() + chunkSize,
-             bodySizeLimit);
+            throw ProtocolError_t::format
+                (HTTP_BODY_TOO_LONG, "Security limit exceeded: line "
+                                     "is too long ('%ld > %d)",
+                 data.written() + chunkSize,
+                 bodySizeLimit);
 
         // read chunk
         readBlock(chunkSize, data);
@@ -529,9 +540,10 @@ void HTTPIO_t::readChunkedContent(HTTPHeader_t &header, DataSink_t &data)
         // read CRLF after chunk
         std::string emptyLine(readLine());
         if (!emptyLine.empty())
-            throw ProtocolError_t(HTTP_VALUE,
-                              "Chunk terminator should be empty, "
-                              "not '%s'.", emptyLine.substr(0, 30).c_str());
+            throw ProtocolError_t::format(
+                    HTTP_VALUE,
+                    "Chunk terminator should be empty, "
+                    "not '%s'.", emptyLine.substr(0, 30).c_str());
     }
 
     // read trailer
@@ -548,16 +560,17 @@ void HTTPIO_t::readContent(HTTPHeader_t &header, DataSink_t &data,
         long int contentLength;
         std::istringstream is(value);
         if (!(is >> contentLength) || (contentLength < 0))
-            throw ProtocolError_t(HTTP_VALUE,
-                              "Invalid content length header '%s'.",
-                              value.substr(0, 30).c_str());
+            throw ProtocolError_t::format(
+                    HTTP_VALUE,
+                    "Invalid content length header '%s'.",
+                    value.substr(0, 30).c_str());
 
         // check for body limit
         if ((bodySizeLimit >= 0) && (contentLength > bodySizeLimit))
-            throw ProtocolError_t
-            (HTTP_BODY_TOO_LONG, "Security limit exceeded: line "
-             "is too long ('%ld > %d)",
-             contentLength, bodySizeLimit);
+            throw ProtocolError_t::format
+                (HTTP_BODY_TOO_LONG, "Security limit exceeded: line "
+                                     "is too long ('%ld > %d)",
+                 contentLength, bodySizeLimit);
 
         // tell sink how much data it will be fed
         //data.await(contentLength);
@@ -577,9 +590,10 @@ void HTTPIO_t::readContent(HTTPHeader_t &header, DataSink_t &data,
         }
         else
         {
-            throw ProtocolError_t(HTTP_VALUE,
-                              "Invalid content-transfer-encoding "
-                              "header '%s'.", value.substr(0, 30).c_str());
+            throw ProtocolError_t::format(
+                    HTTP_VALUE,
+                    "Invalid content-transfer-encoding "
+                    "header '%s'.", value.substr(0, 30).c_str());
         }
     }
     else if (!request)

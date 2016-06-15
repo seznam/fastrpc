@@ -22,13 +22,13 @@
  *
  * FILE          $Id: frpcindexerror.h,v 1.3 2007-05-18 15:29:45 mirecta Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #ifndef FRPCFRPCINDEXERROR_H
 #define FRPCFRPCINDEXERROR_H
@@ -45,37 +45,18 @@ namespace FRPC
 class FRPC_DLLEXPORT IndexError_t : public Error_t
 {
 public:
-    /**
-        @brief Constructor from format string and arguments
-        @param format is const char* format string 
-        @param ... is other arguments
-    */
-    IndexError_t(const char *format, ...):Error_t()
-    {
-        // open variadic arguments
-        va_list valist;
-        va_start(valist, format);
+    IndexError_t(const std::string &msg) : Error_t(msg) {}
 
-        // format message
-        char buf[1024];
-        vsnprintf(buf, sizeof(buf), format, valist);
+    static IndexError_t format(const char *format, ...) __attribute__((format(printf, 1, 2)));
 
-        // close variadic arguments
-        va_end(valist);
-
-        // return formated message
-        msg = buf;
-    }
-    /**
-        @brief Default destructor
-    */
+    /** @brief Default destructor */
     ~IndexError_t() throw();
+
 private:
     /**
         @brief Default constructor is disabled
     */
     IndexError_t();
-
 };
 
 };

@@ -39,7 +39,16 @@
 #define FRPC_GET_DATA_TYPE( data ) (data >> 3)
 #define FRPC_GET_DATA_TYPE_INFO( data ) (data & 0x07 )
 namespace FRPC {
+namespace {
 
+/** Decodes zigzag encoded unsigned int back to signed int.
+ */
+int64_t zigzagDecode(int64_t s) {
+    uint64_t n = static_cast<uint64_t>(s);
+    return static_cast<int64_t>((n >> 1) ^ (-(s & 1)));
+}
+
+} // namespace
 
 
 
@@ -78,8 +87,7 @@ void BinUnMarshaller_t::unMarshallInternal(const char *data, unsigned int size, 
             }
             protocolVersion.versionMajor = mainBuff.data()[2];
             protocolVersion.versionMinor = mainBuff.data()[3];
-            if (protocolVersion.versionMajor > 2) {
-
+            if (protocolVersion.versionMajor > 3) {
                 //unsupeorted protocol version
                 throw StreamError_t("Unsupported protocol version !!!");
             }
@@ -175,9 +183,13 @@ void BinUnMarshaller_t::unMarshallInternal(const char *data, unsigned int size, 
                 break;
                 case INT: {
                     internalType = INT;
-                    dataWanted = FRPC_GET_DATA_TYPE_INFO(mainBuff[0]);
-                    if (dataWanted > 4 || !dataWanted)
-                        throw StreamError_t("Size of int is 0 or > 4 !!!");
+                    if (protocolVersion.versionMajor > 2) {
+                        dataWanted = FRPC_GET_DATA_TYPE_INFO(mainBuff[0]) + 1;
+                    } else {
+                        dataWanted = FRPC_GET_DATA_TYPE_INFO(mainBuff[0]);
+                        if (dataWanted > 4 || !dataWanted)
+                            throw StreamError_t("Size of int is 0 or > 4 !!!");
+                    }
                     mainBuff.erase();
 #ifdef _DEBUG
 		    printf("int lenght:%d\n",dataWanted);
@@ -207,7 +219,11 @@ void BinUnMarshaller_t::unMarshallInternal(const char *data, unsigned int size, 
                 break;
                 case DATETIME: {
                     internalType = DATETIME;
-                    dataWanted = 10;
+                    if (protocolVersion.versionMajor > 2) {
+                        dataWanted = 14;
+                    } else {
+                        dataWanted = 10;
+                    }
                     mainBuff.erase();
 #ifdef _DEBUG
                     printf("datetime size 10 \n");
@@ -360,13 +376,21 @@ void BinUnMarshaller_t::unMarshallInternal(const char *data, unsigned int size, 
         }
         break;
         case INT: {
-            //unpack value
-            Number32_t value(mainBuff.data(), mainBuff.size());
-            if (mainInternalType == FAULT)
-                errNo = value.number;
-            else
-                dataBuilder.buildInt(value.number);
-
+            if (protocolVersion.versionMajor > 2) {
+                Number_t value(mainBuff.data(), mainBuff.size());
+                value.number = zigzagDecode(value.number);
+                if (mainInternalType == FAULT)
+                    errNo = value.number;
+                else
+                    dataBuilder.buildInt(value.number);
+            } else {
+                //unpack value
+                Number32_t value(mainBuff.data(), mainBuff.size());
+                if (mainInternalType == FAULT)
+                    errNo = value.number;
+                else
+                    dataBuilder.buildInt(value.number);
+            }
             internalType = NONE;
             dataWanted = 1;
             //decrement member count
@@ -438,36 +462,70 @@ void BinUnMarshaller_t::unMarshallInternal(const char *data, unsigned int size, 
         }
         break;
         case DATETIME: {
-            DateTimeData_t dateTime;
+            if (protocolVersion.versionMajor > 2) {
+                DateTimeDataV3_t dateTime;
 
-            memcpy(dateTime.data, mainBuff.data(), 10);
-            //unpack
-            dateTime.unpack();
+                memcpy(dateTime.data, mainBuff.data(), 14);
+                //unpack
+                dateTime.unpack();
 
-            if (dateTime.dateTime.year || dateTime.dateTime.month
+                if (dateTime.dateTime.year || dateTime.dateTime.month
+                    || dateTime.dateTime.day || dateTime.dateTime.hour
+                    || dateTime.dateTime.minute || dateTime.dateTime.sec)
+                {
+                    //call builder
+                    dataBuilder.buildDateTime(dateTime.dateTime.year + 1600,
+                                              dateTime.dateTime.month,
+                                              dateTime.dateTime.day,
+                                              dateTime.dateTime.hour,
+                                              dateTime.dateTime.minute,
+                                              dateTime.dateTime.sec,
+                                              dateTime.dateTime.weekDay,
+                                              dateTime.dateTime.unixTime,
+                                              dateTime.dateTime.timeZone * 15 * 60);
+                } else {
+                    dataBuilder.buildDateTime(dateTime.dateTime.year,
+                                              dateTime.dateTime.month,
+                                              dateTime.dateTime.day,
+                                              dateTime.dateTime.hour,
+                                              dateTime.dateTime.minute,
+                                              dateTime.dateTime.sec,
+                                              dateTime.dateTime.weekDay,
+                                              dateTime.dateTime.unixTime,
+                                              dateTime.dateTime.timeZone * 15 * 60);
+                }
+            } else { // protocol v 2.x or earlier
+                DateTimeData_t dateTime;
+
+                memcpy(dateTime.data, mainBuff.data(), 10);
+                //unpack
+                dateTime.unpack();
+
+                if (dateTime.dateTime.year || dateTime.dateTime.month
                     || dateTime.dateTime.day || dateTime.dateTime.hour
                     || dateTime.dateTime.minute || dateTime.dateTime.sec) {
 
-                //call builder
-                dataBuilder.buildDateTime(dateTime.dateTime.year + 1600,
-                                          dateTime.dateTime.month,
-                                          dateTime.dateTime.day,
-                                          dateTime.dateTime.hour,
-                                          dateTime.dateTime.minute,
-                                          dateTime.dateTime.sec,
-                                          dateTime.dateTime.weekDay,
-                                          dateTime.dateTime.unixTime,
-                                          dateTime.dateTime.timeZone * 15 * 60);
-            } else {
-                dataBuilder.buildDateTime(dateTime.dateTime.year,
-                                          dateTime.dateTime.month,
-                                          dateTime.dateTime.day,
-                                          dateTime.dateTime.hour,
-                                          dateTime.dateTime.minute,
-                                          dateTime.dateTime.sec,
-                                          dateTime.dateTime.weekDay,
-                                          dateTime.dateTime.unixTime,
-                                          dateTime.dateTime.timeZone * 15 * 60);
+                    //call builder
+                    dataBuilder.buildDateTime(dateTime.dateTime.year + 1600,
+                                              dateTime.dateTime.month,
+                                              dateTime.dateTime.day,
+                                              dateTime.dateTime.hour,
+                                              dateTime.dateTime.minute,
+                                              dateTime.dateTime.sec,
+                                              dateTime.dateTime.weekDay,
+                                              dateTime.dateTime.unixTime,
+                                              dateTime.dateTime.timeZone * 15 * 60);
+                } else {
+                    dataBuilder.buildDateTime(dateTime.dateTime.year,
+                                              dateTime.dateTime.month,
+                                              dateTime.dateTime.day,
+                                              dateTime.dateTime.hour,
+                                              dateTime.dateTime.minute,
+                                              dateTime.dateTime.sec,
+                                              dateTime.dateTime.weekDay,
+                                              dateTime.dateTime.unixTime,
+                                              dateTime.dateTime.timeZone * 15 * 60);
+                }
             }
             internalType = NONE;
             dataWanted = 1;
@@ -527,4 +585,3 @@ void BinUnMarshaller_t::unMarshallInternal(const char *data, unsigned int size, 
 }
 
 }
-

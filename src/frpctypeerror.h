@@ -22,13 +22,13 @@
  *
  * FILE          $Id: frpctypeerror.h,v 1.3 2007-05-18 15:29:46 mirecta Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #ifndef FRPCFRPCTYPEERROR_H
 #define FRPCFRPCTYPEERROR_H
@@ -47,34 +47,17 @@ namespace FRPC
 class FRPC_DLLEXPORT TypeError_t : public Error_t
 {
 public:
-    /**
-        @brief Constructor from format string and arguments
-        @param format is const char* format string 
-        @param ... is other arguments
-    */
-    TypeError_t(const char *format, ...):Error_t()
-    {
-        // open variadic arguments
-        va_list valist;
-        va_start(valist, format);
+    TypeError_t(const std::string &msg) : Error_t(msg) {}
 
-        // format message
-        char buf[1024];
-        vsnprintf(buf, sizeof(buf), format, valist);
+    /// Creates a fault with specified formatted string.
+    static TypeError_t format(const char *format, ...) __attribute__((format(printf, 1, 2)));
 
-        // close variadic arguments
-        va_end(valist);
-
-        // return formated message
-        msg = buf;
-
-    }
     /**
         @brief Default destructor
     */
     ~TypeError_t() throw();
 private:
-    
+
     /**
         @brief Default constructor is disabled
     */

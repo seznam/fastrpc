@@ -2,8 +2,8 @@
 #include <cassert>
 #include <memory>
 
-#include "../src/frpcbase64.h"
-#include "../src/frpcb64writer.h"
+#include "frpcbase64.h"
+#include "frpcb64writer.h"
 
 using namespace FRPC;
 
@@ -15,11 +15,28 @@ public:
     }
 
     void flush(){
-        
+
     }
 
     std::string data;
 };
+
+size_t tests = 0;
+size_t fails = 0;
+
+bool expect(bool condition, const char *mark, const char *file, int line) {
+    ++tests;
+    if (!condition) {
+        fails++;
+        std::cerr << file << ":" << line
+                  << ":1: error: FAILED TEST: " << mark << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
+#define TEST(condition) expect(condition, ""#condition"", __FILE__, __LINE__)
 
 std::string encode_b64(std::string source) {
     MyWriter_t mywriter;
@@ -31,22 +48,22 @@ std::string encode_b64(std::string source) {
     return mywriter.data;
 }
 
-void assert_simple_decode(std::string value, unsigned line_num) {
+void test_simple_decode(std::string value, unsigned line_num) {
     std::string value_b64(encode_b64(value));
-    
+
     std::string value_decoded(Base64::decode(value_b64.c_str(), value_b64.size()));
 
     if (value_decoded != value) {
         std::cerr << "failed test on line " << line_num << std::endl;
         std::cerr << value << std::endl;
         std::cerr << value_b64 << std::endl;
-        assert(value_decoded == value);
+        TEST(value_decoded == value);
     }
 }
 
-void assert_stream_decode(std::string value, unsigned line_num) {
+void test_stream_decode(std::string value, unsigned line_num) {
     std::string value_b64(encode_b64(value));
-    
+
     // break value in 2 parts and try to decode that
     for (int i = 0; i < value_b64.size(); ++i) {
         Base64 decoder;
@@ -57,14 +74,14 @@ void assert_stream_decode(std::string value, unsigned line_num) {
             std::cerr << "failed stream test on line " << line_num << " break i: " << i << std::endl;
             std::cerr << value << std::endl;
             std::cerr << value_b64 << std::endl;
-            assert(value_decoded == value);
+            TEST(value_decoded == value);
         }
     }
 }
 
-void assert_decode(std::string value, unsigned line_num) {
-    assert_simple_decode(value, line_num);
-    assert_stream_decode(value, line_num);
+void test_decode(std::string value, unsigned line_num) {
+    test_simple_decode(value, line_num);
+    test_stream_decode(value, line_num);
 }
 
 // encode -> decode test
@@ -72,17 +89,17 @@ void assert_decode(std::string value, unsigned line_num) {
 int main(int argc, const char *argv[])
 {
     for (int i=0; i<500; ++i) {
-        assert_decode(std::string(i, 'a'), __LINE__);
+        test_decode(std::string(i, 'a'), __LINE__);
     }
 
-    assert_decode("", __LINE__);
-    assert_decode("\n\n\t\r\vsdfsadlkjfsadj  klfds", __LINE__);
-    assert_decode("\ndlfkajsdflkj23lkj2342342l3kj4l2k3j4l2knhs", __LINE__);
-    assert_decode("/", __LINE__);
-    assert_decode(std::string(100, 's'), __LINE__);
-    assert_decode(std::string(100, '\n'), __LINE__);
-    assert_decode(std::string(101, '2'), __LINE__);
-    assert_decode(std::string(401, 'a'), __LINE__);
+    test_decode("", __LINE__);
+    test_decode("\n\n\t\r\vsdfsadlkjfsadj  klfds", __LINE__);
+    test_decode("\ndlfkajsdflkj23lkj2342342l3kj4l2k3j4l2knhs", __LINE__);
+    test_decode("/", __LINE__);
+    test_decode(std::string(100, 's'), __LINE__);
+    test_decode(std::string(100, '\n'), __LINE__);
+    test_decode(std::string(101, '2'), __LINE__);
+    test_decode(std::string(401, 'a'), __LINE__);
 
     return 0;
 }

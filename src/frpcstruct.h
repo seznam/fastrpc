@@ -272,7 +272,8 @@ inline FRPC_DLLEXPORT Struct_t& Struct(Value_t &value)
     Struct_t *struct_v = dynamic_cast<Struct_t*>(&value);
 
     if(!struct_v)
-        throw TypeError_t("Type is %s but not struct",value.getTypeName());
+        throw TypeError_t::format("Type is %s but not struct",
+                                  value.getTypeName());
     return *struct_v;
 
 }
@@ -290,7 +291,8 @@ inline FRPC_DLLEXPORT const Struct_t& Struct(const Value_t &value)
     const Struct_t *struct_v = dynamic_cast<const Struct_t*>(&value);
 
     if(!struct_v)
-        throw TypeError_t("Type is %s but not struct",value.getTypeName());
+        throw TypeError_t::format("Type is %s but not struct",
+                                  value.getTypeName());
     return *struct_v;
 
 }

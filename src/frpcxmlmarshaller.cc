@@ -314,7 +314,8 @@ void XmlMarshaller_t::packMethodCall(const char* methodName, unsigned int size) 
 
 
     if (size > 255 || size == 0)
-        throw LenError_t("Lenght of method name is %d not in interval (1-255)",size);
+        throw LenError_t::format(
+            "Lenght of method name is %d not in interval (1-255)", size);
 
     //pack MAgic header
     packMagic();
@@ -408,7 +409,8 @@ void XmlMarshaller_t::packStructMember(const char* memberName, unsigned int size
 
 
     if (size > 255 || size == 0)
-        throw LenError_t("Lenght of member name is %d not in interval (1-255)",size);
+        throw LenError_t::format(
+            "Lenght of member name is %d not in interval (1-255)", size);
 
     packSpaces(level);
     writer.write("<member>\n",9);

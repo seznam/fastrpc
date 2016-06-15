@@ -214,7 +214,7 @@ void URL_t::parse(const std::string &url) {
 #endif // !WIN32
     } else {
         // oops, chyba -> zalogujeme
-        throw TypeError_t("URL '%s': unknown scheme.", url.c_str());
+        throw TypeError_t::format("URL '%s': unknown scheme.", url.c_str());
     }
 
     // najdeme pozici prvního lomítka
@@ -261,7 +261,7 @@ void URL_t::parse(const std::string &url) {
 
     if (isUnix) {
         if (!host.empty()) {
-            throw TypeError_t(
+            throw TypeError_t::format(
                 "Unix URL '%s' has non-empty host.",
                 url.c_str());
         }

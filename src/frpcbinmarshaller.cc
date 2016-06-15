@@ -41,6 +41,30 @@
 
 namespace FRPC {
 
+namespace {
+
+/** Encodes signed integer as unsigned,
+ * with positive values even and negative values odd
+ * starting around zero.
+ * This saves transfer space and unifies integer encoding.
+ * 0 -> 0
+ * -1 -> 1
+ * 1 -> 2
+ * -2 -> 3
+ * 2 -> 4
+ * ...
+ */
+uint64_t zigzagEncode(int64_t n) {
+    // the right shift has to be arithmetic
+    // negative numbers become all binary 1s
+    // positive numbers become all binary 0s
+    // effectively inverting bits of the result in
+    // case of negative number
+    return ((n << 1) ^ (n >> 63));
+}
+
+} // namespace
+
 BinMarshaller_t::BinMarshaller_t(Writer_t &writer,
                                  const ProtocolVersion_t &protocolVersion)
         :writer(writer),protocolVersion(protocolVersion) {
@@ -107,31 +131,60 @@ void BinMarshaller_t::packBool(bool value) {
 
 void BinMarshaller_t::packDateTime(short year, char month, char day, char hour,
                                    char minute, char sec, char weekDay,
-                                   time_t unixTime, int timeZone) {
-    DateTimeData_t dateTime;
-    //pack type
-    char type = FRPC_DATA_TYPE(DATETIME,0);
+                                   time_t unixTime, int timeZone)
+{
+    // since protocol version 3, we use full timestamp time_t in the packed data
+    if (protocolVersion.versionMajor > 2) {
+        DateTimeDataV3_t dateTime;
+        //pack type
+        char type = FRPC_DATA_TYPE(DATETIME,0);
 
-    //pack DateTimeData
-    if ( year <= 1600 ) {
-        dateTime.dateTime.year = 0;
+        //pack DateTimeData
+        if ( year <= 1600 ) {
+            dateTime.dateTime.year = 0;
+        } else {
+            dateTime.dateTime.year = (year - 1600) & 0x7ff;
+        }
+        dateTime.dateTime.month = month & 0x0f;
+        dateTime.dateTime.day = day & 0x1f;
+        dateTime.dateTime.hour = hour & 0x1f;
+        dateTime.dateTime.minute = minute & 0x3f;
+        dateTime.dateTime.sec = sec & 0x3f;
+
+        dateTime.dateTime.weekDay = weekDay & 0x07;
+        dateTime.dateTime.unixTime = unixTime;
+        dateTime.dateTime.timeZone = (timeZone / 60 / 15);
+        dateTime.pack();
+        //write type
+        writer.write(&type,1);
+        //write data
+        writer.write((dateTime.data), sizeof(dateTime.data));
     } else {
-        dateTime.dateTime.year = (year - 1600) & 0x7ff;
-    }
-    dateTime.dateTime.month = month & 0x0f;
-    dateTime.dateTime.day = day & 0x1f;
-    dateTime.dateTime.hour = hour & 0x1f;
-    dateTime.dateTime.minute = minute & 0x3f;
-    dateTime.dateTime.sec = sec & 0x3f;
+        DateTimeData_t dateTime;
+        //pack type
+        char type = FRPC_DATA_TYPE(DATETIME,0);
 
-    dateTime.dateTime.weekDay = weekDay & 0x07;
-    dateTime.dateTime.unixTime = unixTime;
-    dateTime.dateTime.timeZone = (timeZone / 60 / 15);
-    dateTime.pack();
-    //write type
-    writer.write(&type,1);
-    //write data
-    writer.write((dateTime.data),10);
+        //pack DateTimeData
+        if ( year <= 1600 ) {
+            dateTime.dateTime.year = 0;
+        } else {
+            dateTime.dateTime.year = (year - 1600) & 0x7ff;
+        }
+        dateTime.dateTime.month = month & 0x0f;
+        dateTime.dateTime.day = day & 0x1f;
+        dateTime.dateTime.hour = hour & 0x1f;
+        dateTime.dateTime.minute = minute & 0x3f;
+        dateTime.dateTime.sec = sec & 0x3f;
+
+        dateTime.dateTime.weekDay = weekDay & 0x07;
+        dateTime.dateTime.unixTime = unixTime;
+        dateTime.dateTime.timeZone = (timeZone / 60 / 15);
+        dateTime.pack();
+        //write type
+        writer.write(&type,1);
+        //write data
+        writer.write((dateTime.data),10);
+    }
 }
 
 void BinMarshaller_t::packDouble(double value) {
@@ -177,9 +230,21 @@ void BinMarshaller_t::packFault(int errNumber, const char* errMsg,
 }
 
 void BinMarshaller_t::packInt(Int_t::value_type value) {
+    if (protocolVersion.versionMajor > 2) {
+        // pack via zigzag encoding.
+        uint64_t zig = zigzagEncode(value);
+        unsigned int numType = getNumberType(
+                static_cast<Int_t::value_type>(zig));
+        //pack type
+        char type = FRPC_DATA_TYPE(INT, numType);
+        //pack number value
+        Number_t number(zig);
 
+        //write type
+        writer.write(&type, 1);
+        writer.write(number.data, getNumberSize(numType));
 
-    if (protocolVersion.versionMajor > 1) {
+    } else if (protocolVersion.versionMajor > 1) {
 
         if (value < 0) { // negative int8
             //obtain int size for compress
@@ -188,7 +253,7 @@ void BinMarshaller_t::packInt(Int_t::value_type value) {
             Number_t  number(-value);
             //write type
             writer.write(&type,1);
-            writer.write(number.data,getNumberSize(numType));
+            writer.write(number.data, getNumberSize(numType));
 
         } else { //positive int8
             unsigned int numType = getNumberType(value);
@@ -196,7 +261,7 @@ void BinMarshaller_t::packInt(Int_t::value_type value) {
             Number_t  number(value);
             //write type
             writer.write(&type,1);
-            writer.write(number.data,getNumberSize(numType));
+            writer.write(number.data, getNumberSize(numType));
 
         }
 
@@ -209,7 +274,7 @@ void BinMarshaller_t::packInt(Int_t::value_type value) {
 
         //write type
         writer.write(&type,1);
-        writer.write(number.data,getNumberSize(numType));
+        writer.write(number.data, getNumberSize(numType));
     }
 
 
@@ -220,10 +285,12 @@ void BinMarshaller_t::packMethodCall(const char* methodName,
 
     //pack type
     char type = FRPC_DATA_TYPE(METHOD_CALL,0);
+
     //check conditions
     if ( size > 255 || size == 0)
-        throw LenError_t("Lenght of method name is %d not in interval (1-255)",
-                         size);
+        throw LenError_t::format(
+            "Lenght of method name is %d not in interval (1-255)", size);
+
     int8_t realSize = int8_t(size);
     //magic
     packMagic();
@@ -275,8 +342,8 @@ void BinMarshaller_t::packStructMember(const char* memberName,
 
 
     if (size > 255 || size == 0)
-        throw LenError_t("Lenght of member name is %d not in interval (1-255)",
-                         size);
+        throw LenError_t::format(
+            "Lenght of member name is %d not in interval (1-255)", size);
 
     //write member name
     int8_t realSize = int8_t(size);
@@ -302,8 +369,7 @@ void BinMarshaller_t::packMagic() {
     unsigned char magic[]={0xCA,0x11,0x00,0x00};
     magic[2] = protocolVersion.versionMajor;
     magic[3] = protocolVersion.versionMinor;
-    writer.write(reinterpret_cast<char *>(magic),4);
-
+    writer.write(reinterpret_cast<const char*>(magic),4);
 }
 
 void BinMarshaller_t::flush() {

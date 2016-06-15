@@ -46,30 +46,21 @@ namespace FRPC {
 */
 class FRPC_DLLEXPORT ProtocolError_t: public Error_t {
 public:
+    ProtocolError_t(int errNum, const std::string &msg)
+        : Error_t(msg),
+          errNum(errNum)
+    {}
+
     /**
-    @brief Constructor from format string and arguments
+    @brief Constructs ProtocolError_t from format string and arguments
     @param errNum is an error number
-    @param format is const char* format string 
+    @param format is const char* format string
     @param ... is other arguments
      */
-    ProtocolError_t(int errNum,const char *format, ...):errNum(errNum) {
+    static ProtocolError_t format(int errNum,const char *format, ...) __attribute__((format(printf, 2, 3)));
 
-        // open variadic arguments
-        va_list valist;
-        va_start(valist, format);
-
-        // format message
-        char buf[1024];
-        vsnprintf(buf, sizeof(buf), format, valist);
-
-        // close variadic arguments
-        va_end(valist);
-
-        // return formated message
-        msg = buf;
-    }
     /**
-     * @brief constructor with only errnum 
+     * @brief constructor with only errnum
      * used in child clases
      * */
     ProtocolError_t(int errNum):errNum(errNum) {}
@@ -93,7 +84,7 @@ protected:
     ProtocolError_t();
 
     int errNum;
-    
+
 
 };
 

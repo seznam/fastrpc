@@ -81,8 +81,7 @@ private:
 
     char internalType;
     char mainInternalType;
-    long internalValue;
-
+    long faultCode;
 
     char wantType;
 
@@ -91,6 +90,7 @@ private:
     ProtocolVersion_t protocolVersion;
     bool versionCheck;
 
+    std::string faultString;
 };
 
 };

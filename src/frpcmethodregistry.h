@@ -215,7 +215,7 @@ private:
     Value_t& listMethods(Pool_t &pool, Array_t &params);
     Value_t& methodHelp(Pool_t &pool, Array_t &params);
     Value_t& methodSignature(Pool_t &pool, Array_t &params);
-    Value_t& muticall(Pool_t &pool, Array_t &params);
+    Value_t& multicall(Pool_t &pool, Array_t &params);
 
 
     std::map<std::string, RegistryEntry_t> methodMap;

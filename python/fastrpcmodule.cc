@@ -412,10 +412,9 @@ int DateTimeObject_init(DateTimeObject *self, PyObject *args, PyObject *)
 #endif
     if (pyValue && PyUnicode_Check(pyValue)) {
 #if PY_MAJOR_VERSION == 2
-        PyObject *utf = PyUnicode_AsUTF8String(pyValue);
-        if (utf) {
-            TimeObject_init_parseString(self, utf);
-            Py_DECREF(utf);
+        PyObjectWrapper_t utf(PyUnicode_AsUTF8String(pyValue));
+        if (utf.get()) {
+            TimeObject_init_parseString(self, utf.get());
         }
 #else
         return TimeObject_init_parseString(self, pyValue);
@@ -1323,8 +1322,17 @@ public:
         }
     }
 
-private:
+    typedef std::pair<std::string, std::string> Header_t;
 
+    void addRequestHttpHeader(const Header_t& header) {
+        headers.push_back(header);
+    }
+
+    void addRequestHttpHeaderForCall(const Header_t& header) {
+        headersForCall.push_back(header);
+    }
+
+private:
     URL_t url;
     HTTPIO_t io;
     int readTimeout;
@@ -1344,6 +1352,11 @@ private:
     PyObject *datetimeBuilder;
     PyObject *preCall;
     PyObject *postCall;
+
+    typedef std::vector<Header_t> Headers_t;
+
+    Headers_t headersForCall;
+    Headers_t headers;
 };
 
 struct ServerProxyObject
@@ -1518,14 +1531,120 @@ PyObject* Method_getattr(MethodObject *self, char *name)
     return newMethod(self->proxy, self->name + '.' + name);
 }
 
+namespace {
+
+/** converts pyobject to string, returns true if succesful
+ *  otherwise it sets PyErr and returns false.
+ */
+bool get_string(PyObject *s, std::string &tgt) {
+#if PY_MAJOR_VERSION < 3
+    if (PyString_Check(s)) {
+        tgt = PyString_AsString(s);
+        return true;
+    }
+#else
+    if (PyUnicode_Check(s)) {
+        Py_ssize_t len;
+        const char * ptr = PyUnicode_AsUTF8AndSize(s, &len);
+        tgt.assign(ptr, len);
+        return true;
+    }
+#endif
+    PyErr_Format(PyExc_TypeError,
+                 "Expected string, found %s.",
+                 Py_TYPE(s)->tp_name);
+    return false;
+}
+
+// unpacks std::pair of strings from a python sequence object
+bool unpack_string_pair(PyObject *o, std::pair<std::string, std::string> &res)
+{
+    if (!PySequence_Check(o))
+    {
+        PyErr_Format(PyExc_TypeError,
+                     "String pair object must be a sequence, not %s.",
+                     Py_TYPE(o)->tp_name);
+        return false;
+    }
+
+    // iterate over the sequence, insert headers
+    const Py_ssize_t len = PySequence_Size(o);
+
+    if (len != 2) {
+        PyErr_Format(PyExc_TypeError,
+                     "String sequence does have %ld items, not 2.",
+                     len);
+        return false;
+    }
+
+    // parse the two strings
+    std::string first, second;
+
+    if (!get_string(PySequence_GetItem(o, 0), first))
+        return false;
+
+    if (!get_string(PySequence_GetItem(o, 1), second))
+        return false;
+
+    res = std::make_pair(first, second);
+    return true;
+}
+
+/* feeds either list or tuple of 2 item string tuples into serverproxy object
+ * as either session or call request headers
+ */
+bool feed_headers(PyObject *hdrs, Proxy_t &proxy, bool callScope) {
+    // check the hdrs object is a sequence
+    if (!PySequence_Check(hdrs))
+    {
+        PyErr_Format(PyExc_TypeError,
+                     "headers object must be a sequence, not %s.",
+                     Py_TYPE(hdrs)->tp_name);
+        return false;
+    }
+
+    // iterate over the sequence, insert headers
+    const Py_ssize_t len = PySequence_Size(hdrs);
+    for (Py_ssize_t idx = 0; idx < len; ++idx) {
+        PyObjectWrapper_t header(PySequence_GetItem(hdrs, idx));
+
+        // is this a tuple? unpack two strings from this
+        std::pair<std::string, std::string> hp;
+
+        // unpack as a header pair, exit on error
+        if (!unpack_string_pair(*header, hp))
+            return false;
+
+        if (callScope) {
+            proxy.addRequestHttpHeaderForCall(hp);
+        } else {
+            proxy.addRequestHttpHeader(hp);
+        }
+    }
+    return true;
+}
+
+} // namespace
+
 PyObject* Method_call(MethodObject *self, PyObject *args, PyObject *keys)
 {
     // check whether we are called with keywords and fail if so
     if (keys)
     {
-        PyErr_SetString(PyExc_TypeError,
-                        "Cannot call remote method with keyword arguments.");
-        return 0;
+        if (!PyDict_Check(keys)) {
+            PyErr_SetString(PyExc_TypeError,
+                        "Should not happen. KWDict is not a dict.");
+            return 0;
+        }
+
+        PyObject *hdrs = PyDict_GetItemString(keys, "headers");
+
+        if (hdrs) {
+            // it should be list or tuple containing tuples of size 2
+            // on error just bail out, it's already set via pyerr_ methods
+            if (!feed_headers(hdrs, self->proxy->proxy, true))
+                return 0;
+        }
     }
 
     // make remote call
@@ -1550,6 +1669,7 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
                                    "protocolVersionMinor",
                                    "nativeBoolean", "datetimeBuilder",
                                    "preCall", "postCall", "hideAttributes",
+                                   "headers",
                                    0};
 
     // parse arguments
@@ -1571,6 +1691,7 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
     PyObject *preCall = 0;
     PyObject *postCall = 0;
     int hideAttributes = true;
+    PyObject *headers = 0;
 
     static const char *kwtypes = "siiiiisissiiOO";
     const void *kwvars[] = { serverUrl, &readTimeout,
@@ -1580,11 +1701,12 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
         &protocolVersionMajor,
         &protocolVersionMinor,
         &nativeBoolean, &datetimeBuilder,
+        &headers,
         NULL };
 
     // Normal initialization
     if (!PyArg_ParseTupleAndKeywords(args, keywds,
-                                     "s#|iiiiisissiiOOOOi:ServerProxy.__init__",
+                                     "s#|iiiiisissiiOOOOiO:ServerProxy.__init__",
                                      (char **)kwlist,
                                      &serverUrl, &serverUrlLen, &readTimeout,
                                      &writeTimeout, &connectTimeout,
@@ -1592,7 +1714,8 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
                                      &useHTTP10, &proxyVia, &stringMode_,
                                      &protocolVersionMajor,
                                      &protocolVersionMinor, &nativeBoolean,
-                                     &datetimeBuilder, &preCall, &postCall, &hideAttributes))
+                                     &datetimeBuilder, &preCall, &postCall, &hideAttributes,
+                                     &headers))
     {
 
         // Initialization from ConfigParser and section
@@ -1698,10 +1821,12 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
                                     useHTTP10, proxyVia, stringMode,
                                     ProtocolVersion_t(protocolVersionMajor,
                                             protocolVersionMinor),
-                                    nativeBoolean != 0 ? PyObject_IsTrue(nativeBoolean) : false,
+                                    nativeBoolean != 0 ? PyObject_IsTrue(nativeBoolean) : true,
                                     datetimeBuilder, preCall, postCall);
         proxy->proxyOk = true;
 
+        if (headers)
+            feed_headers(headers, proxy->proxy, /*callscope*/ false);
     }
 
     catch (const HTTPError_t &httpError)
@@ -1856,6 +1981,12 @@ PyObject* Proxy_t::operator()(MethodObject *methodObject, PyObject *args) {
     Builder_t builder(reinterpret_cast<PyObject*>(methodObject),
                       stringMode, nativeBoolean, datetimeBuilder);
     Marshaller_t *marshaller;
+
+    {
+        client.addCustomRequestHeader(headers);
+        client.addCustomRequestHeader(headersForCall);
+        headersForCall.clear();
+    }
 
     switch(rpcTransferMode) {
     case BINARY_NEVER:
@@ -2063,7 +2194,8 @@ extern "C"
     static PyObject* fastrpc_dumps(PyObject *self, PyObject *args,
                                    PyObject *keywds);
 
-    static PyObject* fastrpc_loads(PyObject *self, PyObject *args);
+    static PyObject* fastrpc_loads(PyObject *self, PyObject *args,
+                                   PyObject *keywds);
 }
 
 static char fastrpc_boolean__doc__[] =
@@ -2266,16 +2398,34 @@ PyObject* fastrpc_dumps(PyObject *, PyObject *args, PyObject *keywds) {
 
 static char fastrpc_loads__doc__[] =
     "Convert an XML-RPC packet to unmarshalled data plus a method\n"
-    "name (None if not present).\n";
+    "name (None if not present).\n"
+    "Takes optional parameters:\n"
+    " * stringMode ('string', 'unicode', 'mixed')\n"
+    " * nativeBoolean (True/False, defaults to True)\n"
+    " * datetimeBuilder (callable that converts datetime components to python object)\n"
+    " * useBinary (True/False/None - Defaults to None, which means 'detect')\n";
 
-PyObject* fastrpc_loads(PyObject *, PyObject *args) {
+PyObject* fastrpc_loads(PyObject *, PyObject *args, PyObject *keywds) {
+    static const char *kwlist[] = {"data",
+                                   "stringMode",
+                                   "nativeBoolean",
+                                   "datetimeBuilder",
+                                   "useBinary",
+                                   0};
+
     // parse arguments
     PyObject *data;
     char *stringMode_ = 0;
     PyObject *nativeBoolean = 0;
     PyObject *datetimeBuilder = 0;
+    PyObject *useBinary = 0;
 
-    if (!PyArg_ParseTuple(args, "O|sOO:fastrpc.loads", &data, &stringMode_, &nativeBoolean, &datetimeBuilder))
+    if (!PyArg_ParseTupleAndKeywords(
+                args, keywds,
+                "O|sOOO:fastrpc.loads", (char **)kwlist,
+                &data,
+                &stringMode_,
+                &nativeBoolean, &datetimeBuilder, &useBinary))
         return 0;
 
     StringMode_t stringMode = parseStringMode(stringMode_);
@@ -2299,11 +2449,25 @@ PyObject* fastrpc_loads(PyObject *, PyObject *args) {
 
     try {
         Builder_t builder(0, stringMode,
-                nativeBoolean != 0 ? PyObject_IsTrue(nativeBoolean) : false,
+                nativeBoolean != 0 ? PyObject_IsTrue(nativeBoolean) : true,
                 datetimeBuilder);
 
-        std::auto_ptr<UnMarshaller_t> unmarshaller
-            (UnMarshaller_t::create(dataStr, dataSize, builder));
+        std::auto_ptr<UnMarshaller_t> unmarshaller;
+
+        // Use detection if useBinary is unspecified or None
+        if (!useBinary || useBinary == Py_None) {
+            unmarshaller.reset(
+                    UnMarshaller_t::create(dataStr, dataSize, builder));
+        } else {
+            unmarshaller.reset(
+                    UnMarshaller_t::create((PyObject_IsTrue(useBinary)
+                                            ? Marshaller_t::BINARY_RPC
+                                            : Marshaller_t::XML_RPC),
+                                           builder));
+
+            unmarshaller->unMarshall(dataStr, dataSize,
+                                     FRPC::UnMarshaller_t::TYPE_ANY);
+        }
 
         // check for error (exception already raised)
         PyObject *umdata = builder.getUnMarshaledData();
@@ -2592,7 +2756,7 @@ static PyMethodDef frpc_methods[] =
         }, {
             "loads",
             (PyCFunction) fastrpc_loads,
-            METH_VARARGS,
+            METH_VARARGS | METH_KEYWORDS,
             fastrpc_loads__doc__
         }, {
             "dumpTree",

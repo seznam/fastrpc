@@ -65,7 +65,7 @@ std::string extractMember(const std::string &member) {
               member;
 }
 
-/** 
+/**
  * @short Reads from given iterator next two bytes and convert its as hexa encoded
  * pair to one byte.
  */
@@ -234,7 +234,8 @@ public:
         char *end;
         double value = strtod(str.c_str(), &end);
         if (*end)
-            throw StreamError_t("Can't convert `%s' to double", str.c_str());
+            throw StreamError_t::format("Can't convert `%s' to double",
+                                        str.c_str());
         if (errno == ERANGE)
             throw StreamError_t("Unsupported size of double (too small/big)");
 
@@ -250,7 +251,8 @@ public:
         char *end;
         long long int value = strtoll(str.c_str(), &end, 10);
         if (*end)
-            throw StreamError_t("Can't convert `%s' to int", str.c_str());
+            throw StreamError_t::format("Can't convert `%s' to int",
+                                        str.c_str());
         if (errno == ERANGE)
             throw StreamError_t("Unsupported size of int (too small/big)");
 
@@ -338,8 +340,8 @@ public:
             return &Values_t::buildDateTime;
 
         default:
-            throw StreamError_t("Can't resolve type of value `%s'",
-                                value.c_str());
+            throw StreamError_t::format("Can't resolve type of value `%s'",
+                                        value.c_str());
         }
     }
 
@@ -379,4 +381,3 @@ void URLUnMarshaller_t::finish() {
 }
 
 } // namespace FRPC
-

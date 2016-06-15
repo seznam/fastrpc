@@ -22,13 +22,13 @@
  *
  * FILE          $Id: frpchttperror.h,v 1.3 2007-05-18 15:29:45 mirecta Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #ifndef FRPCFRPCHTTPERROR_H
 #define FRPCFRPCHTTPERROR_H
@@ -46,24 +46,11 @@ namespace FRPC
 class FRPC_DLLEXPORT HTTPError_t : public ProtocolError_t
 {
 public:
-    HTTPError_t(long errNum,const char *format, ...)
-        :   ProtocolError_t(static_cast<int>(errNum))
-    {
-        
-        // open variadic arguments
-        va_list valist;
-        va_start(valist, format);
+    HTTPError_t(long errNum, const std::string &msg)
+        : ProtocolError_t(errNum, msg)
+    {}
 
-        // format message
-        char buf[1024];
-        vsnprintf(buf, sizeof(buf), format, valist);
-
-        // close variadic arguments
-        va_end(valist);
-
-        // return formated message
-        msg = buf;
-    }
+    static HTTPError_t format(long errNum, const char *format, ...) __attribute__((format(printf, 2, 3)));
 
     ~HTTPError_t() throw();
 private:

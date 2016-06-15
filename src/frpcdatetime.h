@@ -236,7 +236,8 @@ inline FRPC_DLLEXPORT DateTime_t& DateTime(Value_t &value)
     DateTime_t *dateTime = dynamic_cast<DateTime_t*>(&value);
 
     if(!dateTime)
-        throw TypeError_t("Type is %s but not dateTime",value.getTypeName());
+        throw TypeError_t::format("Type is %s but not dateTime",
+                                  value.getTypeName());
 
     return *dateTime;
 }
@@ -253,7 +254,8 @@ inline FRPC_DLLEXPORT const DateTime_t& DateTime(const Value_t &value)
     const DateTime_t *dateTime = dynamic_cast<const DateTime_t*>(&value);
 
     if(!dateTime)
-        throw TypeError_t("Type is %s but not dateTime",value.getTypeName());
+        throw TypeError_t::format("Type is %s but not dateTime",
+                                  value.getTypeName());
 
     return *dateTime;
 }
