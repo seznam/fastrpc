@@ -1,3 +1,9 @@
+libfastrpc (8.0.0) UNRELEASED; urgency=medium
+
+  * New major revision of fastrpc. Includes changes from 8.0.0-rc1 and 8.0.0-rc2
+
+ -- Filip Volejnik <volca@preinstall.go.seznam.cz>  Wed, 15 Jun 2016 11:01:23 +0200
+
 libfastrpc (8.0.0-rc2) testing; urgency=low
 
   * Fixing format string warnings.
