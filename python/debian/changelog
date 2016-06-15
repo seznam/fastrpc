@@ -1,4 +1,10 @@
-python-fastrpc (8.0.0rc1) UNRELEASED; urgency=medium
+python-fastrpc (8.0.0) testing; urgency=medium
+
+  * Fixes to the python exception handling introduced in frpc 8.0
+
+ -- Filip Volejnik <volca@preinstall.go.seznam.cz>  Wed, 15 Jun 2016 11:25:03 +0200
+
+python-fastrpc (8.0.0rc1) testing; urgency=medium
 
   * Allow kwargs in loads. Added new optional parameter useBinary (True, False, None) that specifies if the loads should enforce binary decoding.
   * fixes to the python3 version of the python bindings
