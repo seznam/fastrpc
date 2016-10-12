@@ -1,3 +1,9 @@
+libfastrpc (8.0.1) stable; urgency=medium
+
+  * fixing the .pc file include directory
+
+ -- Filip Volejnik <filip.volejnik@firma.seznam.cz>  Wed, 12 Oct 2016 07:56:48 +0100
+
 libfastrpc (8.0.0) UNRELEASED; urgency=medium
 
   * New major revision of fastrpc. Includes changes from 8.0.0-rc1 and 8.0.0-rc2
