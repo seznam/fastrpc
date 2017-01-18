@@ -1736,9 +1736,21 @@ DECL_METHOD(MethodRegistryObject, system_methodSignature) {
             PyObjectWrapper_t signature
                 (PyObject_CallFunction(self->defaultMethodSignature,
                                        (char *)"(s)", name));
+
             // check for error or non-string signature
-            if (!signature || !PyUnicode_Check(signature))
+            if (!signature)
                 return signature.inc();
+
+            // if it already isn't a string, return without converting
+#if PY_MAJOR_VERSION < 3
+            if (!PyString_Check(signature) && !PyUnicode_Check(signature)) {
+                return signature.inc();
+            }
+#else
+            if (!PyUnicode_Check(signature)) {
+                return signature.inc();
+            }
+#endif
 
             // string => convert to array of arrays
             return stringToSignature(signature);
@@ -2167,7 +2179,11 @@ namespace {
         : name(name), callback(callback, true), signature(signature, true),
           help(help, true), context(context, true), names(names, true), pos(pos)
     {
+#if PY_MAJOR_VERSION < 3
+        if (PyString_Check(signature) || PyUnicode_Check(signature)) {
+#else
         if (PyUnicode_Check(signature)) {
+#endif
             char *sig;
             Py_ssize_t sigSize;
             STR_ASSTRANDSIZE(signature, sig, sigSize) {
