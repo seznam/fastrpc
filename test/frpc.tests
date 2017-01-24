@@ -48,10 +48,11 @@ CA11 0200 68   04 "help" 20 04 "what"
 help("what")
 
 @fault
-#MGC VER  FAULT
-CA11 0200 78    09 c8 2002 "FAULT_TEST"
-error(fault test)
+#MGC VER  FAULT PINT(500)
+CA11 0200 78    39   f401     200a "FAULT_TEST"
+fault(500, fault test)
 
+# Test fault code transfer over all different kinds of ints!
 # TODO: Older protocol version.
 # TODO: V3.0 protocol ints.
 # END

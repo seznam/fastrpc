@@ -7,6 +7,7 @@
 #include <iostream>
 #include <fstream>
 #include <memory>
+#include <sstream>
 
 #include "frpcunmarshaller.h"
 #include "frpctreebuilder.h"
@@ -197,6 +198,7 @@ const char *errorTypeStr(ErrorType_t et) {
     switch (et) {
     case ERROR_BAD_PROTOCOL_VERSION: return "bad protocol version";
     case ERROR_UNEXPECTED_END:       return "unexpected data end";
+    case ERROR_FAULT_TEST:           return "fault test";
     case ERROR_UNKNOWN:
     default:
         return "unknown";
@@ -240,7 +242,7 @@ ErrorType_t parseErrorType(const FRPC::Fault_t &err) {
     if (err.what() ==  std::string("No data unmarshalled"))
         return ERROR_UNEXPECTED_END;
 
-    if (err.what() ==  std::string("FAULT_TEST"))
+    if (err.what() == std::string("FAULT_TEST"))
         return ERROR_FAULT_TEST;
 
     error() << "Unhandled FRPC::Fault_t " << err.what() << std::endl;
@@ -282,6 +284,12 @@ struct TestResult_t {
     std::string comment;
 };
 
+std::string toStr(int i) {
+    std::ostringstream s;
+    s << i;
+    return s.str();
+}
+
 /** Runs the core test, returns corrected result */
 std::pair<TestInstance_t, TestResult_t>
 runTest(const TestSettings_t &ts, const TestInstance_t &ti,
@@ -321,8 +329,15 @@ runTest(const TestSettings_t &ts, const TestInstance_t &ti,
         ErrorType_t ert = parseErrorType(ex);
         corrected.text = std::string("error(")+errorTypeStr(ert)+")";
     } catch (const FRPC::Fault_t &ex) {
-        ErrorType_t ert = parseErrorType(ex);
-        corrected.text = std::string("error(")+errorTypeStr(ert)+")";
+        if (ex.errorNum() > 0) {
+            // fault contains integral error number, let's contain it in the output
+            std::string errNumStr = toStr(ex.errorNum());
+            corrected.text = std::string("fault(") + errNumStr + ", "
+                             + ex.what() + ")";
+        } else {
+            ErrorType_t ert = parseErrorType(ex);
+            corrected.text = std::string("error(") + errorTypeStr(ert) + ")";
+        }
     } catch (const std::exception &ex) {
         corrected.text = std::string("error(")+ex.what()+")";
     }
