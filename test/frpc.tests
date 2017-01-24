@@ -50,7 +50,7 @@ help("what")
 @fault
 #MGC VER  FAULT PINT(500)
 CA11 0200 78    39   f401     200a "FAULT_TEST"
-fault(500, fault test)
+fault(500, FAULT_TEST)
 
 # Test fault code transfer over all different kinds of ints!
 # TODO: Older protocol version.
