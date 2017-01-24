@@ -1,0 +1,57 @@
+# FastRPC tests
+# Lines beginning with '#' are comments
+# Lines beginning with '@' define visible test names
+# First line is hexadecimal/string binary representation
+# Second line is textual representation of the result
+# error(TEXT) has a special meaning - it means an exception is expected
+@Exception: Invalid protocol version
+#MGC VER
+CA11 FFFF
+error(bad protocol version)
+
+CA11 0000
+error(bad protocol version)
+
+@No data after call
+CA11 0200
+error(unexpected data end)
+
+#### Premature ends ####
+@Premature data end
+CA11 0200 70
+error(unexpected data end)
+
+CA11  0200  70 50
+error(unexpected data end)
+
+CA11  0200  70 50 02
+error(unexpected data end)
+
+CA11  0200  70 50 02 02
+error(unexpected data end)
+
+CA11  0200  70 50 02 02 73
+error(unexpected data end)
+
+@OK, empty struct
+CA11  0200  70 50 00
+{}
+
+@method response {status=200, statusMessage=Ok}
+#MGC  VER   RS STRUCT MEMBERS KL "status" INT(200) KL  "statusMessage" STR  "Ok"
+CA11  0200  70 50     02      06 "status" 09 c8    0d  "statusMessage" 2002 "Ok"
+{status: 200, statusMessage: "Ok"}
+
+@call help("help")
+#MGC VER  CALL    "help" STR   "what"
+CA11 0200 68   04 "help" 20 04 "what"
+help("what")
+
+@fault
+#MGC VER  FAULT
+CA11 0200 78    09 c8 2002 "FAULT_TEST"
+error(fault test)
+
+# TODO: Older protocol version.
+# TODO: V3.0 protocol ints.
+# END
