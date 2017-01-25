@@ -33,6 +33,13 @@ error(unexpected data end)
 CA11  0200  70 50 02 02 73
 error(unexpected data end)
 
+# incomplete integer
+CA11  0200 68 04 "help" 39
+error(unexpected data end)
+
+CA11  0200 68 04 "help" 39 f4
+error(unexpected data end)
+
 @OK, empty struct
 CA11  0200  70 50 00
 {}
