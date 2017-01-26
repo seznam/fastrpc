@@ -4,6 +4,10 @@
 # First line is hexadecimal/string binary representation
 # Second line is textual representation of the result
 # error(TEXT) has a special meaning - it means an exception is expected
+
+#################################
+#### Various prologue errors ####
+#################################
 @Exception: Invalid protocol version
 #MGC VER
 CA11 FFFF
@@ -16,7 +20,9 @@ error(bad protocol version)
 CA11 0200
 error(unexpected data end)
 
+########################
 #### Premature ends ####
+########################
 @Premature data end
 CA11 0200 70
 error(unexpected data end)
@@ -40,10 +46,9 @@ error(unexpected data end)
 CA11  0200 68 04 "help" 39 f4
 error(unexpected data end)
 
-@OK, empty struct
-CA11  0200  70 50 00
-{}
-
+#################################
+#### Various valid responses ####
+#################################
 @method response {status=200, statusMessage=Ok}
 #MGC  VER   RS STRUCT MEMBERS KL "status" INT(200) KL  "statusMessage" STR  "Ok"
 CA11  0200  70 50     02      06 "status" 09 c8    0d  "statusMessage" 2002 "Ok"
@@ -54,12 +59,140 @@ CA11  0200  70 50     02      06 "status" 09 c8    0d  "statusMessage" 2002 "Ok"
 CA11 0200 68   04 "help" 20 04 "what"
 help("what")
 
-@fault
+######################
+#### Struct tests ####
+######################
+@struct 0 items
+CA11 0200 70 50 00
+{}
+
+@struct key zero length
+CA11 0200 70 50 01 00 09 c8
+# Is this okay? should we allow zero length struct keys?
+{: 200}
+
+@struct max key length
+CA11 0200 70 50 01 FF "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" 09 c8
+{aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa: 200}
+
+@premature struct end - 1 pair instead of 2
+CA11 0200 70 50 02 01 "a" 09c8
+error(unexpected data end)
+
+#####################
+#### Fault tests ####
+#####################
+@valid fault
 #MGC VER  FAULT PINT(500)
 CA11 0200 78    39   f401     200a "FAULT_TEST"
 fault(500, FAULT_TEST)
 
+@valid fault, v3 protocol int
+#MGC VER  FAULT INT(500)
+CA11 0300 78    09   e803     200a "FAULT_TEST"
+fault(500, FAULT_TEST)
+
+@fault without code
+CA11 0200 78    200a "FAULT_TEST"
+error(unexpected data end)
+
+@fault without text
+CA11 0200 78    39   f401
+error(unexpected data end)
+
+@fault without both text and code
+CA11 0200 78
+error(unexpected data end)
+
+##################
+#### Integers ####
+##################
+@v3 integer in v2 stream
+CA11 0200 70 50 01 06 "badint" 09 e803
+error(unknown type)
+
+@v3 integer in v3 stream is okay
+CA11 0300 70 50 01 07 "goodint" 09 e803
+{goodint: 500}
+
+@v3 integer 0
+CA11 0300 70 50 01 04 "zero" 08 00
+{zero: 0}
+
+@v3 integer 1
+CA11 0300 70 50 01 03 "int" 08 02
+{int: 1}
+
+@v3 integer -1
+CA11 0300 70 50 01 03 "int" 08 01
+{int: -1}
+
+
+@v3 maximal length int, negative
+CA11 0300 70 50 01 06 "maxint" 0F FFFFFFFFFFFFFFFF
+{maxint: -9223372036854775808}
+
+@v3 maximal length int, positive
+CA11 0300 70 50 01 06 "maxint" 0F FEFFFFFFFFFFFFFF
+{maxint: 9223372036854775807}
+
+@v2 positive int, both v2 and v3
+CA11 0200 70 50 01 04 "pint" 38 00
+{pint: 0}
+
+CA11 0200 70 50 01 04 "pint" 38 01
+{pint: 1}
+
+CA11 0300 70 50 01 04 "pint" 38 01
+{pint: 1}
+
+@v2 positive int max value
+CA11 0200 70 50 01 04 "pint" 3F FFFFFFFFFFFFFF7F
+{pint: 9223372036854775807}
+
+@v2 negative int, both v2 and v3
+CA11 0200 70 50 01 04 "nint" 40 00
+{nint: 0}
+
+CA11 0200 70 50 01 04 "nint" 40 01
+{nint: -1}
+
+CA11 0300 70 50 01 04 "nint" 40 01
+{nint: -1}
+
+# this illustrates the problem with this encoding quite well
+CA11 0300 70 50 01 04 "nint" 47 FFFFFFFFFFFFFF7F
+{nint: -9223372036854775807}
+
+#v1 integer, invalid length 0
+CA11 0200 70 50 01 03 "int" 08
+error(bad int size)
+
+@v1 integer, 1 byte 0, protocol v1
+CA11 0100 70 50 01 03 "int" 09 00
+{int: 0}
+
+@v1 integer, 1 byte 0, protocol v2
+CA11 0200 70 50 01 03 "int" 09 00
+{int: 0}
+
+###############
+#### Array ####
+###############
+# TODO
+
+##################
+#### DateTime ####
+##################
+# TODO
+
+###############
+### Result ####
+###############
+# TODO
+# result is other type than struct - array, int, string...
+
+
 # Test fault code transfer over all different kinds of ints!
 # TODO: Older protocol version.
-# TODO: V3.0 protocol ints.
 # END

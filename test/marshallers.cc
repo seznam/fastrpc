@@ -191,7 +191,9 @@ enum ErrorType_t {
     ERROR_UNKNOWN = 0,
     ERROR_BAD_PROTOCOL_VERSION,
     ERROR_UNEXPECTED_END,
-    ERROR_FAULT_TEST
+    ERROR_FAULT_TEST,
+    ERROR_INVALID_TYPE,
+    ERROR_INVALID_INT_SIZE
 };
 
 const char *errorTypeStr(ErrorType_t et) {
@@ -199,6 +201,8 @@ const char *errorTypeStr(ErrorType_t et) {
     case ERROR_BAD_PROTOCOL_VERSION: return "bad protocol version";
     case ERROR_UNEXPECTED_END:       return "unexpected data end";
     case ERROR_FAULT_TEST:           return "fault test";
+    case ERROR_INVALID_TYPE:         return "unknown type";
+    case ERROR_INVALID_INT_SIZE:     return "bad int size";
     case ERROR_UNKNOWN:
     default:
         return "unknown";
@@ -226,11 +230,17 @@ std::ostream &error() {
 
 template<>
 ErrorType_t parseErrorType(const FRPC::StreamError_t &err) {
-    if (err.what() ==  std::string("Unsupported protocol version !!!"))
+    if (err.what() == std::string("Unsupported protocol version !!!"))
         return ERROR_BAD_PROTOCOL_VERSION;
 
-    if (err.what() ==  std::string("Stream not complete"))
+    if (err.what() == std::string("Stream not complete"))
         return ERROR_UNEXPECTED_END;
+
+    if (err.what() == std::string("Don't known this type"))
+        return ERROR_INVALID_TYPE;
+
+    if (err.what() == std::string("Size of int is 0 or > 4 !!!"))
+        return ERROR_INVALID_INT_SIZE;
 
     error() << "Unhandled FRPC::StreamError_t " << err.what() << std::endl;
 
@@ -404,6 +414,12 @@ void runTests(const TestSettings_t &ts, std::istream &input) {
 
         switch (ps) {
         case PS_BINARY:
+            if (line.empty()) {
+                if (ts.diffable)
+                    std::cout << std::endl;
+                continue;
+            }
+
             ti.binary = unhex(line); ps = PS_TEXT;
             if (ts.diffable)
                 std::cout << line << std::endl;
