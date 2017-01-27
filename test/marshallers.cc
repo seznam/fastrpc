@@ -193,7 +193,8 @@ enum ErrorType_t {
     ERROR_UNEXPECTED_END,
     ERROR_FAULT_TEST,
     ERROR_INVALID_TYPE,
-    ERROR_INVALID_INT_SIZE
+    ERROR_INVALID_INT_SIZE,
+    ERROR_INVALID_STR_SIZE
 };
 
 const char *errorTypeStr(ErrorType_t et) {
@@ -203,6 +204,7 @@ const char *errorTypeStr(ErrorType_t et) {
     case ERROR_FAULT_TEST:           return "fault test";
     case ERROR_INVALID_TYPE:         return "unknown type";
     case ERROR_INVALID_INT_SIZE:     return "bad int size";
+    case ERROR_INVALID_STR_SIZE:     return "bad string size";
     case ERROR_UNKNOWN:
     default:
         return "unknown";
@@ -241,6 +243,9 @@ ErrorType_t parseErrorType(const FRPC::StreamError_t &err) {
 
     if (err.what() == std::string("Size of int is 0 or > 4 !!!"))
         return ERROR_INVALID_INT_SIZE;
+
+    if (err.what() == std::string("Size of string length is 0 !!!")
+        return ERROR_INVALID_STR_SIZE;
 
     error() << "Unhandled FRPC::StreamError_t " << err.what() << std::endl;
 
