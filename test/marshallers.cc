@@ -494,7 +494,7 @@ void runTests(const TestSettings_t &ts) {
     if (ts.usestdin) {
         runTests(ts, std::cin);
     } else {
-        std::ifstream infile(ts.testfile);
+        std::ifstream infile(ts.testfile.c_str());
         runTests(ts, infile);
     }
 }
