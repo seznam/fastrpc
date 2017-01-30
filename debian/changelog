@@ -1,3 +1,9 @@
+libfastrpc (8.0.2) stable; urgency=medium
+
+  * FIX: Limit the forwarded header lifespan to single call
+
+ -- Filip Volejnik <filip.volejnik@firma.seznam.cz>  Tue, 06 Dec 2016 16:05:35 +0100
+
 libfastrpc (8.0.1) stable; urgency=medium
 
   * fixing the .pc file include directory

@@ -541,7 +541,8 @@ public:
     /** @brief set new connect timeout */
     void setConnectTimeout(int timeout);
 
-    /** @brief sets a value to the X-Forwarded-For header, used on proxy servers. */
+    /** @brief sets a value to the X-Forwarded-For header for next call,
+     *         used on proxy servers. */
     void setForwardHeader(const std::string &forwarded);
 
     const URL_t& getURL();
