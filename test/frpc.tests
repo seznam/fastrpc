@@ -166,7 +166,7 @@ CA11 0300 70 50 01 04 "nint" 47 FFFFFFFFFFFFFF7F
 
 #v1 integer, invalid length 0
 CA11 0200 70 50 01 03 "int" 08
-error(bad int size)
+error(bad size)
 
 @v1 integer, 1 byte 0, protocol v1
 CA11 0100 70 51 01 03 "int" 09 00
@@ -242,13 +242,17 @@ CA11 0200 70 50 01 03 "str" 20 00
 CA11 0200 70 50 01 03 "str" 20 01 "A"
 {str: "A"}
 
+@string, overflow in int length
+CA11 0200 70 50 01 03 "str" 27 0100000000000001 "A"
+error(unexpected data end)
+
 @string, multiple characters
 CA11 0200 70 50 01 03 "str" 20 0A "Hello FRPC"
 {str: "Hello FRPC"}
 
 @bad string size in protocol version 1
-CA11 0100 70 50 01 03 "str" 20
-error(bad string size)
+CA11 0100 70 51 01 03 "str" 20
+error(bad size)
 
 ###############
 #### Array ####
@@ -274,6 +278,7 @@ CA11 0100 70 51 01 06 "binary" 31 00
 
 @binary v1 bad size
 CA11 0100 70 51 01 06 "binary" 30
+error(bad size)
 
 @binary v2 empty
 CA11 0200 70 50 01 06 "binary" 30 00
@@ -324,4 +329,5 @@ CA11 0300 80 50 01 08 "datetime" 28 00 773F8B5800000000  9D     4E           B6 
 # Test fault code transfer over all different kinds of ints!
 # Fault with other types than int/string combo
 # Fault with duplicate items
+# string delsi nez 32bit cislo - preteceni typu
 # END
