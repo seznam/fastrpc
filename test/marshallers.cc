@@ -244,7 +244,7 @@ ErrorType_t parseErrorType(const FRPC::StreamError_t &err) {
     if (err.what() == std::string("Size of int is 0 or > 4 !!!"))
         return ERROR_INVALID_INT_SIZE;
 
-    if (err.what() == std::string("Size of string length is 0 !!!")
+    if (err.what() == std::string("Size of string length is 0 !!!"))
         return ERROR_INVALID_STR_SIZE;
 
     error() << "Unhandled FRPC::StreamError_t " << err.what() << std::endl;
