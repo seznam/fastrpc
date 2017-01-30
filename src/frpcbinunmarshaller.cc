@@ -54,7 +54,7 @@ enum{S_MAGIC = 0, S_BODY, S_METHOD_NAME, S_METHOD_NAME_LEN,
      S_METHOD_CALL, S_METHOD_RESPONSE, S_FAULT,
      S_INT, S_BOOL, S_DOUBLE, S_STRING, S_DATETIME, S_BINARY, S_INTP8, S_INTN8,
      S_STRUCT, S_ARRAY, S_NULLTYPE,
-     S_MEMBER_NAME, S_VALUE_TYPE, S_STRING_LEN, S_BINARY_LEN};
+     S_MEMBER_NAME, S_VALUE_TYPE, S_REAL_VALUE_TYPE, S_STRING_LEN, S_BINARY_LEN};
 
 /** Decodes zigzag encoded integer back into native integer.
  */
@@ -311,6 +311,7 @@ public:
             throw StreamError_t("Only first value of fault can be int");
         }
         driver.errNo() = value;
+        driver.faultState() = 2;
     }
 
     virtual void buildMethodCall(const char* methodName, unsigned int size) {
@@ -369,7 +370,7 @@ protected:
 
 static void unMarshallInternal(BinUnMarshaller_t::Driver_t &d, char type) {
     BinUnMarshaller_t::FaultBuilder_t faultBuilder(d);
-    DataBuilder_t *dataBuilder = (d.faultState() != 0) ? d.dataBuilder()
+    DataBuilder_t *dataBuilder = (d.faultState() == 0) ? d.dataBuilder()
                                                        : &faultBuilder;
     unsigned char magic[]={0xCA, 0x11};
 
@@ -381,7 +382,7 @@ static void unMarshallInternal(BinUnMarshaller_t::Driver_t &d, char type) {
             }
             d.version().versionMajor = d[2];
             d.version().versionMinor = d[3];
-            if (d.version().versionMajor > 3) {
+            if (d.version().versionMajor > 3 || d.version().versionMajor < 1) {
                 throw StreamError_t("Unsupported protocol version !!!");
             }
 
@@ -431,7 +432,7 @@ static void unMarshallInternal(BinUnMarshaller_t::Driver_t &d, char type) {
                     std::string(d.data(), d.wanted()).c_str());
 
             d.newDataWanted = 1;
-            d.state = S_VALUE_TYPE;
+            d.state = S_REAL_VALUE_TYPE;
         }
         break;
         case S_VALUE_TYPE: {
@@ -440,9 +441,14 @@ static void unMarshallInternal(BinUnMarshaller_t::Driver_t &d, char type) {
                 d.state = S_MEMBER_NAME;
                 break;
             }
+            // fall-through
 
+        case S_REAL_VALUE_TYPE:
             switch (getValueType(d[0])) {
             case BOOL: {
+                if (d[0] & 0x6) {
+                    throw StreamError_t("Invalid bool value");
+                }
                 dataBuilder->buildBool(d[0] & 0x01);
                 debugf("bool\n");
                 d.finalizeValue = true;
@@ -451,6 +457,9 @@ static void unMarshallInternal(BinUnMarshaller_t::Driver_t &d, char type) {
             }
             break;
             case NULLTYPE: {
+                if (d.version().versionMajor == 1) {
+                    throw StreamError_t("Unknown value type");
+                }
                 TreeBuilder_t *treeBuilder(dynamic_cast<TreeBuilder_t*>(dataBuilder));
                 if (treeBuilder) {
                     treeBuilder->buildNull();
@@ -599,6 +608,7 @@ static void unMarshallInternal(BinUnMarshaller_t::Driver_t &d, char type) {
 
         case S_DOUBLE: {
             dataBuilder->buildDouble(getDouble(d.data()));
+            d.finalizeValue = true;
             d.newDataWanted = 1;
             d.state = S_VALUE_TYPE;
         }
