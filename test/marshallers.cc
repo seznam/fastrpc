@@ -195,7 +195,8 @@ enum ErrorType_t {
     ERROR_INVALID_TYPE,
     ERROR_INVALID_INT_SIZE,
     ERROR_INVALID_STR_SIZE,
-    ERROR_INVALID_BIN_SIZE
+    ERROR_INVALID_BIN_SIZE,
+    ERROR_INVALID_BOOL_VALUE
 };
 
 const char *errorTypeStr(ErrorType_t et) {
@@ -207,6 +208,7 @@ const char *errorTypeStr(ErrorType_t et) {
     case ERROR_INVALID_INT_SIZE:     return "bad size";
     case ERROR_INVALID_STR_SIZE:     return "bad size";
     case ERROR_INVALID_BIN_SIZE:     return "bad size";
+    case ERROR_INVALID_BOOL_VALUE:   return "invalid bool value";
     case ERROR_UNKNOWN:
     default:
         return "unknown";
@@ -243,6 +245,12 @@ ErrorType_t parseErrorType(const FRPC::StreamError_t &err) {
     if (err.what() == std::string("Don't known this type"))
         return ERROR_INVALID_TYPE;
 
+    if (err.what() == std::string("Unknown value type"))
+        return ERROR_INVALID_TYPE;
+
+    if (err.what() == std::string("Illegal element length"))
+        return ERROR_INVALID_INT_SIZE;
+
     if (err.what() == std::string("Size of int is 0 or > 4 !!!"))
         return ERROR_INVALID_INT_SIZE;
 
@@ -251,6 +259,9 @@ ErrorType_t parseErrorType(const FRPC::StreamError_t &err) {
 
     if (err.what() == std::string("Size of binary length is 0 !!!"))
         return ERROR_INVALID_BIN_SIZE;
+
+    if (err.what() == std::string("Invalid bool value"))
+        return ERROR_INVALID_BOOL_VALUE;
 
     error() << "Unhandled FRPC::StreamError_t " << err.what() << std::endl;
 

@@ -684,6 +684,7 @@ static void unMarshallInternal(BinUnMarshaller_t::Driver_t &d, char type) {
 BinUnMarshaller_t::~BinUnMarshaller_t() {}
 
 void BinUnMarshaller_t::finish() {
+    debugf("finish: state = %u, storage.size = %zu\n", state, entityStorage.size());
     if (state != S_VALUE_TYPE || entityStorage.size() > 0)
         throw StreamError_t("Stream not complete");
 }
