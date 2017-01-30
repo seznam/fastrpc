@@ -346,6 +346,11 @@ int FRPC_DLLEXPORT dumpFastrpcTree(const Value_t &value, std::string &outstr,
         }
         break;
 
+    case Null_t::TYPE: {
+            out << "null";
+        }
+        break;
+
     case Struct_t::TYPE: {
             const Struct_t &structVal = Struct(value);
             bool first = true;

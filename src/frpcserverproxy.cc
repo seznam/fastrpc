@@ -423,7 +423,7 @@ void ServerProxy_t::setConnectTimeout(int timeout) {
 }
 
 void ServerProxy_t::setForwardHeader(const std::string &fwd) {
-    sp->addRequestHttpHeader(std::make_pair(HTTP_HEADER_X_FORWARDED_FOR, fwd));
+    sp->addRequestHttpHeaderForCall(std::make_pair(HTTP_HEADER_X_FORWARDED_FOR, fwd));
 }
 
 const URL_t& ServerProxy_t::getURL() {
@@ -450,4 +450,3 @@ void ServerProxy_t::deleteRequestHttpHeaders() {
 }
 
 } // namespace FRPC
-
