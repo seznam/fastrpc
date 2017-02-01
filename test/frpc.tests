@@ -103,7 +103,7 @@ fault(500, FAULT_TEST)
 
 @fault without code
 CA11 0200 78    200a "FAULT_TEST"
-error(unexpected data end)
+error(invalid fault)
 
 @fault without text
 CA11 0200 78    39   f401
@@ -114,15 +114,21 @@ CA11 0200 78
 error(unexpected data end)
 
 @fault, valid, different int type (v1)
-CA11 0100 78    09   f401     200a "FAULT_TEST"
+CA11 0100 78 0A f401 210a "FAULT_TEST"
 fault(500, FAULT_TEST)
 
-@fault, invalid, duplicate int/string
+@fault, invalid, duplicate string
 CA11 0200 78 39 f401 200b "FAULT_TEST1" 200b "FAULT_TEST2"
-error(unknown type)
+error(invalid fault)
 
-CA11 0200 78 39 f401 39 f501 200a "FAULT_TEST"
-error(unknown type)
+@fault, invalid, duplicate int
+CA11 0200 78 39 f401 38 01 200a "FAULT_TEST"
+error(invalid fault)
+
+@invalid fault - swapped order
+#MGC VER  FAULT PINT(500)
+CA11 0200 78 200a "FAULT_TEST" 39 f401
+error(invalid fault)
 
 # Fault with other types than int/string combo
 # Fault with duplicate items
