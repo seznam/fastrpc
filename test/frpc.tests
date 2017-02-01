@@ -372,8 +372,95 @@ CA11 0300 80 50 01 08 "datetime" 28 00 773F8B5800000000  9D     4E           B6 
 ### Result ####
 ###############
 # TODO
-# result is other type than struct - array, int, string...
 
-# TODO: unknown types, response/call/fault misplaced in data....
+@result plain int
+CA11 0300 70 08 01
+-1
+
+@result plain str
+CA11 0200 70 2005 "hello"
+"hello"
+
+@result array
+CA11 0200 70 58 01 20 05 "hello"
+("hello")
+
+######################
+### Unknown types ####
+######################
+# higher 5 bits allowed values:
+# 0,1,2,3,4,5,6,7,8
+# 10,11,12,13,14,15
+# BAD VALUES: > 15, 9
+
+@unknown type
+CA11 0200 70 50 01 03 "bad" 48
+error(unknown type)
+
+CA11 0200 70 50 01 03 "bad" 80
+error(unknown type)
+
+CA11 0200 70 50 01 03 "bad" 88
+error(unknown type)
+
+CA11 0200 70 50 01 03 "bad" 90
+error(unknown type)
+
+CA11 0200 70 50 01 03 "bad" 98
+error(unknown type)
+
+CA11 0200 70 50 01 03 "bad" A0
+error(unknown type)
+
+CA11 0200 70 50 01 03 "bad" A8
+error(unknown type)
+
+CA11 0200 70 50 01 03 "bad" B0
+error(unknown type)
+
+CA11 0200 70 50 01 03 "bad" B8
+error(unknown type)
+
+CA11 0200 70 50 01 03 "bad" C0
+error(unknown type)
+
+CA11 0200 70 50 01 03 "bad" C8
+error(unknown type)
+
+CA11 0200 70 50 01 03 "bad" D0
+error(unknown type)
+
+CA11 0200 70 50 01 03 "bad" D8
+error(unknown type)
+
+CA11 0200 70 50 01 03 "bad" E0
+error(unknown type)
+
+CA11 0200 70 50 01 03 "bad" E8
+error(unknown type)
+
+CA11 0200 70 50 01 03 "bad" F0
+error(unknown type)
+
+CA11 0200 70 50 01 03 "bad" F8
+error(unknown type)
+
+# TODO: response/call/fault misplaced in data....
+
+###################################################
+#### Misplaced response/call/fault within data ####
+###################################################
+
+@misplaced response
+CA11 0200 70 50 01 07 "invalid" 70 08 01
+error(unknown type)
+
+@misplaced call
+CA11 0200 70 50 01 07 "invalid" 68 04 "help" 20 04 "what"
+error(unknown type)
+
+@misplaced fault
+CA11 0200 70 50 01 07 "invalid" 78    39   f401     200a "FAULT_TEST"
+error(unknown type)
 
 # END
