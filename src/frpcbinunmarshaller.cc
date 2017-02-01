@@ -39,7 +39,6 @@
 
 #define FRPC_GET_DATA_TYPE_INFO( data ) ((data) & 0x07 )
 
-#define _DEBUG
 #ifdef _DEBUG
 #define debugf(...) printf(__VA_ARGS__)
 #else
