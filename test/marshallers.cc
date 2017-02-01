@@ -1,6 +1,7 @@
 /* Tests covering unmarshaller and marshaller parts of the fastrpc library.
  */
 
+#include <cstring>
 #include <string>
 #include <vector>
 #include <stdexcept>
@@ -237,7 +238,8 @@ enum ErrorType_t {
     ERROR_INVALID_INT_SIZE,
     ERROR_INVALID_STR_SIZE,
     ERROR_INVALID_BIN_SIZE,
-    ERROR_INVALID_BOOL_VALUE
+    ERROR_INVALID_BOOL_VALUE,
+    ERROR_INVALID_FAULT
 };
 
 const char *errorTypeStr(ErrorType_t et) {
@@ -250,6 +252,7 @@ const char *errorTypeStr(ErrorType_t et) {
     case ERROR_INVALID_STR_SIZE:     return "bad size";
     case ERROR_INVALID_BIN_SIZE:     return "bad size";
     case ERROR_INVALID_BOOL_VALUE:   return "invalid bool value";
+    case ERROR_INVALID_FAULT:        return "invalid fault";
     case ERROR_UNKNOWN:
     default:
         return "unknown";
@@ -303,6 +306,9 @@ ErrorType_t parseErrorType(const FRPC::StreamError_t &err) {
 
     if (err.what() == std::string("Invalid bool value"))
         return ERROR_INVALID_BOOL_VALUE;
+
+    if (::strstr(err.what(), "value of fault can be"))
+        return ERROR_INVALID_FAULT;
 
     error() << "Unhandled FRPC::StreamError_t " << err.what() << std::endl;
 
