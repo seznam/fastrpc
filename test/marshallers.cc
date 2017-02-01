@@ -559,6 +559,10 @@ void runTests(const TestSettings_t &ts) {
         runTests(ts, std::cin);
     } else {
         std::ifstream infile(ts.testfile);
+        if (!infile.is_open()) {
+            throw std::runtime_error(
+                    "Could not open the test file " + ts.testfile);
+        }
         runTests(ts, infile);
     }
 }
