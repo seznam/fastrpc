@@ -327,6 +327,7 @@ public:
             throw StreamError_t("Only second value of fault can be string");
         }
         driver.dataBuilder()->buildFault(driver.errNo(), data, size);
+        driver.faultState() = 3;
     }
 
     virtual void buildString(const std::string &data) {
@@ -334,6 +335,7 @@ public:
             throw StreamError_t("Only second value of fault can be string");
         }
         driver.dataBuilder()->buildFault(driver.errNo(), data);
+        driver.faultState() = 3;
     }
 
     virtual void buildStructMember(const char *memberName, unsigned int size) {
