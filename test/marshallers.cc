@@ -351,6 +351,75 @@ std::string toStr(int i) {
     return s.str();
 }
 
+std::auto_ptr<FRPC::UnMarshaller_t> unmarshall(FRPC::TreeBuilder_t &builder,
+                                               const char *data,
+                                               size_t size)
+{
+    std::auto_ptr<FRPC::UnMarshaller_t>
+        unmarshaller = std::auto_ptr<FRPC::UnMarshaller_t>(
+                FRPC::UnMarshaller_t::create(
+                        FRPC::UnMarshaller_t::BINARY_RPC,
+                            builder));
+
+    unmarshaller->unMarshall(data,
+                             size,
+                             FRPC::UnMarshaller_t::TYPE_ANY);
+
+    unmarshaller->finish();
+    return unmarshaller;
+}
+
+
+void formatTextDump(FRPC::TreeBuilder_t &builder, std::string &tgt) {
+    std::string txtree;
+    tgt = builder.getUnMarshaledMethodName();
+    FRPC::dumpFastrpcTree(builder.getUnMarshaledData(), txtree, -1);
+
+    tgt += txtree;
+}
+
+std::string serDeser(FRPC::TreeBuilder_t &orig,
+                     std::string &bintarget,
+                     FRPC::ProtocolVersion_t pv)
+{
+    // // marshall into string again and see how we differ
+    StrWriter_t sw(bintarget);
+    std::string mname = orig.getUnMarshaledMethodName();
+
+    std::auto_ptr<FRPC::Marshaller_t> marshaller
+        (FRPC::Marshaller_t::create
+         (FRPC::Marshaller_t::BINARY_RPC, sw,
+          pv));
+
+    FRPC::TreeFeeder_t feeder(*marshaller);
+
+    if (!mname.empty()) {
+        marshaller->packMethodCall(mname.c_str());
+        FRPC::Array_t &params = FRPC::Array(orig.getUnMarshaledData());
+        for (FRPC::Array_t::const_iterator
+                 iparams = params.begin(),
+                 eparams = params.end();
+             iparams != eparams; ++iparams) {
+            feeder.feedValue(**iparams);
+        }
+    } else {
+        marshaller->packMethodResponse();
+        feeder.feedValue(orig.getUnMarshaledData());
+    }
+
+    marshaller->flush();
+
+    // after this we deserialize again
+    FRPC::Pool_t pool;
+    FRPC::TreeBuilder_t builder(pool);
+    std::auto_ptr<FRPC::UnMarshaller_t> unm
+        = unmarshall(builder, bintarget.data(), bintarget.size());
+
+    std::string secondText;
+    formatTextDump(builder, secondText);
+    return secondText;
+}
+
 /** Runs the core test, returns corrected result */
 std::pair<TestInstance_t, TestResult_t>
 runTest(const TestSettings_t &ts, const TestInstance_t &ti,
@@ -358,63 +427,30 @@ runTest(const TestSettings_t &ts, const TestInstance_t &ti,
 {
     TestInstance_t corrected;
     TestResult_t result(TEST_PASSED);
-    bool allOk = false;
+    std::string secondTxtForm;
+    bool error = false;
 
     try {
         FRPC::Pool_t pool;
         FRPC::TreeBuilder_t builder(pool);
 
-        std::auto_ptr<FRPC::UnMarshaller_t>
-            unmarshaller = std::auto_ptr<FRPC::UnMarshaller_t>(
-                    FRPC::UnMarshaller_t::create(
-                            FRPC::UnMarshaller_t::BINARY_RPC,
-                            builder));
-
-        unmarshaller->unMarshall(ti.binary.data(),
-                                 ti.binary.size(),
-                                 FRPC::UnMarshaller_t::TYPE_ANY);
-
-        unmarshaller->finish();
+        std::auto_ptr<FRPC::UnMarshaller_t> unmarshaller
+            = unmarshall(builder, ti.binary.data(), ti.binary.size());
 
         // TODO: Fix - introduce a normalized dump method
         // Text format of the deserialized data
-        std::string txtree;
-        std::string mname = builder.getUnMarshaledMethodName();
-        corrected.text = mname;
-        FRPC::dumpFastrpcTree(builder.getUnMarshaledData(), txtree, -1);
-        corrected.text += txtree;
+        formatTextDump(builder, corrected.text);
 
-        // // marshall into string again and see how we differ
-        // StrWriter_t sw(corrected.binary);
-
-        // std::auto_ptr<FRPC::Marshaller_t> marshaller
-        //     (FRPC::Marshaller_t::create
-        //      (FRPC::Marshaller_t::BINARY_RPC, sw,
-        //       unmarshaller->getProtocolVersion()));
-
-        // FRPC::TreeFeeder_t feeder(*marshaller);
-
-        // if (!mname.empty()) {
-        //     marshaller->packMethodCall(mname.c_str());
-        //     FRPC::Array_t &params = FRPC::Array(builder.getUnMarshaledData());
-        //     for (FRPC::Array_t::const_iterator
-        //              iparams = params.begin(),
-        //              eparams = params.end();
-        //          iparams != eparams; ++iparams) {
-        //         feeder.feedValue(**iparams);
-        //     }
-        // } else {
-        //     marshaller->packMethodResponse();
-        //     feeder.feedValue(builder.getUnMarshaledData());
-        // }
-
-        // marshaller->flush();
-        // allOk = true;
-
+        secondTxtForm =
+            serDeser(builder,
+                     corrected.binary,
+                     unmarshaller->getProtocolVersion());
     } catch (const FRPC::StreamError_t &ex) {
         ErrorType_t ert = parseErrorType(ex);
         corrected.text = std::string("error(")+errorTypeStr(ert)+")";
+        error = true;
     } catch (const FRPC::Fault_t &ex) {
+        error = true;
         if (ex.errorNum() > 0) {
             // fault contains integral error number, let's contain it in the output
             std::string errNumStr = toStr(ex.errorNum());
@@ -428,19 +464,18 @@ runTest(const TestSettings_t &ts, const TestInstance_t &ti,
             corrected.text = std::string("error(") + errorTypeStr(ert) + ")";
         }
     } catch (const std::exception &ex) {
+        error = true;
         corrected.text = std::string("error(")+ex.what()+")";
     }
 
     // compare the unmarshalled data
     if (corrected.text != ti.text) {
         result.set(TEST_FAILED, corrected.text + " <> " + ti.text);
-    }
-
-    // compare the marshalled data
-/*    if (allOk && (corrected.binary != ti.binary)) {
+    } else if (!error && (secondTxtForm != ti.text)) {
         result.set(TEST_FAILED,
-                   "Marshalled data differ : \n\t" + hex(corrected.binary) + "\n\t" + hex(ti.binary));
-                   }*/
+                   "Remarshalled data yield different result : \n\t"
+                   + secondTxtForm + "\n\t" + corrected.text);
+    }
 
     return std::make_pair(corrected, result);
 }
