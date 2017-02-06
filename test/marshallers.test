@@ -1,0 +1,7 @@
+#!/bin/sh
+
+env > /tmp/env
+pwd >> /tmp/env
+
+# ../ is there because we build and run tests in the src dir
+./test-marshallers stdin < $srcdir/../test/frpc.tests
