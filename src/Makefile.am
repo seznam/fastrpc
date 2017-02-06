@@ -87,7 +87,7 @@ test_base64_LDADD=libfastrpc.la
 test_protocol_LDADD=libfastrpc.la
 test_marshallers_LDADD=libfastrpc.la
 
-TESTS=test-base64 test-protocol test-marshallers
+TESTS=test-base64 test-protocol @top_srcdir@/test/marshallers.test
 
 #doc:
     #doxygen
