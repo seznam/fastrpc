@@ -1,6 +1,7 @@
 /* Tests covering unmarshaller and marshaller parts of the fastrpc library.
  */
 
+#include <cstring>
 #include <string>
 #include <vector>
 #include <stdexcept>
@@ -129,7 +130,7 @@ int nextHexNibble(std::string::const_iterator &it,
         case 'a' ... 'f': return c - 'a' + 10;
         case 'A' ... 'F': return c - 'A' + 10;
         // Whitespace moves us to the next character
-        case '\n':
+ case '\n':
         case  ' ':
         case '\t': continue;
         default: return -2;
@@ -237,7 +238,10 @@ enum ErrorType_t {
     ERROR_INVALID_INT_SIZE,
     ERROR_INVALID_STR_SIZE,
     ERROR_INVALID_BIN_SIZE,
-    ERROR_INVALID_STRUCT_KEY_SIZE
+    ERROR_INVALID_STRUCT_KEY_SIZE,
+    ERROR_INVALID_FAULT,
+    ERROR_INVALID_BOOL_VALUE,
+    ERROR_INVALID_ARRAY_SIZE
 };
 
 const char *errorTypeStr(ErrorType_t et) {
@@ -250,6 +254,9 @@ const char *errorTypeStr(ErrorType_t et) {
     case ERROR_INVALID_STR_SIZE:     return "bad size";
     case ERROR_INVALID_BIN_SIZE:     return "bad size";
     case ERROR_INVALID_STRUCT_KEY_SIZE: return "bad key length";
+    case ERROR_INVALID_FAULT:        return "invalid fault";
+    case ERROR_INVALID_BOOL_VALUE:   return "invalid bool value";
+    case ERROR_INVALID_ARRAY_SIZE:   return "invalid array length";
     case ERROR_UNKNOWN:
     default:
         return "unknown";
@@ -286,6 +293,12 @@ ErrorType_t parseErrorType(const FRPC::StreamError_t &err) {
     if (err.what() == std::string("Don't known this type"))
         return ERROR_INVALID_TYPE;
 
+    if (err.what() == std::string("Unknown value type"))
+        return ERROR_INVALID_TYPE;
+
+    if (err.what() == std::string("Illegal element length"))
+        return ERROR_INVALID_INT_SIZE;
+
     if (err.what() == std::string("Size of int is 0 or > 4 !!!"))
         return ERROR_INVALID_INT_SIZE;
 
@@ -300,6 +313,24 @@ ErrorType_t parseErrorType(const FRPC::StreamError_t &err) {
 
     if (err.what() == std::string("Length of member name is 0 not in interval (1-255)"))
         return ERROR_INVALID_STRUCT_KEY_SIZE;
+
+    if (err.what() == std::string("Struct member name length is zero"))
+        return ERROR_INVALID_STRUCT_KEY_SIZE;
+
+    if (err.what() == std::string("Only second value of fault can be string"))
+        return ERROR_INVALID_FAULT;
+
+    if (err.what() == std::string("Only first value of fault can be int"))
+        return ERROR_INVALID_FAULT;
+
+    if (err.what() == std::string("Only second value of fault can be string"))
+        return ERROR_INVALID_FAULT;
+
+    if (err.what() == std::string("Invalid bool value"))
+        return ERROR_INVALID_BOOL_VALUE;
+
+    if (err.what() == std::string("Array too long !!!"))
+        return ERROR_INVALID_ARRAY_SIZE;
 
     error() << "Unhandled FRPC::StreamError_t " << err.what() << std::endl;
 

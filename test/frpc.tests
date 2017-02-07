@@ -272,9 +272,13 @@ CA11 0200 70 50 02 04 "str0" 20 00 04 "str1" 20 04 "PASS"
 CA11 0200 70 50 01 03 "str" 20 01 "A"
 {str: "A"}
 
-@string, overflow in int length
-CA11 0200 70 50 01 03 "str" 27 0100000000000001 "A"
-error(unexpected data end)
+# Disabled, as we can't predict which exception will happen.
+# Usually this will result in bad-alloc, thanks to the string
+# being pre-reserved for the expected data size.
+# We can't guarantee that, though.
+#@string, overflow in int length of string
+#CA11 0200 70 50 01 03 "str" 27 0100000000000001 "A"
+#error(unexpected data end)
 
 @string, multiple characters
 CA11 0200 70 50 01 03 "str" 20 0A "Hello FRPC"
@@ -305,7 +309,7 @@ CA11 0200 70 50 01 05 "array" 58 01 20 05 "Hello"
 
 @binary, overflow in int length
 CA11 0200 70 50 01 05 "array" 5F 0100000000000001 20 05 "Hello"
-error(unexpected data end)
+error(invalid array length)
 
 @deep array
 CA11 0200 70 50 01 05 "array" 58 01 58 01 58 01 58 01 58 01 58 01 58 01 58 01 58 01 58 01 58 01 58 01 58 01 58 01 58 01 58 01 58 01 20 04 "DEEP"
@@ -330,10 +334,10 @@ CA11 0200 70 50 01 06 "binary" 30 00
 CA11 0200 70 50 01 06 "binary" 30 02 CAFE
 {binary: b"ca fe"}
 
-@binary, overflow in int length
-CA11 0200 70 50 01 06 "binary" 37 0100000000000001 CA
-error(unexpected data end)
-
+# Disabled. See String size overflow for reason.
+#@binary, overflow in int length
+#CA11 0200 70 50 01 06 "binary" 37 0100000000000001 CA
+#error(unexpected data end)
 
 ##############
 #### Null ####
@@ -343,7 +347,7 @@ CA11 0100 80 51 01 04 "null" 60
 error(unknown type)
 
 @null in v2 stream okay
-CA11 0200 80 50 01 04 "null" 60
+CA11 0201 80 50 01 04 "null" 60
 {null: null}
 
 @null in v3 stream okay

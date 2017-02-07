@@ -26,562 +26,684 @@
  *
  * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
+ *              Jan Klesnil <jan.klesnil@firma.seznam.cz>
  *
  * HISTORY
  *
  */
 #include "frpcbinunmarshaller.h"
+#include "frpcinternals.h"
+#include <frpcstreamerror.h>
 #include "frpctreebuilder.h"
 #include <memory.h>
-#include <frpcstreamerror.h>
 
+#define FRPC_GET_DATA_TYPE_INFO( data ) ((data) & 0x07 )
 
-#define FRPC_GET_DATA_TYPE( data ) (data >> 3)
-#define FRPC_GET_DATA_TYPE_INFO( data ) (data & 0x07 )
+#ifdef _DEBUG
+#define debugf(...) printf(__VA_ARGS__)
+#else
+static void noop() {}
+#define debugf(...) noop()
+#endif
+
 namespace FRPC {
-namespace {
 
-/** Decodes zigzag encoded unsigned int back to signed int.
+// unmarshaller state machine states
+enum{S_MAGIC = 0, S_BODY, S_METHOD_NAME, S_METHOD_NAME_LEN,
+     S_METHOD_CALL, S_METHOD_RESPONSE, S_FAULT,
+     S_INT, S_BOOL, S_DOUBLE, S_STRING, S_DATETIME, S_BINARY, S_INTP8, S_INTN8,
+     S_STRUCT, S_ARRAY, S_NULLTYPE,
+     S_MEMBER_NAME, S_VALUE_TYPE, S_REAL_VALUE_TYPE, S_STRING_LEN, S_BINARY_LEN};
+
+/** Decodes zigzag encoded integer back into native integer.
  */
-int64_t zigzagDecode(int64_t s) {
+static int64_t zigzagDecode(int64_t s) {
     uint64_t n = static_cast<uint64_t>(s);
     return static_cast<int64_t>((n >> 1) ^ (-(s & 1)));
 }
 
-} // namespace
-
-
-
-BinUnMarshaller_t::~BinUnMarshaller_t() {}
-
-
-void BinUnMarshaller_t::finish() {
-    if (internalType !=NONE || entityStorage.size() > 0)
-        throw StreamError_t("Stream not complete");
-
+static uint8_t getValueType(uint8_t data) {
+    return ((data) >> 3);
 }
 
-void BinUnMarshaller_t::unMarshall(const char *data, unsigned int size, char type) {
-    try {
-        unMarshallInternal(data, size, type);
+/** Read value from type tag and check its value according to version */
+static uint8_t getVersionedLengthSize(bool longer, uint8_t data) {
+    if (longer) return (data & 0x7) + 1;
+    uint8_t val = (data & 0x7);
+    if (val == 0 || val > 4) {
+        throw StreamError_t("Illegal element length");
     }
-    catch (...) {
-        mainBuff.finish();
-        throw;
-    }
-    mainBuff.finish();
+    return val;
 }
 
-void BinUnMarshaller_t::unMarshallInternal(const char *data, unsigned int size, char type) {
+static int64_t getInt(const char *data, size_t size) {
+    union {
+        char tmp[8];
+        int64_t number;
+    };
+    memset(tmp, 0, 8);
+    memcpy(tmp, data, size);
+
+#ifdef FRPC_BIG_ENDIAN
+    //swap it
+    SWAP_BYTE(tmp[7],tmp[0]);
+    SWAP_BYTE(tmp[6],tmp[1]);
+    SWAP_BYTE(tmp[5],tmp[2]);
+    SWAP_BYTE(tmp[4],tmp[3]);
+#endif
+
+    return number;
+}
+
+// needs 8 bytes of data
+static double getDouble(const char *data) {
+#ifdef FRPC_BIG_ENDIAN
+    char tmp[8] = {
+        data[7], data[6], data[5], data[4], data[3], data[2], data[1], data[0]
+    };
+
+    return *reinterpret_cast<double*>(tmp);
+#else
+    return *reinterpret_cast<const double*>(data);
+#endif
+}
+
+// needs 10 bytes of data
+static DateTimeInternal_t getDateTime(const char *data) {
+    DateTimeInternal_t dateTime;
+    int32_t unixTime;
+    dateTime.year  = (data[9] << 3) | ((data[8] & 0xe0) >> 5);
+    dateTime.month = (data[8] & 0x1e) >> 1;
+    dateTime.day = ((data[8] & 0x01) << 4) |(((data[7] & 0xf0) >> 4));
+    dateTime.hour = ((data[7] & 0x0f) << 1) | ((data[6] & 0x80) >> 7);
+    dateTime.minute = ((data[6] & 0x7e) >> 1);
+    dateTime.sec = ((data[6] & 0x01) << 5) | ((data[5] & 0xf8) >> 3);
+    dateTime.weekDay = (data[5] & 0x07);
+    memcpy(&unixTime, &data[1], 4 );
+    dateTime.unixTime = unixTime;
+    dateTime.timeZone = data[0];
+    return dateTime;
+}
+
+// needs 14 bytes of data
+static DateTimeInternal_t getDateTimeV3(const char *data) {
+    DateTimeInternal_t dateTime;
+    dateTime.year  = (data[13] << 3) | ((data[12] & 0xe0) >> 5);
+    dateTime.month = (data[12] & 0x1e) >> 1;
+    dateTime.day = ((data[12] & 0x01) << 4) |(((data[11] & 0xf0) >> 4));
+    dateTime.hour = ((data[11] & 0x0f) << 1) | ((data[10] & 0x80) >> 7);
+    dateTime.minute = ((data[10] & 0x7e) >> 1);
+    dateTime.sec = ((data[10] & 0x01) << 5) | ((data[9] & 0xf8) >> 3);
+    dateTime.weekDay = (data[9] & 0x07);
+    int64_t time64 = 0;
+    memcpy(reinterpret_cast<char*>(&time64),&data[1], 8);
+    dateTime.unixTime = time64;
+
+    if (sizeof(time_t) < sizeof(time64)) {
+        if (dateTime.unixTime != time64) {
+            throw StreamError_t(
+                        "time_t can't hold the received timestamp value");
+        }
+    }
+
+    dateTime.timeZone = data[0];
+    return dateTime;
+}
+
+class BinUnMarshaller_t::Driver_t {
+public:
+    Driver_t(BinUnMarshaller_t &self,
+             const char *data,
+             unsigned int size)
+        : self(self),
+          input(data),
+          inputSize(size),
+          newDataWanted(0),
+          finalizeValue(false),
+          state(self.state)
+    {
+        if (!self.buffer.empty()) {
+            uint64_t toRead = std::min<uint64_t>(self.dataWanted, inputSize);
+            self.buffer.append(&input[0], toRead);
+            inputSize -= toRead;
+            input += toRead;
+        }
+    }
+
+    bool hasWantedData() const {
+        return self.dataWanted <= self.buffer.size() + inputSize;
+    }
+
+    void update() {
+        // empty buffer
+        if (!self.buffer.empty()) {
+            self.buffer.clear();
+            self.buffer.reserve();   // TODO is it good?
+            self.dataWanted = newDataWanted;
+        } else {
+            input += self.dataWanted;
+            inputSize -= self.dataWanted;
+            self.dataWanted = newDataWanted;
+        }
+        newDataWanted = 0;
+    }
+
+    void finish() {
+        if (inputSize > 0) {
+            self.buffer.reserve(self.dataWanted);
+            self.buffer.append(input, inputSize);
+        }
+    }
+
+    uint64_t wanted() const { return self.dataWanted; }
+
+    const char *data() const {
+        if (self.buffer.empty())
+            return input;
+        else
+            return self.buffer.data();
+    }
+
+    const char & operator [] (const unsigned int index) const {
+        if (self.buffer.empty())
+            return input[index];
+        else
+            return self.buffer[index];
+    }
+
+    void pushEntity(uint8_t type, uint32_t size) {
+        BinUnMarshaller_t::StackElement_t e = {size, type};
+        self.entityStorage.push_back(e);
+    }
+
+    bool isInsideStruct() const {
+        return !self.entityStorage.empty()
+                && self.entityStorage.back().type == STRUCT;
+    }
+
+    void decrementMember() {
+        if (!finalizeValue) return;
+        finalizeValue = false;
+
+        while (!self.entityStorage.empty()) {
+            self.entityStorage.back().members -= 1;
+
+            if (self.entityStorage.back().members != 0)
+                return;
+
+            //call builder to close entity
+            switch (self.entityStorage.back().type) {
+            case STRUCT:
+                self.dataBuilder.closeStruct();
+                break;
+
+            case ARRAY:
+                self.dataBuilder.closeArray();
+                break;
+
+            default:
+                break;
+            }
+            self.entityStorage.pop_back();
+        }
+    }
+
+    // accessors
+    ProtocolVersion_t& version() { return self.protocolVersion; }
+    DataBuilder_t* dataBuilder() const { return &self.dataBuilder; }
+    uint8_t& faultState() const { return  self.faultState; }
+    int64_t& errNo() const { return self.errNo; }
+
+protected:
+    BinUnMarshaller_t &self;
+    const char *input;
+    unsigned int inputSize;
+public:
+    uint64_t newDataWanted;
+    bool finalizeValue;
+    uint8_t &state;
+};
+
+class BinUnMarshaller_t::FaultBuilder_t : public DataBuilderWithNull_t {
+public:
+    FaultBuilder_t(BinUnMarshaller_t::Driver_t &driver)
+        : driver(driver)
+    {}
+
+    virtual void buildMethodResponse() {
+        throw StreamError_t("Invalid state: method response");
+    }
+
+    virtual void buildBinary(const char* data, unsigned int size) {
+        throw StreamError_t("Fault cannot contain binary value");
+    }
+
+    virtual void buildBinary(const std::string &data) {
+        throw StreamError_t("Fault cannot contain binary value");
+    }
+
+    virtual void buildBool(bool value) {
+        throw StreamError_t("Fault cannot contain boolean");
+    }
+
+    virtual void buildDateTime(short year, char month, char day,char hour,
+                               char minute, char sec, char weekDay,
+                               time_t unixTime, int timeZone)
+    {
+        throw StreamError_t("Fault cannot contain datatime");
+    }
+
+    virtual void buildDouble(double value) {
+        throw StreamError_t("Fault cannot contain double");
+    }
+
+    virtual void buildFault(int, const char*, unsigned int) {
+        throw StreamError_t("Fault cannot contain another fault");
+    }
+
+    virtual void buildFault(int errNumber, const std::string &errMsg) {
+        throw StreamError_t("Fault cannot contain another fault");
+    }
+
+    virtual void buildInt(Int_t::value_type value) {
+        if (driver.faultState() != 1) {
+            throw StreamError_t("Only first value of fault can be int");
+        }
+        driver.errNo() = value;
+        driver.faultState() = 2;
+    }
+
+    virtual void buildMethodCall(const char* methodName, unsigned int size) {
+        throw StreamError_t("Invalid state: method call");
+    }
+
+    virtual void buildMethodCall(const std::string &methodName) {
+        throw StreamError_t("Invalid state: method call");
+    }
+
+    virtual void buildString(const char* data, unsigned int size) {
+        if (driver.faultState() != 2) {
+            throw StreamError_t("Only second value of fault can be string");
+        }
+        driver.dataBuilder()->buildFault(driver.errNo(), data, size);
+        driver.faultState() = 3;
+    }
+
+    virtual void buildString(const std::string &data) {
+        if (driver.faultState() != 2) {
+            throw StreamError_t("Only second value of fault can be string");
+        }
+        driver.dataBuilder()->buildFault(driver.errNo(), data);
+        driver.faultState() = 3;
+    }
+
+    virtual void buildStructMember(const char *memberName, unsigned int size) {
+        throw StreamError_t("Fault cannot contain struct");
+    }
+
+    virtual void buildStructMember(const std::string &memberName) {
+        throw StreamError_t("Fault cannot contain struct");
+    }
+
+    virtual void closeArray() {
+        throw StreamError_t("Fault cannot contain array");
+    }
+
+    virtual void closeStruct() {
+        throw StreamError_t("Fault cannot contain struct");
+    }
+
+    virtual void openArray(unsigned int numOfItems) {
+        throw StreamError_t("Fault cannot contain array");
+    }
+
+    virtual void openStruct(unsigned int numOfMembers) {
+        throw StreamError_t("Fault cannot contain struct");
+    }
+
+    virtual void buildNull() {
+        throw StreamError_t("Fault cannot contain null");
+    }
+
+protected:
+    BinUnMarshaller_t::Driver_t &driver;
+};
+
+static void unMarshallInternal(BinUnMarshaller_t::Driver_t &d, char type) {
+    BinUnMarshaller_t::FaultBuilder_t faultBuilder(d);
+    DataBuilder_t *dataBuilder = (d.faultState() == 0) ? d.dataBuilder()
+                                                       : &faultBuilder;
     unsigned char magic[]={0xCA, 0x11};
 
-    while (true) {
-        if (readData(data, size) != 0 )
-            return;
-
-        switch (internalType) {
-        case MAGIC: {
-            if (memcmp(mainBuff.data(), magic, 2) != 0) {
-                //bad magic
+    for (; d.hasWantedData(); d.decrementMember(), d.update()) {
+        switch (d.state) {
+        case S_MAGIC: {
+            if (memcmp(d.data(), magic, 2) != 0) {
                 throw StreamError_t("Bad magic !!!");
             }
-            protocolVersion.versionMajor = mainBuff.data()[2];
-            protocolVersion.versionMinor = mainBuff.data()[3];
-            if (protocolVersion.versionMajor > 3) {
-                //unsupeorted protocol version
+            d.version().versionMajor = d[2];
+            d.version().versionMinor = d[3];
+            if (d.version().versionMajor > 3 || d.version().versionMajor < 1) {
                 throw StreamError_t("Unsupported protocol version !!!");
             }
 
-            mainBuff.erase();
-            internalType = MAIN;
-
-            dataWanted = 1;
+            d.newDataWanted = 1;
+            d.state = S_BODY;
         }
         break;
 
-        case MAIN: {
-            mainInternalType =  FRPC_GET_DATA_TYPE(mainBuff[0]);
-            mainBuff.erase();
+        case S_BODY: {
+            char mType = getValueType(d[0]);
 
-            if (mainInternalType != type && type != TYPE_ANY ) {
+            do {
+                if (mType == type) break;
+                if (type == UnMarshaller_t::TYPE_ANY ) break;
+                if (mType == FAULT && type == UnMarshaller_t::TYPE_METHOD_RESPONSE) break;
 
-                if (mainInternalType != FAULT || type != TYPE_METHOD_RESPONSE) {
-                    throw StreamError_t("Bad main Type !!!");
-                }
+                throw StreamError_t("Bad main Type !!!");
+            } while (false);
+
+            if (mType == METHOD_RESPONSE) {
+                dataBuilder->buildMethodResponse();
             }
 
-            if (mainInternalType == METHOD_CALL)
-                internalType = METHOD_NAME_LEN;
-            else
-                internalType = NONE;
-
-            if (mainInternalType == METHOD_RESPONSE) {
-                dataBuilder.buildMethodResponse();
-                mainInternalType = NONE;
-            }
-            dataWanted = 1;
-        }
-        break;
-        case METHOD_NAME_LEN: {
-            dataWanted = static_cast<unsigned char>(mainBuff[0]);
-            internalType = METHOD_NAME;
-            mainBuff.erase();
-        }
-        break;
-        case METHOD_NAME: {
-            dataBuilder.buildMethodCall(mainBuff.data(), mainBuff.size());
-            mainBuff.erase();
-            mainInternalType = NONE;
-            internalType = NONE;
-            dataWanted = 1;
-        }
-        break;
-        case MEMBER_NAME: {
-            dataBuilder.buildStructMember(mainBuff.data(), mainBuff.size());
-#ifdef _DEBUG
-            printf( "struct member: %s \n", std::string(mainBuff.data(), mainBuff.size()).c_str());
-#endif
-            //we have member name
-            entityStorage.back().member = true;
-
-            mainBuff.erase();
-            internalType = NONE;
-            dataWanted = 1;
-        }
-        break;
-        case NONE: {
-            if (isNextMember()) {
-                dataWanted = static_cast<unsigned char>(mainBuff[0]);
-                mainBuff.erase();
-                internalType = MEMBER_NAME;
-            } else {
-                switch (FRPC_GET_DATA_TYPE(mainBuff[0])) {
-                case BOOL: {
-                    dataBuilder.buildBool(FRPC_GET_DATA_TYPE_INFO(mainBuff[0]) & 0x01);
-                    //decrement member count
-#ifdef _DEBUG
-		    printf("bool\n");
-#endif
-                    internalType = NONE;
-                    mainBuff.erase();
-                    dataWanted = 1;
-                    decrementMember();
-                }
-                break;
-                case NULLTYPE: {
-                    TreeBuilder_t *treeBuilder(dynamic_cast<TreeBuilder_t*>(&dataBuilder));
-                    if (treeBuilder) {
-                        treeBuilder->buildNull();
-                    } else {
-                        dynamic_cast<DataBuilderWithNull_t&>(dataBuilder).buildNull();
-                    }
-                    internalType = NONE;
-                    mainBuff.erase();
-                    dataWanted = 1;
-                    decrementMember();
-                }
-                break;
-                case INT: {
-                    internalType = INT;
-                    if (protocolVersion.versionMajor > 2) {
-                        dataWanted = FRPC_GET_DATA_TYPE_INFO(mainBuff[0]) + 1;
-                    } else {
-                        dataWanted = FRPC_GET_DATA_TYPE_INFO(mainBuff[0]);
-                        if (dataWanted > 4 || !dataWanted)
-                            throw StreamError_t("Size of int is 0 or > 4 !!!");
-                    }
-                    mainBuff.erase();
-#ifdef _DEBUG
-		    printf("int lenght:%d\n",dataWanted);
-#endif
-                }
-                break;
-                case INTN8: {
-                    internalType = INTN8;
-                    dataWanted = FRPC_GET_DATA_TYPE_INFO(mainBuff[0]) + 1;
-                    mainBuff.erase();
-                }
-                break;
-                case INTP8: {
-                    internalType = INTP8;
-                    dataWanted = FRPC_GET_DATA_TYPE_INFO(mainBuff[0]) + 1;
-                    mainBuff.erase();
-                }
-                break;
-                case DOUBLE: {
-                    internalType = DOUBLE;
-                    dataWanted = 8;
-                    mainBuff.erase();
-#ifdef _DEBUG
-                    printf("double size 8 \n");
-#endif
-                }
-                break;
-                case DATETIME: {
-                    internalType = DATETIME;
-                    if (protocolVersion.versionMajor > 2) {
-                        dataWanted = 14;
-                    } else {
-                        dataWanted = 10;
-                    }
-                    mainBuff.erase();
-#ifdef _DEBUG
-                    printf("datetime size 10 \n");
-#endif
-                }
-                break;
-
-                case STRING: {
-                    internalType = STRING;
-                    typeEvent = LENGTH;
-                    if (protocolVersion.versionMajor < 2)
-                        dataWanted = FRPC_GET_DATA_TYPE_INFO(mainBuff[0]);
-                    else
-                        dataWanted = FRPC_GET_DATA_TYPE_INFO(mainBuff[0]) + 1;
-
-                    if (!dataWanted)
-                        throw StreamError_t("Size of string length is 0 !!!");
-                    mainBuff.erase();
-#ifdef _DEBUG
-                    printf("string size size: %d (or + 1) \n",dataWanted);
-#endif
-                }
-                break;
-
-                case BINARY: {
-                    internalType = BINARY;
-                    typeEvent = LENGTH;
-                    if (protocolVersion.versionMajor < 2)
-                        dataWanted = FRPC_GET_DATA_TYPE_INFO(mainBuff[0]);
-                    else
-                        dataWanted = FRPC_GET_DATA_TYPE_INFO(mainBuff[0]) + 1;
-
-                    if (!dataWanted)
-                        throw StreamError_t("Size of binary length is 0 !!!");
-                    mainBuff.erase();
-#ifdef _DEBUG
-                    printf("binary size size: %d (or + 1) \n",dataWanted);
-#endif
-
-                }
-                break;
-                case ARRAY: {
-                    internalType = ARRAY;
-                    if (protocolVersion.versionMajor < 2)
-                        dataWanted = FRPC_GET_DATA_TYPE_INFO(mainBuff[0]);
-                    else
-                        dataWanted = FRPC_GET_DATA_TYPE_INFO(mainBuff[0]) + 1;
-
-                    mainBuff.erase();
-#ifdef _DEBUG
-                    printf("array size size: %d (or + 1) \n",dataWanted);
-#endif
-                }
-                break;
-                case STRUCT: {
-                    internalType = STRUCT;
-                    if (protocolVersion.versionMajor < 2)
-                        dataWanted = FRPC_GET_DATA_TYPE_INFO(mainBuff[0]);
-                    else
-                        dataWanted = FRPC_GET_DATA_TYPE_INFO(mainBuff[0]) + 1;
-
-                    mainBuff.erase();
-#ifdef _DEBUG
-                    printf("struct size size: %d (or + 1) \n",dataWanted);
-#endif
-
-                }
-                break;
-                default:
-                    throw StreamError_t("Don't known this type");
-                    break;
-
-                }
-
+            if (mType == FAULT) {
+                d.faultState() = 1;
+                dataBuilder = &faultBuilder;
             }
 
+            d.newDataWanted = 1;
+            d.state = (mType == METHOD_CALL) ? S_METHOD_NAME_LEN : S_VALUE_TYPE;
         }
         break;
-        //Types
-        case STRING: {
-            if (typeEvent == LENGTH) {
-                //unpack string len
-                Number_t stringSize(mainBuff.data(), mainBuff.size());
-                dataWanted = stringSize.number;
-#ifdef _DEBUG
-                    printf("string  size: %d  \n",dataWanted);
-#endif
+        case S_METHOD_NAME_LEN: {
+            d.newDataWanted = static_cast<uint8_t>(d[0]);
+            d.state = S_METHOD_NAME;
+        }
+        break;
+        case S_METHOD_NAME: {
+            dataBuilder->buildMethodCall(d.data(), d.wanted());
+            d.newDataWanted = 1;
+            d.state = S_VALUE_TYPE;
+        }
+        break;
+        case S_MEMBER_NAME: {
+            dataBuilder->buildStructMember(d.data(), d.wanted());
+            debugf( "struct member: %s \n",
+                    std::string(d.data(), d.wanted()).c_str());
 
-                mainBuff.erase();
-                if (!dataWanted) {
-                    if (mainInternalType == FAULT) {
-                        dataBuilder.buildFault(errNo, mainBuff.data(), mainBuff.size());
-                        mainInternalType = NONE;
-                        internalType = NONE;
+            d.newDataWanted = 1;
+            d.state = S_REAL_VALUE_TYPE;
+        }
+        break;
+        case S_VALUE_TYPE: {
+            if (d.isInsideStruct()) {
+                d.newDataWanted = static_cast<uint8_t>(d[0]);
 
-                    } else {
-                        dataBuilder.buildString(mainBuff.data(), mainBuff.size());
-                        internalType = NONE;
-                        dataWanted = 1;
-                        decrementMember();
-                    }
+                if (d.newDataWanted == 0)
+                    throw StreamError_t("Struct member name length is zero");
+
+                d.state = S_MEMBER_NAME;
+                break;
+            }
+            // fall-through
+
+        case S_REAL_VALUE_TYPE:
+            switch (getValueType(d[0])) {
+            case BOOL: {
+                if (d[0] & 0x6) {
+                    throw StreamError_t("Invalid bool value");
+                }
+                dataBuilder->buildBool(d[0] & 0x01);
+                debugf("bool\n");
+                d.finalizeValue = true;
+                d.newDataWanted = 1;
+                d.state = S_VALUE_TYPE;
+            }
+            break;
+            case NULLTYPE: {
+                if (d.version().versionMajor == 1) {
+                    throw StreamError_t("Unknown value type");
+                }
+                TreeBuilder_t *treeBuilder(dynamic_cast<TreeBuilder_t*>(dataBuilder));
+                if (treeBuilder) {
+                    treeBuilder->buildNull();
                 } else {
-                    typeEvent = DATA;
+                    dynamic_cast<DataBuilderWithNull_t*>(dataBuilder)->buildNull();
                 }
-            } else {
-                //obtain whole string
-                if (mainInternalType == FAULT) {
-                    dataBuilder.buildFault(errNo, mainBuff.data(), mainBuff.size());
-                    mainInternalType = NONE;
-                    internalType = NONE;
-                    mainBuff.erase();
-                } else {
-                    dataBuilder.buildString(mainBuff.data(), mainBuff.size());
-                    internalType = NONE;
-                    dataWanted = 1;
-                    decrementMember();
-                    mainBuff.erase();
-                }
+                d.finalizeValue = true;
+                d.newDataWanted = 1;
+                d.state = S_VALUE_TYPE;
+            }
+            break;
+            case INT: {
+                d.newDataWanted = getVersionedLengthSize(
+                            d.version().versionMajor > 2, d[0]);
+                debugf("int lenght: %lu\n", d.newDataWanted);
+                d.state = S_INT;
+            }
+            break;
+            case INTN8: {
+                d.newDataWanted = FRPC_GET_DATA_TYPE_INFO(d[0]) + 1;
+                debugf("negative int lenght: %lu\n", d.newDataWanted);
+                d.state = S_INTN8;
+            }
+            break;
+            case INTP8: {
+                d.newDataWanted = FRPC_GET_DATA_TYPE_INFO(d[0]) + 1;
+                debugf("positive int lenght: %lu\n", d.newDataWanted);
+                d.state = S_INTP8;
+            }
+            break;
+            case DOUBLE: {
+                d.newDataWanted = 8;
+                debugf("double size 8 \n");
+                d.state = S_DOUBLE;
+            }
+            break;
+            case DATETIME: {
+                d.newDataWanted = (d.version().versionMajor > 2) ? 14
+                                                                     : 10;
+                debugf("datetime size %lu\n", d.newDataWanted);
+                d.state = S_DATETIME;
+            }
+            break;
+
+            case STRING: {
+                d.newDataWanted = getVersionedLengthSize(
+                            d.version().versionMajor >= 2, d[0]);
+                debugf("string length size: %lu\n", d.newDataWanted);
+                d.state = S_STRING_LEN;
+            }
+            break;
+
+            case BINARY: {
+                d.newDataWanted = getVersionedLengthSize(
+                            d.version().versionMajor >= 2, d[0]);
+                debugf("binary size size: %lu\n", d.newDataWanted);
+                d.state = S_BINARY_LEN;
+            }
+            break;
+            case ARRAY: {
+                d.newDataWanted = getVersionedLengthSize(
+                            d.version().versionMajor >= 2, d[0]);
+                debugf("array size size: %lu\n", d.newDataWanted);
+                d.state = S_ARRAY;
+            }
+            break;
+            case STRUCT: {
+                d.newDataWanted = getVersionedLengthSize(
+                            d.version().versionMajor >= 2, d[0]);
+                debugf("struct size size: %lu\n", d.newDataWanted);
+                d.state = S_STRUCT;
+            }
+            break;
+            default:
+                // TODO
+                //if (d.stopOnUnknown()) {
+                //    return;
+                //}
+                throw StreamError_t("Unknown value type");
+                break;
+
             }
         }
         break;
-        case BINARY: {
-            if (typeEvent == LENGTH) {
-                //unpack string len
-                Number_t stringSize(mainBuff.data(), mainBuff.size());
-                dataWanted = stringSize.number;
-                mainBuff.erase();
-                if (!dataWanted) {
-                    dataBuilder.buildBinary(mainBuff.data(), mainBuff.size());
-                    internalType = NONE;
-                    dataWanted = 1;
-                    decrementMember();
-                } else {
-                    typeEvent = DATA;
-                }
-#ifdef _DEBUG
-                printf( "binary size: %d \n",dataWanted);
-#endif
-
-            } else {
-                //obtain whole data
-                dataBuilder.buildBinary(mainBuff.data(), mainBuff.size());
-                internalType = NONE;
-                dataWanted = 1;
-                decrementMember();
-                mainBuff.erase();
-            }
-
-
+        case S_STRING_LEN: {
+            //unpack string len
+            d.newDataWanted = getInt(d.data(), d.wanted());
+            debugf("string  size: %lu\n", d.newDataWanted);
+            d.state = S_STRING;
         }
         break;
-        case INT: {
-            if (protocolVersion.versionMajor > 2) {
-                Number_t value(mainBuff.data(), mainBuff.size());
-                value.number = zigzagDecode(value.number);
-                if (mainInternalType == FAULT)
-                    errNo = value.number;
-                else
-                    dataBuilder.buildInt(value.number);
-            } else {
-                //unpack value
-                Number32_t value(mainBuff.data(), mainBuff.size());
-                if (mainInternalType == FAULT)
-                    errNo = value.number;
-                else
-                    dataBuilder.buildInt(value.number);
+        case S_STRING: {
+            // report whole string
+            dataBuilder->buildString(d.data(), d.wanted());
+            d.finalizeValue = true;
+            d.newDataWanted = 1;
+            d.state = S_VALUE_TYPE;
+        }
+        break;
+        case S_BINARY_LEN: {
+            //unpack string len
+            d.newDataWanted = getInt(d.data(), d.wanted());
+            debugf( "binary size: %lu\n", d.newDataWanted);
+            d.state = S_BINARY;
+        }
+        break;
+        case S_BINARY: {
+            // report whole data
+            dataBuilder->buildBinary(d.data(), d.wanted());
+            d.finalizeValue = true;
+            d.newDataWanted = 1;
+            d.state = S_VALUE_TYPE;
+        }
+        break;
+        case S_INT: {
+            int64_t number = getInt(d.data(), d.wanted());
+            if (d.version().versionMajor > 2) {
+                number = zigzagDecode(number);
             }
-            internalType = NONE;
-            dataWanted = 1;
-            //decrement member count
-            decrementMember();
-            mainBuff.erase();
-#ifdef _DEBUG
-                printf( "int number: %i \n",value.number);
-#endif
 
+            dataBuilder->buildInt(number);
+            debugf( "int number: %li\n", number);
+            d.finalizeValue = true;
+            d.newDataWanted = 1;
+            d.state = S_VALUE_TYPE;
         }
         break;
 
-        case INTN8: {
+        case S_INTN8: {
             //unpack value
-            Number_t value(mainBuff.data(), mainBuff.size());
-            if (mainInternalType == FAULT)
-                errNo = -value.number;
-            else
-                dataBuilder.buildInt(-value.number);
-
-            internalType = NONE;
-            dataWanted = 1;
-            //decrement member count
-            decrementMember();
-            mainBuff.erase();
+            dataBuilder->buildInt(-getInt(d.data(), d.wanted()));
+            d.finalizeValue = true;
+            d.newDataWanted = 1;
+            d.state = S_VALUE_TYPE;
         }
         break;
 
-        case INTP8: {
+        case S_INTP8: {
             //unpack value
-            Number_t value(mainBuff.data(), mainBuff.size());
-            if (mainInternalType == FAULT)
-                errNo = value.number;
-            else
-                dataBuilder.buildInt(value.number);
-
-            internalType = NONE;
-            dataWanted = 1;
-            //decrement member count
-            decrementMember();
-            mainBuff.erase();
+            dataBuilder->buildInt(getInt(d.data(), d.wanted()));
+            d.finalizeValue = true;
+            d.newDataWanted = 1;
+            d.state = S_VALUE_TYPE;
         }
         break;
 
-        case DOUBLE: {
-            double value;
-             //write data
-            char data[8];
-            memset(data, 0, 8);
-            memcpy(data, mainBuff.data(), 8);
-
-#ifdef FRPC_BIG_ENDIAN
-           //swap it
-           SWAP_BYTE(data[7],data[0]);
-           SWAP_BYTE(data[6],data[1]);
-           SWAP_BYTE(data[5],data[2]);
-           SWAP_BYTE(data[4],data[3]);
-#endif
-
-            memcpy((char*)&value,data,8);
-
-            //call builder
-            dataBuilder.buildDouble(value);
-            internalType = NONE;
-            dataWanted = 1;
-            //decrement member count
-            decrementMember();
-            mainBuff.erase();
+        case S_DOUBLE: {
+            dataBuilder->buildDouble(getDouble(d.data()));
+            d.finalizeValue = true;
+            d.newDataWanted = 1;
+            d.state = S_VALUE_TYPE;
         }
         break;
-        case DATETIME: {
-            if (protocolVersion.versionMajor > 2) {
-                DateTimeDataV3_t dateTime;
 
-                memcpy(dateTime.data, mainBuff.data(), 14);
-                //unpack
-                dateTime.unpack();
+        case S_DATETIME: {
+            DateTimeInternal_t dateTime = (d.version().versionMajor > 2)
+                    ? getDateTimeV3(d.data())
+                    : getDateTime(d.data());
 
-                if (dateTime.dateTime.year || dateTime.dateTime.month
-                    || dateTime.dateTime.day || dateTime.dateTime.hour
-                    || dateTime.dateTime.minute || dateTime.dateTime.sec)
-                {
-                    //call builder
-                    dataBuilder.buildDateTime(dateTime.dateTime.year + 1600,
-                                              dateTime.dateTime.month,
-                                              dateTime.dateTime.day,
-                                              dateTime.dateTime.hour,
-                                              dateTime.dateTime.minute,
-                                              dateTime.dateTime.sec,
-                                              dateTime.dateTime.weekDay,
-                                              dateTime.dateTime.unixTime,
-                                              dateTime.dateTime.timeZone * 15 * 60);
-                } else {
-                    dataBuilder.buildDateTime(dateTime.dateTime.year,
-                                              dateTime.dateTime.month,
-                                              dateTime.dateTime.day,
-                                              dateTime.dateTime.hour,
-                                              dateTime.dateTime.minute,
-                                              dateTime.dateTime.sec,
-                                              dateTime.dateTime.weekDay,
-                                              dateTime.dateTime.unixTime,
-                                              dateTime.dateTime.timeZone * 15 * 60);
-                }
-            } else { // protocol v 2.x or earlier
-                DateTimeData_t dateTime;
-
-                memcpy(dateTime.data, mainBuff.data(), 10);
-                //unpack
-                dateTime.unpack();
-
-                if (dateTime.dateTime.year || dateTime.dateTime.month
-                    || dateTime.dateTime.day || dateTime.dateTime.hour
-                    || dateTime.dateTime.minute || dateTime.dateTime.sec) {
-
-                    //call builder
-                    dataBuilder.buildDateTime(dateTime.dateTime.year + 1600,
-                                              dateTime.dateTime.month,
-                                              dateTime.dateTime.day,
-                                              dateTime.dateTime.hour,
-                                              dateTime.dateTime.minute,
-                                              dateTime.dateTime.sec,
-                                              dateTime.dateTime.weekDay,
-                                              dateTime.dateTime.unixTime,
-                                              dateTime.dateTime.timeZone * 15 * 60);
-                } else {
-                    dataBuilder.buildDateTime(dateTime.dateTime.year,
-                                              dateTime.dateTime.month,
-                                              dateTime.dateTime.day,
-                                              dateTime.dateTime.hour,
-                                              dateTime.dateTime.minute,
-                                              dateTime.dateTime.sec,
-                                              dateTime.dateTime.weekDay,
-                                              dateTime.dateTime.unixTime,
-                                              dateTime.dateTime.timeZone * 15 * 60);
-                }
+            if (dateTime.year || dateTime.month || dateTime.day
+                    || dateTime.hour || dateTime.minute || dateTime.sec)
+            {
+                dateTime.year += 1600;
             }
-            internalType = NONE;
-            dataWanted = 1;
-            //decrement member count
-            decrementMember();
-            mainBuff.erase();
 
+            dataBuilder->buildDateTime(
+                        dateTime.year, dateTime.month, dateTime.day,
+                        dateTime.hour, dateTime.minute, dateTime.sec,
+                        dateTime.weekDay, dateTime.unixTime,
+                        dateTime.timeZone * 15 * 60);
+
+            d.finalizeValue = true;
+            d.newDataWanted = 1;
+            d.state = S_VALUE_TYPE;
         }
         break;
-        case STRUCT: {
-            Number_t numOfMembers(mainBuff.data(), mainBuff.size());
 
-            //call builder
-            dataBuilder.openStruct(numOfMembers.number);
-            if (numOfMembers.number != 0) {
-                //save event
-                entityStorage.push_back(TypeStorage_t(STRUCT, numOfMembers.number));
+        case S_STRUCT: {
+            int64_t acc = getInt(d.data(), d.wanted());
+            if (acc >> 32) {
+                throw StreamError_t("Struct too large !!!");
+            }
+
+            dataBuilder->openStruct(acc);
+
+            if (acc != 0) {
+                d.pushEntity(STRUCT, acc);
             } else {
-                dataBuilder.closeStruct();
-                decrementMember();
+                dataBuilder->closeStruct();
+                d.finalizeValue = true;
             }
-            internalType = NONE;
-            dataWanted = 1;
-            mainBuff.erase();
-#ifdef _DEBUG
-            printf( "struct size: %i \n",numOfMembers.number);
-#endif
+            debugf( "struct size: %li \n", acc);
+            d.newDataWanted = 1;
+            d.state = S_VALUE_TYPE;
         }
         break;
-        case ARRAY: {
+
+        case S_ARRAY: {
             //unpack number
-            Number_t numOfItems(mainBuff.data(), mainBuff.size());
-
-            //call builder
-            dataBuilder.openArray(numOfItems.number);
-            //save evnt
-            if (numOfItems.number != 0) {
-                entityStorage.push_back(TypeStorage_t(ARRAY, numOfItems.number));
-            } else {
-                dataBuilder.closeArray();
-                decrementMember();
+            int64_t acc = getInt(d.data(), d.wanted());
+            if (acc >> 32) {
+                throw StreamError_t("Array too long !!!");
             }
-            internalType = NONE;
-            dataWanted = 1;
-            mainBuff.erase();
-#ifdef _DEBUG
-            printf( "array size: %i \n",numOfItems.number);
-#endif
 
+            dataBuilder->openArray(acc);
+
+            if (acc != 0) {
+                d.pushEntity(ARRAY, acc);
+            } else {
+                dataBuilder->closeArray();
+                d.finalizeValue = true;
+            }
+            debugf( "array size: %li\n", acc);
+            d.newDataWanted = 1;
+            d.state = S_VALUE_TYPE;
         }
         break;
-
         }
     }
+}
 
+BinUnMarshaller_t::~BinUnMarshaller_t() {}
 
+void BinUnMarshaller_t::finish() {
+    debugf("finish: state = %u, storage.size = %zu\n", state, entityStorage.size());
+    if (state != S_VALUE_TYPE || entityStorage.size() > 0)
+        throw StreamError_t("Stream not complete");
+}
+
+void BinUnMarshaller_t::unMarshall(const char *data, unsigned int size, char type) {
+    Driver_t driver(*this, data, size);
+    try {
+        unMarshallInternal(driver, type);
+    }
+    catch (...) {
+        driver.finish();
+        throw;
+    }
+    driver.finish();
 }
 
 }

@@ -71,12 +71,11 @@ namespace FRPC
 {
 
 enum{NONE=0, INT=1,BOOL,DOUBLE,STRING,DATETIME,BINARY,INTP8,INTN8,
-     STRUCT=10,ARRAY,NULLTYPE,METHOD_CALL=13,METHOD_RESPONSE,FAULT,
-     MEMBER_NAME = 100,METHOD_NAME,METHOD_NAME_LEN,MAGIC,MAIN };
+     STRUCT=10,ARRAY,NULLTYPE,
+     METHOD_CALL=13,METHOD_RESPONSE,FAULT,
+     METHOD_NAME=100, MEMBER_NAME};
 
 enum{CHAR8=0,SHORT16=1,LONG24,LONG32,LONG40,LONG48,LONG56,LONG64};
-enum{DATA,LENGTH};
-
 const Int_t::value_type ZERO = 0;
 const Int_t::value_type ALLONES = ~ZERO;
 const Int_t::value_type INT8_MASK = ALLONES << 8;
@@ -111,20 +110,6 @@ union Number_t
         SWAP_BYTE(data[4],data[3]);
 #endif
     }
-    Number_t(const char *number, char size)
-    {
-        memset(data, 0, 8);
-        memcpy(data, number, size);
-
-#ifdef FRPC_BIG_ENDIAN
-        //swap it
-        SWAP_BYTE(data[7],data[0]);
-        SWAP_BYTE(data[6],data[1]);
-        SWAP_BYTE(data[5],data[2]);
-        SWAP_BYTE(data[4],data[3]);
-#endif
-
-    }
     char data[8];
     Int_t::value_type number;
 };
@@ -140,18 +125,6 @@ union Number32_t
         SWAP_BYTE(data[2],data[1]);
 #endif
 
-
-    }
-    Number32_t(const char *number, char size)
-    {
-        memset(data, 0, 4);
-        memcpy(data, number, size);
-
-#ifdef FRPC_BIG_ENDIAN
-        //swap it
-        SWAP_BYTE(data[3],data[0]);
-        SWAP_BYTE(data[2],data[1]);
-#endif
 
     }
     char data[4];
@@ -256,21 +229,6 @@ struct DateTimeData_t
                   | ((dateTime.year & 0x07) << 5);
         data[9] = ((dateTime.year & 0x07f8) >> 3);
     }
-
-    void unpack()
-    {
-        int32_t unixTime;
-        dateTime.year  = (data[9] << 3) | ((data[8] & 0xe0) >> 5);
-        dateTime.month = (data[8] & 0x1e) >> 1;
-        dateTime.day = ((data[8] & 0x01) << 4) |(((data[7] & 0xf0) >> 4));
-        dateTime.hour = ((data[7] & 0x0f) << 1) | ((data[6] & 0x80) >> 7);
-        dateTime.minute = ((data[6] & 0x7e) >> 1);
-        dateTime.sec = ((data[6] & 0x01) << 5) | ((data[5] & 0xf8) >> 3);
-        dateTime.weekDay = (data[5] & 0x07);
-        memcpy(reinterpret_cast<char*>(&unixTime),&data[1], 4 );
-        dateTime.unixTime = unixTime;
-        dateTime.timeZone = data[0];
-    }
 };
 
 // the datetime data structure used since protocol version 3
@@ -304,29 +262,6 @@ struct DateTimeDataV3_t
         data[12] = ((dateTime.day & 0x1f) >> 4) | ((dateTime.month & 0x0f) << 1)
                   | ((dateTime.year & 0x07) << 5);
         data[13] = ((dateTime.year & 0x07f8) >> 3);
-    }
-
-    void unpack()
-    {
-        dateTime.year  = (data[13] << 3) | ((data[12] & 0xe0) >> 5);
-        dateTime.month = (data[12] & 0x1e) >> 1;
-        dateTime.day = ((data[12] & 0x01) << 4) |(((data[11] & 0xf0) >> 4));
-        dateTime.hour = ((data[11] & 0x0f) << 1) | ((data[10] & 0x80) >> 7);
-        dateTime.minute = ((data[10] & 0x7e) >> 1);
-        dateTime.sec = ((data[10] & 0x01) << 5) | ((data[9] & 0xf8) >> 3);
-        dateTime.weekDay = (data[9] & 0x07);
-        int64_t time64 = 0;
-        memcpy(reinterpret_cast<char*>(&time64),&data[1], 8);
-        dateTime.unixTime = time64;
-
-        if (sizeof(time_t) < sizeof(time64)) {
-            if (dateTime.unixTime != time64) {
-                throw StreamError_t(
-                        "time_t can't hold the received timestamp value");
-            }
-        }
-
-        dateTime.timeZone = data[0];
     }
 };
 

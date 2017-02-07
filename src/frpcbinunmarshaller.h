@@ -26,6 +26,7 @@
  *
  * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
+ *              Jan Klesnil <jan.klesnil@firma.seznam.cz>
  *
  * HISTORY
  *
@@ -35,22 +36,25 @@
 
 #include <frpcunmarshaller.h>
 #include <frpcdatabuilder.h>
-#include "frpcinternals.h"
 #include <frpc.h>
 #include <vector>
 #include <string>
 
 namespace FRPC {
 
-/**
-@author Miroslav Talasek
-*/
 class BinUnMarshaller_t : public UnMarshaller_t {
 public:
+    class Driver_t;
+    class FaultBuilder_t;
+    friend class Driver_t;
+    friend class FaultBuilder_t;
+
     BinUnMarshaller_t(DataBuilder_t & dataBuilder)
-            :dataBuilder(dataBuilder),internalType(MAGIC),typeEvent(NONE)
-            ,mainInternalType(NONE),
-            dataWanted(4),readPosition(0) {}
+        : dataBuilder(dataBuilder),
+          dataWanted(4), // size of magic and version header
+          state(0),
+          faultState(0)
+    {}
 
     virtual ~BinUnMarshaller_t();
 
@@ -60,158 +64,28 @@ public:
         return protocolVersion;
     }
 
+    size_t unMarshall2(const char *data, unsigned int size, char type);
+
 private:
     BinUnMarshaller_t();
 
-    virtual void unMarshallInternal(const char *data, unsigned int size, char type);
-
-    class Buffer_t
-    {
-    public:
-        Buffer_t() : m_weakData(NULL), m_weakDataSize(0) {}
-
-        void append(const char *data, const unsigned int size) {
-            if (m_data.empty()) {
-                if (m_weakData != NULL)
-                    throw Error_t("append is not supported on weak BinUnMarshaller_t::Buffer_t");
-                m_weakData = data;
-                m_weakDataSize = size;
-            } else {
-                m_data.reserve(m_data.size() + size);
-                m_data.append(data, size);
-            }
-        }
-
-        const char *data() const {
-            if (m_weakData != NULL)
-                return m_weakData;
-            else
-                return m_data.data();
-        }
-
-        unsigned int size() const {
-            if (m_weakData != NULL)
-                return m_weakDataSize;
-            else
-                return m_data.size();
-        }
-
-        const char & operator [] (const unsigned int index) const {
-            if (m_weakData != NULL)
-                return m_weakData[index];
-            else
-                return m_data[index];
-        }
-
-        void erase() {
-            m_weakData = NULL;
-            m_weakDataSize = 0;
-            m_data.clear();
-            m_data.reserve();
-        }
-
-        void finish() {
-            if (m_weakData != NULL) {
-                m_data.reserve(m_data.size() + m_weakDataSize);
-                m_data.append(m_weakData, m_weakDataSize);
-                m_weakData = NULL;
-                m_weakDataSize = 0;
-            }
-        }
-
-    private:
-        const char* m_weakData;
-        unsigned int m_weakDataSize;
-        std::string m_data;
+    struct StackElement_t {
+        uint32_t members;
+        uint8_t type;
     };
 
-    inline int readData(const char *data, unsigned int size) {
-
-        unsigned int readSize = (dataWanted > (size-readPosition))?size
-                                - readPosition:dataWanted;
-
-        if (readPosition == size) {
-            readPosition = 0;
-            return -1;
-        }
-
-
-        mainBuff.append(&data[readPosition], readSize);
-        dataWanted -= readSize;
-        readPosition += readSize;
-
-        if (dataWanted == 0) {
-            return 0;
-        } else {
-            readPosition = 0;
-            return -1;
-        }
-        //ak velkost poskytnutych dat je == readPosition tak readposition= 0
-
-    }
-
-    /**
-        @brief this method check if next item is struct member or value
-    */
-    inline bool isNextMember() {
-        if (entityStorage.size() < 1)
-            return false;
-
-        if (entityStorage.back().type != STRUCT)
-            return false;
-
-        if (entityStorage.back().member)
-            return false;
-
-        return true;
-    }
-    //decrement member count if any ARRAY or STRUCT exist
-    inline void decrementMember() {
-        if (entityStorage.size() < 1)
-            return ;
-
-        //decrement member count
-        entityStorage.back().numOfItems--;
-        //if struct want member name
-        if (entityStorage.back().type == STRUCT)
-            entityStorage.back().member = false;
-
-        if (entityStorage.back().numOfItems != 0 )
-            return;
-        //call builder to close entity
-        switch (entityStorage.back().type) {
-
-        case STRUCT:
-            dataBuilder.closeStruct();
-
-            break;
-
-        case ARRAY:
-            dataBuilder.closeArray();
-
-            break;
-
-        default:
-            break;
-        }
-        entityStorage.pop_back();
-        decrementMember();
-    }
-
     DataBuilder_t &dataBuilder;
-
-    std::vector<TypeStorage_t> entityStorage;
-    char internalType;
-    char typeEvent;
-    char mainInternalType;
-    Buffer_t mainBuff;
-    //long dataReaded;
-    unsigned int dataWanted;
-    unsigned int readPosition;
-    unsigned int errNo;
+    std::vector<StackElement_t> entityStorage;
+    std::string buffer;
+    uint64_t dataWanted;
+    int64_t errNo;
+    uint8_t state;
+    uint8_t faultState;
     ProtocolVersion_t protocolVersion;
+    uint64_t _reserved1;
+    uint64_t _reserved2;
 };
 
-};
+}
 
 #endif
