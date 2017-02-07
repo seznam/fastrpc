@@ -236,7 +236,8 @@ enum ErrorType_t {
     ERROR_INVALID_TYPE,
     ERROR_INVALID_INT_SIZE,
     ERROR_INVALID_STR_SIZE,
-    ERROR_INVALID_BIN_SIZE
+    ERROR_INVALID_BIN_SIZE,
+    ERROR_INVALID_STRUCT_KEY_SIZE
 };
 
 const char *errorTypeStr(ErrorType_t et) {
@@ -248,6 +249,7 @@ const char *errorTypeStr(ErrorType_t et) {
     case ERROR_INVALID_INT_SIZE:     return "bad size";
     case ERROR_INVALID_STR_SIZE:     return "bad size";
     case ERROR_INVALID_BIN_SIZE:     return "bad size";
+    case ERROR_INVALID_STRUCT_KEY_SIZE: return "bad key length";
     case ERROR_UNKNOWN:
     default:
         return "unknown";
@@ -292,6 +294,12 @@ ErrorType_t parseErrorType(const FRPC::StreamError_t &err) {
 
     if (err.what() == std::string("Size of binary length is 0 !!!"))
         return ERROR_INVALID_BIN_SIZE;
+
+    if (err.what() == std::string("Lenght of member name is 0 not in interval (1-255)"))
+        return ERROR_INVALID_STRUCT_KEY_SIZE;
+
+    if (err.what() == std::string("Length of member name is 0 not in interval (1-255)"))
+        return ERROR_INVALID_STRUCT_KEY_SIZE;
 
     error() << "Unhandled FRPC::StreamError_t " << err.what() << std::endl;
 

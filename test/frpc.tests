@@ -68,9 +68,7 @@ CA11 0200 70 50 00
 
 @struct key zero length
 CA11 0200 70 50 01 00 09 c8
-# Note: The spec says clearly 1-255 octets key length. So the implementation is
-# not respecting the spec.
-{: 200}
+error(bad key length)
 
 @struct max key length
 CA11 0200 70 50 01 FF "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" 09 c8
