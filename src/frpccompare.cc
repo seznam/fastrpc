@@ -35,6 +35,7 @@
  *                  First draft.
  */
 
+#include <stdexcept>
 #include "frpccompare.h"
 
 namespace FRPC {
