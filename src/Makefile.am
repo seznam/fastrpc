@@ -74,7 +74,7 @@ libfastrpc_la_SOURCES = frpcvalue.cc frpcarray.cc frpcstruct.cc frpcbinary.cc fr
                         frpctreebuilder.cc frpctreefeeder.cc frpcfault.cc frpc.cc frpcmethodregistry.cc \
                         frpcserver.cc frpcresponseerror.cc frpcconnector.cc frpcnull.cc \
                         frpcurlunmarshaller.cc frpcjsonmarshaller.cc frpcb64unmarshaller.cc frpcbase64.cc \
-                        frpcb64writer.cc frpcconfig.cc
+                        frpcb64writer.cc frpcconfig.cc frpccompare.cc
 
 # with these flags (version info etc.)
 libfastrpc_la_LDFLAGS = @VERSION_INFO@ $(DEPS_LIBS)
