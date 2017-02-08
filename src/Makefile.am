@@ -79,13 +79,15 @@ libfastrpc_la_SOURCES = frpcvalue.cc frpcarray.cc frpcstruct.cc frpcbinary.cc fr
 # with these flags (version info etc.)
 libfastrpc_la_LDFLAGS = @VERSION_INFO@ $(DEPS_LIBS)
 
-check_PROGRAMS=test-base64 test-protocol
+check_PROGRAMS=test-base64 test-protocol test-marshallers
 test_base64_SOURCES=../test/base64.cc
 test_protocol_SOURCES=../test/protocol.cc
+test_marshallers_SOURCES=../test/marshallers.cc
 test_base64_LDADD=libfastrpc.la
 test_protocol_LDADD=libfastrpc.la
+test_marshallers_LDADD=libfastrpc.la
 
-TESTS=test-base64 test-protocol
+TESTS=test-base64 test-protocol @top_srcdir@/test/marshallers.test
 
 #doc:
     #doxygen
