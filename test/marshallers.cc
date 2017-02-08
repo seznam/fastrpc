@@ -392,7 +392,8 @@ std::string toStr(int i) {
 
 std::auto_ptr<FRPC::UnMarshaller_t> unmarshall(FRPC::TreeBuilder_t &builder,
                                                const char *data,
-                                               size_t size)
+                                               size_t size,
+                                               size_t step = 0)
 {
     std::auto_ptr<FRPC::UnMarshaller_t>
         unmarshaller = std::auto_ptr<FRPC::UnMarshaller_t>(
@@ -400,9 +401,23 @@ std::auto_ptr<FRPC::UnMarshaller_t> unmarshall(FRPC::TreeBuilder_t &builder,
                         FRPC::UnMarshaller_t::BINARY_RPC,
                             builder));
 
-    unmarshaller->unMarshall(data,
-                             size,
-                             FRPC::UnMarshaller_t::TYPE_ANY);
+    if (!step) {
+        unmarshaller->unMarshall(data,
+                                 size,
+                                 FRPC::UnMarshaller_t::TYPE_ANY);
+    } else {
+        const char *p = data;
+        const char *end = data + size;
+        while (p < end) {
+            size_t rest = end - p;
+            size_t ds = rest > step ? step : rest;
+
+            unmarshaller->unMarshall(p,
+                                     ds,
+                                     FRPC::UnMarshaller_t::TYPE_ANY);
+            p += ds;
+        }
+    }
 
     unmarshaller->finish();
     return unmarshaller;
@@ -419,7 +434,8 @@ void formatTextDump(FRPC::TreeBuilder_t &builder, std::string &tgt) {
 
 std::string serDeser(FRPC::TreeBuilder_t &orig,
                      std::string &bintarget,
-                     FRPC::ProtocolVersion_t pv)
+                     FRPC::ProtocolVersion_t pv,
+                     size_t step = 0)
 {
     // // marshall into string again and see how we differ
     StrWriter_t sw(bintarget);
@@ -452,7 +468,7 @@ std::string serDeser(FRPC::TreeBuilder_t &orig,
     FRPC::Pool_t pool;
     FRPC::TreeBuilder_t builder(pool);
     std::auto_ptr<FRPC::UnMarshaller_t> unm
-        = unmarshall(builder, bintarget.data(), bintarget.size());
+        = unmarshall(builder, bintarget.data(), bintarget.size(), step);
 
     std::string secondText;
     formatTextDump(builder, secondText);
@@ -480,10 +496,36 @@ runTest(const TestSettings_t &ts, const TestInstance_t &ti,
         // Text format of the deserialized data
         formatTextDump(builder, corrected.text);
 
+        std::string lastTxtForm;
+        bool bufCheckFailed = false;
+
+        // check for step consistency
+        for (size_t step = 0; step < corrected.binary.size(); ++step) {
+            std::string txtForm =
+                serDeser(builder,
+                         corrected.binary,
+                         unmarshaller->getProtocolVersion(),
+                         step);
+
+            if (!lastTxtForm.empty()) {
+                if (lastTxtForm != txtForm) {
+                    bufCheckFailed = true;
+                    break;
+                }
+            }
+
+            lastTxtForm = txtForm;
+        }
+
         secondTxtForm =
             serDeser(builder,
                      corrected.binary,
                      unmarshaller->getProtocolVersion());
+
+
+        if (bufCheckFailed) {
+            secondTxtForm = "error(unmarshaller is buffer size sensitive)";
+        }
     } catch (const FRPC::StreamError_t &ex) {
         ErrorType_t ert = parseErrorType(ex);
         corrected.text = std::string("error(")+errorTypeStr(ert)+")";
