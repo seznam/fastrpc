@@ -495,19 +495,19 @@ static void unMarshallInternal(BinUnMarshaller_t::Driver_t &d, char type) {
             case INT: {
                 d.newDataWanted = getVersionedLengthSize(
                             d.version().versionMajor > 2, d[0]);
-                debugf("int lenght: %lu\n", d.newDataWanted);
+                debugf("int length: %lu\n", d.newDataWanted);
                 d.state = S_INT;
             }
             break;
             case INTN8: {
                 d.newDataWanted = FRPC_GET_DATA_TYPE_INFO(d[0]) + 1;
-                debugf("negative int lenght: %lu\n", d.newDataWanted);
+                debugf("negative int length: %lu\n", d.newDataWanted);
                 d.state = S_INTN8;
             }
             break;
             case INTP8: {
                 d.newDataWanted = FRPC_GET_DATA_TYPE_INFO(d[0]) + 1;
-                debugf("positive int lenght: %lu\n", d.newDataWanted);
+                debugf("positive int length: %lu\n", d.newDataWanted);
                 d.state = S_INTP8;
             }
             break;
