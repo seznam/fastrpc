@@ -76,7 +76,7 @@ static uint8_t getVersionedLengthSize(bool longer, uint8_t data) {
     return val;
 }
 
-static int64_t getInt(const char *data, size_t size) {
+static int64_t getInt64(const char *data, size_t size) {
     union {
         char tmp[8];
         int64_t number;
@@ -95,6 +95,24 @@ static int64_t getInt(const char *data, size_t size) {
     return number;
 }
 
+static int32_t getInt32(const char *data, size_t size) {
+    union {
+        char tmp[4];
+        int32_t number;
+    };
+    memset(tmp, 0, 4);
+    memcpy(tmp, data, size);
+
+#ifdef FRPC_BIG_ENDIAN
+    //swap it
+    SWAP_BYTE(tmp[3],tmp[0]);
+    SWAP_BYTE(tmp[2],tmp[1]);
+#endif
+
+    return number;
+}
+
+
 // needs 8 bytes of data
 static double getDouble(const char *data) {
 #ifdef FRPC_BIG_ENDIAN
@@ -111,7 +129,6 @@ static double getDouble(const char *data) {
 // needs 10 bytes of data
 static DateTimeInternal_t getDateTime(const char *data) {
     DateTimeInternal_t dateTime;
-    int32_t unixTime;
     dateTime.year  = (data[9] << 3) | ((data[8] & 0xe0) >> 5);
     dateTime.month = (data[8] & 0x1e) >> 1;
     dateTime.day = ((data[8] & 0x01) << 4) |(((data[7] & 0xf0) >> 4));
@@ -119,8 +136,7 @@ static DateTimeInternal_t getDateTime(const char *data) {
     dateTime.minute = ((data[6] & 0x7e) >> 1);
     dateTime.sec = ((data[6] & 0x01) << 5) | ((data[5] & 0xf8) >> 3);
     dateTime.weekDay = (data[5] & 0x07);
-    memcpy(&unixTime, &data[1], 4 );
-    dateTime.unixTime = unixTime;
+    dateTime.unixTime = getInt32(&data[1], 4);
     dateTime.timeZone = data[0];
     return dateTime;
 }
@@ -136,7 +152,7 @@ static DateTimeInternal_t getDateTimeV3(const char *data) {
     dateTime.sec = ((data[10] & 0x01) << 5) | ((data[9] & 0xf8) >> 3);
     dateTime.weekDay = (data[9] & 0x07);
     int64_t time64 = 0;
-    memcpy(reinterpret_cast<char*>(&time64),&data[1], 8);
+    time64 = getInt64(&data[1], 8);
     dateTime.unixTime = time64;
 
     if (sizeof(time_t) < sizeof(time64)) {
@@ -551,7 +567,7 @@ static void unMarshallInternal(BinUnMarshaller_t::Driver_t &d, char type) {
         break;
         case S_STRING_LEN: {
             //unpack string len
-            d.newDataWanted = getInt(d.data(), d.wanted());
+            d.newDataWanted = getInt64(d.data(), d.wanted());
             debugf("string  size: %lu\n", d.newDataWanted);
             d.state = S_STRING;
         }
@@ -566,7 +582,7 @@ static void unMarshallInternal(BinUnMarshaller_t::Driver_t &d, char type) {
         break;
         case S_BINARY_LEN: {
             //unpack string len
-            d.newDataWanted = getInt(d.data(), d.wanted());
+            d.newDataWanted = getInt64(d.data(), d.wanted());
             debugf( "binary size: %lu\n", d.newDataWanted);
             d.state = S_BINARY;
         }
@@ -580,7 +596,7 @@ static void unMarshallInternal(BinUnMarshaller_t::Driver_t &d, char type) {
         }
         break;
         case S_INT: {
-            int64_t number = getInt(d.data(), d.wanted());
+            int64_t number = getInt64(d.data(), d.wanted());
             if (d.version().versionMajor > 2) {
                 number = zigzagDecode(number);
             }
@@ -595,7 +611,7 @@ static void unMarshallInternal(BinUnMarshaller_t::Driver_t &d, char type) {
 
         case S_INTN8: {
             //unpack value
-            dataBuilder->buildInt(-getInt(d.data(), d.wanted()));
+            dataBuilder->buildInt(-getInt64(d.data(), d.wanted()));
             d.finalizeValue = true;
             d.newDataWanted = 1;
             d.state = S_VALUE_TYPE;
@@ -604,7 +620,7 @@ static void unMarshallInternal(BinUnMarshaller_t::Driver_t &d, char type) {
 
         case S_INTP8: {
             //unpack value
-            dataBuilder->buildInt(getInt(d.data(), d.wanted()));
+            dataBuilder->buildInt(getInt64(d.data(), d.wanted()));
             d.finalizeValue = true;
             d.newDataWanted = 1;
             d.state = S_VALUE_TYPE;
@@ -643,7 +659,7 @@ static void unMarshallInternal(BinUnMarshaller_t::Driver_t &d, char type) {
         break;
 
         case S_STRUCT: {
-            int64_t acc = getInt(d.data(), d.wanted());
+            int64_t acc = getInt64(d.data(), d.wanted());
             if (acc >> 32) {
                 throw StreamError_t("Struct too large !!!");
             }
@@ -664,7 +680,7 @@ static void unMarshallInternal(BinUnMarshaller_t::Driver_t &d, char type) {
 
         case S_ARRAY: {
             //unpack number
-            int64_t acc = getInt(d.data(), d.wanted());
+            int64_t acc = getInt64(d.data(), d.wanted());
             if (acc >> 32) {
                 throw StreamError_t("Array too long !!!");
             }
