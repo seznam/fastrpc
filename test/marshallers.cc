@@ -15,6 +15,7 @@
 #include "frpctreebuilder.h"
 #include "frpcwriter.h"
 #include "frpctreefeeder.h"
+#include "frpccompare.h"
 
 /*
 
@@ -470,6 +471,12 @@ std::string serDeser(FRPC::TreeBuilder_t &orig,
     std::auto_ptr<FRPC::UnMarshaller_t> unm
         = unmarshall(builder, bintarget.data(), bintarget.size(), step);
 
+    if (FRPC::compare(orig.getUnMarshaledData(),
+                      builder.getUnMarshaledData()) != 0)
+    {
+        throw std::runtime_error("remarshalled data yield different resuilt");
+    }
+
     std::string secondText;
     formatTextDump(builder, secondText);
     return secondText;
@@ -483,7 +490,7 @@ runTest(const TestSettings_t &ts, const TestInstance_t &ti,
     TestInstance_t corrected;
     TestResult_t result(TEST_PASSED);
     std::string secondTxtForm;
-    bool error = false;
+    bool waserror = false;
 
     try {
         FRPC::Pool_t pool;
@@ -499,11 +506,17 @@ runTest(const TestSettings_t &ts, const TestInstance_t &ti,
         std::string lastTxtForm;
         bool bufCheckFailed = false;
 
+        secondTxtForm =
+            serDeser(builder,
+                     corrected.binary,
+                     unmarshaller->getProtocolVersion());
+
         // check for step consistency
         for (size_t step = 0; step < corrected.binary.size(); ++step) {
+            std::string tempData;
             std::string txtForm =
                 serDeser(builder,
-                         corrected.binary,
+                         tempData,
                          unmarshaller->getProtocolVersion(),
                          step);
 
@@ -517,21 +530,15 @@ runTest(const TestSettings_t &ts, const TestInstance_t &ti,
             lastTxtForm = txtForm;
         }
 
-        secondTxtForm =
-            serDeser(builder,
-                     corrected.binary,
-                     unmarshaller->getProtocolVersion());
-
-
         if (bufCheckFailed) {
             secondTxtForm = "error(unmarshaller is buffer size sensitive)";
         }
     } catch (const FRPC::StreamError_t &ex) {
         ErrorType_t ert = parseErrorType(ex);
         corrected.text = std::string("error(")+errorTypeStr(ert)+")";
-        error = true;
+        waserror = true;
     } catch (const FRPC::Fault_t &ex) {
-        error = true;
+        waserror = true;
         if (ex.errorNum() > 0) {
             // fault contains integral error number, let's contain it in the output
             std::string errNumStr = toStr(ex.errorNum());
@@ -545,14 +552,14 @@ runTest(const TestSettings_t &ts, const TestInstance_t &ti,
             corrected.text = std::string("error(") + errorTypeStr(ert) + ")";
         }
     } catch (const std::exception &ex) {
-        error = true;
+        waserror = true;
         corrected.text = std::string("error(")+ex.what()+")";
     }
 
     // compare the unmarshalled data
     if (corrected.text != ti.text) {
         result.set(TEST_FAILED, corrected.text + " <> " + ti.text);
-    } else if (!error && (secondTxtForm != ti.text)) {
+    } else if (!waserror && (secondTxtForm != ti.text)) {
         result.set(TEST_FAILED,
                    "Remarshalled data yield different result : \n\t"
                    + secondTxtForm + "\n\t" + corrected.text);
