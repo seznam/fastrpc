@@ -86,6 +86,10 @@ CA11 0200 70 50 02 02 "s1" 50 00 02 "s2" 50 01 01 "k" 20 01 "v"
 CA11 0200 70 50 01 01 "a" 50 01 01 "a" 50 01 01 "a" 50 01 01 "a" 50 01 01 "a" 50 01 01 "a" 50 01 01 "a" 50 01 01 "a" 50 01 01 "a" 50 01 01 "a" 50 01 01 "a" 50 01 01 "a" 50 01 01 "a" 50 01 01 "a" 50 01 01 "a" 50 01 01 "a" 20 04 "DEEP"
 {a: {a: {a: {a: {a: {a: {a: {a: {a: {a: {a: {a: {a: {a: {a: {a: "DEEP"}}}}}}}}}}}}}}}}
 
+@struct more complex struct
+CA11 0200 70 50 04 04 "ahoj" 50 01 03 "cau" 20 04 "hele" 05 "intik" 39 f401 06 "string" 20 04 "fuj!" 03 "str" 50 03 04 "ahoj" 50 01 03 "cau" 20 04 "hele" 05 "intik" 39 f401 06 "string" 20 04 "fuj!"
+{ahoj: {cau: "hele"}, intik: 500, str: {ahoj: {cau: "hele"}, intik: 500, string: "fuj!"}, string: "fuj!"}
+
 #####################
 #### Fault tests ####
 #####################
