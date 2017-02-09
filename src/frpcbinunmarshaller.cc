@@ -179,7 +179,8 @@ public:
           state(self.state)
     {
         if (!self.buffer.empty()) {
-            uint64_t toRead = std::min<uint64_t>(self.dataWanted, inputSize);
+            size_t remains = self.dataWanted - self.buffer.size();
+            uint64_t toRead = std::min<uint64_t>(remains, inputSize);
             self.buffer.append(&input[0], toRead);
             inputSize -= toRead;
             input += toRead;
@@ -195,12 +196,11 @@ public:
         if (!self.buffer.empty()) {
             self.buffer.clear();
             self.buffer.reserve();   // TODO is it good?
-            self.dataWanted = newDataWanted;
         } else {
             input += self.dataWanted;
             inputSize -= self.dataWanted;
-            self.dataWanted = newDataWanted;
         }
+        self.dataWanted = newDataWanted;
         newDataWanted = 0;
     }
 
