@@ -65,7 +65,7 @@ void test_stream_decode(std::string value, unsigned line_num) {
     std::string value_b64(encode_b64(value));
 
     // break value in 2 parts and try to decode that
-    for (int i = 0; i < value_b64.size(); ++i) {
+    for (size_t i = 0; i < value_b64.size(); ++i) {
         Base64 decoder;
         std::string value_decoded;
         value_decoded.append(decoder.process(value_b64.c_str(), i));

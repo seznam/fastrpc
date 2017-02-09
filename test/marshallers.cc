@@ -15,6 +15,7 @@
 #include "frpctreebuilder.h"
 #include "frpcwriter.h"
 #include "frpctreefeeder.h"
+#include "frpccompare.h"
 
 /*
 
@@ -130,7 +131,7 @@ int nextHexNibble(std::string::const_iterator &it,
         case 'a' ... 'f': return c - 'a' + 10;
         case 'A' ... 'F': return c - 'A' + 10;
         // Whitespace moves us to the next character
-        case '\n':
+ case '\n':
         case  ' ':
         case '\t': continue;
         default: return -2;
@@ -238,8 +239,10 @@ enum ErrorType_t {
     ERROR_INVALID_INT_SIZE,
     ERROR_INVALID_STR_SIZE,
     ERROR_INVALID_BIN_SIZE,
+    ERROR_INVALID_STRUCT_KEY_SIZE,
+    ERROR_INVALID_FAULT,
     ERROR_INVALID_BOOL_VALUE,
-    ERROR_INVALID_FAULT
+    ERROR_INVALID_ARRAY_SIZE
 };
 
 const char *errorTypeStr(ErrorType_t et) {
@@ -251,8 +254,10 @@ const char *errorTypeStr(ErrorType_t et) {
     case ERROR_INVALID_INT_SIZE:     return "bad size";
     case ERROR_INVALID_STR_SIZE:     return "bad size";
     case ERROR_INVALID_BIN_SIZE:     return "bad size";
-    case ERROR_INVALID_BOOL_VALUE:   return "invalid bool value";
+    case ERROR_INVALID_STRUCT_KEY_SIZE: return "bad key length";
     case ERROR_INVALID_FAULT:        return "invalid fault";
+    case ERROR_INVALID_BOOL_VALUE:   return "invalid bool value";
+    case ERROR_INVALID_ARRAY_SIZE:   return "invalid array length";
     case ERROR_UNKNOWN:
     default:
         return "unknown";
@@ -304,11 +309,29 @@ ErrorType_t parseErrorType(const FRPC::StreamError_t &err) {
     if (err.what() == std::string("Size of binary length is 0 !!!"))
         return ERROR_INVALID_BIN_SIZE;
 
+    if (err.what() == std::string("Lenght of member name is 0 not in interval (1-255)"))
+        return ERROR_INVALID_STRUCT_KEY_SIZE;
+
+    if (err.what() == std::string("Length of member name is 0 not in interval (1-255)"))
+        return ERROR_INVALID_STRUCT_KEY_SIZE;
+
+    if (err.what() == std::string("Struct member name length is zero"))
+        return ERROR_INVALID_STRUCT_KEY_SIZE;
+
+    if (err.what() == std::string("Only second value of fault can be string"))
+        return ERROR_INVALID_FAULT;
+
+    if (err.what() == std::string("Only first value of fault can be int"))
+        return ERROR_INVALID_FAULT;
+
+    if (err.what() == std::string("Only second value of fault can be string"))
+        return ERROR_INVALID_FAULT;
+
     if (err.what() == std::string("Invalid bool value"))
         return ERROR_INVALID_BOOL_VALUE;
 
-    if (::strstr(err.what(), "value of fault can be"))
-        return ERROR_INVALID_FAULT;
+    if (err.what() == std::string("Array too long !!!"))
+        return ERROR_INVALID_ARRAY_SIZE;
 
     error() << "Unhandled FRPC::StreamError_t " << err.what() << std::endl;
 
@@ -370,7 +393,8 @@ std::string toStr(int i) {
 
 std::auto_ptr<FRPC::UnMarshaller_t> unmarshall(FRPC::TreeBuilder_t &builder,
                                                const char *data,
-                                               size_t size)
+                                               size_t size,
+                                               size_t step = 0)
 {
     std::auto_ptr<FRPC::UnMarshaller_t>
         unmarshaller = std::auto_ptr<FRPC::UnMarshaller_t>(
@@ -378,9 +402,23 @@ std::auto_ptr<FRPC::UnMarshaller_t> unmarshall(FRPC::TreeBuilder_t &builder,
                         FRPC::UnMarshaller_t::BINARY_RPC,
                             builder));
 
-    unmarshaller->unMarshall(data,
-                             size,
-                             FRPC::UnMarshaller_t::TYPE_ANY);
+    if (!step) {
+        unmarshaller->unMarshall(data,
+                                 size,
+                                 FRPC::UnMarshaller_t::TYPE_ANY);
+    } else {
+        const char *p = data;
+        const char *end = data + size;
+        while (p < end) {
+            size_t rest = end - p;
+            size_t ds = rest > step ? step : rest;
+
+            unmarshaller->unMarshall(p,
+                                     ds,
+                                     FRPC::UnMarshaller_t::TYPE_ANY);
+            p += ds;
+        }
+    }
 
     unmarshaller->finish();
     return unmarshaller;
@@ -397,7 +435,8 @@ void formatTextDump(FRPC::TreeBuilder_t &builder, std::string &tgt) {
 
 std::string serDeser(FRPC::TreeBuilder_t &orig,
                      std::string &bintarget,
-                     FRPC::ProtocolVersion_t pv)
+                     FRPC::ProtocolVersion_t pv,
+                     size_t step = 0)
 {
     // // marshall into string again and see how we differ
     StrWriter_t sw(bintarget);
@@ -430,7 +469,13 @@ std::string serDeser(FRPC::TreeBuilder_t &orig,
     FRPC::Pool_t pool;
     FRPC::TreeBuilder_t builder(pool);
     std::auto_ptr<FRPC::UnMarshaller_t> unm
-        = unmarshall(builder, bintarget.data(), bintarget.size());
+        = unmarshall(builder, bintarget.data(), bintarget.size(), step);
+
+    if (FRPC::compare(orig.getUnMarshaledData(),
+                      builder.getUnMarshaledData()) != 0)
+    {
+        throw std::runtime_error("remarshalled data yield different resuilt");
+    }
 
     std::string secondText;
     formatTextDump(builder, secondText);
@@ -445,7 +490,7 @@ runTest(const TestSettings_t &ts, const TestInstance_t &ti,
     TestInstance_t corrected;
     TestResult_t result(TEST_PASSED);
     std::string secondTxtForm;
-    bool error = false;
+    bool waserror = false;
 
     try {
         FRPC::Pool_t pool;
@@ -458,16 +503,42 @@ runTest(const TestSettings_t &ts, const TestInstance_t &ti,
         // Text format of the deserialized data
         formatTextDump(builder, corrected.text);
 
+        std::string lastTxtForm;
+        bool bufCheckFailed = false;
+
         secondTxtForm =
             serDeser(builder,
                      corrected.binary,
                      unmarshaller->getProtocolVersion());
+
+        // check for step consistency
+        for (size_t step = 0; step < corrected.binary.size(); ++step) {
+            std::string tempData;
+            std::string txtForm =
+                serDeser(builder,
+                         tempData,
+                         unmarshaller->getProtocolVersion(),
+                         step);
+
+            if (!lastTxtForm.empty()) {
+                if (lastTxtForm != txtForm) {
+                    bufCheckFailed = true;
+                    break;
+                }
+            }
+
+            lastTxtForm = txtForm;
+        }
+
+        if (bufCheckFailed) {
+            secondTxtForm = "error(unmarshaller is buffer size sensitive)";
+        }
     } catch (const FRPC::StreamError_t &ex) {
         ErrorType_t ert = parseErrorType(ex);
         corrected.text = std::string("error(")+errorTypeStr(ert)+")";
-        error = true;
+        waserror = true;
     } catch (const FRPC::Fault_t &ex) {
-        error = true;
+        waserror = true;
         if (ex.errorNum() > 0) {
             // fault contains integral error number, let's contain it in the output
             std::string errNumStr = toStr(ex.errorNum());
@@ -481,14 +552,14 @@ runTest(const TestSettings_t &ts, const TestInstance_t &ti,
             corrected.text = std::string("error(") + errorTypeStr(ert) + ")";
         }
     } catch (const std::exception &ex) {
-        error = true;
+        waserror = true;
         corrected.text = std::string("error(")+ex.what()+")";
     }
 
     // compare the unmarshalled data
     if (corrected.text != ti.text) {
         result.set(TEST_FAILED, corrected.text + " <> " + ti.text);
-    } else if (!error && (secondTxtForm != ti.text)) {
+    } else if (!waserror && (secondTxtForm != ti.text)) {
         result.set(TEST_FAILED,
                    "Remarshalled data yield different result : \n\t"
                    + secondTxtForm + "\n\t" + corrected.text);

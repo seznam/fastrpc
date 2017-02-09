@@ -1,3 +1,11 @@
+libfastrpc (8.0.3) stable; urgency=medium
+
+  * rewritten large part of the bin unmarshaller - simplified and more compliant
+  * added a test suite for the binary protocol (both marshaller and demarshaller are tested)
+  * Fix: Python2 version of the server object didn't convert the method signature, leaving it as a string. This broken some interactive clients
+
+ -- Filip Volejnik <filip.volejnik@firma.seznam.cz>  Wed, 08 Feb 2017 15:26:43 +0100
+
 libfastrpc (8.0.2) stable; urgency=medium
 
   * FIX: Limit the forwarded header lifespan to single call
