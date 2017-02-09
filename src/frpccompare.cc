@@ -94,39 +94,31 @@ bool operator>=(const FRPC::Value_t &lhs, const FRPC::Value_t &rhs) {
     return compare(lhs, rhs) >= 0;
 }
 
-namespace helper {
+template <typename Value_T>
+static int compareValue(const Value_T &lhs, const Value_T &rhs) {
+    return (lhs < rhs)? -1
+        : ((rhs < lhs)? 1: 0);
+}
 
-template <typename Value_t>
-inline int compare(const Value_t &lhs, const Value_t &rhs) {
-    return (lhs < rhs)? -1: ((rhs < lhs)? 1: 0);
+template <typename Value_T>
+static int compareValue(const Value_t &lhs, const Value_t &rhs) {
+    const Value_T &lhsc = static_cast<const Value_T&>(lhs);
+    const Value_T &rhsc = static_cast<const Value_T&>(rhs);
+    return (lhsc.getValue() < rhsc.getValue())? -1
+        : ((rhsc.getValue() < lhsc.getValue())? 1: 0);
 }
 
 template <>
-inline int compare(const FRPC::Bool_t &lhs, const FRPC::Bool_t &rhs) {
-    return compare(lhs.getValue(), rhs.getValue());
+int compareValue<FRPC::DateTime_t>(const FRPC::Value_t &lhs,
+                                   const FRPC::Value_t &rhs)
+{
+    const DateTime_t &lhsc = static_cast<const DateTime_t&>(lhs);
+    const DateTime_t &rhsc = static_cast<const DateTime_t&>(rhs);
+    return (lhsc.getUnixTime() < rhsc.getUnixTime())? -1
+        : ((rhsc.getUnixTime() < lhsc.getUnixTime())? 1: 0);
 }
 
-template <>
-inline int compare(const FRPC::Int_t &lhs, const FRPC::Int_t &rhs) {
-    return compare(lhs.getValue(), rhs.getValue());
-}
-
-template <>
-inline int compare(const FRPC::Double_t &lhs, const FRPC::Double_t &rhs) {
-    return compare(lhs.getValue(), rhs.getValue());
-}
-
-template <>
-inline int compare(const FRPC::String_t &lhs, const FRPC::String_t &rhs) {
-    return compare(lhs.getString(), rhs.getString());
-}
-
-template <>
-inline int compare(const FRPC::Binary_t &lhs, const FRPC::Binary_t &rhs) {
-    return compare(lhs.getString(), rhs.getString());
-}
-
-int compare(const FRPC::Struct_t &lhs, const FRPC::Struct_t &rhs) {
+static int compare(const FRPC::Struct_t &lhs, const FRPC::Struct_t &rhs) {
     FRPC::Struct_t::const_iterator ilhs = lhs.begin();
     FRPC::Struct_t::const_iterator irhs = rhs.begin();
     FRPC::Struct_t::const_iterator elhs = lhs.end();
@@ -134,7 +126,7 @@ int compare(const FRPC::Struct_t &lhs, const FRPC::Struct_t &rhs) {
 
     for (; (ilhs != elhs) && (irhs != erhs); ++ilhs, ++irhs) {
         // compare the key
-        if (int res = compare(ilhs->first, irhs->first)) return res;
+        if (int res = ilhs->first.compare(irhs->first)) return res;
         // compare the value
         if (int res = compare(*ilhs->second, *irhs->second)) return res;
     }
@@ -145,7 +137,7 @@ int compare(const FRPC::Struct_t &lhs, const FRPC::Struct_t &rhs) {
     return 0;
 }
 
-int compare(const FRPC::Array_t &lhs, const FRPC::Array_t &rhs) {
+static int compare(const FRPC::Array_t &lhs, const FRPC::Array_t &rhs) {
     FRPC::Array_t::const_iterator ilhs = lhs.begin();
     FRPC::Array_t::const_iterator irhs = rhs.begin();
     FRPC::Array_t::const_iterator elhs = lhs.end();
@@ -161,30 +153,28 @@ int compare(const FRPC::Array_t &lhs, const FRPC::Array_t &rhs) {
     return 0;
 }
 
-} // namespace helper
-
 int compare(const FRPC::Value_t &lhs, const FRPC::Value_t &rhs) {
     // compare the type
-    if (int res = helper::compare(lhs.getType(), rhs.getType())) return res;
+    if (int res = compareValue(lhs.getType(), rhs.getType())) return res;
 
     // compare the value
     switch (lhs.getType()) {
     case FRPC::Bool_t::TYPE:
-        return helper::compare(FRPC::Bool(lhs), FRPC::Bool(rhs));
+        return compareValue<FRPC::Bool_t>(lhs, rhs);
     case FRPC::Int_t::TYPE:
-        return helper::compare(FRPC::Int(lhs), FRPC::Int(rhs));
+        return compareValue<FRPC::Int_t>(lhs, rhs);
     case FRPC::Double_t::TYPE:
-        return helper::compare(FRPC::Double(lhs), FRPC::Double(rhs));
+        return compareValue<FRPC::Double_t>(lhs, rhs);
     case FRPC::String_t::TYPE:
-        return helper::compare(FRPC::String(lhs), FRPC::String(rhs));
+        return compareValue<FRPC::String_t>(lhs, rhs);
     case FRPC::Binary_t::TYPE:
-        return helper::compare(FRPC::Binary(lhs), FRPC::Binary(rhs));
+        return compareValue<FRPC::Binary_t>(lhs, rhs);
     case FRPC::DateTime_t::TYPE:
-        return helper::compare(FRPC::DateTime(lhs), FRPC::DateTime(rhs));
+        return compareValue<FRPC::DateTime_t>(lhs, rhs);
     case FRPC::Struct_t::TYPE:
-        return helper::compare(FRPC::Struct(lhs), FRPC::Struct(rhs));
+        return compare(FRPC::Struct(lhs), FRPC::Struct(rhs));
     case FRPC::Array_t::TYPE:
-        return helper::compare(FRPC::Array(lhs), FRPC::Array(rhs));
+        return compare(FRPC::Array(lhs), FRPC::Array(rhs));
     case FRPC::Null_t::TYPE:
         return 0;
     default:
