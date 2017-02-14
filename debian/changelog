@@ -1,3 +1,12 @@
+libfastrpc (8.0.4) stable; urgency=medium
+
+  * fix parsing fragmented streams
+  * Added a larger struct for tests
+  * FIX: Test for the buffer sizes was not active. Fixed.
+  * Fixed frpc::compare recursion problems
+
+ -- Filip Volejnik <filip.volejnik@firma.seznam.cz>  Tue, 14 Feb 2017 10:23:30 +0100
+
 libfastrpc (8.0.3) stable; urgency=medium
 
   * rewritten large part of the bin unmarshaller - simplified and more compliant
