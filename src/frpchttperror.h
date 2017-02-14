@@ -47,7 +47,7 @@ class FRPC_DLLEXPORT HTTPError_t : public ProtocolError_t
 {
 public:
     HTTPError_t(long errNum, const std::string &msg)
-        : ProtocolError_t(errNum, msg)
+        : ProtocolError_t(static_cast<int>(errNum), msg)
     {}
 
     static HTTPError_t format(long errNum, const char *format, ...) __attribute__((format(printf, 2, 3)));

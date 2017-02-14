@@ -135,7 +135,7 @@ public:
     inline Value_t& getUnMarshaledData()
     {
         if (!retValue)
-            throw Fault_t(getUnMarshaledErrorNumber(),
+            throw Fault_t(static_cast<int>(getUnMarshaledErrorNumber()),
                           getUnMarshaledErrorMessage());
         return *retValue;
     }
