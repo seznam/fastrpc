@@ -170,13 +170,15 @@ class BinUnMarshaller_t::Driver_t {
 public:
     Driver_t(BinUnMarshaller_t &self,
              const char *data,
-             unsigned int size)
+             unsigned int size,
+             bool stopOnUnknown = false)
         : self(self),
           input(data),
           inputSize(size),
           newDataWanted(0),
           finalizeValue(false),
-          state(self.state)
+          state(self.state),
+          stopOnUnknown(stopOnUnknown)
     {
         if (!self.buffer.empty()) {
             size_t remains = self.dataWanted - self.buffer.size();
@@ -229,26 +231,26 @@ public:
 
     void pushEntity(uint8_t type, uint32_t size) {
         BinUnMarshaller_t::StackElement_t e = {size, type};
-        self.entityStorage.push_back(e);
+        self.recursionStack.push_back(e);
     }
 
     bool isInsideStruct() const {
-        return !self.entityStorage.empty()
-                && self.entityStorage.back().type == STRUCT;
+        return !self.recursionStack.empty()
+                && self.recursionStack.back().type == STRUCT;
     }
 
     void decrementMember() {
         if (!finalizeValue) return;
         finalizeValue = false;
 
-        while (!self.entityStorage.empty()) {
-            self.entityStorage.back().members -= 1;
+        while (!self.recursionStack.empty()) {
+            self.recursionStack.back().members -= 1;
 
-            if (self.entityStorage.back().members != 0)
+            if (self.recursionStack.back().members != 0)
                 return;
 
             //call builder to close entity
-            switch (self.entityStorage.back().type) {
+            switch (self.recursionStack.back().type) {
             case STRUCT:
                 self.dataBuilder.closeStruct();
                 break;
@@ -260,7 +262,7 @@ public:
             default:
                 break;
             }
-            self.entityStorage.pop_back();
+            self.recursionStack.pop_back();
         }
     }
 
@@ -269,6 +271,7 @@ public:
     DataBuilder_t* dataBuilder() const { return &self.dataBuilder; }
     uint8_t& faultState() const { return  self.faultState; }
     int64_t& errNo() const { return self.errNo; }
+    size_t remains() const { return inputSize; }
 
 protected:
     BinUnMarshaller_t &self;
@@ -278,6 +281,7 @@ public:
     uint64_t newDataWanted;
     bool finalizeValue;
     uint8_t &state;
+    bool stopOnUnknown;
 };
 
 class BinUnMarshaller_t::FaultBuilder_t : public DataBuilderWithNull_t {
@@ -555,10 +559,9 @@ static void unMarshallInternal(BinUnMarshaller_t::Driver_t &d, char type) {
             }
             break;
             default:
-                // TODO
-                //if (d.stopOnUnknown()) {
-                //    return;
-                //}
+                if (d.stopOnUnknown) {
+                    return;
+                }
                 throw StreamError_t("Unknown value type");
                 break;
 
@@ -705,12 +708,14 @@ static void unMarshallInternal(BinUnMarshaller_t::Driver_t &d, char type) {
 BinUnMarshaller_t::~BinUnMarshaller_t() {}
 
 void BinUnMarshaller_t::finish() {
-    debugf("finish: state = %u, storage.size = %zu\n", state, entityStorage.size());
-    if (state != S_VALUE_TYPE || entityStorage.size() > 0)
+    debugf("finish: state = %u, storage.size = %zu\n", state, recursionStack.size());
+    if (state != S_VALUE_TYPE || recursionStack.size() > 0)
         throw StreamError_t("Stream not complete");
 }
 
-void BinUnMarshaller_t::unMarshall(const char *data, unsigned int size, char type) {
+void BinUnMarshaller_t::unMarshall(
+        const char *data, unsigned int size, char type)
+{
     Driver_t driver(*this, data, size);
     try {
         unMarshallInternal(driver, type);
@@ -720,6 +725,32 @@ void BinUnMarshaller_t::unMarshall(const char *data, unsigned int size, char typ
         throw;
     }
     driver.finish();
+}
+
+size_t BinUnMarshaller_t::unMarshallKnown(
+        const char *data, unsigned int size, char type)
+{
+    Driver_t driver(*this, data, size, true);
+    try {
+        unMarshallInternal(driver, type);
+        if (driver.state == S_VALUE_TYPE) {
+            return size - driver.remains();
+        }
+    }
+    catch (...) {
+        driver.finish();
+        throw;
+    }
+    driver.finish();
+    return size;
+}
+
+void BinUnMarshaller_t::resetToFaultState() {
+    recursionStack.clear();
+    buffer.clear();
+    faultState = 1;
+    dataWanted = 1;
+    state = S_VALUE_TYPE;
 }
 
 }

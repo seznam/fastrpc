@@ -113,5 +113,26 @@ UnMarshaller_t* UnMarshaller_t::create(const char* data, unsigned int size,
 
     return unMarshaller;
 }
+
+namespace extras {
+
+size_t recursionDepth(const UnMarshaller_t *unmarshaller) {
+    return dynamic_cast<const BinUnMarshaller_t*>(unmarshaller)
+            ->recursionLevel();
+}
+
+size_t unMarshallPartial(UnMarshaller_t *unmarshaller,
+                         const char *data, unsigned int size, char type)
+{
+    return dynamic_cast<BinUnMarshaller_t*>(unmarshaller)
+            ->unMarshallKnown(data, size, type);
+}
+
+void resetToFaultState(UnMarshaller_t *unmarshaller) {
+    return dynamic_cast<BinUnMarshaller_t*>(unmarshaller)->resetToFaultState();
+}
+
+} // namespace extras
+
 }
 

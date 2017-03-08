@@ -64,9 +64,12 @@ public:
         return protocolVersion;
     }
 
-    size_t unMarshall2(const char *data, unsigned int size, char type);
+    size_t unMarshallKnown(const char *data, unsigned int size, char type);
+    size_t recursionLevel() const { return recursionStack.size(); }
 
-private:
+    void resetToFaultState();
+
+protected:
     BinUnMarshaller_t();
 
     struct StackElement_t {
@@ -75,7 +78,7 @@ private:
     };
 
     DataBuilder_t &dataBuilder;
-    std::vector<StackElement_t> entityStorage;
+    std::vector<StackElement_t> recursionStack;
     std::string buffer;
     uint64_t dataWanted;
     int64_t errNo;
