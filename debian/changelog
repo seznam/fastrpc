@@ -1,3 +1,10 @@
+libfastrpc (8.0.5) stable; urgency=medium
+
+  * some bits needed for implementing FRPS protocol in client code
+  * silence some warnings
+
+ -- Filip Volejnik <filip.volejnik@firma.seznam.cz>  Fri, 10 Mar 2017 12:16:14 +0100
+
 libfastrpc (8.0.4) stable; urgency=medium
 
   * fix parsing fragmented streams
