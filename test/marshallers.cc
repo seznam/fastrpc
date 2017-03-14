@@ -618,6 +618,9 @@ void runTests(const TestSettings_t &ts, std::istream &input) {
             if (line.empty()) {
                 ps = PS_BINARY;
 
+                int outputs = -1;
+                if (ts.diffable) outputs = 1;
+
                 // run the test with combo of offsets+sizes
                 for (size_t offset = 0; offset < ti.binary.size(); ++offset) {
                     for (size_t step = 1; step < ti.binary.size() - offset;
@@ -626,7 +629,7 @@ void runTests(const TestSettings_t &ts, std::istream &input) {
                         std::pair<TestInstance_t, TestResult_t> result =
                             runTest(ts, ti, testNum, lineNum, offset, step);
 
-                        if (ts.diffable) {
+                        if (ts.diffable && outputs) {
                             std::cout << result.first.text << std::endl << std::endl;
                         }
 
@@ -644,10 +647,14 @@ void runTests(const TestSettings_t &ts, std::istream &input) {
                                       << " '" << testName << "' ("<< offset
                                       << ", " << step << ")\r";
                         }
+
+                        if (outputs != 0) --outputs;
                     }
                 }
 
-                std::cout << std::endl;
+                if (!ts.diffable)
+                    std::cerr << std::endl;
+
                 ti.reset();
                 ++testNum;
                 break;
