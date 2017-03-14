@@ -394,6 +394,7 @@ std::string toStr(int i) {
 std::auto_ptr<FRPC::UnMarshaller_t> unmarshall(FRPC::TreeBuilder_t &builder,
                                                const char *data,
                                                size_t size,
+                                               size_t offset = 0,
                                                size_t step = 0)
 {
     std::auto_ptr<FRPC::UnMarshaller_t>
@@ -403,21 +404,24 @@ std::auto_ptr<FRPC::UnMarshaller_t> unmarshall(FRPC::TreeBuilder_t &builder,
                             builder));
 
     if (!step) {
-        unmarshaller->unMarshall(data,
-                                 size,
-                                 FRPC::UnMarshaller_t::TYPE_ANY);
-    } else {
-        const char *p = data;
-        const char *end = data + size;
-        while (p < end) {
-            size_t rest = end - p;
-            size_t ds = rest > step ? step : rest;
+        step = size - offset;
+    }
 
-            unmarshaller->unMarshall(p,
-                                     ds,
-                                     FRPC::UnMarshaller_t::TYPE_ANY);
-            p += ds;
+    const char *p = data;
+    const char *end = data + size;
+    while (p < end) {
+        size_t rest = end - p;
+        size_t ds = rest > step ? step : rest;
+
+        if (offset != 0) {
+            ds = offset > rest ? rest : offset;
+            offset = 0;
         }
+
+        unmarshaller->unMarshall(p,
+                                 ds,
+                                 FRPC::UnMarshaller_t::TYPE_ANY);
+        p += ds;
     }
 
     unmarshaller->finish();
@@ -436,6 +440,7 @@ void formatTextDump(FRPC::TreeBuilder_t &builder, std::string &tgt) {
 std::string serDeser(FRPC::TreeBuilder_t &orig,
                      std::string &bintarget,
                      FRPC::ProtocolVersion_t pv,
+                     size_t offset = 0,
                      size_t step = 0)
 {
     // // marshall into string again and see how we differ
@@ -469,7 +474,7 @@ std::string serDeser(FRPC::TreeBuilder_t &orig,
     FRPC::Pool_t pool;
     FRPC::TreeBuilder_t builder(pool);
     std::auto_ptr<FRPC::UnMarshaller_t> unm
-        = unmarshall(builder, bintarget.data(), bintarget.size(), step);
+        = unmarshall(builder, bintarget.data(), bintarget.size(), offset, step);
 
     if (FRPC::compare(orig.getUnMarshaledData(),
                       builder.getUnMarshaledData()) != 0)
@@ -485,7 +490,7 @@ std::string serDeser(FRPC::TreeBuilder_t &orig,
 /** Runs the core test, returns corrected result */
 std::pair<TestInstance_t, TestResult_t>
 runTest(const TestSettings_t &ts, const TestInstance_t &ti,
-        size_t testNum, size_t lineNum)
+        size_t testNum, size_t lineNum, size_t offset, size_t step)
 {
     TestInstance_t corrected;
     TestResult_t result(TEST_PASSED);
@@ -497,42 +502,18 @@ runTest(const TestSettings_t &ts, const TestInstance_t &ti,
         FRPC::TreeBuilder_t builder(pool);
 
         std::auto_ptr<FRPC::UnMarshaller_t> unmarshaller
-            = unmarshall(builder, ti.binary.data(), ti.binary.size());
+            = unmarshall(builder, ti.binary.data(), ti.binary.size(),
+                         offset, step);
 
         // TODO: Fix - introduce a normalized dump method
         // Text format of the deserialized data
         formatTextDump(builder, corrected.text);
 
-        std::string lastTxtForm;
-        bool bufCheckFailed = false;
-
         secondTxtForm =
             serDeser(builder,
                      corrected.binary,
-                     unmarshaller->getProtocolVersion());
-
-        // check for step consistency
-        for (size_t step = 0; step < corrected.binary.size(); ++step) {
-            std::string tempData;
-            std::string txtForm =
-                serDeser(builder,
-                         tempData,
-                         unmarshaller->getProtocolVersion(),
-                         step);
-
-            if (!lastTxtForm.empty()) {
-                if (lastTxtForm != txtForm) {
-                    bufCheckFailed = true;
-                    break;
-                }
-            }
-
-            lastTxtForm = txtForm;
-        }
-
-        if (bufCheckFailed) {
-            secondTxtForm = "error(unmarshaller is buffer size sensitive)";
-        }
+                     unmarshaller->getProtocolVersion(),
+                     offset, step);
     } catch (const FRPC::StreamError_t &ex) {
         ErrorType_t ert = parseErrorType(ex);
         corrected.text = std::string("error(")+errorTypeStr(ert)+")";
@@ -637,27 +618,36 @@ void runTests(const TestSettings_t &ts, std::istream &input) {
             if (line.empty()) {
                 ps = PS_BINARY;
 
-                std::pair<TestInstance_t, TestResult_t> result =
-                    runTest(ts, ti, testNum, lineNum);
+                // run the test with combo of offsets+sizes
+                for (size_t offset = 0; offset < ti.binary.size(); ++offset) {
+                    for (size_t step = 1; step < ti.binary.size() - offset;
+                         ++step)
+                    {
+                        std::pair<TestInstance_t, TestResult_t> result =
+                            runTest(ts, ti, testNum, lineNum, offset, step);
 
-                if (ts.diffable) {
-                    std::cout << result.first.text << std::endl << std::endl;
+                        if (ts.diffable) {
+                            std::cout << result.first.text << std::endl << std::endl;
+                        }
+
+                        if (result.second() != TEST_PASSED) {
+                            ++errCount;
+                            error() << "Failed test no. " << testNum
+                                    << " '" << testName << "'"
+                                    << " in " << ts.testfile << ":" << lineNum
+                                    << " with '" << result.second.comment << "'"
+                                    << " ("<< offset << ", " << step << ")"
+                                    << std::endl;
+                        } else {
+                            success() << "Passed test no. "
+                                      << testNum
+                                      << " '" << testName << "' ("<< offset
+                                      << ", " << step << ")\r";
+                        }
+                    }
                 }
 
-                if (result.second() != TEST_PASSED) {
-                    ++errCount;
-                    error() << "Failed test no. " << testNum
-                            << " '" << testName << "'"
-                            << " in " << ts.testfile << ":" << lineNum
-                            << " with '" << result.second.comment << "'"
-                            << std::endl;
-                } else {
-                    success() << "Passed test no. "
-                              << testNum
-                              << " '" << testName << "'"
-                              << std::endl;
-                }
-
+                std::cout << std::endl;
                 ti.reset();
                 ++testNum;
                 break;
