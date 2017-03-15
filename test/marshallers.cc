@@ -242,7 +242,8 @@ enum ErrorType_t {
     ERROR_INVALID_STRUCT_KEY_SIZE,
     ERROR_INVALID_FAULT,
     ERROR_INVALID_BOOL_VALUE,
-    ERROR_INVALID_ARRAY_SIZE
+    ERROR_INVALID_ARRAY_SIZE,
+    ERROR_INVALID_MESSAGE_TYPE
 };
 
 const char *errorTypeStr(ErrorType_t et) {
@@ -258,6 +259,7 @@ const char *errorTypeStr(ErrorType_t et) {
     case ERROR_INVALID_FAULT:        return "invalid fault";
     case ERROR_INVALID_BOOL_VALUE:   return "invalid bool value";
     case ERROR_INVALID_ARRAY_SIZE:   return "invalid array length";
+    case ERROR_INVALID_MESSAGE_TYPE: return "invalid message type";
     case ERROR_UNKNOWN:
     default:
         return "unknown";
@@ -332,6 +334,9 @@ ErrorType_t parseErrorType(const FRPC::StreamError_t &err) {
 
     if (err.what() == std::string("Array too long !!!"))
         return ERROR_INVALID_ARRAY_SIZE;
+
+    if (err.what() == std::string("Invalid stream message type"))
+        return ERROR_INVALID_MESSAGE_TYPE;
 
     error() << "Unhandled FRPC::StreamError_t " << err.what() << std::endl;
 
@@ -621,9 +626,14 @@ void runTests(const TestSettings_t &ts, std::istream &input) {
                 int outputs = -1;
                 if (ts.diffable) outputs = 1;
 
+                bool wasError = false;
+
                 // run the test with combo of offsets+sizes
-                for (size_t offset = 0; offset < ti.binary.size(); ++offset) {
-                    for (size_t step = 1; step < ti.binary.size() - offset;
+                for (size_t offset = 0; offset < ti.binary.size() && !wasError;
+                     ++offset)
+                {
+                    for (size_t step = 1;
+                         (step < ti.binary.size() - offset) && !wasError;
                          ++step)
                     {
                         std::pair<TestInstance_t, TestResult_t> result =
@@ -641,6 +651,7 @@ void runTests(const TestSettings_t &ts, std::istream &input) {
                                     << " with '" << result.second.comment << "'"
                                     << " ("<< offset << ", " << step << ")"
                                     << std::endl;
+                            wasError = true;
                         } else {
                             success() << "Passed test no. "
                                       << testNum
@@ -652,7 +663,7 @@ void runTests(const TestSettings_t &ts, std::istream &input) {
                     }
                 }
 
-                if (!ts.diffable)
+                if (!ts.diffable && !wasError)
                     std::cerr << std::endl;
 
                 ti.reset();

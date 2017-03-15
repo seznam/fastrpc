@@ -389,7 +389,7 @@ protected:
     BinUnMarshaller_t::Driver_t &driver;
 };
 
-static void unMarshallInternal(BinUnMarshaller_t::Driver_t &d, char type) {
+static void unMarshallInternal(BinUnMarshaller_t::Driver_t &d, char reqType) {
     BinUnMarshaller_t::FaultBuilder_t faultBuilder(d);
     DataBuilder_t *dataBuilder = (d.faultState() == 0) ? d.dataBuilder()
                                                        : &faultBuilder;
@@ -413,27 +413,35 @@ static void unMarshallInternal(BinUnMarshaller_t::Driver_t &d, char type) {
         break;
 
         case S_BODY: {
-            char mType = getValueType(d[0]);
+            char msgType = getValueType(d[0]);
 
+            // filter stream types not requested
             do {
-                if (mType == type) break;
-                if (type == UnMarshaller_t::TYPE_ANY ) break;
-                if (mType == FAULT && type == UnMarshaller_t::TYPE_METHOD_RESPONSE) break;
+                if (reqType == UnMarshaller_t::TYPE_ANY) break;
+                if (msgType == reqType) break;
+                if (msgType == FAULT &&
+                    reqType == UnMarshaller_t::TYPE_METHOD_RESPONSE)
+                    break;
 
-                throw StreamError_t("Bad main Type !!!");
+                throw StreamError_t("Encountered unexpected stream message type");
             } while (false);
 
-            if (mType == METHOD_RESPONSE) {
-                dataBuilder->buildMethodResponse();
-            }
-
-            if (mType == FAULT) {
+            // filter invalid stream values
+            switch (msgType) {
+            case FAULT:
                 d.faultState() = 1;
                 dataBuilder = &faultBuilder;
+                break;
+            case METHOD_RESPONSE:
+                dataBuilder->buildMethodResponse();
+                break;
+            case METHOD_CALL: break;
+            default:
+                throw StreamError_t("Invalid stream message type");
             }
 
             d.newDataWanted = 1;
-            d.state = (mType == METHOD_CALL) ? S_METHOD_NAME_LEN : S_VALUE_TYPE;
+            d.state = (msgType == METHOD_CALL) ? S_METHOD_NAME_LEN : S_VALUE_TYPE;
         }
         break;
         case S_METHOD_NAME_LEN: {

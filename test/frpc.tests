@@ -347,15 +347,15 @@ CA11 0200 70 50 01 06 "binary" 30 02 CAFE
 #### Null ####
 ##############
 @null in v1 stream - unknown type
-CA11 0100 80 51 01 04 "null" 60
+CA11 0100 70 51 01 04 "null" 60
 error(unknown type)
 
 @null in v2 stream okay
-CA11 0201 80 50 01 04 "null" 60
+CA11 0201 70 50 01 04 "null" 60
 {null: null}
 
 @null in v3 stream okay
-CA11 0300 80 50 01 04 "null" 60
+CA11 0300 70 50 01 04 "null" 60
 {null: null}
 
 ##################
@@ -363,15 +363,15 @@ CA11 0300 80 50 01 04 "null" 60
 ##################
 @v1 datetime
 # (20170127T12:39:19+0000)       DT ZN UNX       WDSEC  MIN<<1|HR<<7 HR>>1|day<<4  YR<5|D>4|M<1 YR>3
-CA11 0100 80 51 01 08 "datetime" 28 00 773F8B58  9D     4E           B6            23           34
+CA11 0100 70 51 01 08 "datetime" 28 00 773F8B58  9D     4E           B6            23           34
 {datetime: 20170127T12:39:19+0000}
 
 @v2 datetime
-CA11 0200 80 50 01 08 "datetime" 28 00 773F8B58  9D     4E           B6            23           34
+CA11 0200 70 50 01 08 "datetime" 28 00 773F8B58  9D     4E           B6            23           34
 {datetime: 20170127T12:39:19+0000}
 
 @v3 datetime
-CA11 0300 80 50 01 08 "datetime" 28 00 773F8B5800000000  9D     4E           B6            23           34
+CA11 0300 70 50 01 08 "datetime" 28 00 773F8B5800000000  9D     4E           B6            23           34
 {datetime: 20170127T12:39:19+0000}
 
 ###############
@@ -468,5 +468,12 @@ error(unknown type)
 @misplaced fault
 CA11 0200 70 50 01 07 "invalid" 78    39   f401     200a "FAULT_TEST"
 error(unknown type)
+
+############################
+### Unknown message type ###
+############################
+@bad message type
+CA11 0300 80 50 01 07 "goodint" 09 e803
+error(invalid message type)
 
 # END
