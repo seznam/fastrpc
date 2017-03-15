@@ -48,6 +48,9 @@ static void noop() {}
 
 namespace FRPC {
 
+// 1 gig elements max. hard limit
+const size_t ELEMENT_SIZE_LIMIT = 1 << 30;
+
 // unmarshaller state machine states
 enum{S_MAGIC = 0, S_BODY, S_METHOD_NAME, S_METHOD_NAME_LEN,
      S_METHOD_CALL, S_METHOD_RESPONSE, S_FAULT,
@@ -554,6 +557,7 @@ static void unMarshallInternal(BinUnMarshaller_t::Driver_t &d, char reqType) {
             case ARRAY: {
                 d.newDataWanted = getVersionedLengthSize(
                             d.version().versionMajor >= 2, d[0]);
+
                 debugf("array size size: %lu\n", d.newDataWanted);
                 d.state = S_ARRAY;
             }
@@ -561,6 +565,7 @@ static void unMarshallInternal(BinUnMarshaller_t::Driver_t &d, char reqType) {
             case STRUCT: {
                 d.newDataWanted = getVersionedLengthSize(
                             d.version().versionMajor >= 2, d[0]);
+
                 debugf("struct size size: %lu\n", d.newDataWanted);
                 d.state = S_STRUCT;
             }
@@ -578,6 +583,10 @@ static void unMarshallInternal(BinUnMarshaller_t::Driver_t &d, char reqType) {
         case S_STRING_LEN: {
             //unpack string len
             d.newDataWanted = getInt64(d.data(), d.wanted());
+
+            if (d.newDataWanted >= ELEMENT_SIZE_LIMIT)
+                throw StreamError_t("String entity too large");
+
             debugf("string  size: %lu\n", d.newDataWanted);
             d.state = S_STRING;
         }
@@ -593,6 +602,10 @@ static void unMarshallInternal(BinUnMarshaller_t::Driver_t &d, char reqType) {
         case S_BINARY_LEN: {
             //unpack string len
             d.newDataWanted = getInt64(d.data(), d.wanted());
+
+            if (d.newDataWanted >= ELEMENT_SIZE_LIMIT)
+                throw StreamError_t("Binary entity too large");
+
             debugf( "binary size: %lu\n", d.newDataWanted);
             d.state = S_BINARY;
         }
@@ -674,6 +687,9 @@ static void unMarshallInternal(BinUnMarshaller_t::Driver_t &d, char reqType) {
                 throw StreamError_t("Struct too large !!!");
             }
 
+            if (acc >= ELEMENT_SIZE_LIMIT)
+                throw StreamError_t("Struct entity too large");
+
             dataBuilder->openStruct(acc);
 
             if (acc != 0) {
@@ -691,9 +707,13 @@ static void unMarshallInternal(BinUnMarshaller_t::Driver_t &d, char reqType) {
         case S_ARRAY: {
             //unpack number
             int64_t acc = getInt64(d.data(), d.wanted());
+
             if (acc >> 32) {
                 throw StreamError_t("Array too long !!!");
             }
+
+            if (acc >= ELEMENT_SIZE_LIMIT)
+                    throw StreamError_t("Array entity too large");
 
             dataBuilder->openArray(acc);
 

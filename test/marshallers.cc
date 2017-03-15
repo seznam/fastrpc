@@ -244,7 +244,8 @@ enum ErrorType_t {
     ERROR_INVALID_BOOL_VALUE,
     ERROR_INVALID_ARRAY_SIZE,
     ERROR_INVALID_MESSAGE_TYPE,
-    ERROR_DATA_AFTER_END
+    ERROR_DATA_AFTER_END,
+    ERROR_ENTITY_TOO_LARGE
 };
 
 const char *errorTypeStr(ErrorType_t et) {
@@ -262,6 +263,7 @@ const char *errorTypeStr(ErrorType_t et) {
     case ERROR_INVALID_ARRAY_SIZE:   return "invalid array length";
     case ERROR_INVALID_MESSAGE_TYPE: return "invalid message type";
     case ERROR_DATA_AFTER_END:       return "data after end";
+    case ERROR_ENTITY_TOO_LARGE:     return "entity too large";
     case ERROR_UNKNOWN:
     default:
         return "unknown";
@@ -342,6 +344,18 @@ ErrorType_t parseErrorType(const FRPC::StreamError_t &err) {
 
     if (err.what() == std::string("Unexpected value after end"))
         return ERROR_DATA_AFTER_END;
+
+    if (err.what() == std::string("Binary entity too large"))
+        return ERROR_ENTITY_TOO_LARGE;
+
+    if (err.what() == std::string("String entity too large"))
+        return ERROR_ENTITY_TOO_LARGE;
+
+    if (err.what() == std::string("Array entity too large"))
+        return ERROR_ENTITY_TOO_LARGE;
+
+    if (err.what() == std::string("Struct entity too large"))
+        return ERROR_ENTITY_TOO_LARGE;
 
     error() << "Unhandled FRPC::StreamError_t " << err.what() << std::endl;
 

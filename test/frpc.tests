@@ -90,6 +90,10 @@ CA11 0200 70 50 01 01 "a" 50 01 01 "a" 50 01 01 "a" 50 01 01 "a" 50 01 01 "a" 50
 CA11 0200 70 50 04 04 "ahoj" 50 01 03 "cau" 20 04 "hele" 05 "intik" 39 f401 06 "string" 20 04 "fuj!" 03 "str" 50 03 04 "ahoj" 50 01 03 "cau" 20 04 "hele" 05 "intik" 39 f401 06 "string" 20 04 "fuj!"
 {ahoj: {cau: "hele"}, intik: 500, str: {ahoj: {cau: "hele"}, intik: 500, string: "fuj!"}, string: "fuj!"}
 
+@struct, size over hardcoded limit
+CA11 0200 70 5F 1000004000000000
+error(entity too large)
+
 #####################
 #### Fault tests ####
 #####################
@@ -276,13 +280,9 @@ CA11 0200 70 50 02 04 "str0" 20 00 04 "str1" 20 04 "PASS"
 CA11 0200 70 50 01 03 "str" 20 01 "A"
 {str: "A"}
 
-# Disabled, as we can't predict which exception will happen.
-# Usually this will result in bad-alloc, thanks to the string
-# being pre-reserved for the expected data size.
-# We can't guarantee that, though.
-#@string, overflow in int length of string
-#CA11 0200 70 50 01 03 "str" 27 0100000000000001 "A"
-#error(unexpected data end)
+@string, string size over limit
+CA11 0200 70 50 01 03 "str" 2F 1000004000000000 "A"
+error(unexpected data end)
 
 @string, multiple characters
 CA11 0200 70 50 01 03 "str" 20 0A "Hello FRPC"
@@ -311,9 +311,13 @@ CA11 0200 70 50 01 05 "array" 58 02 58 00 58 00
 CA11 0200 70 50 01 05 "array" 58 01 20 05 "Hello"
 {array: ("Hello")}
 
-@binary, overflow in array length
+@array, length > 32 bits
 CA11 0200 70 50 01 05 "array" 5F 0100000000000001 20 05 "Hello"
 error(invalid array length)
+
+@array, length >= 30 bits (hardcoded sanity limit)
+CA11 0200 70 50 01 05 "array" 5F 1000004000000000 20 05 "Hello"
+error(entity too large)
 
 @deep array
 CA11 0200 70 50 01 05 "array" 58 01 58 01 58 01 58 01 58 01 58 01 58 01 58 01 58 01 58 01 58 01 58 01 58 01 58 01 58 01 58 01 58 01 20 04 "DEEP"
@@ -338,10 +342,9 @@ CA11 0200 70 50 01 06 "binary" 30 00
 CA11 0200 70 50 01 06 "binary" 30 02 CAFE
 {binary: b"ca fe"}
 
-# Disabled. See String size overflow for reason.
-#@binary, overflow in int length
-#CA11 0200 70 50 01 06 "binary" 37 0100000000000001 CA
-#error(unexpected data end)
+@binary, size over limit
+CA11 0200 70 50 01 06 "binary" 37 1000004000000000 CA
+error(entity too large)
 
 ##############
 #### Null ####
