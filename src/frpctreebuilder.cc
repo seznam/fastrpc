@@ -43,14 +43,16 @@ void TreeBuilder_t::buildBinary(const char* data, unsigned int size)
 {
     Value_t &binary = pool.Binary(const_cast<char*>(data),size);
     if(!isMember(binary))
-        isFirst(binary);
+        if (!isFirst(binary))
+            throw StreamError_t("Unexpected value after end");
 }
 
 void TreeBuilder_t::buildBinary(const std::string& data)
 {
     Value_t &binary = pool.Binary(data);
     if(!isMember(binary))
-        isFirst(binary);
+        if (!isFirst(binary))
+            throw StreamError_t("Unexpected value after end");
 
 }
 
@@ -58,15 +60,16 @@ void TreeBuilder_t::buildBool(bool value)
 {
     Value_t &boolean = pool.Bool(value);
     if(!isMember(boolean))
-        isFirst(boolean);
-
+        if (!isFirst(boolean))
+            throw StreamError_t("Unexpected value after end");
 }
 
 void TreeBuilder_t::buildNull()
 {
     Value_t &nullValue = pool.Null();
     if (!isMember(nullValue))
-        isFirst(nullValue);
+        if (!isFirst(nullValue))
+            throw StreamError_t("Unexpected value after end");
 }
 
 void TreeBuilder_t::buildDateTime(short year, char month, char day, char hour,
@@ -76,7 +79,8 @@ void TreeBuilder_t::buildDateTime(short year, char month, char day, char hour,
     Value_t &dateTime = pool.DateTime(year, month, day, hour, minute, sec,
                                       weekDay, unixTime, timeZone);
     if(!isMember(dateTime))
-        isFirst(dateTime);
+        if (!isFirst(dateTime))
+            throw StreamError_t("Unexpected value after end");
 }
 
 void TreeBuilder_t::buildDouble(double value)
@@ -84,7 +88,8 @@ void TreeBuilder_t::buildDouble(double value)
     Value_t &doubleVal = pool.Double(value);
 
     if(!isMember(doubleVal))
-        isFirst(doubleVal);
+        if (!isFirst(doubleVal))
+            throw StreamError_t("Unexpected value after end");
 }
 
 void TreeBuilder_t::buildFault(int errNumber, const char* errMsg,
@@ -112,8 +117,8 @@ void TreeBuilder_t::buildInt(Int_t::value_type value)
     Value_t &integer = pool.Int(value);
 
     if(!isMember(integer))
-        isFirst(integer);
-
+        if (!isFirst(integer))
+            throw StreamError_t("Unexpected value after end");
 }
 
 void TreeBuilder_t::buildMethodCall(const char* methodName, unsigned int size)
@@ -150,7 +155,8 @@ void TreeBuilder_t::buildString(const char* data, unsigned int size)
     Value_t &stringVal = pool.String(const_cast<char*>(data), size);
 
     if(!isMember(stringVal))
-        isFirst(stringVal);
+        if (!isFirst(stringVal))
+            throw StreamError_t("Unexpected value after end");
 }
 
 void TreeBuilder_t::buildString(const std::string& data)
@@ -159,7 +165,8 @@ void TreeBuilder_t::buildString(const std::string& data)
     Value_t &stringVal = pool.String(data);
 
     if(!isMember(stringVal))
-        isFirst(stringVal);
+        if (!isFirst(stringVal))
+            throw StreamError_t("Unexpected value after end");
 }
 
 void TreeBuilder_t::buildStructMember(const char* memberName, unsigned int size)
@@ -190,10 +197,10 @@ void TreeBuilder_t::openArray(unsigned int numOfItems)
     array.reserve(numOfItems);
 
     if(!isMember(array))
-        isFirst(array);
+        if (!isFirst(array))
+            throw StreamError_t("Unexpected value after end");
 
     entityStorage.push_back(ValueTypeStorage_t(&array,ARRAY));
-
 }
 
 void TreeBuilder_t::openStruct(unsigned int numOfMembers)
@@ -201,10 +208,10 @@ void TreeBuilder_t::openStruct(unsigned int numOfMembers)
     Value_t &structVal = pool.Struct();
 
     if(!isMember(structVal))
-        isFirst(structVal);
+        if (!isFirst(structVal))
+            throw StreamError_t("Unexpected value after end");
 
     entityStorage.push_back(ValueTypeStorage_t(&structVal,STRUCT));
-
 }
 
 }

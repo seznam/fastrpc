@@ -530,8 +530,7 @@ static void unMarshallInternal(BinUnMarshaller_t::Driver_t &d, char reqType) {
             }
             break;
             case DATETIME: {
-                d.newDataWanted = (d.version().versionMajor > 2) ? 14
-                                                                     : 10;
+                d.newDataWanted = (d.version().versionMajor > 2) ? 14 : 10;
                 debugf("datetime size %lu\n", d.newDataWanted);
                 d.state = S_DATETIME;
             }

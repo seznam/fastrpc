@@ -243,7 +243,8 @@ enum ErrorType_t {
     ERROR_INVALID_FAULT,
     ERROR_INVALID_BOOL_VALUE,
     ERROR_INVALID_ARRAY_SIZE,
-    ERROR_INVALID_MESSAGE_TYPE
+    ERROR_INVALID_MESSAGE_TYPE,
+    ERROR_DATA_AFTER_END
 };
 
 const char *errorTypeStr(ErrorType_t et) {
@@ -260,6 +261,7 @@ const char *errorTypeStr(ErrorType_t et) {
     case ERROR_INVALID_BOOL_VALUE:   return "invalid bool value";
     case ERROR_INVALID_ARRAY_SIZE:   return "invalid array length";
     case ERROR_INVALID_MESSAGE_TYPE: return "invalid message type";
+    case ERROR_DATA_AFTER_END:       return "data after end";
     case ERROR_UNKNOWN:
     default:
         return "unknown";
@@ -338,6 +340,9 @@ ErrorType_t parseErrorType(const FRPC::StreamError_t &err) {
     if (err.what() == std::string("Invalid stream message type"))
         return ERROR_INVALID_MESSAGE_TYPE;
 
+    if (err.what() == std::string("Unexpected value after end"))
+        return ERROR_DATA_AFTER_END;
+
     error() << "Unhandled FRPC::StreamError_t " << err.what() << std::endl;
 
     return ERROR_UNKNOWN;
@@ -388,6 +393,7 @@ struct TestResult_t {
 
     TestResultType_t result;
     std::string comment;
+
 };
 
 std::string toStr(int i) {
