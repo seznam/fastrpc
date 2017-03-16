@@ -90,12 +90,14 @@ struct TestSettings_t {
     TestSettings_t()
         : diffable(false),
           usestdin(false),
-          testfile(DEFAULT_TEST_FILE)
+          testfile(DEFAULT_TEST_FILE),
+          verbose(false)
     {}
 
     bool diffable; //!< Diffable mode - outputs a corrected test input
     bool usestdin;
     std::string testfile;
+    bool verbose;
 };
 
 void processArgs(TestSettings_t &s, const Args_t &args) {
@@ -111,6 +113,8 @@ void processArgs(TestSettings_t &s, const Args_t &args) {
             s.usestdin = true;
         } else if (*it == "testfile") {
             s.testfile = extract_arg(it, iend);
+        } else if (*it == "verbose") {
+            s.verbose = true;
         } else {
             std::cerr << "Unknown parameter " << *it
                       << " expected [diffable] [stdin] [testfile filename]" << std::endl;
@@ -462,11 +466,13 @@ void formatTextDump(FRPC::TreeBuilder_t &builder, std::string &tgt) {
     tgt += txtree;
 }
 
-std::string serDeser(FRPC::TreeBuilder_t &orig,
-                     std::string &bintarget,
-                     FRPC::ProtocolVersion_t pv,
-                     size_t offset = 0,
-                     size_t step = 0)
+
+FRPC::Value_t& serDeser(FRPC::Pool_t &pool,
+                        FRPC::TreeBuilder_t &orig,
+                        std::string &bintarget,
+                        FRPC::ProtocolVersion_t pv,
+                        size_t offset = 0,
+                        size_t step = 0)
 {
     // // marshall into string again and see how we differ
     StrWriter_t sw(bintarget);
@@ -496,7 +502,6 @@ std::string serDeser(FRPC::TreeBuilder_t &orig,
     marshaller->flush();
 
     // after this we deserialize again
-    FRPC::Pool_t pool;
     FRPC::TreeBuilder_t builder(pool);
     std::auto_ptr<FRPC::UnMarshaller_t> unm
         = unmarshall(builder, bintarget.data(), bintarget.size(), offset, step);
@@ -507,9 +512,7 @@ std::string serDeser(FRPC::TreeBuilder_t &orig,
         throw std::runtime_error("remarshalled data yield different resuilt");
     }
 
-    std::string secondText;
-    formatTextDump(builder, secondText);
-    return secondText;
+    return builder.getUnMarshaledData();
 }
 
 /** Runs the core test, returns corrected result */
@@ -534,11 +537,18 @@ runTest(const TestSettings_t &ts, const TestInstance_t &ti,
         // Text format of the deserialized data
         formatTextDump(builder, corrected.text);
 
-        secondTxtForm =
-            serDeser(builder,
+        FRPC::Value_t &second =
+            serDeser(pool,
+                     builder,
                      corrected.binary,
                      unmarshaller->getProtocolVersion(),
                      offset, step);
+
+        if (FRPC::compare(builder.getUnMarshaledData(), second) != 0) {
+            result.set(TEST_FAILED,
+                       "Remarshalled data yield different result : \n\t"
+                       + secondTxtForm + "\n\t" + corrected.text);
+        }
     } catch (const FRPC::StreamError_t &ex) {
         ErrorType_t ert = parseErrorType(ex);
         corrected.text = std::string("error(")+errorTypeStr(ert)+")";
@@ -565,10 +575,6 @@ runTest(const TestSettings_t &ts, const TestInstance_t &ti,
     // compare the unmarshalled data
     if (corrected.text != ti.text) {
         result.set(TEST_FAILED, corrected.text + " <> " + ti.text);
-    } else if (!waserror && (secondTxtForm != ti.text)) {
-        result.set(TEST_FAILED,
-                   "Remarshalled data yield different result : \n\t"
-                   + secondTxtForm + "\n\t" + corrected.text);
     }
 
     return std::make_pair(corrected, result);
@@ -656,6 +662,9 @@ void runTests(const TestSettings_t &ts, std::istream &input) {
                          (step < ti.binary.size() - offset) && !wasError;
                          ++step)
                     {
+                        if (step == offset)
+                            continue;
+
                         std::pair<TestInstance_t, TestResult_t> result =
                             runTest(ts, ti, testNum, lineNum, offset, step);
 
@@ -672,7 +681,7 @@ void runTests(const TestSettings_t &ts, std::istream &input) {
                                     << " ("<< offset << ", " << step << ")"
                                     << std::endl;
                             wasError = true;
-                        } else {
+                        } else if (ts.verbose) {
                             success() << "Passed test no. "
                                       << testNum
                                       << " '" << testName << "' ("<< offset
@@ -683,8 +692,8 @@ void runTests(const TestSettings_t &ts, std::istream &input) {
                     }
                 }
 
-                if (!ts.diffable && !wasError)
-                    std::cerr << std::endl;
+                if (!ts.diffable && !wasError && ts.verbose)
+                  std::cerr << std::endl;
 
                 ti.reset();
                 ++testNum;
