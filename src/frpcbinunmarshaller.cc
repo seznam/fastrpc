@@ -449,6 +449,10 @@ static void unMarshallInternal(BinUnMarshaller_t::Driver_t &d, char reqType) {
         break;
         case S_METHOD_NAME_LEN: {
             d.newDataWanted = static_cast<uint8_t>(d[0]);
+
+            if (!d.newDataWanted)
+                throw StreamError_t("Bad call name");
+
             d.state = S_METHOD_NAME;
         }
         break;
