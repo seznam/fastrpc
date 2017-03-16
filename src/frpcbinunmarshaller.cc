@@ -49,7 +49,7 @@ static void noop() {}
 namespace FRPC {
 
 // 1 gig elements max. hard limit
-const size_t ELEMENT_SIZE_LIMIT = 1 << 30;
+static const size_t ELEMENT_SIZE_LIMIT = 1 << 30;
 
 // unmarshaller state machine states
 enum{S_MAGIC = 0, S_BODY, S_METHOD_NAME, S_METHOD_NAME_LEN,
