@@ -687,11 +687,16 @@ static void unMarshallInternal(BinUnMarshaller_t::Driver_t &d, char reqType) {
 
         case S_STRUCT: {
             int64_t acc = getInt64(d.data(), d.wanted());
+
+            // we don't accept negative sizes here
+            if (acc < 0)
+                throw StreamError_t("Struct entity invalid size");
+
             if (acc >> 32) {
                 throw StreamError_t("Struct too large !!!");
             }
 
-            if (acc >= ELEMENT_SIZE_LIMIT)
+            if (static_cast<size_t>(acc) >= ELEMENT_SIZE_LIMIT)
                 throw StreamError_t("Struct entity too large");
 
             dataBuilder->openStruct(acc);
@@ -712,11 +717,15 @@ static void unMarshallInternal(BinUnMarshaller_t::Driver_t &d, char reqType) {
             //unpack number
             int64_t acc = getInt64(d.data(), d.wanted());
 
+            // we don't accept negative sizes here
+            if (acc < 0)
+                throw StreamError_t("Array entity invalid size");
+
             if (acc >> 32) {
                 throw StreamError_t("Array too long !!!");
             }
 
-            if (acc >= ELEMENT_SIZE_LIMIT)
+            if (static_cast<size_t>(acc) >= ELEMENT_SIZE_LIMIT)
                     throw StreamError_t("Array entity too large");
 
             dataBuilder->openArray(acc);
