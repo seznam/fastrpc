@@ -411,7 +411,7 @@ struct TestResult_t {
 
     TestResultType_t result;
     std::string comment;
-
+    std::string corrected;
 };
 
 std::string toStr(int i) {
@@ -469,11 +469,12 @@ void formatTextDump(FRPC::TreeBuilder_t &builder, std::string &tgt) {
 
 FRPC::Value_t& serDeser(FRPC::Pool_t &pool,
                         FRPC::TreeBuilder_t &orig,
-                        std::string &bintarget,
                         FRPC::ProtocolVersion_t pv,
                         size_t offset = 0,
                         size_t step = 0)
 {
+    std::string bintarget;
+
     // // marshall into string again and see how we differ
     StrWriter_t sw(bintarget);
     std::string mname = orig.getUnMarshaledMethodName();
@@ -515,15 +516,65 @@ FRPC::Value_t& serDeser(FRPC::Pool_t &pool,
     return builder.getUnMarshaledData();
 }
 
+// just a counter of individual compares done
+size_t passedChecks = 0;
+size_t passedTests  = 0;
+
 /** Runs the core test, returns corrected result */
-std::pair<TestInstance_t, TestResult_t>
-runTest(const TestSettings_t &ts, const TestInstance_t &ti,
-        size_t testNum, size_t lineNum, size_t offset, size_t step)
+TestResult_t runTest(FRPC::Pool_t &pool, const TestSettings_t &ts,
+                     const TestInstance_t &ti,
+                     size_t testNum, size_t lineNum, FRPC::Value_t &value,
+                     const std::string &origTxt,
+                     size_t offset, size_t step)
 {
-    TestInstance_t corrected;
     TestResult_t result(TEST_PASSED);
     std::string secondTxtForm;
     bool waserror = false;
+
+    FRPC::TreeBuilder_t builder(pool);
+
+    std::auto_ptr<FRPC::UnMarshaller_t> unmarshaller
+        = unmarshall(builder, ti.binary.data(), ti.binary.size(),
+                     offset, step);
+
+    if (FRPC::compare(builder.getUnMarshaledData(), value) != 0) {
+        std::string myTxt;
+        formatTextDump(builder, myTxt);
+        result.set(TEST_FAILED,
+                   "Unmarshalled data yield different result : \n\t"
+                   + origTxt + "\n\t" + myTxt);
+
+        return result;
+    }
+
+    ++passedChecks;
+
+    FRPC::Value_t &second =
+        serDeser(pool,
+                 builder,
+                 unmarshaller->getProtocolVersion(),
+                 offset, step);
+
+    if (FRPC::compare(builder.getUnMarshaledData(), second) != 0) {
+        std::string myTxt;
+        formatTextDump(builder, myTxt);
+        result.set(TEST_FAILED,
+                   "Remarshalled data yield different result : \n\t"
+                   + origTxt + "\n\t" + myTxt);
+
+        return result;
+    }
+
+    ++passedChecks;
+
+    return result;
+}
+
+TestResult_t
+runTest(const TestSettings_t &ts, const TestInstance_t &ti,
+        size_t testNum, size_t lineNum)
+{
+    TestResult_t result(TEST_PASSED);
 
     try {
         FRPC::Pool_t pool;
@@ -531,54 +582,66 @@ runTest(const TestSettings_t &ts, const TestInstance_t &ti,
 
         std::auto_ptr<FRPC::UnMarshaller_t> unmarshaller
             = unmarshall(builder, ti.binary.data(), ti.binary.size(),
-                         offset, step);
+                         0, ti.binary.size());
 
         // TODO: Fix - introduce a normalized dump method
         // Text format of the deserialized data
-        formatTextDump(builder, corrected.text);
+        formatTextDump(builder, result.corrected);
 
-        FRPC::Value_t &second =
-            serDeser(pool,
-                     builder,
-                     corrected.binary,
-                     unmarshaller->getProtocolVersion(),
-                     offset, step);
-
-        if (FRPC::compare(builder.getUnMarshaledData(), second) != 0) {
-            result.set(TEST_FAILED,
-                       "Remarshalled data yield different result : \n\t"
-                       + secondTxtForm + "\n\t" + corrected.text);
+        // compare the unmarshalled data
+        if (result.corrected != ti.text) {
+            result.set(TEST_FAILED, result.corrected + " <> " + ti.text);
+            return result;
         }
+        bool wasError = false;
+
+        // run the test with combo of offsets+sizes
+        for (size_t offset = 0; offset < ti.binary.size() && !wasError;
+             ++offset)
+        {
+            for (size_t step = 1;
+                 (step < ti.binary.size() - offset) && !wasError;
+                 ++step)
+            {
+                if (step == offset)
+                    continue;
+
+                result = runTest(pool, ts, ti, testNum, lineNum,
+                                 builder.getUnMarshaledData(),
+                                 result.corrected,
+                                 offset, step);
+
+                if (result() != TEST_PASSED)
+                    return result;
+            }
+        }
+
+        return result;
+
     } catch (const FRPC::StreamError_t &ex) {
         ErrorType_t ert = parseErrorType(ex);
-        corrected.text = std::string("error(")+errorTypeStr(ert)+")";
-        waserror = true;
+        result.corrected = std::string("error(")+errorTypeStr(ert)+")";
     } catch (const FRPC::Fault_t &ex) {
-        waserror = true;
         if (ex.errorNum() > 0) {
             // fault contains integral error number, let's contain it in the output
             std::string errNumStr = toStr(ex.errorNum());
-            corrected.text = std::string("fault(") + errNumStr + ", "
-                             + ex.what() + ")";
-
-            // TODO: pack the fault
-            corrected.binary = ti.binary;
+            result.corrected = std::string("fault(") + errNumStr + ", "
+                               + ex.what() + ")";
         } else {
             ErrorType_t ert = parseErrorType(ex);
-            corrected.text = std::string("error(") + errorTypeStr(ert) + ")";
+            result.corrected = std::string("error(") + errorTypeStr(ert) + ")";
         }
     } catch (const std::exception &ex) {
-        waserror = true;
-        corrected.text = std::string("error(")+ex.what()+")";
+        result.corrected = std::string("error(")+ex.what()+")";
     }
 
-    // compare the unmarshalled data
-    if (corrected.text != ti.text) {
-        result.set(TEST_FAILED, corrected.text + " <> " + ti.text);
+    if (result.corrected != ti.text) {
+        result.set(TEST_FAILED, result.corrected + " <> " + ti.text);
     }
 
-    return std::make_pair(corrected, result);
+    return result;
 }
+
 
 enum ParseState_t {
     PS_BINARY,
@@ -652,48 +715,26 @@ void runTests(const TestSettings_t &ts, std::istream &input) {
                 int outputs = -1;
                 if (ts.diffable) outputs = 1;
 
-                bool wasError = false;
+                TestResult_t result = runTest(ts, ti, testNum, lineNum);
 
-                // run the test with combo of offsets+sizes
-                for (size_t offset = 0; offset < ti.binary.size() && !wasError;
-                     ++offset)
-                {
-                    for (size_t step = 1;
-                         (step < ti.binary.size() - offset) && !wasError;
-                         ++step)
-                    {
-                        if (step == offset)
-                            continue;
-
-                        std::pair<TestInstance_t, TestResult_t> result =
-                            runTest(ts, ti, testNum, lineNum, offset, step);
-
-                        if (ts.diffable && outputs) {
-                            std::cout << result.first.text << std::endl << std::endl;
-                        }
-
-                        if (result.second() != TEST_PASSED) {
-                            ++errCount;
-                            error() << "Failed test no. " << testNum
-                                    << " '" << testName << "'"
-                                    << " in " << ts.testfile << ":" << lineNum
-                                    << " with '" << result.second.comment << "'"
-                                    << " ("<< offset << ", " << step << ")"
-                                    << std::endl;
-                            wasError = true;
-                        } else if (ts.verbose) {
-                            success() << "Passed test no. "
-                                      << testNum
-                                      << " '" << testName << "' ("<< offset
-                                      << ", " << step << ")\r";
-                        }
-
-                        if (outputs != 0) --outputs;
-                    }
+                if (ts.diffable && outputs) {
+                    std::cout << result.corrected << std::endl << std::endl;
                 }
 
-                if (!ts.diffable && !wasError && ts.verbose)
-                  std::cerr << std::endl;
+                if (result() != TEST_PASSED) {
+                    ++errCount;
+                    error() << "Failed test no. " << testNum
+                            << " '" << testName << "'"
+                            << " in " << ts.testfile << ":" << lineNum
+                            << " with '" << result.comment << "'\n";
+                } else if (ts.verbose) {
+                    ++passedTests;
+                    success() << "Passed test no. "
+                              << testNum
+                              << " '" << testName << "'\n";
+                }
+
+                if (outputs != 0) --outputs;
 
                 ti.reset();
                 ++testNum;
@@ -736,10 +777,14 @@ int main(int argc, const char *argv[]) {
 
     runTests(ts);
 
+    std::cerr << "----" << std::endl;
+
     if (errCount) {
-        std::cerr << "----" << std::endl;
         error() << "Test contained " << errCount << " error(s)." << std::endl;
         return 1;
+    } else {
+        success() << "Passed " << passedTests << " tests with "
+                  << passedChecks << " individual checks" << std::endl;
     }
 
     return 0;
