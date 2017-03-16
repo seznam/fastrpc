@@ -249,7 +249,8 @@ enum ErrorType_t {
     ERROR_INVALID_ARRAY_SIZE,
     ERROR_INVALID_MESSAGE_TYPE,
     ERROR_DATA_AFTER_END,
-    ERROR_ENTITY_TOO_LARGE
+    ERROR_ENTITY_TOO_LARGE,
+    ERROR_BAD_CALL_NAME
 };
 
 const char *errorTypeStr(ErrorType_t et) {
@@ -268,6 +269,7 @@ const char *errorTypeStr(ErrorType_t et) {
     case ERROR_INVALID_MESSAGE_TYPE: return "invalid message type";
     case ERROR_DATA_AFTER_END:       return "data after end";
     case ERROR_ENTITY_TOO_LARGE:     return "entity too large";
+    case ERROR_BAD_CALL_NAME:        return "bad call name";
     case ERROR_UNKNOWN:
     default:
         return "unknown";
@@ -360,6 +362,9 @@ ErrorType_t parseErrorType(const FRPC::StreamError_t &err) {
 
     if (err.what() == std::string("Struct entity too large"))
         return ERROR_ENTITY_TOO_LARGE;
+
+    if (err.what() == std::string("Bad call name"))
+        return ERROR_BAD_CALL_NAME;
 
     error() << "Unhandled FRPC::StreamError_t " << err.what() << std::endl;
 
@@ -727,11 +732,14 @@ void runTests(const TestSettings_t &ts, std::istream &input) {
                             << " '" << testName << "'"
                             << " in " << ts.testfile << ":" << lineNum
                             << " with '" << result.comment << "'\n";
-                } else if (ts.verbose) {
+                } else {
                     ++passedTests;
-                    success() << "Passed test no. "
-                              << testNum
-                              << " '" << testName << "'\n";
+
+                    if (ts.verbose) {
+                        success() << "Passed test no. "
+                                  << testNum
+                                  << " '" << testName << "'\n";
+                    }
                 }
 
                 if (outputs != 0) --outputs;

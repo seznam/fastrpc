@@ -486,4 +486,12 @@ error(data after end)
 CA11 0300 80 50 01 07 "goodint" 09 e803
 error(invalid message type)
 
+#########################
+### Invalid call name ###
+#########################
+@empty call name is illegal
+#MGC VER  CALL    STR   "what"
+CA11 0200 68   00 20 04 "what"
+error(bad call name)
+
 # END
