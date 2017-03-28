@@ -298,7 +298,7 @@ def _writeOut(branch, indent = ""):
         retval += ("%s)" % indent)
         return retval
     elif type(branch) == DateTime:
-        return "%02d.%02d.%04d %02d:%02d:%02d %s%04d (%s)" % (branch.day, branch.month, branch.year, branch.hour, branch.min, branch.sec, {True:"+",False:"-"}[branch.timeZone>=0], branch.timeZone*100, branch)
+        return str("%02d.%02d.%04d %02d:%02d:%02d %s%04d (%s)" % (branch.day, branch.month, branch.year, branch.hour, branch.min, branch.sec, {True:"+",False:"-"}[branch.timeZone>=0], branch.timeZone*100, branch))
     elif type(branch) == Binary:
         return "\"%s\"" % branch.data
     elif type(branch) == Boolean:
