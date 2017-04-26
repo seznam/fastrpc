@@ -79,7 +79,7 @@ public:
     Builder_t(PyObject *methodObject, StringMode_t stringMode, bool nativeBoolean = true, PyObject *datetimeBuilder = 0)
         : FRPC::DataBuilderWithNull_t(), first(true), error(false), retValue(Py_None),
           methodObject(methodObject), methodName(0), stringMode(stringMode), nativeBoolean(nativeBoolean),
-          datetimeBuilder(datetimeBuilder)
+        datetimeBuilder(datetimeBuilder), allowSurrogates(false)
     {
         Py_INCREF(retValue);
     }
@@ -245,6 +245,7 @@ public:
 
     PyObject * getRetValue() { return retValue; }
 
+    void enableSurrogatePass() { allowSurrogates = true; }
 private :
     bool first;
     bool error;
@@ -257,6 +258,7 @@ private :
     bool nativeBoolean;
     //NOTE: Either null or ref managed by owner
     PyObject *datetimeBuilder;
+    bool allowSurrogates;
 };
 
 

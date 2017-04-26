@@ -1285,7 +1285,7 @@ public:
           protocolVersion(protocolVersion),
           connector(new SimpleConnectorIPv6_t(url, connectTimeout, keepAlive)),
           nativeBoolean(nativeBoolean), datetimeBuilder(datetimeBuilder),
-          preCall(preCall), postCall(postCall)
+          preCall(preCall), postCall(postCall), allowSurrogates(false)
     {}
 
     ~Proxy_t() {
@@ -1332,6 +1332,8 @@ public:
         headersForCall.push_back(header);
     }
 
+    void enableSurrogatePass() { allowSurrogates = true; }
+
 private:
     URL_t url;
     HTTPIO_t io;
@@ -1357,6 +1359,8 @@ private:
 
     Headers_t headersForCall;
     Headers_t headers;
+
+    bool allowSurrogates;
 };
 
 struct ServerProxyObject
@@ -1669,7 +1673,7 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
                                    "protocolVersionMinor",
                                    "nativeBoolean", "datetimeBuilder",
                                    "preCall", "postCall", "hideAttributes",
-                                   "headers",
+                                   "headers", "allowSurrogates",
                                    0};
 
     // parse arguments
@@ -1692,8 +1696,9 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
     PyObject *postCall = 0;
     int hideAttributes = true;
     PyObject *headers = 0;
+    PyObject *allowSurrogates = 0;
 
-    static const char *kwtypes = "siiiiisissiiOO";
+    static const char *kwtypes = "siiiiisissiiOOO";
     const void *kwvars[] = { serverUrl, &readTimeout,
         &writeTimeout, &connectTimeout,
         &keepAlive, &mode, encoding,
@@ -1701,12 +1706,11 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
         &protocolVersionMajor,
         &protocolVersionMinor,
         &nativeBoolean, &datetimeBuilder,
-        &headers,
-        NULL };
+        &headers, NULL };
 
     // Normal initialization
     if (!PyArg_ParseTupleAndKeywords(args, keywds,
-                                     "s#|iiiiisissiiOOOOiO:ServerProxy.__init__",
+                                     "s#|iiiiisissiiOOOOiOO:ServerProxy.__init__",
                                      (char **)kwlist,
                                      &serverUrl, &serverUrlLen, &readTimeout,
                                      &writeTimeout, &connectTimeout,
@@ -1714,8 +1718,9 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
                                      &useHTTP10, &proxyVia, &stringMode_,
                                      &protocolVersionMajor,
                                      &protocolVersionMinor, &nativeBoolean,
-                                     &datetimeBuilder, &preCall, &postCall, &hideAttributes,
-                                     &headers))
+                                     &datetimeBuilder, &preCall, &postCall,
+                                     &hideAttributes, &headers,
+                                     &allowSurrogates))
     {
 
         // Initialization from ConfigParser and section
@@ -1824,6 +1829,11 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
                                     nativeBoolean != 0 ? PyObject_IsTrue(nativeBoolean) : true,
                                     datetimeBuilder, preCall, postCall);
         proxy->proxyOk = true;
+
+        if (allowSurrogates) {
+            if (PyObject_IsTrue(allowSurrogates))
+                proxy->proxy.enableSurrogatePass();
+        }
 
         if (headers)
             feed_headers(headers, proxy->proxy, /*callscope*/ false);
@@ -1980,6 +1990,9 @@ PyObject* Proxy_t::operator()(MethodObject *methodObject, PyObject *args) {
     HTTPClient_t client(io, url, connector.get(), useHTTP10);
     Builder_t builder(reinterpret_cast<PyObject*>(methodObject),
                       stringMode, nativeBoolean, datetimeBuilder);
+
+    if (allowSurrogates) builder.enableSurrogatePass();
+
     Marshaller_t *marshaller;
 
     {

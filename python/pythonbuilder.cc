@@ -246,7 +246,10 @@ void Builder_t::buildString(const char* data, unsigned int size) {
         stringVal = PyUnicode_DecodeUTF8(data, size, "strict");
     }
 # else
-    stringVal = PyUnicode_DecodeUTF8(data, size, "strict");
+    if (allowSurrogates)
+        stringVal = PyUnicode_DecodeUTF8(data, size, "surrogatepass");
+    else
+        stringVal = PyUnicode_DecodeUTF8(data, size, "strict");
 # endif
 #else
     bool utf8 = (stringMode == STRING_MODE_UNICODE);
@@ -357,4 +360,3 @@ extern "C" {
     }
 
 } // extern "C"
-

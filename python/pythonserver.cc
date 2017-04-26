@@ -288,6 +288,7 @@ namespace {
         int keepAlive;
         int maxKeepalive;
         int useBinary;
+        int allowSurrogates;
         char nativeBoolean;
         PyObject *datetimeBuilder;
 
@@ -462,7 +463,8 @@ namespace {
                  -1 ,-1),
               outType(FRPC::Server_t::XML_RPC), closeConnection(true),
               contentLength(0), useChunks(false), headersSent(false),
-              head(false), useBinary(serverObject->useBinary)
+            head(false), useBinary(serverObject->useBinary),
+            allowSurrogates(false)
         {}
 
         ~Server_t() {}
@@ -479,11 +481,13 @@ namespace {
 
         inline void addOutHeader(const std::string &key, const std::string &value);
 
+        void enableSurrogatePass() { allowSurrogates = true; }
+
     private:
         void readRequest(FRPC::DataBuilder_t &builder);
 
-        PyObject* headersToPyList(const FRPC::HTTPHeader_t &headers, 
-                                  const std::string &name = ""); 
+        PyObject* headersToPyList(const FRPC::HTTPHeader_t &headers,
+                                  const std::string &name = "");
 
         /**
          * @brief says to server that all data was writed
@@ -527,6 +531,7 @@ namespace {
         bool head;
         ProtocolVersion_t protocolVersion;
         bool useBinary;
+        bool allowSurrogates;
 
         /** HTTP headers received in client's request. */
         FRPC::HTTPHeader_t headersIn;
@@ -584,7 +589,7 @@ extern "C" {
     static DECL_METHOD(ServerObject, getInHeaders);
 
     static DECL_METHOD(ServerObject, getOutHeaders);
-    
+
     static DECL_METHOD(ServerObject, getInHeadersFor);
 
     static DECL_METHOD(ServerObject, getOutHeadersFor);
@@ -769,6 +774,9 @@ PyObject* Server_t::serve(int fd, PyObjectWrapper_t addr) {
 
     do {
         Builder_t builder(0, serverObject->stringMode, serverObject->nativeBoolean, serverObject->datetimeBuilder);
+
+        // fix for utf-8 surrogates, if requested by the caller
+        if (allowSurrogates) builder.enableSurrogatePass();
 
         try {
             // call preprocessor
@@ -1137,7 +1145,7 @@ void Server_t::sendResponse() {
         headersOut.add(FRPC::HTTP_HEADER_ACCEPT, strAccept);
 
         //append connection header
-        headersOut.add(FRPC::HTTP_HEADER_CONNECTION, 
+        headersOut.add(FRPC::HTTP_HEADER_CONNECTION,
             serverObject->keepAlive ? "keep-alive" : "close");
 
         // write content-length or content-transfer-encoding when we can send
@@ -1271,7 +1279,7 @@ PyObject *Server_t::getOutHeadersFor(const std::string &name) {
 }
 
 
-void Server_t::addOutHeader(const std::string &key, const std::string &value) { 
+void Server_t::addOutHeader(const std::string &key, const std::string &value) {
     headersOut.add(key, value);
 }
 
@@ -1451,7 +1459,7 @@ DECL_METHOD_KWD(MethodRegistryObject, registerDefault) {
         { (char *)"default method callback",  &self->defaultMethod, NULL},
         { (char *)"default method list callback",
                                         &self->defaultListMethods, NULL},
-        { (char *)"default method help callback", 
+        { (char *)"default method help callback",
                                         &self->defaultMethodHelp, NULL},
         { (char *)"default method signature callback",
                                         &self->defaultMethodSignature, NULL},
@@ -2041,7 +2049,8 @@ PyObject* ServerObject_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
     static const char *kwlist[] = { "readTimeout", "writeTimeout", "keepAlive",
                                     "maxKeepalive", "introspectionEnabled",
-                                    "callbacks", "stringMode", "useBinary", 0 };
+                                    "callbacks", "stringMode", "useBinary",
+                                    "allowSurrogates", 0 };
 
     // set defaults
     self->readTimeout = 10000;
@@ -2050,25 +2059,31 @@ PyObject* ServerObject_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     self->maxKeepalive = 0;
     self->stringMode = FRPC::Python::STRING_MODE_MIXED;
     self->useBinary = true;
+    self->allowSurrogates = false;
 
     PyObject *callbacks = 0;
     PyObject *introspectionEnabled = 0;
     PyObject *useBinary = 0;
+    PyObject *allowSurrogates = 0;
 
     char *stringMode = 0;
 
     // parse arguments
     if (!PyArg_ParseTupleAndKeywords(args, kwds,
-                                     "|iiiiOOsO::fastrpc.Server",
+                                     "|iiiiOOsOO::fastrpc.Server",
                                      (char **)kwlist,
                                      &self->readTimeout, &self->writeTimeout,
                                      &self->keepAlive, &self->maxKeepalive,
                                      &introspectionEnabled, &callbacks,
-                                     &stringMode, &useBinary))
+                                     &stringMode, &useBinary,
+                                     &allowSurrogates))
         return 0;
 
     if (useBinary)
         self->useBinary = PyObject_IsTrue(useBinary);
+
+    if (allowSurrogates)
+        self->allowSurrogates = PyObject_IsTrue(allowSurrogates);
 
     if ((self->stringMode = FRPC::Python::parseStringMode(stringMode))
         == FRPC::Python::STRING_MODE_INVALID)
@@ -2103,6 +2118,9 @@ PyObject* ServerObject_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
     // create the server
     self->server = new Server_t(self);
+
+    // do we allow surrogates?
+    if (self->allowSurrogates) self->server->enableSurrogatePass();
 
     // OK
     return selfHolder.inc();
