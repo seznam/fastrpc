@@ -145,6 +145,14 @@ private:
         @param dataSize - is a size of data in bytes
     */
     String_t(std::string::value_type *pData, std::string::size_type dataSize);
+
+    /**
+        @brief Constructor  from pointer to data and data size
+        @param pool  -  is a reference to Pool_t used for allocating
+        @param pData - is a unsigned char pointer to data
+        @param dataSize - is a size of data in bytes
+    */
+    String_t(const std::string::value_type *pData, std::string::size_type dataSize);
     /**
        @brief Constructor from std::string value
        @param pool  -  is a reference to Pool_t used for allocating

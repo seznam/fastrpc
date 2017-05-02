@@ -101,6 +101,21 @@ public:
                      std::string::size_type dataSize);
     /**
         @brief Create new Binary_t object from pointer and size of data
+        @param data is a  pointer to binary data
+        @param dataSize is a size of binary data
+        @return reference to Binary_t
+    */
+    Binary_t& Binary(const std::string::value_type *data,
+                     std::string::size_type dataSize);
+    /**
+        @brief Create new Binary_t object from pointer and size of data
+        @param data is a  pointer to binary data
+        @param dataSize is a size of binary data
+        @return reference to Binary_t
+    */
+    Binary_t& Binary(const uint8_t *data, std::size_t dataSize);
+    /**
+        @brief Create new Binary_t object from pointer and size of data
         @param value is a std::string
         @return reference to Binary_t
     */
@@ -218,12 +233,21 @@ public:
     */
     String_t&  String(const std::wstring &value);
     /**
-        @brief Create new Binary_t object from pointer and size of data
-        @param data is a  pointer to binary data
-        @param dataSize is a size of binary data
+        @brief Create new String_t object from pointer and size of data
+        @param data is a  pointer to string data
+        @param dataSize is a size of string data
         @return reference to String_t
     */
     String_t& String(std::string::value_type *data,
+                     std::string::size_type dataSize);
+
+    /**
+        @brief Create new String_t object from pointer and size of data
+        @param data is a  pointer to string data
+        @param dataSize is a size of string data
+        @return reference to String_t
+    */
+    String_t& String(const std::string::value_type *data,
                      std::string::size_type dataSize);
 
     /**

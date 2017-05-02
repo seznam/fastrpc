@@ -43,7 +43,15 @@ Binary_t::~Binary_t()
 {}
 
 Binary_t::Binary_t(std::string::value_type *pData, std::string::size_type dataSize)
-        :value(pData,dataSize)
+    : value(pData, dataSize)
+{}
+
+Binary_t::Binary_t(const std::string::value_type *pData, std::string::size_type dataSize)
+    : value(pData, dataSize)
+{}
+
+Binary_t::Binary_t(const uint8_t *pData, std::string::size_type dataSize)
+    : value(reinterpret_cast<const std::string::value_type *>(pData), dataSize)
 {}
 
 Binary_t::Binary_t(const std::string &value)
