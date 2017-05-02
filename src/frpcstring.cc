@@ -59,6 +59,13 @@ String_t::String_t(std::string::value_type *pData, std::string::size_type dataSi
     validateBytes(value.data(), value.size());
 }
 
+String_t::String_t(const std::string::value_type *pData, std::string::size_type dataSize)
+        :value(pData,dataSize)
+{
+    //WARNING: Pointer to raw data, not null-terminated
+    validateBytes(value.data(), value.size());
+}
+
 String_t::String_t(const std::string &value)
         :value(value)
 {

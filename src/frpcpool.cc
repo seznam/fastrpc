@@ -114,6 +114,24 @@ Binary_t& Pool_t::Binary(std::string::value_type *data,
     return *newValue;
 }
 
+Binary_t& Pool_t::Binary(const std::string::value_type *data,
+                         std::string::size_type dataSize)
+{
+    Binary_t *newValue = new Binary_t(data, dataSize);
+
+    pointerStorage.push_back(newValue);
+
+    return *newValue;
+}
+
+Binary_t& Pool_t::Binary(const uint8_t *data, std::size_t dataSize) {
+    Binary_t *newValue = new Binary_t(data, dataSize);
+
+    pointerStorage.push_back(newValue);
+
+    return *newValue;
+}
+
 Binary_t& Pool_t::Binary(const std::string &value)
 {
     Binary_t *newValue =  new Binary_t(value);
@@ -250,6 +268,15 @@ String_t& Pool_t::String(std::string::value_type *data,
     return *newValue;
 }
 
+String_t& Pool_t::String(const std::string::value_type *data,
+                         std::string::size_type dataSize)
+{
+    String_t *newValue = new String_t(data, dataSize);
+
+    pointerStorage.push_back(newValue);
+
+    return *newValue;
+}
 
 
 Array_t& Pool_t::Array()
