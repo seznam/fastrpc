@@ -1722,6 +1722,9 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
                                      &hideAttributes, &headers,
                                      &allowSurrogates))
     {
+        if (PyErr_Occurred()) {
+            PyErr_Clear();
+        }
 
         // Initialization from ConfigParser and section
         PyObject *cfgParser;
@@ -1761,33 +1764,52 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
                             break;
             }
             if (method == NULL) continue;
+
             PyObjectWrapper_t value(PyObject_CallMethod(cfgParser, method,
                     "s#s",
                     cfgSection, cfgSectionLen, kwlist[i]));
-            if (value) {
-                switch (kwtypes[i]) {
-                    case 's':
-#if PY_MAJOR_VERSION >= 3
-                        Py_ssize_t len;
-                        kwvars[i] = strdupa(PyUnicode_AsUTF8AndSize(value.object, &len));
-#else
-                        kwvars[i] = strdupa(PyString_AsString(value.object));
-#endif
-                        break;
-                    case 'i':
-                        *(int*)kwvars[i] = PyLong_AsLong(value.object);
-                        break;
-                    case 'f':
-                        *(float*)kwvars[i] = PyFloat_AsDouble(value.object);
-                        break;
-                    case 'b':
-                        *(bool*)kwvars[i] = (value.object == Py_True);
-                        break;
-                    default:
-                        break;
+
+            if (!value) {
+                if (PyErr_ExceptionMatches(PyExc_ValueError)) {
+                    return 0;
                 }
+                PyErr_Clear();
+                continue;
             }
 
+            switch (kwtypes[i]) {
+                case 's':
+#if PY_MAJOR_VERSION >= 3
+                    Py_ssize_t len;
+                    kwvars[i] = strdupa(PyUnicode_AsUTF8AndSize(value.object, &len));
+                    if (PyErr_Occurred()){
+                        return 0;
+                    }
+#else
+                    kwvars[i] = strdupa(PyString_AsString(value.object));
+                    if (PyErr_Occurred()){
+                        return 0;
+                    }
+#endif
+                    break;
+                case 'i':
+                    *(int*)kwvars[i] = PyLong_AsLong(value.object);
+                    if (PyErr_Occurred()){
+                        return 0;
+                    }
+                    break;
+                case 'f':
+                    *(float*)kwvars[i] = PyFloat_AsDouble(value.object);
+                    if (PyErr_Occurred()) {
+                        return 0;
+                    }
+                    break;
+                case 'b':
+                    *(bool*)kwvars[i] = PyObject_IsTrue(value.object);
+                    break;
+                default:
+                    break;
+            }
         }
     }
 
