@@ -124,7 +124,7 @@ void Server_t::serve(int fd,
             readRequest(builder, headerIn);
 
         } catch(const StreamError_t &streamError) {
-            std::auto_ptr<Marshaller_t>
+            std::unique_ptr<Marshaller_t>
                 marshaller(Marshaller_t::create(chooseType(outType),
                                                 *this,
                                                 ProtocolVersion_t()));
@@ -197,7 +197,7 @@ void Server_t::readRequest(DataBuilder_t &builder,
     std::string transferMethod;
     std::string contentType;
     std::string uriPath;
-    std::auto_ptr<UnMarshaller_t> unmarshaller;
+    std::unique_ptr<UnMarshaller_t> unmarshaller;
     //SocketCloser_t closer(httpIO.socket());
 
     //read hlavicku
@@ -313,13 +313,13 @@ void Server_t::readRequest(DataBuilder_t &builder,
 
         // what type is request
         if (contentType.find("application/x-frpc") != std::string::npos) {
-            unmarshaller = std::auto_ptr<UnMarshaller_t>(
+            unmarshaller = std::unique_ptr<UnMarshaller_t>(
                     UnMarshaller_t::create(
                             UnMarshaller_t::BINARY_RPC,
                             builder));
 
         } else if (contentType.find("text/xml") != std::string::npos) {
-            unmarshaller = std::auto_ptr<UnMarshaller_t>(
+            unmarshaller = std::unique_ptr<UnMarshaller_t>(
                     UnMarshaller_t::create(
                             UnMarshaller_t::XML_RPC,
                             builder));
@@ -327,7 +327,7 @@ void Server_t::readRequest(DataBuilder_t &builder,
         } else if (contentType.find("application/x-www-form-urlencoded")
                    != std::string::npos)
         {
-            unmarshaller = std::auto_ptr<UnMarshaller_t>(
+            unmarshaller = std::unique_ptr<UnMarshaller_t>(
                     UnMarshaller_t::create(
                             UnMarshaller_t::URL_ENCODED,
                             builder,
@@ -336,7 +336,7 @@ void Server_t::readRequest(DataBuilder_t &builder,
         } else if (contentType.find("application/x-base64-frpc")
                   != std::string::npos)
         {
-            unmarshaller = std::auto_ptr<UnMarshaller_t>(
+            unmarshaller = std::unique_ptr<UnMarshaller_t>(
                     UnMarshaller_t::create(
                             UnMarshaller_t::BASE64,
                             builder));

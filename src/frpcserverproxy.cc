@@ -175,7 +175,7 @@ private:
     bool useHTTP10;
     unsigned int serverSupportedProtocols;
     ProtocolVersion_t protocolVersion;
-    std::auto_ptr<Connector_t> connector;
+    std::unique_ptr<Connector_t> connector;
     HTTPClient_t::HeaderVector_t requestHttpHeadersForCall;
     HTTPClient_t::HeaderVector_t requestHttpHeaders;
 };
@@ -264,7 +264,7 @@ Value_t& ServerProxyImpl_t::call(Pool_t &pool, const std::string &methodName,
         requestHttpHeadersForCall.clear();
     }
     TreeBuilder_t builder(pool);
-    std::auto_ptr<Marshaller_t>marshaller(createMarshaller(client));
+    std::unique_ptr<Marshaller_t>marshaller(createMarshaller(client));
     TreeFeeder_t feeder(*marshaller);
 
     try {
@@ -297,7 +297,7 @@ void ServerProxyImpl_t::call(DataBuilder_t &builder, const std::string &methodNa
         client.addCustomRequestHeader(requestHttpHeadersForCall);
         requestHttpHeadersForCall.clear();
     }
-    std::auto_ptr<Marshaller_t>marshaller(createMarshaller(client));
+    std::unique_ptr<Marshaller_t>marshaller(createMarshaller(client));
     TreeFeeder_t feeder(*marshaller);
 
     try {
@@ -334,7 +334,7 @@ Value_t& ServerProxyImpl_t::call(Pool_t &pool, const char *methodName,
         requestHttpHeadersForCall.clear();
     }
     TreeBuilder_t builder(pool);
-    std::auto_ptr<Marshaller_t>marshaller(createMarshaller(client));
+    std::unique_ptr<Marshaller_t>marshaller(createMarshaller(client));
     TreeFeeder_t feeder(*marshaller);
 
     try {

@@ -38,9 +38,8 @@
 #include <cstdlib>
 #include <sstream>
 #include <algorithm>
-#include <frpcxmlunmarshaller.h>
 
-
+#include "frpcxmlunmarshaller.h"
 
 /**
 * @brief dummy method for test in configure
@@ -311,22 +310,31 @@ int FRPC_DLLEXPORT dumpFastrpcTree(const Value_t &value, std::string &outstr,
         break;
 
     case Binary_t::TYPE: {
-
             out << "b\"";
-
-            // get data
-            std::string binary;
-            if (Binary(value).size() > MAX_LEN)
-                binary = Binary(value).getString().substr(0, MAX_LEN);
-            else
-                binary = Binary(value).getString();
-
-            // copy in hex
+            auto len = MAX_LEN;
+            auto &bin = Binary(value);
             HexWriter_t hexWriter(out);
-            std::copy(binary.begin(), binary.end(), hexWriter);
-            if (Binary(value).size() > MAX_LEN)
-                out << "...";
+            for (decltype(bin.size()) i = 0; i < bin.size(); ++i) {
+                *hexWriter = bin.data()[i];
+                if (--len == 0) break;
+            }
+            if (len) out << "...";
+            out << '"';
+        }
+        break;
 
+    case BinaryRef_t::TYPE: {
+            out << "b\"";
+            auto len = MAX_LEN;
+            HexWriter_t hexWriter(out);
+            for (auto chunk: BinaryRef(value).chunks()) {
+                for (decltype(chunk.size) i = 0; i < chunk.size; ++i) {
+                    *hexWriter = chunk.data[i];
+                    if (--len == 0) break;
+                }
+                if (len == 0) break;
+            }
+            if (len) out << "...";
             out << '"';
         }
         break;
@@ -482,6 +490,13 @@ void printValue(const Value_t &value, long spaces ) {
     case Binary_t::TYPE: {
             std::ostringstream os;
             os << "binary " << Binary(value).size() << " bytes \n";
+            printf("%s\n",os.str().c_str());
+        }
+        break;
+
+    case BinaryRef_t::TYPE: {
+            std::ostringstream os;
+            os << "binaryref " << BinaryRef(value).size() << " bytes \n";
             printf("%s\n",os.str().c_str());
         }
         break;

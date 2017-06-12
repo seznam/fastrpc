@@ -169,8 +169,8 @@ int MethodRegistry_t::processCall(const std::string &clientIP, const std::string
                                    const ProtocolVersion_t &protocolVersion)
 {
     Pool_t pool;
-    std::auto_ptr<Marshaller_t> marshaller(Marshaller_t::create(typeOut, writer,
-                                                               protocolVersion));
+    std::unique_ptr<Marshaller_t>
+        marshaller(Marshaller_t::create(typeOut, writer, protocolVersion));
     TimeDiff_t timeD;
 
     TreeFeeder_t feeder(*marshaller);
@@ -300,7 +300,8 @@ Value_t& MethodRegistry_t::processCall(const std::string &clientIP, Reader_t &re
                                        unsigned int typeIn, Pool_t &pool)
 {
     TreeBuilder_t builder(pool);
-    std::auto_ptr<UnMarshaller_t> unmarshaller(UnMarshaller_t::create(typeIn, builder));
+    std::unique_ptr<UnMarshaller_t>
+        unmarshaller(UnMarshaller_t::create(typeIn, builder));
     char buffer[BUFFER_SIZE];
     long readed;
     Value_t *result;
@@ -331,7 +332,8 @@ int MethodRegistry_t::processCall(const std::string &clientIP, Reader_t &reader,
 {
     Pool_t pool;
     TreeBuilder_t builder(pool);
-    std::auto_ptr<UnMarshaller_t> unmarshaller(UnMarshaller_t::create(typeIn, builder));
+    std::unique_ptr<UnMarshaller_t>
+        unmarshaller(UnMarshaller_t::create(typeIn, builder));
     Value_t *retValue;
 
 
@@ -346,9 +348,9 @@ int MethodRegistry_t::processCall(const std::string &clientIP, Reader_t &reader,
             unmarshaller->unMarshall(buffer, readed,
                                      UnMarshaller_t::TYPE_METHOD_CALL);
         }
-        std::auto_ptr<Marshaller_t> marshaller(Marshaller_t::create(typeOut,
-                                               writer,
-                                               unmarshaller->getProtocolVersion()));
+        std::unique_ptr<Marshaller_t>
+            marshaller(Marshaller_t::create(typeOut, writer,
+                                            unmarshaller->getProtocolVersion()));
         TreeFeeder_t feeder(*marshaller);
 
         retValue = &(processCall(clientIP, builder.getUnMarshaledMethodName(),
@@ -361,18 +363,18 @@ int MethodRegistry_t::processCall(const std::string &clientIP, Reader_t &reader,
     }
     catch(const StreamError_t &streamError)
     {
-        std::auto_ptr<Marshaller_t> marshaller(Marshaller_t::create(typeOut,
-                                               writer,
-                                               unmarshaller->getProtocolVersion()));
+        std::unique_ptr<Marshaller_t>
+            marshaller(Marshaller_t::create(typeOut, writer,
+                                            unmarshaller->getProtocolVersion()));
         TreeFeeder_t feeder(*marshaller);
         marshaller->packFault(FRPC_PARSE_ERROR,streamError.message().c_str());
         marshaller->flush();
     }
     catch(const Fault_t &fault)
     {
-        std::auto_ptr<Marshaller_t> marshaller(Marshaller_t::create(typeOut,
-                                               writer,
-                                               unmarshaller->getProtocolVersion()));
+        std::unique_ptr<Marshaller_t>
+            marshaller(Marshaller_t::create(typeOut, writer,
+                                            unmarshaller->getProtocolVersion()));
         TreeFeeder_t feeder(*marshaller);
         marshaller->packFault(fault.errorNum(),fault.message().c_str());
         marshaller->flush();

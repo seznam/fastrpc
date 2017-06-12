@@ -39,7 +39,7 @@
 AM_CXXFLAGS = -Wall -fPIC $(DEPS_CFLAGS) ${CXXEXTRAFLAGS}
 
 # extra compiler options
-AM_CPPFLAGS = -D_ISOC99_SOURCE -D__ENABLE_WSTRING=1
+AM_CPPFLAGS = -D_ISOC99_SOURCE -D__ENABLE_WSTRING=1 -std=c++11
 
 # install these headers
 include_HEADERS = frpc.h frpcvalue.h frpcarray.h frpcstruct.h frpcbinary.h frpcdatetime.h \
