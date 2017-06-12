@@ -141,6 +141,14 @@ Binary_t& Pool_t::Binary(const std::string &value)
     return *newValue;
 }
 
+BinaryRef_t& Pool_t::BinaryRef(BinaryRefFeeder_t feeder) {
+    BinaryRef_t *newValue = new BinaryRef_t(feeder);
+
+    pointerStorage.push_back(newValue);
+
+    return *newValue;
+}
+
 DateTime_t&  Pool_t::DateTime(short year, char month, char day,
                               char hour, char minute, char sec, char weekDay,
                               time_t unixTime, int timeZone)

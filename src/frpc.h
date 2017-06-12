@@ -42,6 +42,7 @@
 #include <frpcarray.h>
 
 #include <frpcbinary.h>
+#include <frpcbinaryref.h>
 #include <frpcbool.h>
 #include <frpcdatetime.h>
 #include <frpcdouble.h>

@@ -134,9 +134,7 @@ void JSONMarshaller_t::flush() {
     writer.flush();
 }
 
-void JSONMarshaller_t::packMethodCall(const char *methodName,
-                                      unsigned int size)
-{
+void JSONMarshaller_t::packMethodCall(const char *, unsigned int) {
     throw Error_t("JSON marshaller don't support method calls");
 }
 
@@ -234,6 +232,14 @@ void JSONMarshaller_t::packDateTime(short, char, char, char, char, char, char,
 void JSONMarshaller_t::packNull() {
     DBG("null: \n");
     writer.write("null", 4);
+    dec(ctx, writer);
+}
+
+void JSONMarshaller_t::packBinaryRef(BinaryRefFeeder_t feeder) {
+    DBG("binary: %.*s\n", size, value);
+    writer.write("\"", 1);
+    XmlMarshaller_t::writeEncodeBase64(writer, feeder.next, false);
+    writer.write("\"", 1);
     dec(ctx, writer);
 }
 

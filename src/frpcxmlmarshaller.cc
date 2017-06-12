@@ -156,12 +156,6 @@ void XmlMarshaller_t::packBool(bool value) {
 }
 
 void XmlMarshaller_t::packNull() {
-  /*  if (protocolVersion.versionMajor < 2
-        || protocolVersion.versionMinor < 1) {
-
-        throw StreamError_t("Null is not supported by protocol version lower than 2.1");
-    }*/
-
     packSpaces(level);
     if (entityStorage.empty()) {
         writer.write("<param>\n",8);
@@ -177,9 +171,27 @@ void XmlMarshaller_t::packNull() {
     decrementItem();
 }
 
+void XmlMarshaller_t::packBinaryRef(BinaryRefFeeder_t feeder) {
+    packSpaces(level);
+    if (entityStorage.empty()) {
+        writer.write("<param>\n", 8);
+        level++;
+    }
+    packSpaces(level);
+    writer.write("<value><base64>", 15);
+    writeEncodeBase64(writer, feeder.next);
+    writer.write("</base64></value>\n",18);
+    if (entityStorage.empty()) {
+        packSpaces(level - 1);
+        writer.write("</param>\n", 9);
+        level--;
+    }
+    decrementItem();
+}
+
 void XmlMarshaller_t::packDateTime(short year, char month, char day, char hour,
-                                   char minute, char sec, char weekDay,
-                                   time_t unixTime, int timeZone) {
+                                   char minute, char sec, char,
+                                   time_t, int timeZone) {
     std::string data = getISODateTime(year, month, day, hour, minute,
                                       sec, timeZone);
 
@@ -465,56 +477,83 @@ void XmlMarshaller_t::packMagic() {
 
 }
 
-void XmlMarshaller_t::writeEncodeBase64(Writer_t &writer, const char *data, unsigned int len, bool rn) {
-    static const char table[] =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+void XmlMarshaller_t::writeEncodeBase64(Writer_t &writer,
+                                        const char *data, unsigned int len,
+                                        bool rn)
+{
+    bool written = false;
+    writeEncodeBase64(writer, [&] () -> BinaryRefFeeder_t::Chunk_t {
+        if (written) return {nullptr, 0u};
+        written = true;
+        return {(uint8_t *)data, len};
+    }, rn);
+}
 
-    std::string src(data,len);
+void XmlMarshaller_t::writeEncodeBase64(Writer_t &writer,
+                                        Chunks_t chunks,
+                                        bool rn)
+{
+    static const char table[]
+        = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-    if (src.empty()) {
+    auto write_first_sextet = [&] (uint8_t octet0) {
+        writer.write(&table[octet0 >> 2], 1);
+    };
+    auto write_second_sextet = [&] (uint8_t octet0, uint8_t octet1) {
+        writer.write(&table[((octet0 & 0x03) << 4) | (octet1 >> 4)], 1);
+    };
+    auto write_third_sextet = [&] (uint8_t octet1, uint8_t octet2) {
+        writer.write(&table[((octet1 & 0x0F) << 2) | (octet2 >> 6)], 1);
+    };
+    auto write_fourth_sextet = [&] (uint8_t octet2) {
+        writer.write(&table[octet2 & 0x3F], 1);
+    };
 
-        return ;
-    }
-
-
-
-
+    int input_len = 0;
     size_t lineLen = 0;
-    std::string::const_iterator end = src.end();
-    for (std::string::const_iterator isrc = src.begin();
-            isrc != end; ) {
-        unsigned char input[3];
-        int n = 0;
-        for (; (isrc != end) && (n < 3) ; isrc++, n++)
-            input[n] = *isrc;
+    uint8_t input[3];
+    for (;;) {
+        auto chunk = chunks();
+        if (chunk.data == nullptr) break;
+        std::size_t i = 0lu;
+        for (;;) {
+            while ((i < chunk.size) && (input_len != 3))
+                input[input_len++] = chunk.data[i++];
+            if (input_len < 3) break;
+            input_len = 0;
 
-        if (n) {
-            writer.write(&table[input[0] >> 2],1);
-            writer.write(&table[((input[0] & 0x03) << 4) | (input[1] >> 4)],1);
-            if (n > 1)
-                writer.write(&table[((input[1] & 0x0F) << 2) | (input[2] >> 6)],1);
-            else
-                writer.write("=",1);
-            if (n > 2)
-                writer.write(&table[input[2] & 0x3F],1);
-            else
-                writer.write("=",1);
-            lineLen += 4;
-            if (lineLen > 72) {
-                if (rn) writer.write("\r\n",2);
-                lineLen = 0;
+            write_first_sextet(input[0]);
+            write_second_sextet(input[0], input[1]);
+            write_third_sextet(input[1], input[2]);
+            write_fourth_sextet(input[2]);
+            if (rn) {
+                lineLen += 4;
+                if (lineLen > 72) {
+                    writer.write("\r\n", 2);
+                    lineLen = 0;
+                }
             }
         }
     }
 
-    if (lineLen) {
-        if (rn) writer.write("\r\n",2);
-        lineLen = 0;
+    switch (input_len) {
+    case 1:
+        write_first_sextet(input[0]);
+        write_second_sextet(input[0], 0);
+        writer.write("==", 2);
+        break;
+    case 2:
+        write_first_sextet(input[0]);
+        write_second_sextet(input[0], input[1]);
+        write_third_sextet(input[1], 0);
+        writer.write("=", 1);
+        break;
+    default:
+        break;
     }
-
-
-    return ;
+    if (lineLen && rn) writer.write("\r\n", 2);
 }
+
 void XmlMarshaller_t::writeQuotedString(const char *data, unsigned int len) {
     for (unsigned int i = 0; i < len; i++) {
         switch (data[i]) {

@@ -62,24 +62,6 @@ using namespace FRPC;
 
 namespace {
 
-
-bool canReadBody(const std::string &method, int response) {
-    // HEAD cannot have any content
-    if (method == "HEAD")
-        return false;
-
-    // CONNECT cannot have body on success
-    if (method == "CONNECT")
-        return (response != 200);
-
-    // 100 Continue => no content
-    if (response == 100)
-        return false;
-
-    // OK we can have body
-    return true;
-};
-
 inline bool canSendBody(const std::string &method) {
     return (method == "POST") || (method == "PUT");
 };

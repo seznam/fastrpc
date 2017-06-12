@@ -75,8 +75,16 @@ public:
 
     void packNull();
 
+    void packBinaryRef(BinaryRefFeeder_t feeder);
+
     static void writeEncodeBase64(Writer_t &writer,
                                   const char *data, unsigned int len,
+                                  bool rn = true);
+
+    using Chunks_t = std::function<BinaryRefFeeder_t::Chunk_t()>;
+
+    static void writeEncodeBase64(Writer_t &writer,
+                                  Chunks_t chunks,
                                   bool rn = true);
 
 private:

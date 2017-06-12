@@ -390,4 +390,16 @@ void BinMarshaller_t::packNull() {
 
 }
 
-};
+void BinMarshaller_t::packBinaryRef(BinaryRefFeeder_t feeder) {
+    auto size = feeder.size();
+    unsigned int numType = getNumberType(size);
+    Number_t dataSize(size);
+    char type = FRPC_DATA_TYPE(BINARY, numType);
+    writer.write(&type, 1);
+    writer.write((char*)dataSize.data, getNumberSize(numType));
+    while (auto chunk = feeder.next())
+        writer.write((char *)chunk.data, chunk.size);
+}
+
+} // namespace FRPC
+
