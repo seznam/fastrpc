@@ -47,6 +47,8 @@ namespace FRPC
 class Bool_t;
 class Double_t;
 class Binary_t;
+class BinaryRef_t;
+struct BinaryRefFeeder_t;
 class String_t;
 class Array_t;
 class DateTime_t;
@@ -121,6 +123,10 @@ public:
     */
     Binary_t& Binary(const std::string &value);
     /**
+        @brief Create new BinaryRef_t object from chunks feeder.
+    */
+    BinaryRef_t& BinaryRef(BinaryRefFeeder_t feeder);
+    /*
         @brief Create new DateTime_t object from unix tm structure
         You should specify your timezone!
 

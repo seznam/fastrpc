@@ -53,7 +53,8 @@ include_HEADERS = frpc.h frpcvalue.h frpcarray.h frpcstruct.h frpcbinary.h frpcd
                   frpcsocket.h frpcsocketunix.h frpcsocketwin.h frpcplatform.h \
                   frpcversion.h frpcconnector.h frpcconverters.h frpcnull.h \
                   frpcbinmarshaller.h frpcxmlmarshaller.h frpcinternals.h frpccompare.h frpcb64marshaller.h \
-                  frpcjsonmarshaller.h frpcb64writer.h frpcconfig.h frpcbinunmarshaller-extras.h
+                  frpcjsonmarshaller.h frpcb64writer.h frpcconfig.h frpcbinunmarshaller-extras.h            \
+				  frpcbinaryref.h
 
 
 noinst_HEADERS = frpcbinunmarshaller.h frpcxmlunmarshaller.h frpcurlunmarshaller.h frpcb64unmarshaller.h frpcbase64.h \

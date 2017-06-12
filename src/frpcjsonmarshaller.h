@@ -43,12 +43,13 @@
 #include <vector>
 #include <utility>
 
+#include <frpc.h>
 #include <frpcmarshaller.h>
 
 namespace FRPC {
 
 class Writer_t;
-class ProtocolVersion_t;
+struct ProtocolVersion_t;
 
 /** 
  * @short
@@ -83,6 +84,8 @@ public:
                               int tz);
 
     void packNull();
+
+    void packBinaryRef(BinaryRefFeeder_t feeder);
 
 private:
     enum State_t { ARRAY = ']', STRUCT = '}'};

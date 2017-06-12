@@ -74,6 +74,8 @@ public:
 
     void packNull();
 
+    void packBinaryRef(BinaryRefFeeder_t feeder);
+
 private:
 
     BinMarshaller_t();
