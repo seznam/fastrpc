@@ -1,3 +1,16 @@
+python-fastrpc (8.0.1) stable; urgency=medium
+
+  * Revert " support for native string in signature for python 3"
+  * 
+  * This reverts commit 3f303dbdfe72831833faa65056b2bdb3f303c86c.
+  * #3798 debian stretch - osetreni v ServerProxy_ServerProxy
+  * support for native string in signature for python 3
+  * adding surrogate handling enabler. Fixes problems with existing invalid utf-8 containing surrogate sequences, defaults to off, enabled by giving named arg allowSurrogates to ServerProxy/Server
+  * Adding a really simple python server implementation for testing and example purposes
+  * Fix: Python2 version of the server object didn't convert the method signature, leaving it as a string. This broken some interactive clients
+
+ -- Filip Volejnik <filip.volejnik@firma.seznam.cz>  Tue, 13 Jun 2017 09:50:28 +0100
+
 python-fastrpc (8.0.0) testing; urgency=medium
 
   * Fixes to the python exception handling introduced in frpc 8.0
