@@ -1381,7 +1381,7 @@ PyObject* MethodRegistryObject_new(PyTypeObject *type, PyObject *args,
              ("Return an array of all available RPC methods on this "
               "server."));
         registerInternalMethod
-            (self, "system.methodSignature", "s:A",
+            (self, "system.methodSignature", "s:s",
              ("Given the name of a method, return an array of "
               "legal signatures. Each signature is an array of "
               "strings. The first item of each signature is the "
@@ -1750,9 +1750,15 @@ DECL_METHOD(MethodRegistryObject, system_methodSignature) {
                 return signature.inc();
 
             // if it already isn't a string, return without converting
+#if PY_MAJOR_VERSION < 3
             if (!PyString_Check(signature) && !PyUnicode_Check(signature)) {
                 return signature.inc();
             }
+#else
+            if (!PyUnicode_Check(signature)) {
+                return signature.inc();
+            }
+#endif
 
             // string => convert to array of arrays
             return stringToSignature(signature);
@@ -2191,7 +2197,11 @@ namespace {
         : name(name), callback(callback, true), signature(signature, true),
           help(help, true), context(context, true), names(names, true), pos(pos)
     {
+#if PY_MAJOR_VERSION < 3
         if (PyString_Check(signature) || PyUnicode_Check(signature)) {
+#else
+        if (PyUnicode_Check(signature)) {
+#endif
             char *sig;
             Py_ssize_t sigSize;
             STR_ASSTRANDSIZE(signature, sig, sigSize) {
