@@ -1,3 +1,28 @@
+libfastrpc (8.0.6) stable; urgency=medium
+
+  * binary ref
+  * comment out binaryref case
+  * enabling c++11 and small portion of cleaning
+  * #3798 debian stretch - osetreni v ServerProxy_ServerProxy
+  * support for native string in signature for python 3
+  * add (const char *, size) ctors to Binary_t and String_t, add (const uint8_t *, size) ctor to Binary_t
+  * adding surrogate handling enabler. Fixes problems with existing invalid utf-8 containing surrogate sequences, defaults to off, enabled by giving named arg allowSurrogates to ServerProxy/Server
+  * bugfix of netcat when datetime is returned
+  * check for invalid negative sizes
+  * making the fixed size limit internal, nonexported
+  * * Test for bad call name
+  * * Count tests in non-verbose mode too
+  * Check for empty call name in unmarshaller
+  * Sped up the tests significantly
+  * speed up the tests
+  * limit size of var. len structures to 1G elements
+  * added check for excessive data after end, which were ignored before
+  * fix: handle invalid stream message types with exceptions
+  * fixed the diffable output
+  * Test now repeats itself on all possible offset/step combinations
+
+ -- Filip Volejnik <filip.volejnik@firma.seznam.cz>  Tue, 13 Jun 2017 09:04:28 +0100
+
 libfastrpc (8.0.5) stable; urgency=medium
 
   * some bits needed for implementing FRPS protocol in client code
