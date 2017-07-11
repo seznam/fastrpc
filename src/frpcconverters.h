@@ -41,9 +41,11 @@
 #include <iterator>
 #include <algorithm>
 
+#include "frpcarray.h"
+
 namespace FRPC {
 
-/** 
+/**
  * @short Base converter class.
  */
 template <class Type_t, class FRPCType_t>
@@ -52,7 +54,7 @@ public:
     /// Conversion fuction type.
     typedef FRPCType_t &(Pool_t::*ConverterCall_t)(const Type_t &);
 
-    /** 
+    /**
      * @short Create new converter.
      * @param pool FastRPC pool.
      * @param call conversion function.
@@ -61,7 +63,7 @@ public:
         : pool(&pool), call(call)
     {}
 
-    /** 
+    /**
      * @short Convert value to FastRPC value.
      * @return FastRPC value.
      */
@@ -69,7 +71,7 @@ public:
         return (*pool.*call)(value);
     }
 
-    /** 
+    /**
      * @short Return FastRPC pool.
      * @return FastRPC pool.
      */
@@ -82,13 +84,13 @@ private:
     ConverterCall_t call;  //!< conversion function
 };
 
-/** 
+/**
  * @short Convert int to FastRPC value.
  */
 template <class Type_t>
 class base_int_cnvt: public base_cnvt<Type_t, Int_t> {
 public:
-    /** 
+    /**
      * @short Create new converter.
      * @param pool FastRPC pool.
      */
@@ -97,13 +99,13 @@ public:
     {}
 };
 
-/** 
+/**
  * @short Convert double to FastRPC value.
  */
 template <class Type_t>
 class base_double_cnvt: public base_cnvt<Type_t, Double_t> {
 public:
-    /** 
+    /**
      * @short Create new converter.
      * @param pool FastRPC pool.
      */
@@ -112,13 +114,13 @@ public:
     {}
 };
 
-/** 
+/**
  * @short Convert string to FastRPC value.
  */
 template <class Type_t>
 class base_string_cnvt: public base_cnvt<Type_t, String_t> {
 public:
-    /** 
+    /**
      * @short Create new converter.
      * @param pool FastRPC pool.
      */
@@ -127,13 +129,13 @@ public:
     {}
 };
 
-/** 
+/**
  * @short Convert bool to FastRPC value.
  */
 template <class Type_t>
 class base_bool_cnvt: public base_cnvt<Type_t, Bool_t> {
 public:
-    /** 
+    /**
      * @short Create new converter.
      * @param pool FastRPC pool.
      */
@@ -142,13 +144,13 @@ public:
     {}
 };
 
-/** 
+/**
  * @short Convert binary to FastRPC value.
  */
 template <class Type_t>
 class base_binary_cnvt: public base_cnvt<Type_t, Binary_t> {
 public:
-    /** 
+    /**
      * @short Create new converter.
      * @param pool FastRPC pool.
      */
@@ -157,13 +159,13 @@ public:
     {}
 };
 
-/** 
+/**
  * @short Convert datetime to FastRPC value.
  */
 template <class Type_t>
 class base_datetime_cnvt: public base_cnvt<Type_t, DateTime_t> {
 public:
-    /** 
+    /**
      * @short Create new converter.
      * @param pool FastRPC pool.
      */
@@ -172,13 +174,13 @@ public:
     {}
 };
 
-/** 
+/**
  * @short Convert localtime to FastRPC value.
  */
 template <class Type_t>
 class base_localtime_cnvt: public base_cnvt<Type_t, DateTime_t> {
 public:
-    /** 
+    /**
      * @short Create new converter.
      * @param pool FastRPC pool.
      */
@@ -187,13 +189,13 @@ public:
     {}
 };
 
-/** 
+/**
  * @short Convert utctime to FastRPC value.
  */
 template <class Type_t>
 class base_utctime_cnvt: public base_cnvt<Type_t, DateTime_t> {
 public:
-    /** 
+    /**
      * @short Create new converter.
      * @param pool FastRPC pool.
      */
@@ -202,13 +204,13 @@ public:
     {}
 };
 
-/** 
+/**
  * @short Convert array - each iterable object to FastRPC value.
  */
 template <class Converter_t>
 class base_array_cnvt {
 public:
-    /** 
+    /**
      * @short Create new converter.
      * @param converter value converter.
      */
@@ -216,16 +218,16 @@ public:
         : converter(converter)
     {}
 
-    /** 
+    /**
      * @short Convert value - each iterable object to FastRPC value.
-     * @return 
+     * @return
      */
     template <class ArrayType_t>
     inline Value_t &operator()(const ArrayType_t &value) const {
         return to_array(value.begin(), value.end(), converter);
     }
 
-    /** 
+    /**
      * @short Return FastRPC pool.
      * @return FastRPC pool.
      */
@@ -237,7 +239,7 @@ public:
     const Converter_t &converter; //!< value converter
 };
 
-/** 
+/**
  * @short Shortcut for base_array_cnvt.
  * @param cnvt array value convertor.
  * @return new base_array_cnvt.
@@ -247,13 +249,13 @@ inline base_array_cnvt<BaseConv_t> array_cnvt(const BaseConv_t &cnvt) {
     return base_array_cnvt<BaseConv_t>(cnvt);
 }
 
-/** 
+/**
  * @short Convert pair - member of associative containers to FastRPC value.
  */
 template <class Converter_t>
 class base_pair_cnvt {
 public:
-    /** 
+    /**
      * @short Create new converter.
      * @param converter value converter.
      */
@@ -261,7 +263,7 @@ public:
         : converter(converter)
     {}
 
-    /** 
+    /**
      * @short Convert pair - member of associative containers to FastRPC value.
      * @return FastRPC value.
      */
@@ -270,7 +272,7 @@ public:
         return Struct_t::pair(pair.first, &converter(pair.second));
     }
 
-    /** 
+    /**
      * @short Return FastRPC pool.
      * @return FastRPC pool.
      */
@@ -282,7 +284,7 @@ public:
     const Converter_t &converter; //!< value converter
 };
 
-/** 
+/**
  * @short Shortcut for base_pair_cnvt.
  * @param cnvt pair value convertor.
  * @return new base_pair_cnvt.
@@ -292,12 +294,12 @@ inline base_pair_cnvt<BaseConv_t> pair_cnvt(const BaseConv_t &cnvt) {
     return base_pair_cnvt<BaseConv_t>(cnvt);
 }
 
-/** 
+/**
  * @short Base class for aplication struct a class converters.
  */
 class base_struct_cnvt {
 public:
-    /** 
+    /**
      * @short Create new converter.
      * @param converter value converter.
      */
@@ -305,7 +307,7 @@ public:
         : pool(pool)
     {}
 
-    /** 
+    /**
      * @short Return FastRPC pool.
      * @return FastRPC pool.
      */
@@ -315,7 +317,7 @@ protected:
     Pool_t &pool; //!< FastRPC pool
 };
 
-/** 
+/**
  * @short Convert elements in interval to array of FastRPC values.
  * @param begin iterator at first element.
  * @param end iterator after last element.
@@ -332,7 +334,7 @@ inline Value_t &to_array(const ForwardIterator_t &begin,
     return array;
 }
 
-/** 
+/**
  * @short Convert elements of iterable container to array of FastRPC values.
  * @param container some value container like std::vector.
  * @param converter value converter.
@@ -345,7 +347,7 @@ inline Value_t &to_array(const Container_t &container,
     return to_array(container.begin(), container.end(), converter);
 }
 
-/** 
+/**
  * @short Convert elements in interval to struct of FastRPC values.
  * @param begin iterator at first element.
  * @param end iterator after last element.
@@ -364,7 +366,7 @@ inline Value_t &to_struct(const ForwardIterator_t &begin,
     return structure;
 }
 
-/** 
+/**
  * @short Convert elements in interval to struct of FastRPC values.
  * @param container some value container like std::map.
  * @param converter value converter.
@@ -404,4 +406,3 @@ typedef base_utctime_cnvt<time_t> utctime_cnvt;
 } // namespace
 
 #endif /* FRPC_FRPCCONVERTERS_H */
-
