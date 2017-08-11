@@ -25,7 +25,7 @@ try:
     from fastrpc import Fault, ProtocolError, ServerProxy, \
                         ON_SUPPORT_ON_KEEP_ALIVE, Binary, DateTime, Boolean
     ProtocolException = ProtocolError
-except:
+except Exception:
     sys.FASTRPC = False
     from xmlrpc.client import Fault, ProtocolError, ServerProxy, \
                         Binary, DateTime, Boolean, Transport
@@ -58,13 +58,13 @@ import types
 try:
     import MySQLdb
     sys.MYSQL = True
-except:
+except Exception:
     sys.MYSQL = False
 import datetime
 try:
     import decimal
     sys.DECIMAL = True
-except:
+except Exception:
     sys.DECIMAL = False
 from time import time
 
@@ -144,7 +144,7 @@ class DbConn:
 
                     __result.append(__row)
                 return __result
-            except:
+            except Exception:
                 return "OK"
         except KeyboardInterrupt:
             raise
@@ -353,7 +353,7 @@ def completionAppendModule(completion, moduleName, module):
 def FILE(path):
     try:
         f = open(path, "r")
-    except:
+    except Exception:
         raise
     else:
         data = f.read()
@@ -410,11 +410,11 @@ def main():
     try:
         __proxyVia = environ["http_proxy"]
         environ["HTTP_PROXY"] = __proxyVia
-    except:
+    except Exception:
         __proxyVia = ""
         try:
             del environ["HTTP_PROXY"]
-        except:
+        except Exception:
             pass
 
     if len(argv) > 1:
@@ -475,7 +475,7 @@ def main():
 
                     print("Connection refused while connecting to %s" % __server)
                     __haveClient = False
-            except:
+            except Exception:
                 pass
 
     if __isATty:
@@ -500,7 +500,7 @@ def main():
         __histFile = path.join(environ["HOME"], ".fastrpc-netcat_history")
         try:
             readline.read_history_file(__histFile)
-        except:
+        except Exception:
             pass
         atexitRegister(readline.write_history_file, __histFile)
 
@@ -523,7 +523,7 @@ def main():
         import fn
         fn.globals = globals()
         fn.init()
-    except:
+    except Exception:
         pass
 
     if __doRc:
@@ -532,7 +532,7 @@ def main():
             __rcFile = open(__rcFile)
             __rcData = __rcFile.read().split("\n")
             __rcFile.close()
-        except:
+        except Exception:
             __rcData = []
     else:
         __rcData = []
@@ -585,7 +585,7 @@ def main():
                     raise Exception("Missing arguments")
                 try:
                     int(__splitted[2])
-                except:
+                except Exception:
                     __num = False
                 else:
                     __num = True
@@ -637,7 +637,7 @@ def main():
                         __clientName = "client%s" % __clientNo
                     try:
                         exec("global %s" % __clientName)
-                    except:
+                    except Exception:
                         pass
                     exec("%s = client" % __clientName)
 
@@ -653,7 +653,7 @@ def main():
 
                     try:
                         __proxyVia = environ["http_proxy"]
-                    except:
+                    except Exception:
                         __proxyVia = ""
 
                     if sys.FASTRPC:
@@ -678,7 +678,7 @@ def main():
                         __clientName = "client%s" % __clientNo
                     try:
                         exec("global %s" % __clientName)
-                    except:
+                    except Exception:
                         pass
                     exec("%s = client" % __clientName)
 
@@ -695,7 +695,7 @@ def main():
 
                                 print("Connection refused while connecting to %s" % __server)
                                 __clientOk = False
-                        except:
+                        except Exception:
                             pass
                         if __clientOk:
                             print("New client is now known as %s" % __clientName)
@@ -723,7 +723,7 @@ def main():
             elif __firstToken == "timeout" and len(__splitted) == 2:
                 try:
                     __readTimeout = 1000*int(__splitted[1])
-                except:
+                except Exception:
                     if not __isATty:
                         print("Bad timeout value on line %d" % __line)
                         exit(-1)
