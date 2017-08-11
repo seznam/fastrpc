@@ -218,9 +218,7 @@ def _writeOut(branch, indent=""):
     if isinstance(branch, int):
         return "%s" % branch
     elif isinstance(branch, (bytes, str)):
-        if isinstance(branch, str):
-            return ("\"%s\"" % branch).encode(sys.CHARSET, "replace")
-        return ("\"%s\"" % branch).decode("utf8").encode(sys.CHARSET, "replace")
+        return ("\"%s\"" % branch)
     elif isinstance(branch, float):
         return "%s" % branch
     elif isinstance(branch, dict):
@@ -533,12 +531,12 @@ def main():
     while __run:
         try:
             if len(__rcData):
-                __command = __rcData.pop(0).replace("\n", "").replace("\r", "").strip(" ").decode(sys.CHARSET).encode("utf8")
+                __command = __rcData.pop(0).replace("\n", "").replace("\r", "").strip(" ")
             else:
                 if __isATty:
-                    __command = input("fastrpc-netcat[%s] > " % sys.CONSOLENAME).replace("\n", "").replace("\r", "").strip(" ").decode(sys.CHARSET).encode("utf8")
+                    __command = input("fastrpc-netcat[%s] > " % sys.CONSOLENAME).replace("\n", "").replace("\r", "").strip(" ")
                 else:
-                    __command = input().replace("\n", "").replace("\r", "").strip(" ").decode(sys.CHARSET).encode("utf8")
+                    __command = input().replace("\n", "").replace("\r", "").strip(" ")
             __splitted = __command.split(" ")
 
             __line += 1
@@ -817,7 +815,7 @@ def main():
                             if __result != None:
                                 print()
                                 if __pyOut:
-                                    print(str(convertFrpc(__result)).encode(sys.CHARSET))
+                                    print(str(convertFrpc(__result)))
                                 else:
                                     writeOut(__result)
                                 print()
