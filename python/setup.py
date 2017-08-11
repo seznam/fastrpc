@@ -63,7 +63,7 @@ sysconfig._init_posix = _init_posix(sysconfig._init_posix)
 
 
 here = dirname(__file__)
-readme = join(here, 'README')
+readme = join(here, 'README.md')
 changelog = join(here, "debian/changelog")
 
 version = str(Changelog(open(changelog, 'rt')).get_version())
