@@ -27,11 +27,11 @@ try:
     ProtocolException = ProtocolError
 except:
     sys.FASTRPC = False
-    from xmlrpclib import Fault, ProtocolError, ServerProxy, \
+    from xmlrpc.client import Fault, ProtocolError, ServerProxy, \
                         Binary, DateTime, Boolean, Transport
-    from urllib import FancyURLopener
-    import httplib
-    oldHTTP = httplib.HTTP
+    from urllib.request import FancyURLopener
+    import http.client
+    oldHTTP = http.client.HTTP
     class MyHTTP(oldHTTP):
         def putheader(self, header, value):
             if header.lower() != "content-type" or value == "text/xml":
@@ -39,7 +39,7 @@ except:
             #endif
         #enddef
     #endclass
-    httplib.HTTP = MyHTTP
+    http.client.HTTP = MyHTTP
 
     class MyTransport(Transport):
         def request(self, host, handler, requestBody, verbose = 0):
@@ -119,7 +119,7 @@ class DbConn:
             self.cursor.execute("BEGIN WORK")
         except KeyboardInterrupt:
             raise
-        except Exception, e:
+        except Exception as e:
             if e[0] == 2003:
                 self.connect()
                 return self.execute(query, parms)
@@ -133,7 +133,7 @@ class DbConn:
             self.cursor.execute("COMMIT")
         except KeyboardInterrupt:
             raise
-        except Exception, e:
+        except Exception as e:
             return "Error: %s" % e
         #endtry
     #enddef
@@ -143,7 +143,7 @@ class DbConn:
             self.cursor.execute("ROLLBACK")
         except KeyboardInterrupt:
             raise
-        except Exception, e:
+        except Exception as e:
             return "Error: %s" % e
         #endtry
     #enddef
@@ -170,7 +170,7 @@ class DbConn:
             #endtry
         except KeyboardInterrupt:
             raise
-        except Exception, e:
+        except Exception as e:
             return "Error: %s" % e
         else:
             if sys.AUTOCOMMIT:
@@ -212,15 +212,15 @@ class Completer:
 
 
 def _type(branch):
-    if type(branch) == types.IntType:
+    if type(branch) == int:
         return "int"
-    elif type(branch) in [types.StringType, types.UnicodeType]:
+    elif type(branch) in [bytes, str]:
         return "string"
-    elif type(branch) == types.FloatType:
+    elif type(branch) == float:
         return "float"
-    elif type(branch) == types.DictType:
+    elif type(branch) == dict:
         return "struct"
-    elif type(branch) == types.ListType:
+    elif type(branch) == list:
         return "array"
     elif type(branch) == DateTime:
         return "datetime"
@@ -228,7 +228,7 @@ def _type(branch):
         return "binary"
     elif type(branch) == Boolean:
         return "boolean"
-    elif type(branch) == types.LongType:
+    elif type(branch) == int:
         return "long"
     elif type(branch) == datetime.datetime:
         return "datetime"
@@ -246,21 +246,21 @@ def _type(branch):
 #enddef
 
 def _writeOut(branch, indent = ""):
-    if type(branch) == types.IntType:
+    if type(branch) == int:
         return "%s" % branch
-    elif type(branch) in [types.StringType, types.UnicodeType]:
-        if type(branch) == types.UnicodeType:
+    elif type(branch) in [bytes, str]:
+        if type(branch) == str:
             return ("\"%s\"" % branch).encode(sys.CHARSET, "replace")
         else:
             return ("\"%s\"" % branch).decode("utf8").encode(sys.CHARSET, "replace")
         #endif
-    elif type(branch) == types.FloatType:
+    elif type(branch) == float:
         return "%s" % branch
-    elif type(branch) == types.DictType:
+    elif type(branch) == dict:
         retval = "{\n"
 
         if sys.AUTOSORT:
-            keys = branch.keys()
+            keys = list(branch.keys())
             keys.sort()
             for k in keys:
                 v = branch[k]
@@ -272,7 +272,7 @@ def _writeOut(branch, indent = ""):
                 #endif
             #endfor
         else:
-            for k, v in branch.iteritems():
+            for k, v in branch.items():
                 t = _type(v)
                 if t:
                     retval += "%s    %s %s = %s\n" % (indent, t, k, _writeOut(v, "%s    " % indent))
@@ -283,7 +283,7 @@ def _writeOut(branch, indent = ""):
         #endif
         retval += ("%s}" % indent)
         return retval
-    elif type(branch) == types.ListType:
+    elif type(branch) == list:
         retval = "(\n"
         idx = 0
         for __row in branch:
@@ -307,7 +307,7 @@ def _writeOut(branch, indent = ""):
         else:
             return "False"
         #endif
-    elif type(branch) == types.LongType:
+    elif type(branch) == int:
         return "%s" % branch
     elif type(branch) == datetime.datetime:
         return "%s" % branch
@@ -367,15 +367,15 @@ def convertFrpc(b):
         return XBinary(b.data)
     elif type(b) == Boolean:
         return XBoolean(b)
-    elif type(b) == types.ListType:
+    elif type(b) == list:
         l = []
         for row in b:
             l.append(convertFrpc(row))
         #endfor
         return l
-    elif type(b) == types.DictType:
+    elif type(b) == dict:
         d = {}
-        for key, value in b.iteritems():
+        for key, value in b.items():
             d[convertFrpc(key)] = convertFrpc(value)
         #endfor
         return d
@@ -388,9 +388,9 @@ def convertFrpc(b):
 def writeOut(branch):
     __t = _type(branch)
     if __t:
-        print "result = %s %s" % (__t, _writeOut(branch))
+        print("result = %s %s" % (__t, _writeOut(branch)))
     else:
-        print "result = %s" % (_writeOut(branch))
+        print("result = %s" % (_writeOut(branch)))
     #endif
 #enddef
 
@@ -433,11 +433,11 @@ def FILE(path):
 
 
 def license():
-    print "FastRPC-Netcat  Copyright (C) 2007  Eduard Veleba"
-    print "This program comes with ABSOLUTELLY NO WARRANTY; for details see COPYING file."
-    print "This is free software, and you are welcome to redistribute it"
-    print "under certain conditions; see COPYING file for details."
-    print
+    print("FastRPC-Netcat  Copyright (C) 2007  Eduard Veleba")
+    print("This program comes with ABSOLUTELLY NO WARRANTY; for details see COPYING file.")
+    print("This is free software, and you are welcome to redistribute it")
+    print("under certain conditions; see COPYING file for details.")
+    print()
 #enddef
 
 
@@ -455,15 +455,15 @@ def main():
     license()
 
     if not sys.FASTRPC:
-        print "FastRPC not found, using XML-RPC instead."
-        print "Consider installing FastRPC for Python %s." % ".".join(sys.version.split(".")[:2])
-        print
+        print("FastRPC not found, using XML-RPC instead.")
+        print("Consider installing FastRPC for Python %s." % ".".join(sys.version.split(".")[:2]))
+        print()
     #endif
 
     if not sys.MYSQL:
-        print "Python-MySQLdb not found, disabling MySQL support."
-        print "Consider installing MySQL client library for Python %s." % ".".join(sys.version.split(".")[:2])
-        print
+        print("Python-MySQLdb not found, disabling MySQL support.")
+        print("Consider installing MySQL client library for Python %s." % ".".join(sys.version.split(".")[:2]))
+        print()
     #endif
 
     __exitVal = 0
@@ -474,9 +474,9 @@ def main():
         sys.CHARSET="ascii"
     #endif
     if len(argv) not in [1, 2, 3] or argv[1:] in [["-h"], ["--help"]]:
-        print "Usage: %s" % argv[0]
-        print "       %s http://{host}:{port}/{path}" % argv[0]
-        print "       %s {host} {port}" % argv[0]
+        print("Usage: %s" % argv[0])
+        print("       %s http://{host}:{port}/{path}" % argv[0])
+        print("       %s {host} {port}" % argv[0])
         exit(0)
     #endif
 
@@ -556,11 +556,11 @@ def main():
                         completion.append("client.%s" % __row)
                     #endif
                 #endfor
-            except ProtocolException, __e:
+            except ProtocolException as __e:
                 if (sys.FASTRPC and __e.status == 1) \
                     or (not sys.FASTRPC and __e[1][0] == 111):
 
-                    print "Connection refused while connecting to %s" % __server
+                    print("Connection refused while connecting to %s" % __server)
                     __haveClient = False
                 #endif
             except:
@@ -639,9 +639,9 @@ def main():
                 __command = __rcData.pop(0).replace("\n", "").replace("\r", "").strip(" ").decode(sys.CHARSET).encode("utf8")
             else:
                 if __isATty:
-                    __command = raw_input("fastrpc-netcat[%s] > " % sys.CONSOLENAME).replace("\n", "").replace("\r", "").strip(" ").decode(sys.CHARSET).encode("utf8")
+                    __command = input("fastrpc-netcat[%s] > " % sys.CONSOLENAME).replace("\n", "").replace("\r", "").strip(" ").decode(sys.CHARSET).encode("utf8")
                 else:
-                    __command = raw_input().replace("\n", "").replace("\r", "").strip(" ").decode(sys.CHARSET).encode("utf8")
+                    __command = input().replace("\n", "").replace("\r", "").strip(" ").decode(sys.CHARSET).encode("utf8")
                 #endif
             #endif
             __splitted = __command.split(" ")
@@ -764,7 +764,7 @@ def main():
                         completion.append("%s.rollback()" % __clientName)
                     #endif
 
-                    print "New database client is now known as %s" % __clientName
+                    print("New database client is now known as %s" % __clientName)
 
                 else:
 
@@ -813,18 +813,18 @@ def main():
                                     completion.append("%s.%s" % (__clientName, __row))
                                 #endif
                             #endfor
-                        except ProtocolException, __e:
+                        except ProtocolException as __e:
                             if (sys.FASTRPC and __e.status == 1) \
                                 or (not sys.FASTRPC and __e[1][0] == 111):
 
-                                print "Connection refused while connecting to %s" % __server
+                                print("Connection refused while connecting to %s" % __server)
                                 __clientOk = False
                             #endif
                         except:
                             pass
                         #endtry
                         if __clientOk:
-                            print "New client is now known as %s" % __clientName
+                            print("New client is now known as %s" % __clientName)
                         #endif
                     #endif
                 #endif
@@ -839,7 +839,7 @@ def main():
                 elif __splitted[1] in ["0", "off", "false"]:
                     sys.AUTOCOMMIT = False
                 elif not __isATty:
-                    print "Bad autocommit value on line %d" % __line
+                    print("Bad autocommit value on line %d" % __line)
                     exit(-1)
                 #endif
             elif __firstToken == "autosort" and len(__splitted) == 2:
@@ -848,7 +848,7 @@ def main():
                 elif __splitted[1] in ["0", "off", "false"]:
                     sys.AUTOSORT = False
                 elif not __isATty:
-                    print "Bad autosort value on line %d" % __line
+                    print("Bad autosort value on line %d" % __line)
                     exit(-1)
                 #endif
             elif __firstToken == "timeout" and len(__splitted) == 2:
@@ -856,7 +856,7 @@ def main():
                     __readTimeout = 1000*int(__splitted[1])
                 except:
                     if not __isATty:
-                        print "Bad timeout value on line %d" % __line
+                        print("Bad timeout value on line %d" % __line)
                         exit(-1)
                     #endif
                 #endtry
@@ -875,67 +875,67 @@ def main():
             elif __firstToken == "shell":
                 if len(__splitted) == 1:
                     __status = spawnv(P_WAIT, "/bin/bash", ["/bin/bash"])
-                    print "Subshell returned status %s" % __status
+                    print("Subshell returned status %s" % __status)
                 #endif
             elif __firstToken == "exec":
                 if len(__splitted) >= 2:
                     __status = spawnvp(P_WAIT, __splitted[1], __splitted[1:])
-                    print "Command returned status %s" % __status
+                    print("Command returned status %s" % __status)
                 #endif
             elif __firstToken in ["?", "??", "help"]:
                 if len(__splitted) == 1:
-                    print "fastrpc-netcat help"
-                    print "=================="
-                    print
-                    print "connect - connect to RPC server"
-                    print "    connect [NAME] {HOST} {PORT}"
-                    print "    connect [NAME] http://{HOST}:{PORT}/{URL}"
-                    print
-                    print "connectdb - connect to mysql database"
-                    print "    connectdb {NAME} {HOST} {DBNAME} {USER} [PASSWORD]"
-                    print
-                    print "timeout - set RPC timeout"
-                    print "    timeout {MILLISECONDS}"
-                    print
-                    print "charset - set input/output charset"
-                    print "    charset {CHARSET}"
-                    print
-                    print "autocommit - enable/disable autocommit (default on)"
-                    print "    autocommit {1|on|true|0|off|false}"
-                    print
-                    print "autosort - enable/disable autosort (default on)"
-                    print "    autosort {1|on|true|0|off|false}"
-                    print
-                    print "name - rename console (PID is default name)"
-                    print "    name test"
-                    print
-                    print "help - print help"
-                    print "    help [METHOD]"
-                    print "    {METHOD} -h"
-                    print
-                    print "exit - exit fastrpc-netcat"
-                    print "    exit [RESULT]"
-                    print "    quit [RESULT]"
-                    print
-                    print "shell - spawn subshell"
-                    print "    shell"
-                    print
-                    print "exec - run command"
-                    print "    exec {COMMAND} [ARG1] [ARG2] ..."
-                    print
-                    print "FILE() - readfile function - returns file contents as fastrpc binary"
-                    print "         when bare string needed, use FILE(...).data"
-                    print "    FILE(\"{FILENAME}\")"
-                    print
-                    print "! - python command execution"
-                    print "    lines beginning with exclamation mark are executed instead of evaluation"
-                    print
+                    print("fastrpc-netcat help")
+                    print("==================")
+                    print()
+                    print("connect - connect to RPC server")
+                    print("    connect [NAME] {HOST} {PORT}")
+                    print("    connect [NAME] http://{HOST}:{PORT}/{URL}")
+                    print()
+                    print("connectdb - connect to mysql database")
+                    print("    connectdb {NAME} {HOST} {DBNAME} {USER} [PASSWORD]")
+                    print()
+                    print("timeout - set RPC timeout")
+                    print("    timeout {MILLISECONDS}")
+                    print()
+                    print("charset - set input/output charset")
+                    print("    charset {CHARSET}")
+                    print()
+                    print("autocommit - enable/disable autocommit (default on)")
+                    print("    autocommit {1|on|true|0|off|false}")
+                    print()
+                    print("autosort - enable/disable autosort (default on)")
+                    print("    autosort {1|on|true|0|off|false}")
+                    print()
+                    print("name - rename console (PID is default name)")
+                    print("    name test")
+                    print()
+                    print("help - print help")
+                    print("    help [METHOD]")
+                    print("    {METHOD} -h")
+                    print()
+                    print("exit - exit fastrpc-netcat")
+                    print("    exit [RESULT]")
+                    print("    quit [RESULT]")
+                    print()
+                    print("shell - spawn subshell")
+                    print("    shell")
+                    print()
+                    print("exec - run command")
+                    print("    exec {COMMAND} [ARG1] [ARG2] ...")
+                    print()
+                    print("FILE() - readfile function - returns file contents as fastrpc binary")
+                    print("         when bare string needed, use FILE(...).data")
+                    print("    FILE(\"{FILENAME}\")")
+                    print()
+                    print("! - python command execution")
+                    print("    lines beginning with exclamation mark are executed instead of evaluation")
+                    print()
                 elif len(__splitted) == 2:
                     methodName = __splitted[1]
                     if __firstToken != "??":
                         __clientName = None
                         __a = methodName.split(".")
-                        for i in xrange(1,len(__a)):
+                        for i in range(1,len(__a)):
                             if str(type(eval(".".join(__a[:i]))))[:19] == "<ServerProxy object":
                                 __clientName = ".".join(__a[:i])
                                 break
@@ -944,9 +944,9 @@ def main():
                         if __clientName != None:
                             methodName = methodName[len(__clientName)+1:]
                             __result = eval("%s.system.methodHelp(methodName)" % __clientName)
-                            print
-                            print __result
-                            print
+                            print()
+                            print(__result)
+                            print()
                         #endif
                     else:
                         exec("help(%s)" % methodName)
@@ -967,42 +967,42 @@ def main():
                             __result = eval("%s" % __command)
                             __timeLen = time() - __t
                             if __result != None:
-                                print
+                                print()
                                 if __pyOut:
-                                    print str(convertFrpc(__result)).encode(sys.CHARSET)
+                                    print(str(convertFrpc(__result)).encode(sys.CHARSET))
                                 else:
                                     writeOut(__result)
                                 #endif
-                                print
+                                print()
                                 if __timeLen >= 1:
-                                    print "Method returned after %.3f seconds" % __timeLen
+                                    print("Method returned after %.3f seconds" % __timeLen)
                                 elif __timeLen >= 0.001:
-                                    print "Method returned after %.3f milliseconds" % (__timeLen*1000.0)
+                                    print("Method returned after %.3f milliseconds" % (__timeLen*1000.0))
                                 else:
-                                    print "Method returned after %.3f microseconds" % (__timeLen*1000000.0)
+                                    print("Method returned after %.3f microseconds" % (__timeLen*1000000.0))
                                 #endif
-                                print
+                                print()
                             #endif
                         #endif
                     #endif
-                except Fault, __f:
+                except Fault as __f:
                     if not __isATty:
-                        print "%s on line %d" % (__f, __line)
+                        print("%s on line %d" % (__f, __line))
                         exit(-1)
                     #endif
-                    print __f
-                except ProtocolError, __e:
+                    print(__f)
+                except ProtocolError as __e:
                     if not __isATty:
-                        print "%s on line %d" % (__e, __line)
+                        print("%s on line %d" % (__e, __line))
                         exit(-1)
                     #endif
-                    print __e
+                    print(__e)
                 #endtry
             #endif
             __interrupt = False
         except KeyboardInterrupt:
             if not __isATty:
-                print "Keyboard interrupt (current line %d)" % __line
+                print("Keyboard interrupt (current line %d)" % __line)
                 exit(-1)
             #endif
             if __interrupt:
@@ -1012,20 +1012,21 @@ def main():
                        "press Ctrl+C one more time.")
                 __interrupt = True
             #endif
-        except EOFError, __e:
+        except EOFError as __e:
             return 0
-        except Exception, __e:
+        except Exception as __e:
             if not __isATty:
-                print "%s on line %d" % (__e, __line)
+                print("%s on line %d" % (__e, __line))
                 exit(-1)
             #endif
-            print __e
+            print(__e)
         #endtry
     #endwhile
-    print
+    print()
     return __exitVal
 #enddef
 
 if __name__ == "__main__":
     exit(main())
 #endif
+
