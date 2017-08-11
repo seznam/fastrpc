@@ -11,7 +11,7 @@ It's very simple to port project from xmlrpclib to fastrpc.
 The binary fastrpc package needs to be installed first.
 See the [installation instructions](../README.md#installation).
 
-Python package can be installed using setuptools:
+[AUR package](https://aur.archlinux.org/packages/python-fastrpc-git/) is available for Arch Linux distribution. The package can be installed using setuptools for other platforms:
 
 ```bash
 git clone https://github.com/seznam/fastrpc.git
