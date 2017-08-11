@@ -779,7 +779,8 @@ def main():
                         __clientName = None
                         __a = methodName.split(".")
                         for i in range(1, len(__a)):
-                            if str(type(eval(".".join(__a[:i]))))[:19] == "<ServerProxy object":
+                            res_type = str(type(eval(".".join(__a[:i]))))[:19]
+                            if res_type == "<class 'ServerProxy":
                                 __clientName = ".".join(__a[:i])
                                 break
                         if __clientName is not None:
