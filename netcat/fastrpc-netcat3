@@ -35,14 +35,14 @@ except Exception:
     )
     from urllib.request import FancyURLopener
     import http.client
-    oldHTTP = http.client.HTTP
+    oldHTTP = http.client.HTTPConnection
 
 
     class MyHTTP(oldHTTP):
         def putheader(self, header, value):
             if header.lower() != "content-type" or value == "text/xml":
                 return oldHTTP.putheader(self, header, value)
-    http.client.HTTP = MyHTTP
+    http.client.HTTPConnection = MyHTTP
 
 
     class MyTransport(Transport):
