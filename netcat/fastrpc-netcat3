@@ -774,7 +774,7 @@ def main():
                         __a = methodName.split(".")
                         for i in range(1, len(__a)):
                             res_type = str(type(eval(".".join(__a[:i]))))[:19]
-                            if res_type == "<class 'ServerProxy":
+                            if res_type in ("<class 'ServerProxy", "<class 'xmlrpc.clie"):
                                 __clientName = ".".join(__a[:i])
                                 break
                         if __clientName is not None:
