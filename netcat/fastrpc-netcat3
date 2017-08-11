@@ -399,15 +399,9 @@ def main():
     __isATty = isatty(stdin.fileno())
     __readTimeout = 60000
 
-    try:
-        __proxyVia = environ["http_proxy"]
+    __proxyVia = environ.get('http_proxy', '')
+    if __proxyVia:
         environ["HTTP_PROXY"] = __proxyVia
-    except Exception:
-        __proxyVia = ""
-        try:
-            del environ["HTTP_PROXY"]
-        except Exception:
-            pass
 
     if len(argv) > 1:
 
@@ -642,10 +636,7 @@ def main():
 
                 else:
 
-                    try:
-                        __proxyVia = environ["http_proxy"]
-                    except Exception:
-                        __proxyVia = ""
+                    __proxyVia = environ.get('http_proxy', '')
 
                     if sys.FASTRPC:
                         if __proxyVia:
