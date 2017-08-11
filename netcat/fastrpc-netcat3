@@ -807,7 +807,7 @@ def main():
                         __pyOut = True
                     if __command:
                         if __command[0] == "!":
-                            exec(__command[1:])
+                            exec(__command[1:].strip())
                         else:
                             __t = time()
                             __result = eval("%s" % __command)
