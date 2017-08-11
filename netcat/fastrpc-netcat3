@@ -31,7 +31,7 @@ except Exception:
     sys.FASTRPC = False
     from xmlrpc.client import (
         Fault, ProtocolError, ServerProxy,
-        Binary, DateTime, Boolean, Transport
+        DateTime, Boolean, Transport
     )
     from urllib.request import FancyURLopener
     import http.client
@@ -196,8 +196,6 @@ def _type(branch):
         return "array"
     elif isinstance(branch, DateTime):
         return "datetime"
-    elif isinstance(branch, Binary):
-        return "binary"
     elif isinstance(branch, Boolean):
         return "boolean"
     elif isinstance(branch, int):
@@ -261,8 +259,6 @@ def _writeOut(branch, indent=""):
         return retval
     elif isinstance(branch, DateTime):
         return str("%02d.%02d.%04d %02d:%02d:%02d %s%04d (%s)" % (branch.day, branch.month, branch.year, branch.hour, branch.min, branch.sec, {True:"+",False:"-"}[branch.timeZone>=0], branch.timeZone*100, branch))
-    elif isinstance(branch, Binary):
-        return "\"%s\"" % branch.data
     elif isinstance(branch, Boolean):
         if branch:
             return "True"
@@ -290,14 +286,6 @@ class XDateTime:
 
     def __repr__(self):
         return "DateTime(\"%s\")" % repr(self.val)
-
-
-class XBinary:
-    def __init__(self, val):
-        self.val = val
-
-    def __repr__(self):
-        return "Binary(%s)" % repr(self.val)
 
 
 class XBoolean:
@@ -364,7 +352,7 @@ def FILE(path):
     else:
         data = f.read()
         f.close()
-        return Binary(data)
+        return data
 
 
 def license():
@@ -488,7 +476,6 @@ def main():
         completion.append("FILE")
         completion.append("exit")
         completion.append("help")
-        completion.append("Binary")
         completion.append("DateTime")
         completion.append("Boolean")
         completion.append("connect")
@@ -791,8 +778,7 @@ def main():
                     print("exec - run command")
                     print("    exec {COMMAND} [ARG1] [ARG2] ...")
                     print()
-                    print("FILE() - readfile function - returns file contents as fastrpc binary")
-                    print("         when bare string needed, use FILE(...).data")
+                    print("FILE() - readfile function - returns file contents")
                     print("    FILE(\"{FILENAME}\")")
                     print()
                     print("! - python command execution")
