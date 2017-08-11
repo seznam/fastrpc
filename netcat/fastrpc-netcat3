@@ -773,6 +773,9 @@ def main():
                     print("! - python command execution")
                     print("    lines beginning with exclamation mark are executed instead of evaluation")
                     print()
+                    print("?? - help on python modules")
+                    print("    Open python documentation of given object")
+                    print()
                 elif len(__splitted) == 2:
                     methodName = __splitted[1]
                     if __firstToken != "??":
