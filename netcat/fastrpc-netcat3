@@ -24,7 +24,7 @@ try:
     sys.FASTRPC = True
     from fastrpc import (
         Fault, ProtocolError, ServerProxy,
-        ON_SUPPORT_ON_KEEP_ALIVE, Binary, DateTime, Boolean
+        ON_SUPPORT_ON_KEEP_ALIVE, DateTime, Boolean
     )
     ProtocolException = ProtocolError
 except Exception:
@@ -314,8 +314,6 @@ class XBoolean:
 def convertFrpc(b):
     if isinstance(b, DateTime):
         return XDateTime(b)
-    elif isinstance(b, Binary):
-        return XBinary(b.data)
     elif isinstance(b, Boolean):
         return XBoolean(b)
     elif isinstance(b, list):
