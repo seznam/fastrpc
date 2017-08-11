@@ -17,29 +17,36 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from sys import stdin, stdout, argv, exit
+from sys import stdin, argv, exit
 import sys
 from os import getenv
 try:
     sys.FASTRPC = True
-    from fastrpc import Fault, ProtocolError, ServerProxy, \
-                        ON_SUPPORT_ON_KEEP_ALIVE, Binary, DateTime, Boolean
+    from fastrpc import (
+        Fault, ProtocolError, ServerProxy,
+        ON_SUPPORT_ON_KEEP_ALIVE, Binary, DateTime, Boolean
+    )
     ProtocolException = ProtocolError
 except Exception:
     sys.FASTRPC = False
-    from xmlrpc.client import Fault, ProtocolError, ServerProxy, \
-                        Binary, DateTime, Boolean, Transport
+    from xmlrpc.client import (
+        Fault, ProtocolError, ServerProxy,
+        Binary, DateTime, Boolean, Transport
+    )
     from urllib.request import FancyURLopener
     import http.client
     oldHTTP = http.client.HTTP
+
+
     class MyHTTP(oldHTTP):
         def putheader(self, header, value):
             if header.lower() != "content-type" or value == "text/xml":
                 return oldHTTP.putheader(self, header, value)
     http.client.HTTP = MyHTTP
 
+
     class MyTransport(Transport):
-        def request(self, host, handler, requestBody, verbose = 0):
+        def request(self, host, handler, requestBody, verbose=0):
             self.verbose = verbose
             urlopener = FancyURLopener()
             urlopener.addheaders = [('User-agent', self.user_agent),
@@ -49,6 +56,8 @@ except Exception:
 
     myTransport = MyTransport()
     ProtocolException = IOError
+
+
 from atexit import register as atexitRegister
 from os import path, environ, isatty, getpid, spawnv, P_WAIT, spawnvp
 import rlcompleter
@@ -67,8 +76,6 @@ try:
 except Exception:
     sys.DECIMAL = False
 from time import time
-
-
 
 
 class Object:
@@ -95,11 +102,11 @@ class DbConn:
         self.connect()
 
     def connect(self):
-        self.conn = MySQLdb.connect(host = self.host,
-                                    port = self.port,
-                                    db = self.db,
-                                    user = self.user,
-                                    passwd = self.passwd)
+        self.conn = MySQLdb.connect(host=self.host,
+                                    port=self.port,
+                                    db=self.db,
+                                    user=self.user,
+                                    passwd=self.passwd)
         self.cursor = self.conn.cursor(MySQLdb.cursors.DictCursor)
         self.cursor.execute("SET NAMES %s" % sys.CHARSET)
 
@@ -130,7 +137,7 @@ class DbConn:
         except Exception as e:
             return "Error: %s" % e
 
-    def execute(self, query, parms = tuple()):
+    def execute(self, query, parms=tuple()):
         if sys.AUTOCOMMIT:
             self.begin()
         try:
@@ -153,7 +160,6 @@ class DbConn:
         else:
             if sys.AUTOCOMMIT:
                 self.commit()
-
 
 
 class Completer:
@@ -209,7 +215,8 @@ def _type(branch):
     else:
         return "???"
 
-def _writeOut(branch, indent = ""):
+
+def _writeOut(branch, indent=""):
     if isinstance(branch, int):
         return "%s" % branch
     elif isinstance(branch, (bytes, str)):
@@ -292,6 +299,7 @@ class XBinary:
     def __repr__(self):
         return "Binary(%s)" % repr(self.val)
 
+
 class XBoolean:
     def __init__(self, val):
         self.val = val
@@ -301,6 +309,7 @@ class XBoolean:
             return "Boolean(1)"
         else:
             return "Boolean(0)"
+
 
 def convertFrpc(b):
     if isinstance(b, DateTime):
@@ -394,9 +403,9 @@ def main():
     __exitVal = 0
     __lang = getenv("LANG")
     if __lang.find("UTF-8") != -1:
-        sys.CHARSET="utf8"
+        sys.CHARSET = "utf8"
     else:
-        sys.CHARSET="ascii"
+        sys.CHARSET = "ascii"
     if len(argv) not in [1, 2, 3] or argv[1:] in [["-h"], ["--help"]]:
         print("Usage: %s" % argv[0])
         print("       %s http://{host}:{port}/{path}" % argv[0])
@@ -445,7 +454,7 @@ def main():
                                      writeTimeout=5000,
                                      connectTimeout=__readTimeout,
                                      useBinary=ON_SUPPORT_ON_KEEP_ALIVE,
-                                     proxyVia = __proxyVia)
+                                     proxyVia=__proxyVia)
             else:
                 client = ServerProxy(__server,
                                      readTimeout=__readTimeout,
@@ -453,7 +462,7 @@ def main():
                                      connectTimeout=__readTimeout,
                                      useBinary=ON_SUPPORT_ON_KEEP_ALIVE)
         else:
-            client = ServerProxy(__server, transport = myTransport, allow_none = True)
+            client = ServerProxy(__server, transport=myTransport, allow_none=True)
         __haveClient = True
     else:
         __haveClient = False
@@ -622,14 +631,14 @@ def main():
                     __server = "http://%s" % __server
 
                 if __connectDb:
-                    if __user == None:
+                    if __user is None:
                         raise Exception("You must specify database name, username and password")
 
-                    client = DbConn(host = __host,
-                                    port = 3306,
-                                    db = __port,
-                                    user = __user,
-                                    passwd = __passwd)
+                    client = DbConn(host=__host,
+                                    port=3306,
+                                    db=__port,
+                                    user=__user,
+                                    passwd=__passwd)
 
                     if __clientName == None:
                         __clientNo += 1
@@ -662,7 +671,7 @@ def main():
                                                  writeTimeout=5000,
                                                  connectTimeout=__readTimeout,
                                                  useBinary=ON_SUPPORT_ON_KEEP_ALIVE,
-                                                 proxyVia = __proxyVia)
+                                                 proxyVia=__proxyVia)
                         else:
                             client = ServerProxy(__server,
                                                  readTimeout=__readTimeout,
@@ -670,9 +679,9 @@ def main():
                                                  connectTimeout=__readTimeout,
                                                  useBinary=ON_SUPPORT_ON_KEEP_ALIVE)
                     else:
-                        client = ServerProxy(__server, transport = myTransport)
+                        client = ServerProxy(__server, transport=myTransport)
 
-                    if __clientName == None:
+                    if __clientName is None:
                         __clientNo += 1
                         __clientName = "client%s" % __clientNo
                     try:
@@ -796,11 +805,11 @@ def main():
                     if __firstToken != "??":
                         __clientName = None
                         __a = methodName.split(".")
-                        for i in range(1,len(__a)):
+                        for i in range(1, len(__a)):
                             if str(type(eval(".".join(__a[:i]))))[:19] == "<ServerProxy object":
                                 __clientName = ".".join(__a[:i])
                                 break
-                        if __clientName != None:
+                        if __clientName is not None:
                             methodName = methodName[len(__clientName)+1:]
                             __result = eval("%s.system.methodHelp(methodName)" % __clientName)
                             print()
@@ -853,7 +862,7 @@ def main():
             if __interrupt:
                 __run = False
             else:
-                print ("\nYou have pressed Ctrl+C. If you really want to exit, "
+                print("\nYou have pressed Ctrl+C. If you really want to exit, "
                        "press Ctrl+C one more time.")
                 __interrupt = True
         except EOFError as __e:
@@ -865,6 +874,7 @@ def main():
             print(__e)
     print()
     return __exitVal
+
 
 if __name__ == "__main__":
     exit(main())
