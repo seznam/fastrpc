@@ -178,48 +178,47 @@ class Completer:
 
 
 def _type(branch):
-    if type(branch) == int:
+    if isinstance(branch, int):
         return "int"
-    elif type(branch) in [bytes, str]:
+    elif isinstance(branch, (bytes, str)):
         return "string"
-    elif type(branch) == float:
+    elif isinstance(branch, float):
         return "float"
-    elif type(branch) == dict:
+    elif isinstance(branch, dict):
         return "struct"
-    elif type(branch) == list:
+    elif isinstance(branch, list):
         return "array"
-    elif type(branch) == DateTime:
+    elif isinstance(branch, DateTime):
         return "datetime"
-    elif type(branch) == Binary:
+    elif isinstance(branch, Binary):
         return "binary"
-    elif type(branch) == Boolean:
+    elif isinstance(branch, Boolean):
         return "boolean"
-    elif type(branch) == int:
+    elif isinstance(branch, int):
         return "long"
-    elif type(branch) == datetime.datetime:
+    elif isinstance(branch, datetime.datetime):
         return "datetime"
-    elif type(branch) == datetime.date:
+    elif isinstance(branch, datetime.date):
         return "date"
-    elif type(branch) == datetime.time:
+    elif isinstance(branch, datetime.time):
         return "time"
-    elif branch == None:
+    elif branch is None:
         return ""
-    elif sys.DECIMAL and type(branch) == decimal.Decimal:
+    elif sys.DECIMAL and isinstance(branch, decimal.Decimal):
         return "decimal"
     else:
         return "???"
 
 def _writeOut(branch, indent = ""):
-    if type(branch) == int:
+    if isinstance(branch, int):
         return "%s" % branch
-    elif type(branch) in [bytes, str]:
-        if type(branch) == str:
+    elif isinstance(branch, (bytes, str)):
+        if isinstance(branch, str):
             return ("\"%s\"" % branch).encode(sys.CHARSET, "replace")
-        else:
-            return ("\"%s\"" % branch).decode("utf8").encode(sys.CHARSET, "replace")
-    elif type(branch) == float:
+        return ("\"%s\"" % branch).decode("utf8").encode(sys.CHARSET, "replace")
+    elif isinstance(branch, float):
         return "%s" % branch
-    elif type(branch) == dict:
+    elif isinstance(branch, dict):
         retval = "{\n"
 
         if sys.AUTOSORT:
@@ -241,7 +240,7 @@ def _writeOut(branch, indent = ""):
                     retval += "%s    %s = %s\n" % (indent, k, _writeOut(v, "%s    " % indent))
         retval += ("%s}" % indent)
         return retval
-    elif type(branch) == list:
+    elif isinstance(branch, list):
         retval = "(\n"
         idx = 0
         for __row in branch:
@@ -253,26 +252,26 @@ def _writeOut(branch, indent = ""):
             idx += 1
         retval += ("%s)" % indent)
         return retval
-    elif type(branch) == DateTime:
+    elif isinstance(branch, DateTime):
         return str("%02d.%02d.%04d %02d:%02d:%02d %s%04d (%s)" % (branch.day, branch.month, branch.year, branch.hour, branch.min, branch.sec, {True:"+",False:"-"}[branch.timeZone>=0], branch.timeZone*100, branch))
-    elif type(branch) == Binary:
+    elif isinstance(branch, Binary):
         return "\"%s\"" % branch.data
-    elif type(branch) == Boolean:
+    elif isinstance(branch, Boolean):
         if branch:
             return "True"
         else:
             return "False"
-    elif type(branch) == int:
+    elif isinstance(branch, int):
         return "%s" % branch
-    elif type(branch) == datetime.datetime:
+    elif isinstance(branch, datetime.datetime):
         return "%s" % branch
-    elif type(branch) == datetime.date:
+    elif isinstance(branch, datetime.date):
         return "%s" % branch
-    elif type(branch) == datetime.time:
+    elif isinstance(branch, datetime.time):
         return "%s" % branch
     elif branch == None:
         return None
-    elif sys.DECIMAL and type(branch) == decimal.Decimal:
+    elif sys.DECIMAL and isinstance(branch, decimal.Decimal):
         return "%s" % branch
     else:
         return "UNKNOWN TYPE %s = %s" % (type(branch), branch)
@@ -304,18 +303,18 @@ class XBoolean:
             return "Boolean(0)"
 
 def convertFrpc(b):
-    if type(b) == DateTime:
+    if isinstance(b, DateTime):
         return XDateTime(b)
-    elif type(b) == Binary:
+    elif isinstance(b, Binary):
         return XBinary(b.data)
-    elif type(b) == Boolean:
+    elif isinstance(b, Boolean):
         return XBoolean(b)
-    elif type(b) == list:
+    elif isinstance(b, list):
         l = []
         for row in b:
             l.append(convertFrpc(row))
         return l
-    elif type(b) == dict:
+    elif isinstance(b, dict):
         d = {}
         for key, value in b.items():
             d[convertFrpc(key)] = convertFrpc(value)
