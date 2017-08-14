@@ -246,7 +246,8 @@ def _write_out(branch, indent=""):
             "%02d.%02d.%04d %02d:%02d:%02d %s%04d (%s)" % (
                 branch.day, branch.month, branch.year,
                 branch.hour, branch.min, branch.sec,
-                {True: "+", False: "-"}[branch.timeZone >= 0], branch.timeZone * 100, branch
+                "+" if branch.timeZone >= 0 else "-",
+                branch.timeZone * 100, branch
             )
         )
     elif isinstance(branch, Boolean):
