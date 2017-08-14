@@ -255,7 +255,7 @@ def _writeOut(branch, indent=""):
         return "%s" % branch
     elif isinstance(branch, datetime.time):
         return "%s" % branch
-    elif branch == None:
+    elif branch is None:
         return None
     elif sys.DECIMAL and isinstance(branch, decimal.Decimal):
         return "%s" % branch
@@ -602,7 +602,7 @@ def main():
                                     user=__user,
                                     passwd=__passwd)
 
-                    if __clientName == None:
+                    if __clientName is None:
                         __clientNo += 1
                         __clientName = "client%s" % __clientNo
                     try:
