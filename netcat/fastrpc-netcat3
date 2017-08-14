@@ -341,7 +341,7 @@ def _completion_append_module(completion, current):
     return _result
 
 
-def completion_append_module(completion, module_name, module):
+def completion_append_module(completion, module):
     return _completion_append_module(completion, module)
 
 
@@ -410,9 +410,7 @@ def main():
         environ["HTTP_PROXY"] = _proxy_via
 
     if len(argv) > 1:
-
         _do_rc = False
-
         _host = argv[1]
 
         if _host.find("/") != -1:
@@ -725,7 +723,7 @@ def main():
             elif _first_token == "import":
                 if len(_splitted) == 2:
                     exec("import %s" % _splitted[1])
-                    _result = completion_append_module(completion, _splitted[1], eval(_splitted[1]))
+                    _result = completion_append_module(completion, eval(_splitted[1]))
                     for _row in _result:
                         if _row:
                             completion.append("%s.%s" % (_splitted[1], _row))
