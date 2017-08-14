@@ -100,11 +100,11 @@ class DbConn:
             self.cursor.execute("BEGIN WORK")
         except KeyboardInterrupt:
             raise
-        except Exception as e:
-            if e[0] == 2003:
+        except Exception as ex:
+            if '2003' in str(ex):
                 self.connect()
-                return self.execute(query, parms)
-            return "Error: %s" % e
+                return self.execute("BEGIN WORK")
+            return "Error: %s" % ex
 
     def commit(self):
         try:
