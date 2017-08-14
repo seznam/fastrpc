@@ -392,12 +392,12 @@ def main():
         print()
 
     _exit_val = 0
-    _lang = getenv("LANG")
-    if _lang.find("UTF-8") != -1:
-        sys.CHARSET = "utf8"
+    _lang = getenv('LANG')
+    if _lang.find('UTF-8') != -1:
+        sys.CHARSET = 'utf8'
     else:
-        sys.CHARSET = "ascii"
-    if len(argv) not in [1, 2, 3] or argv[1:] in [["-h"], ["--help"]]:
+        sys.CHARSET = 'ascii'
+    if len(argv) not in [1, 2, 3] or argv[1:] in [['-h'], ['--help']]:
         print("Usage: %s" % argv[0])
         print("       %s http://{host}:{port}/{path}" % argv[0])
         print("       %s {host} {port}" % argv[0])
@@ -408,13 +408,13 @@ def main():
 
     _proxy_via = environ.get('http_proxy', '')
     if _proxy_via:
-        environ["HTTP_PROXY"] = _proxy_via
+        environ['HTTP_PROXY'] = _proxy_via
 
     if len(argv) > 1:
         _do_rc = False
         _host = argv[1]
 
-        if _host.find("/") != -1:
+        if _host.find('/') != -1:
             _server = _host
         else:
             if len(argv) == 3:
@@ -422,12 +422,12 @@ def main():
             else:
                 _port = 80
 
-            if _host == "0":
-                _host = "127.0.0.1"
+            if _host == '0':
+                _host = '127.0.0.1'
 
-            _server = "%s:%s/RPC2" % (_host, _port)
-        if _server.find("://") == -1:
-            _server = "http://%s" % _server
+            _server = '%s:%s/RPC2' % (_host, _port)
+        if _server.find('://') == -1:
+            _server = 'http://%s' % _server
 
         if sys.FASTRPC:
             if _proxy_via:
@@ -461,7 +461,7 @@ def main():
             try:
                 _result = client.system.listMethods()
                 for _row in _result:
-                    if _row.split(".")[0] != "system":
+                    if _row.split('.')[0] != 'system':
                         completion.append("client.%s" % _row)
             except ProtocolException as _e:
                 if (sys.FASTRPC and _e.status == 1) or (not sys.FASTRPC and _e[1][0] == 111):
@@ -487,8 +487,8 @@ def main():
         completion.append("?")
         _completer = Completer(completion)
         readline.set_completer(_completer.complete)
-        readline.parse_and_bind("tab: complete")
-        _hist_file = path.join(environ["HOME"], ".fastrpc-netcat_history")
+        readline.parse_and_bind('tab: complete')
+        _hist_file = path.join(environ['HOME'], '.fastrpc-netcat_history')
         try:
             readline.read_history_file(_hist_file)
         except Exception:
@@ -518,7 +518,7 @@ def main():
         pass
 
     if _do_rc:
-        _rc_file = path.expanduser("~/.fastrpc-netcatrc")
+        _rc_file = path.expanduser('~/.fastrpc-netcatrc')
         try:
             _rc_file = open(_rc_file)
             _rc_data = _rc_file.read().split("\n")
@@ -530,50 +530,50 @@ def main():
 
     while _run:
         try:
-            if len(_rc_data):
-                _command = _rc_data.pop(0).replace("\n", "").replace("\r", "").strip(" ")
+            if _rc_data:
+                _command = _rc_data.pop(0).replace('\n', '').replace('\r', '').strip(' ')
             else:
                 if _is_a_tty:
                     _command = input(
                         "fastrpc-netcat[%s] > " % sys.CONSOLENAME
-                    ).replace("\n", "").replace("\r", "").strip(" ")
+                    ).replace('\n', '').replace('\r', '').strip(' ')
                 else:
-                    _command = input().replace("\n", "").replace("\r", "").strip(" ")
-            _splitted = _command.split(" ")
+                    _command = input().replace('\n', '').replace('\r', '').strip(' ')
+            _splitted = _command.split(' ')
 
             _line += 1
             _interrupt = False
 
-            if len(_splitted) > 1 and _splitted[-1] in ["-h", "--help"]:
+            if len(_splitted) > 1 and _splitted[-1] in ['-h', '--help']:
                 c = _splitted[0]
-                bracket_pos = c.find("(")
+                bracket_pos = c.find('(')
                 if bracket_pos != -1:
                     c = c[:bracket_pos]
-                _command = "? %s" % c
-                _splitted = ["?", c]
+                _command = '? %s' % c
+                _splitted = ['?', c]
             if _splitted:
                 _first_token = _splitted[0]
             else:
-                _first_token = ""
+                _first_token = ''
 
-            if _first_token == "connectdb":
+            if _first_token == 'connectdb':
                 if not sys.MYSQL:
                     raise Exception("You don't have pymysql library!")
-                _first_token = "connect"
+                _first_token = 'connect'
                 _connect_db = True
             else:
                 _connect_db = False
 
-            if _first_token and _first_token[0] == "#":
+            if _first_token and _first_token[0] == '#':
                 # comment
                 pass
-            elif _command in ["exit", "quit"]:
+            elif _command in ['exit', 'quit']:
                 if len(_splitted) == 2:
                     _exit_val = int(_splitted[1])
                 _run = False
-            elif _first_token == "license":
+            elif _first_token == 'license':
                 license()
-            elif _first_token == "connect":
+            elif _first_token == 'connect':
                 if len(_splitted) < 2:
                     raise Exception("Missing arguments")
                 try:
@@ -591,7 +591,7 @@ def main():
                 _host = _splitted[1]
 
                 _user = None
-                if _host.find("/") != -1:
+                if _host.find('/') != -1:
                     _server = _host
                 else:
                     if len(_splitted) in [4, 5] and _connect_db:
@@ -600,7 +600,7 @@ def main():
                         if len(_splitted) == 5:
                             _passwd = _splitted[4]
                         else:
-                            _passwd = ""
+                            _passwd = ''
                     elif len(_splitted) == 3:
                         _port = _splitted[2]
                     else:
@@ -608,12 +608,12 @@ def main():
                             raise Exception("You must specify database name")
                         _port = 80
 
-                    if _host == "0":
-                        _host = "127.0.0.1"
+                    if _host == '0':
+                        _host = '127.0.0.1'
 
-                    _server = "%s:%s/RPC2" % (_host, _port)
-                if _server.find("://") == -1:
-                    _server = "http://%s" % _server
+                    _server = '%s:%s/RPC2' % (_host, _port)
+                if _server.find('://') == -1:
+                    _server = 'http://%s' % _server
 
                 if _connect_db:
                     if _user is None:
@@ -629,18 +629,18 @@ def main():
 
                     if _client_name is None:
                         _client_no += 1
-                        _client_name = "client%s" % _client_no
+                        _client_name = 'client%s' % _client_no
                     try:
-                        exec("global %s" % _client_name)
+                        exec('global %s' % _client_name)
                     except Exception:
                         pass
-                    exec("%s = client" % _client_name)
+                    exec('%s = client' % _client_name)
 
                     if _is_a_tty:
-                        completion.append("%s.execute" % _client_name)
-                        completion.append("%s.begin()" % _client_name)
-                        completion.append("%s.commit()" % _client_name)
-                        completion.append("%s.rollback()" % _client_name)
+                        completion.append('%s.execute' % _client_name)
+                        completion.append('%s.begin()' % _client_name)
+                        completion.append('%s.commit()' % _client_name)
+                        completion.append('%s.rollback()' % _client_name)
 
                     print("New database client is now known as %s" % _client_name)
 
@@ -671,20 +671,20 @@ def main():
 
                     if _client_name is None:
                         _client_no += 1
-                        _client_name = "client%s" % _client_no
+                        _client_name = 'client%s' % _client_no
                     try:
-                        exec("global %s" % _client_name)
+                        exec('global %s' % _client_name)
                     except Exception:
                         pass
-                    exec("%s = client" % _client_name)
+                    exec('%s = client' % _client_name)
 
                     if _is_a_tty:
                         _client_ok = True
                         try:
                             _result = client.system.listMethods()
                             for _row in _result:
-                                if _row.split(".")[0] != "system":
-                                    completion.append("%s.%s" % (_client_name, _row))
+                                if _row.split('.')[0] != 'system':
+                                    completion.append('%s.%s' % (_client_name, _row))
                         except ProtocolException as _e:
                             if (sys.FASTRPC and _e.status == 1) or (not sys.FASTRPC and _e[1][0] == 111):
                                 print("Connection refused while connecting to %s" % _server)
@@ -694,51 +694,51 @@ def main():
                         if _client_ok:
                             print("New client is now known as %s" % _client_name)
 
-            elif _first_token == "charset" and len(_splitted) == 2:
+            elif _first_token == 'charset' and len(_splitted) == 2:
                 sys.CHARSET = _splitted[1]
-            elif _first_token == "name" and len(_splitted) == 2:
+            elif _first_token == 'name' and len(_splitted) == 2:
                 sys.CONSOLENAME = _splitted[1]
-            elif _first_token == "autocommit" and len(_splitted) == 2:
-                if _splitted[1] in ["1", "on", "true"]:
+            elif _first_token == 'autocommit' and len(_splitted) == 2:
+                if _splitted[1] in ['1', 'on', 'true']:
                     sys.AUTOCOMMIT = True
-                elif _splitted[1] in ["0", "off", "false"]:
+                elif _splitted[1] in ['0', 'off', 'false']:
                     sys.AUTOCOMMIT = False
                 elif not _is_a_tty:
                     print("Bad autocommit value on line %d" % _line)
                     exit(-1)
-            elif _first_token == "autosort" and len(_splitted) == 2:
-                if _splitted[1] in ["1", "on", "true"]:
+            elif _first_token == 'autosort' and len(_splitted) == 2:
+                if _splitted[1] in ['1', 'on', 'true']:
                     sys.AUTOSORT = True
-                elif _splitted[1] in ["0", "off", "false"]:
+                elif _splitted[1] in ['0', 'off', 'false']:
                     sys.AUTOSORT = False
                 elif not _is_a_tty:
                     print("Bad autosort value on line %d" % _line)
                     exit(-1)
-            elif _first_token == "timeout" and len(_splitted) == 2:
+            elif _first_token == 'timeout' and len(_splitted) == 2:
                 try:
                     _read_timeout = 1000*int(_splitted[1])
                 except Exception:
                     if not _is_a_tty:
                         print("Bad timeout value on line %d" % _line)
                         exit(-1)
-            elif _first_token == "import":
+            elif _first_token == 'import':
                 if len(_splitted) == 2:
-                    exec("import %s" % _splitted[1])
+                    exec('import %s' % _splitted[1])
                     _result = completion_append_module(completion, eval(_splitted[1]))
                     for _row in _result:
                         if _row:
-                            completion.append("%s.%s" % (_splitted[1], _row))
+                            completion.append('%s.%s' % (_splitted[1], _row))
                         else:
                             completion.append(_splitted[1])
-            elif _first_token == "shell":
+            elif _first_token == 'shell':
                 if len(_splitted) == 1:
-                    _status = spawnv(P_WAIT, "/bin/bash", ["/bin/bash"])
+                    _status = spawnv(P_WAIT, '/bin/bash', ['/bin/bash'])
                     print("Subshell returned status %s" % _status)
-            elif _first_token == "exec":
+            elif _first_token == 'exec':
                 if len(_splitted) >= 2:
                     _status = spawnvp(P_WAIT, _splitted[1], _splitted[1:])
                     print("Command returned status %s" % _status)
-            elif _first_token in ["?", "??", "help"]:
+            elif _first_token in ['?', '??', 'help']:
                 if len(_splitted) == 1:
                     print("fastrpc-netcat help")
                     print("==================")
@@ -790,22 +790,22 @@ def main():
                     print()
                 elif len(_splitted) == 2:
                     method_name = _splitted[1]
-                    if _first_token != "??":
+                    if _first_token != '??':
                         _client_name = None
-                        _a = method_name.split(".")
+                        _a = method_name.split('.')
                         for i in range(1, len(_a)):
-                            res_type = str(type(eval(".".join(_a[:i]))))[:19]
-                            if res_type in ("<class 'ServerProxy", "<class 'xmlrpc.clie"):
-                                _client_name = ".".join(_a[:i])
+                            res_type = str(type(eval('.'.join(_a[:i]))))[:19]
+                            if res_type in ('<class \'ServerProxy', '<class \'xmlrpc.clie'):
+                                _client_name = '.'.join(_a[:i])
                                 break
                         if _client_name is not None:
                             method_name = method_name[len(_client_name)+1:]
-                            _result = eval("%s.system.methodHelp(method_name)" % _client_name)
+                            _result = eval('%s.system.methodHelp(method_name)' % _client_name)
                             print()
                             print(_result)
                             print()
                     else:
-                        exec("help(%s)" % method_name)
+                        exec('help(%s)' % method_name)
             elif _command:
                 try:
                     _py_out = False
@@ -813,11 +813,11 @@ def main():
                         _command = _command[:-1]
                         _py_out = True
                     if _command:
-                        if _command[0] == "!":
+                        if _command[0] == '!':
                             exec(_command[1:].strip())
                         else:
                             _t = time()
-                            _result = eval("%s" % _command)
+                            _result = eval('%s' % _command)
                             _time_len = time() - _t
                             if _result is not None:
                                 print()
@@ -865,5 +865,5 @@ def main():
     return _exit_val
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     exit(main())
