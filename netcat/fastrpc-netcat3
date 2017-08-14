@@ -17,9 +17,15 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from sys import stdin, argv, exit
+from sys import stdin, argv, exit, version_info
 import sys
 from os import getenv
+
+PY3 = sys.version_info[0] == 3
+if not PY3:
+    print("fastrpc-netcat3 is intended for Python 3 only. Please use fastrpc-netcat instead.")
+    exit(1)
+
 try:
     sys.FASTRPC = True
     from fastrpc import (
