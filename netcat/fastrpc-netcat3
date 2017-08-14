@@ -150,6 +150,7 @@ class DbConn:
 class Completer:
     def __init__(self, methods):
         self.methods = methods
+        self.matches = []
 
     def complete(self, text, state):
         if state == 0:
@@ -199,7 +200,7 @@ def _type(branch):
         return "???"
 
 
-def _writeOut(branch, indent=""):
+def _write_out(branch, indent=""):
     if isinstance(branch, int):
         return "%s" % branch
     elif isinstance(branch, (bytes, str)):
@@ -216,43 +217,38 @@ def _writeOut(branch, indent=""):
                 v = branch[k]
                 t = _type(v)
                 if t:
-                    retval += "%s    %s %s = %s\n" % (indent, t, k, _writeOut(v, "%s    " % indent))
+                    retval += "%s    %s %s = %s\n" % (
+                        indent, t, k, _write_out(v, "%s    " % indent)
+                    )
                 else:
-                    retval += "%s    %s = %s\n" % (indent, k, _writeOut(v, "%s    " % indent))
+                    retval += "%s    %s = %s\n" % (
+                        indent, k, _write_out(v, "%s    " % indent)
+                    )
         else:
             for k, v in branch.items():
                 t = _type(v)
                 if t:
-                    retval += "%s    %s %s = %s\n" % (indent, t, k, _writeOut(v, "%s    " % indent))
+                    retval += "%s    %s %s = %s\n" % (
+                        indent, t, k, _write_out(v, "%s    " % indent)
+                    )
                 else:
-                    retval += "%s    %s = %s\n" % (indent, k, _writeOut(v, "%s    " % indent))
+                    retval += "%s    %s = %s\n" % (
+                        indent, k, _write_out(v, "%s    " % indent)
+                    )
         retval += ("%s}" % indent)
         return retval
     elif isinstance(branch, list):
-        retval = "(\n"
-        idx = 0
-        for __row in branch:
-            t = _type(__row)
-            if t:
-                retval += "%s    [%s] %s = %s\n" % (indent, idx, t, _writeOut(__row, "%s    " % indent))
-            else:
-                retval += "%s    [%s] = %s\n" % (indent, idx, _writeOut(__row, "%s    " % indent))
-            idx += 1
-        retval += ("%s)" % indent)
-        return retval
+        return write_out_list(branch, indent)
     elif isinstance(branch, DateTime):
         return str(
             "%02d.%02d.%04d %02d:%02d:%02d %s%04d (%s)" % (
                 branch.day, branch.month, branch.year,
                 branch.hour, branch.min, branch.sec,
-                {True:"+",False:"-"}[branch.timeZone>=0], branch.timeZone*100, branch
+                {True: "+", False: "-"}[branch.timeZone >= 0], branch.timeZone * 100, branch
             )
         )
     elif isinstance(branch, Boolean):
-        if branch:
-            return "True"
-        else:
-            return "False"
+        return "True" if branch else "False"
     elif isinstance(branch, int):
         return "%s" % branch
     elif isinstance(branch, datetime.datetime):
@@ -267,6 +263,24 @@ def _writeOut(branch, indent=""):
         return "%s" % branch
     else:
         return "UNKNOWN TYPE %s = %s" % (type(branch), branch)
+
+
+def write_out_list(branch, indent=""):
+    retval = "(\n"
+    idx = 0
+    for __row in branch:
+        t = _type(__row)
+        if t:
+            retval += "%s    [%s] %s = %s\n" % (
+                indent, idx, t, _write_out(__row, "%s    " % indent)
+            )
+        else:
+            retval += "%s    [%s] = %s\n" % (
+                indent, idx, _write_out(__row, "%s    " % indent)
+            )
+        idx += 1
+    retval += ("%s)" % indent)
+    return retval
 
 
 class XDateTime:
@@ -310,9 +324,9 @@ def convertFrpc(b):
 def writeOut(branch):
     __t = _type(branch)
     if __t:
-        print("result = %s %s" % (__t, _writeOut(branch)))
+        print("result = %s %s" % (__t, _write_out(branch)))
     else:
-        print("result = %s" % (_writeOut(branch)))
+        print("result = %s" % (_write_out(branch)))
 
 
 def _completionAppendModule(completion, current):
