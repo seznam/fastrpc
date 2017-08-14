@@ -42,7 +42,7 @@ except Exception:
             urlopener = FancyURLopener()
             urlopener.addheaders = [('User-agent', self.user_agent),
                                     ('Content-type', 'text/xml')]
-            f = urlopener.open('http://%s%s' % (host, handler), requestBody)
+            f = urlopener.open('http://{}{}'.format(host, handler), requestBody)
             return self.parse_response(f)
 
     my_transport = MyTransport()
@@ -95,7 +95,7 @@ class DbConn:
             passwd=self.passwd
         )
         self.cursor = self.conn.cursor(pymysql.cursors.DictCursor)
-        self.cursor.execute("SET NAMES %s" % sys.CHARSET)
+        self.cursor.execute("SET NAMES {}".format(sys.CHARSET))
 
     def begin(self):
         try:
@@ -106,7 +106,7 @@ class DbConn:
             if '2003' in str(ex):
                 self.connect()
                 return self.execute("BEGIN WORK")
-            return "Error: %s" % ex
+            return "Error: {}".format(ex)
 
     def commit(self):
         try:
@@ -114,7 +114,7 @@ class DbConn:
         except KeyboardInterrupt:
             raise
         except Exception as e:
-            return "Error: %s" % e
+            return "Error: {}".format(e)
 
     def rollback(self):
         try:
@@ -122,7 +122,7 @@ class DbConn:
         except KeyboardInterrupt:
             raise
         except Exception as e:
-            return "Error: %s" % e
+            return "Error: {}".format(e)
 
     def execute(self, query, parms=tuple()):
         if sys.AUTOCOMMIT:
@@ -143,7 +143,7 @@ class DbConn:
         except KeyboardInterrupt:
             raise
         except Exception as e:
-            return "Error: %s" % e
+            return "Error: {}".format(e)
         else:
             if sys.AUTOCOMMIT:
                 self.commit()
@@ -204,11 +204,11 @@ def _type(branch):
 
 def _write_out(branch, indent=""):
     if isinstance(branch, int):
-        return "%s" % branch
+        return "{}".format(branch)
     elif isinstance(branch, (bytes, str)):
-        return ("\"%s\"" % branch)
+        return "\"{}\"".format(branch)
     elif isinstance(branch, float):
-        return "%s" % branch
+        return "{}".format(branch)
     elif isinstance(branch, dict):
         retval = "{\n"
 
@@ -219,53 +219,53 @@ def _write_out(branch, indent=""):
                 v = branch[k]
                 t = _type(v)
                 if t:
-                    retval += "%s    %s %s = %s\n" % (
-                        indent, t, k, _write_out(v, "%s    " % indent)
+                    retval += "{}    {} {} = {}\n".format(
+                        indent, t, k, _write_out(v, "{}    ".format(indent))
                     )
                 else:
-                    retval += "%s    %s = %s\n" % (
-                        indent, k, _write_out(v, "%s    " % indent)
+                    retval += "{}    {} = {}\n".format(
+                        indent, k, _write_out(v, "{}    ".format(indent))
                     )
         else:
             for k, v in branch.items():
                 t = _type(v)
                 if t:
-                    retval += "%s    %s %s = %s\n" % (
-                        indent, t, k, _write_out(v, "%s    " % indent)
+                    retval += "{}    {} {} = {}\n".format(
+                        indent, t, k, _write_out(v, "{}    ".format(indent))
                     )
                 else:
-                    retval += "%s    %s = %s\n" % (
-                        indent, k, _write_out(v, "%s    " % indent)
+                    retval += "{}    {} = {}\n".format(
+                        indent, k, _write_out(v, "{}    ".format(indent))
                     )
-        retval += ("%s}" % indent)
+        retval += "{}}}".format(indent)
         return retval
     elif isinstance(branch, list):
         return write_out_list(branch, indent)
     elif isinstance(branch, DateTime):
         return str(
-            "%02d.%02d.%04d %02d:%02d:%02d %s%04d (%s)" % (
-                branch.day, branch.month, branch.year,
-                branch.hour, branch.min, branch.sec,
-                "+" if branch.timeZone >= 0 else "-",
-                branch.timeZone * 100, branch
+            "{day}.{month}.{year} {hour}:{min}:{sec} {sign}{timezone} ({branch})".format(
+                day=branch.day, month=branch.month, year=branch.year,
+                hour=branch.hour, min=branch.min, sec=branch.sec,
+                sign="+" if branch.timeZone >= 0 else "-",
+                timezone=branch.timeZone * 100, branch=branch
             )
         )
     elif isinstance(branch, Boolean):
         return "True" if branch else "False"
     elif isinstance(branch, int):
-        return "%s" % branch
+        return "{}".format(branch)
     elif isinstance(branch, datetime.datetime):
-        return "%s" % branch
+        return "{}".format(branch)
     elif isinstance(branch, datetime.date):
-        return "%s" % branch
+        return "{}".format(branch)
     elif isinstance(branch, datetime.time):
-        return "%s" % branch
+        return "{}".format(branch)
     elif branch is None:
         return None
     elif sys.DECIMAL and isinstance(branch, decimal.Decimal):
-        return "%s" % branch
+        return "{}".format(branch)
     else:
-        return "UNKNOWN TYPE %s = %s" % (type(branch), branch)
+        return "UNKNOWN TYPE {} = {}".format(type(branch), branch)
 
 
 def write_out_list(branch, indent=""):
@@ -274,15 +274,15 @@ def write_out_list(branch, indent=""):
     for _row in branch:
         t = _type(_row)
         if t:
-            retval += "%s    [%s] %s = %s\n" % (
-                indent, idx, t, _write_out(_row, "%s    " % indent)
+            retval += "{}    [{}] {} = {}\n".format(
+                indent, idx, t, _write_out(_row, "{}    ".format(indent))
             )
         else:
-            retval += "%s    [%s] = %s\n" % (
-                indent, idx, _write_out(_row, "%s    " % indent)
+            retval += "{}    [{}] = {}\n".format(
+                indent, idx, _write_out(_row, "{}    ".format(indent))
             )
         idx += 1
-    retval += ("%s)" % indent)
+    retval += "{})".format(indent)
     return retval
 
 
@@ -291,7 +291,7 @@ class XDateTime:
         self.val = val
 
     def __repr__(self):
-        return "DateTime(\"%s\")" % repr(self.val)
+        return "DateTime(\"{}\")".format(repr(self.val))
 
 
 class XBoolean:
@@ -323,19 +323,19 @@ def convert_frpc(b):
 def write_out(branch):
     _t = _type(branch)
     if _t:
-        print("result = %s %s" % (_t, _write_out(branch)))
+        print("result = {} {}".format(_t, _write_out(branch)))
     else:
-        print("result = %s" % (_write_out(branch)))
+        print("result = {}".format(_write_out(branch)))
 
 
 def _completion_append_module(completion, current):
     _result = []
     for _row in dir(current):
         if _row[0] != "_":
-            _result2 = _completion_append_module(completion, eval("current.%s" % _row))
+            _result2 = _completion_append_module(completion, eval("current.{}".format(_row)))
             for _row2 in _result2:
                 if _row2:
-                    _result.append("%s.%s" % (_row, _row2))
+                    _result.append("{}.{}".format(_row, _row2))
                 else:
                     _result.append(_row)
     _result.append("")
@@ -383,12 +383,12 @@ def main():
 
     if not sys.FASTRPC:
         print("FastRPC not found, using XML-RPC instead.")
-        print("Consider installing FastRPC for Python %s." % ".".join(sys.version.split(".")[:2]))
+        print("Consider installing FastRPC for Python {}.".format(".".join(sys.version.split(".")[:2])))
         print()
 
     if not sys.MYSQL:
         print("Pymysql not found, disabling MySQL support.")
-        print("Consider installing MySQL client library for Python %s." % ".".join(sys.version.split(".")[:2]))
+        print("Consider installing MySQL client library for Python {}.".format(".".join(sys.version.split(".")[:2])))
         print()
 
     _exit_val = 0
@@ -398,9 +398,9 @@ def main():
     else:
         sys.CHARSET = 'ascii'
     if len(argv) not in [1, 2, 3] or argv[1:] in [['-h'], ['--help']]:
-        print("Usage: %s" % argv[0])
-        print("       %s http://{host}:{port}/{path}" % argv[0])
-        print("       %s {host} {port}" % argv[0])
+        print("Usage: {}".format(argv[0]))
+        print("       {} http://{{host}}:{{port}}/{{path}}".format(argv[0]))
+        print("       {} {{host}} {{port}}".format(argv[0]))
         exit(0)
 
     _is_a_tty = isatty(stdin.fileno())
@@ -425,9 +425,9 @@ def main():
             if _host == '0':
                 _host = '127.0.0.1'
 
-            _server = '%s:%s/RPC2' % (_host, _port)
+            _server = '{}:{}/RPC2'.format(_host, _port)
         if _server.find('://') == -1:
-            _server = 'http://%s' % _server
+            _server = 'http://{}'.format(_server)
 
         if sys.FASTRPC:
             if _proxy_via:
@@ -462,10 +462,10 @@ def main():
                 _result = client.system.listMethods()
                 for _row in _result:
                     if _row.split('.')[0] != 'system':
-                        completion.append("client.%s" % _row)
+                        completion.append('client.{}'.format(_row))
             except ProtocolException as _e:
                 if (sys.FASTRPC and _e.status == 1) or (not sys.FASTRPC and _e[1][0] == 111):
-                    print("Connection refused while connecting to %s" % _server)
+                    print("Connection refused while connecting to {}".format(_server))
                     _have_client = False
             except Exception:
                 pass
@@ -535,7 +535,7 @@ def main():
             else:
                 if _is_a_tty:
                     _command = input(
-                        "fastrpc-netcat[%s] > " % sys.CONSOLENAME
+                        "fastrpc-netcat[{}] > ".format(sys.CONSOLENAME)
                     ).replace('\n', '').replace('\r', '').strip(' ')
                 else:
                     _command = input().replace('\n', '').replace('\r', '').strip(' ')
@@ -549,7 +549,7 @@ def main():
                 bracket_pos = c.find('(')
                 if bracket_pos != -1:
                     c = c[:bracket_pos]
-                _command = '? %s' % c
+                _command = '? {}'.format(c)
                 _splitted = ['?', c]
             if _splitted:
                 _first_token = _splitted[0]
@@ -611,9 +611,9 @@ def main():
                     if _host == '0':
                         _host = '127.0.0.1'
 
-                    _server = '%s:%s/RPC2' % (_host, _port)
+                    _server = '{}:{}/RPC2'.format(_host, _port)
                 if _server.find('://') == -1:
-                    _server = 'http://%s' % _server
+                    _server = 'http://{}'.format(_server)
 
                 if _connect_db:
                     if _user is None:
@@ -629,20 +629,20 @@ def main():
 
                     if _client_name is None:
                         _client_no += 1
-                        _client_name = 'client%s' % _client_no
+                        _client_name = 'client{}'.format(_client_no)
                     try:
-                        exec('global %s' % _client_name)
+                        exec('global {}'.format(_client_name))
                     except Exception:
                         pass
-                    exec('%s = client' % _client_name)
+                    exec('{} = client'.format(_client_name))
 
                     if _is_a_tty:
-                        completion.append('%s.execute' % _client_name)
-                        completion.append('%s.begin()' % _client_name)
-                        completion.append('%s.commit()' % _client_name)
-                        completion.append('%s.rollback()' % _client_name)
+                        completion.append('{}.execute'.format(_client_name))
+                        completion.append('{}.begin()'.format(_client_name))
+                        completion.append('{}.commit()'.format(_client_name))
+                        completion.append('{}.rollback()'.format(_client_name))
 
-                    print("New database client is now known as %s" % _client_name)
+                    print("New database client is now known as {}".format(_client_name))
 
                 else:
 
@@ -671,12 +671,12 @@ def main():
 
                     if _client_name is None:
                         _client_no += 1
-                        _client_name = 'client%s' % _client_no
+                        _client_name = 'client{}'.format(_client_no)
                     try:
-                        exec('global %s' % _client_name)
+                        exec('global {}'.format(_client_name))
                     except Exception:
                         pass
-                    exec('%s = client' % _client_name)
+                    exec('{} = client'.format(_client_name))
 
                     if _is_a_tty:
                         _client_ok = True
@@ -684,15 +684,15 @@ def main():
                             _result = client.system.listMethods()
                             for _row in _result:
                                 if _row.split('.')[0] != 'system':
-                                    completion.append('%s.%s' % (_client_name, _row))
+                                    completion.append('{}.{}'.format(_client_name, _row))
                         except ProtocolException as _e:
                             if (sys.FASTRPC and _e.status == 1) or (not sys.FASTRPC and _e[1][0] == 111):
-                                print("Connection refused while connecting to %s" % _server)
+                                print("Connection refused while connecting to {}".format(_server))
                                 _client_ok = False
                         except Exception:
                             pass
                         if _client_ok:
-                            print("New client is now known as %s" % _client_name)
+                            print("New client is now known as {}".format(_client_name))
 
             elif _first_token == 'charset' and len(_splitted) == 2:
                 sys.CHARSET = _splitted[1]
@@ -704,7 +704,7 @@ def main():
                 elif _splitted[1] in ['0', 'off', 'false']:
                     sys.AUTOCOMMIT = False
                 elif not _is_a_tty:
-                    print("Bad autocommit value on line %d" % _line)
+                    print("Bad autocommit value on line {}".format(_line))
                     exit(-1)
             elif _first_token == 'autosort' and len(_splitted) == 2:
                 if _splitted[1] in ['1', 'on', 'true']:
@@ -712,32 +712,32 @@ def main():
                 elif _splitted[1] in ['0', 'off', 'false']:
                     sys.AUTOSORT = False
                 elif not _is_a_tty:
-                    print("Bad autosort value on line %d" % _line)
+                    print("Bad autosort value on line {}".format(_line))
                     exit(-1)
             elif _first_token == 'timeout' and len(_splitted) == 2:
                 try:
                     _read_timeout = 1000*int(_splitted[1])
                 except Exception:
                     if not _is_a_tty:
-                        print("Bad timeout value on line %d" % _line)
+                        print("Bad timeout value on line {}".format(_line))
                         exit(-1)
             elif _first_token == 'import':
                 if len(_splitted) == 2:
-                    exec('import %s' % _splitted[1])
+                    exec('import {}'.format(_splitted[1]))
                     _result = completion_append_module(completion, eval(_splitted[1]))
                     for _row in _result:
                         if _row:
-                            completion.append('%s.%s' % (_splitted[1], _row))
+                            completion.append('{}.{}'.format(_splitted[1], _row))
                         else:
                             completion.append(_splitted[1])
             elif _first_token == 'shell':
                 if len(_splitted) == 1:
                     _status = spawnv(P_WAIT, '/bin/bash', ['/bin/bash'])
-                    print("Subshell returned status %s" % _status)
+                    print("Subshell returned status {}".format(_status))
             elif _first_token == 'exec':
                 if len(_splitted) >= 2:
                     _status = spawnvp(P_WAIT, _splitted[1], _splitted[1:])
-                    print("Command returned status %s" % _status)
+                    print("Command returned status {}".format(_status))
             elif _first_token in ['?', '??', 'help']:
                 if len(_splitted) == 1:
                     print("fastrpc-netcat help")
@@ -800,12 +800,12 @@ def main():
                                 break
                         if _client_name is not None:
                             method_name = method_name[len(_client_name)+1:]
-                            _result = eval('%s.system.methodHelp(method_name)' % _client_name)
+                            _result = eval('{}.system.methodHelp(method_name)'.format(_client_name))
                             print()
                             print(_result)
                             print()
                     else:
-                        exec('help(%s)' % method_name)
+                        exec('help({})'.format(method_name))
             elif _command:
                 try:
                     _py_out = False
@@ -817,7 +817,7 @@ def main():
                             exec(_command[1:].strip())
                         else:
                             _t = time()
-                            _result = eval('%s' % _command)
+                            _result = eval('{}'.format(_command))
                             _time_len = time() - _t
                             if _result is not None:
                                 print()
@@ -827,26 +827,26 @@ def main():
                                     write_out(_result)
                                 print()
                                 if _time_len >= 1:
-                                    print("Method returned after %.3f seconds" % _time_len)
+                                    print("Method returned after {:.3f} seconds".format(_time_len))
                                 elif _time_len >= 0.001:
-                                    print("Method returned after %.3f milliseconds" % (_time_len*1000.0))
+                                    print("Method returned after {:.3f} milliseconds".format(_time_len*1000.0))
                                 else:
-                                    print("Method returned after %.3f microseconds" % (_time_len*1000000.0))
+                                    print("Method returned after {:.3f} microseconds".format(_time_len*1000000.0))
                                 print()
                 except Fault as _f:
                     if not _is_a_tty:
-                        print("%s on line %d" % (_f, _line))
+                        print("{} on line {}".format(_f, _line))
                         exit(-1)
                     print(_f)
                 except ProtocolError as _e:
                     if not _is_a_tty:
-                        print("%s on line %d" % (_e, _line))
+                        print("{} on line {}".format(_e, _line))
                         exit(-1)
                     print(_e)
             _interrupt = False
         except KeyboardInterrupt:
             if not _is_a_tty:
-                print("Keyboard interrupt (current line %d)" % _line)
+                print("Keyboard interrupt (current line {})".format(_line))
                 exit(-1)
             if _interrupt:
                 _run = False
@@ -858,7 +858,7 @@ def main():
             return 0
         except Exception as _e:
             if not _is_a_tty:
-                print("%s on line %d" % (_e, _line))
+                print("{} on line {}".format(_e, _line))
                 exit(-1)
             print(_e)
     print()
