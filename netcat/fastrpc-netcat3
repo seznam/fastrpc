@@ -198,8 +198,7 @@ def _type(branch):
         return ""
     elif sys.DECIMAL and isinstance(branch, decimal.Decimal):
         return "decimal"
-    else:
-        return "???"
+    return "???"
 
 
 def _write_out(branch, indent=""):
@@ -383,12 +382,20 @@ def main():
 
     if not sys.FASTRPC:
         print("FastRPC not found, using XML-RPC instead.")
-        print("Consider installing FastRPC for Python {}.".format(".".join(sys.version.split(".")[:2])))
+        print(
+            "Consider installing FastRPC for Python {}.".format(
+                ".".join(sys.version.split(".")[:2])
+            )
+        )
         print()
 
     if not sys.MYSQL:
         print("Pymysql not found, disabling MySQL support.")
-        print("Consider installing MySQL client library for Python {}.".format(".".join(sys.version.split(".")[:2])))
+        print(
+            "Consider installing MySQL client library for Python {}.".format(
+                ".".join(sys.version.split(".")[:2])
+            )
+        )
         print()
 
     _exit_val = 0
@@ -686,7 +693,8 @@ def main():
                                 if _row.split('.')[0] != 'system':
                                     completion.append('{}.{}'.format(_client_name, _row))
                         except ProtocolException as _e:
-                            if (sys.FASTRPC and _e.status == 1) or (not sys.FASTRPC and _e[1][0] == 111):
+                            if ((sys.FASTRPC and _e.status == 1)
+                                    or (not sys.FASTRPC and _e[1][0] == 111)):
                                 print("Connection refused while connecting to {}".format(_server))
                                 _client_ok = False
                         except Exception:
@@ -829,9 +837,17 @@ def main():
                                 if _time_len >= 1:
                                     print("Method returned after {:.3f} seconds".format(_time_len))
                                 elif _time_len >= 0.001:
-                                    print("Method returned after {:.3f} milliseconds".format(_time_len*1000.0))
+                                    print(
+                                        "Method returned after {:.3f} milliseconds".format(
+                                            _time_len * 1000.0
+                                        )
+                                    )
                                 else:
-                                    print("Method returned after {:.3f} microseconds".format(_time_len*1000000.0))
+                                    print(
+                                        "Method returned after {:.3f} microseconds".format(
+                                            _time_len * 1000000.0
+                                        )
+                                    )
                                 print()
                 except Fault as _f:
                     if not _is_a_tty:
@@ -851,8 +867,10 @@ def main():
             if _interrupt:
                 _run = False
             else:
-                print("\nYou have pressed Ctrl+C. If you really want to exit, "
-                       "press Ctrl+C one more time.")
+                print(
+                    "\nYou have pressed Ctrl+C. "
+                    "If you really want to exit, press Ctrl+C one more time."
+                )
                 _interrupt = True
         except EOFError as _e:
             return 0
