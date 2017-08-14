@@ -56,7 +56,7 @@ import readline
 import types
 
 try:
-    import MySQLdb
+    import pymysql
     sys.MYSQL = True
 except Exception:
     sys.MYSQL = False
@@ -93,12 +93,12 @@ class DbConn:
         self.connect()
 
     def connect(self):
-        self.conn = MySQLdb.connect(host=self.host,
+        self.conn = pymysql.connect(host=self.host,
                                     port=self.port,
                                     db=self.db,
                                     user=self.user,
                                     passwd=self.passwd)
-        self.cursor = self.conn.cursor(MySQLdb.cursors.DictCursor)
+        self.cursor = self.conn.cursor(pymysql.cursors.DictCursor)
         self.cursor.execute("SET NAMES %s" % sys.CHARSET)
 
     def begin(self):
@@ -371,7 +371,7 @@ def main():
         print()
 
     if not sys.MYSQL:
-        print("Python-MySQLdb not found, disabling MySQL support.")
+        print("Pymysql not found, disabling MySQL support.")
         print("Consider installing MySQL client library for Python %s." % ".".join(sys.version.split(".")[:2]))
         print()
 
@@ -541,7 +541,7 @@ def main():
 
             if __firstToken == "connectdb":
                 if not sys.MYSQL:
-                    raise Exception("You don't have python-mysqldb library!")
+                    raise Exception("You don't have pymysql library!")
                 __firstToken = "connect"
                 __connectDb = True
             else:
