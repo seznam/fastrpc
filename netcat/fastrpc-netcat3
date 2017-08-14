@@ -51,9 +51,7 @@ except Exception:
 
 from atexit import register as atexitRegister
 from os import path, environ, isatty, getpid, spawnv, P_WAIT, spawnvp
-import rlcompleter
 import readline
-import types
 
 try:
     import pymysql
@@ -67,10 +65,6 @@ try:
 except Exception:
     sys.DECIMAL = False
 from time import time
-
-
-class Object:
-    pass
 
 
 class DbConn:
