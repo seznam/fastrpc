@@ -37,12 +37,12 @@ except Exception:
 
 
     class MyTransport(Transport):
-        def request(self, host, handler, requestBody, verbose=0):
+        def request(self, host, handler, request_body, verbose=False):
             self.verbose = verbose
             urlopener = FancyURLopener()
             urlopener.addheaders = [('User-agent', self.user_agent),
                                     ('Content-type', 'text/xml')]
-            f = urlopener.open('http://{}{}'.format(host, handler), requestBody)
+            f = urlopener.open('http://{}{}'.format(host, handler), request_body)
             return self.parse_response(f)
 
     my_transport = MyTransport()
