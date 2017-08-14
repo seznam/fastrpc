@@ -241,7 +241,13 @@ def _writeOut(branch, indent=""):
         retval += ("%s)" % indent)
         return retval
     elif isinstance(branch, DateTime):
-        return str("%02d.%02d.%04d %02d:%02d:%02d %s%04d (%s)" % (branch.day, branch.month, branch.year, branch.hour, branch.min, branch.sec, {True:"+",False:"-"}[branch.timeZone>=0], branch.timeZone*100, branch))
+        return str(
+            "%02d.%02d.%04d %02d:%02d:%02d %s%04d (%s)" % (
+                branch.day, branch.month, branch.year,
+                branch.hour, branch.min, branch.sec,
+                {True:"+",False:"-"}[branch.timeZone>=0], branch.timeZone*100, branch
+            )
+        )
     elif isinstance(branch, Boolean):
         if branch:
             return "True"
@@ -513,7 +519,9 @@ def main():
                 __command = __rcData.pop(0).replace("\n", "").replace("\r", "").strip(" ")
             else:
                 if __isATty:
-                    __command = input("fastrpc-netcat[%s] > " % sys.CONSOLENAME).replace("\n", "").replace("\r", "").strip(" ")
+                    __command = input(
+                        "fastrpc-netcat[%s] > " % sys.CONSOLENAME
+                    ).replace("\n", "").replace("\r", "").strip(" ")
                 else:
                     __command = input().replace("\n", "").replace("\r", "").strip(" ")
             __splitted = __command.split(" ")
