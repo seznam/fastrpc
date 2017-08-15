@@ -1,0 +1,893 @@
+#!/usr/bin/env python
+#
+#    fastrpc-netcat - XML-RPC/FastRPC/MySQL console
+#    Copyright (C) 2007  Eduard Veleba
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+from sys import stdin, argv, exit, version_info
+import sys
+from os import getenv
+
+PY3 = sys.version_info[0] == 3
+if not PY3:
+    print("fastrpc-netcat3 is intended for Python 3 only. Please use fastrpc-netcat instead.")
+    exit(1)
+
+try:
+    sys.FASTRPC = True
+    from fastrpc import (
+        Fault, ProtocolError, ServerProxy,
+        ON_SUPPORT_ON_KEEP_ALIVE, DateTime, Boolean
+    )
+    ProtocolException = ProtocolError
+except Exception:
+    sys.FASTRPC = False
+    from xmlrpc.client import (
+        Fault, ProtocolError, ServerProxy,
+        DateTime, Boolean, Transport
+    )
+    from urllib.request import FancyURLopener
+
+
+    class MyTransport(Transport):
+        def request(self, host, handler, request_body, verbose=False):
+            self.verbose = verbose
+            urlopener = FancyURLopener()
+            urlopener.addheaders = [('User-agent', self.user_agent),
+                                    ('Content-type', 'text/xml')]
+            f = urlopener.open('http://{}{}'.format(host, handler), request_body)
+            return self.parse_response(f)
+
+    my_transport = MyTransport()
+    ProtocolException = IOError
+
+
+from atexit import register as atexitRegister
+from os import path, environ, isatty, getpid, spawnv, P_WAIT, spawnvp
+import readline
+
+try:
+    import pymysql
+    sys.MYSQL = True
+except Exception:
+    sys.MYSQL = False
+import datetime
+try:
+    import decimal
+    sys.DECIMAL = True
+except Exception:
+    sys.DECIMAL = False
+from time import time
+
+
+class DbConn:
+
+    conn = None
+    cursor = None
+
+    host = None
+    port = None
+    db = None
+    user = None
+    passwd = None
+
+    def __init__(self, host, port, db, user, passwd):
+        self.host = host
+        self.port = port
+        self.db = db
+        self.user = user
+        self.passwd = passwd
+        self.connect()
+
+    def connect(self):
+        self.conn = pymysql.connect(
+            host=self.host,
+            port=self.port,
+            db=self.db,
+            user=self.user,
+            passwd=self.passwd
+        )
+        self.cursor = self.conn.cursor(pymysql.cursors.DictCursor)
+        self.cursor.execute("SET NAMES {}".format(sys.CHARSET))
+
+    def begin(self):
+        try:
+            self.cursor.execute("BEGIN WORK")
+        except KeyboardInterrupt:
+            raise
+        except Exception as ex:
+            if '2003' in str(ex):
+                self.connect()
+                return self.execute("BEGIN WORK")
+            return "Error: {}".format(ex)
+
+    def commit(self):
+        try:
+            self.cursor.execute("COMMIT")
+        except KeyboardInterrupt:
+            raise
+        except Exception as e:
+            return "Error: {}".format(e)
+
+    def rollback(self):
+        try:
+            self.cursor.execute("ROLLBACK")
+        except KeyboardInterrupt:
+            raise
+        except Exception as e:
+            return "Error: {}".format(e)
+
+    def execute(self, query, parms=tuple()):
+        if sys.AUTOCOMMIT:
+            self.begin()
+        try:
+            self.cursor.execute(query, parms)
+            try:
+                _result = []
+                while True:
+                    _row = self.cursor.fetchone()
+                    if not _row:
+                        break
+
+                    _result.append(_row)
+                return _result
+            except Exception:
+                return "OK"
+        except KeyboardInterrupt:
+            raise
+        except Exception as e:
+            return "Error: {}".format(e)
+        else:
+            if sys.AUTOCOMMIT:
+                self.commit()
+
+
+class Completer:
+    def __init__(self, methods):
+        self.methods = methods
+        self.matches = []
+
+    def complete(self, text, state):
+        if state == 0:
+            self.matches = self.global_matches(text)
+        try:
+            return self.matches[state]
+        except IndexError:
+            return None
+
+    def global_matches(self, text):
+        matches = []
+        n = len(text)
+        for word in self.methods:
+            if word[:n] == text:
+                matches.append(word)
+        return matches
+
+
+def _type(branch):
+    if isinstance(branch, int):
+        return "int"
+    elif isinstance(branch, (bytes, str)):
+        return "string"
+    elif isinstance(branch, float):
+        return "float"
+    elif isinstance(branch, dict):
+        return "struct"
+    elif isinstance(branch, list):
+        return "array"
+    elif isinstance(branch, DateTime):
+        return "datetime"
+    elif isinstance(branch, Boolean):
+        return "boolean"
+    elif isinstance(branch, int):
+        return "long"
+    elif isinstance(branch, datetime.datetime):
+        return "datetime"
+    elif isinstance(branch, datetime.date):
+        return "date"
+    elif isinstance(branch, datetime.time):
+        return "time"
+    elif branch is None:
+        return ""
+    elif sys.DECIMAL and isinstance(branch, decimal.Decimal):
+        return "decimal"
+    return "???"
+
+
+def _write_out(branch, indent=""):
+    if isinstance(branch, int):
+        return "{}".format(branch)
+    elif isinstance(branch, (bytes, str)):
+        return "\"{}\"".format(branch)
+    elif isinstance(branch, float):
+        return "{}".format(branch)
+    elif isinstance(branch, dict):
+        retval = "{\n"
+
+        if sys.AUTOSORT:
+            keys = list(branch.keys())
+            keys.sort()
+            for k in keys:
+                v = branch[k]
+                t = _type(v)
+                if t:
+                    retval += "{}    {} {} = {}\n".format(
+                        indent, t, k, _write_out(v, "{}    ".format(indent))
+                    )
+                else:
+                    retval += "{}    {} = {}\n".format(
+                        indent, k, _write_out(v, "{}    ".format(indent))
+                    )
+        else:
+            for k, v in branch.items():
+                t = _type(v)
+                if t:
+                    retval += "{}    {} {} = {}\n".format(
+                        indent, t, k, _write_out(v, "{}    ".format(indent))
+                    )
+                else:
+                    retval += "{}    {} = {}\n".format(
+                        indent, k, _write_out(v, "{}    ".format(indent))
+                    )
+        retval += "{}}}".format(indent)
+        return retval
+    elif isinstance(branch, list):
+        return write_out_list(branch, indent)
+    elif isinstance(branch, DateTime):
+        return str(
+            "{day}.{month}.{year} {hour}:{min}:{sec} {sign}{timezone} ({branch})".format(
+                day=branch.day, month=branch.month, year=branch.year,
+                hour=branch.hour, min=branch.min, sec=branch.sec,
+                sign="+" if branch.timeZone >= 0 else "-",
+                timezone=branch.timeZone * 100, branch=branch
+            )
+        )
+    elif isinstance(branch, Boolean):
+        return "True" if branch else "False"
+    elif isinstance(branch, int):
+        return "{}".format(branch)
+    elif isinstance(branch, datetime.datetime):
+        return "{}".format(branch)
+    elif isinstance(branch, datetime.date):
+        return "{}".format(branch)
+    elif isinstance(branch, datetime.time):
+        return "{}".format(branch)
+    elif branch is None:
+        return None
+    elif sys.DECIMAL and isinstance(branch, decimal.Decimal):
+        return "{}".format(branch)
+    else:
+        return "UNKNOWN TYPE {} = {}".format(type(branch), branch)
+
+
+def write_out_list(branch, indent=""):
+    retval = "(\n"
+    idx = 0
+    for _row in branch:
+        t = _type(_row)
+        if t:
+            retval += "{}    [{}] {} = {}\n".format(
+                indent, idx, t, _write_out(_row, "{}    ".format(indent))
+            )
+        else:
+            retval += "{}    [{}] = {}\n".format(
+                indent, idx, _write_out(_row, "{}    ".format(indent))
+            )
+        idx += 1
+    retval += "{})".format(indent)
+    return retval
+
+
+class XDateTime:
+    def __init__(self, val):
+        self.val = val
+
+    def __repr__(self):
+        return "DateTime(\"{}\")".format(repr(self.val))
+
+
+class XBoolean:
+    def __init__(self, val):
+        self.val = val
+
+    def __repr__(self):
+        return "Boolean(1)" if self.val else "Boolean(0)"
+
+
+def convert_frpc(b):
+    if isinstance(b, DateTime):
+        return XDateTime(b)
+    elif isinstance(b, Boolean):
+        return XBoolean(b)
+    elif isinstance(b, list):
+        l = []
+        for row in b:
+            l.append(convert_frpc(row))
+        return l
+    elif isinstance(b, dict):
+        d = {}
+        for key, value in b.items():
+            d[convert_frpc(key)] = convert_frpc(value)
+        return d
+    return b
+
+
+def write_out(branch):
+    _t = _type(branch)
+    if _t:
+        print("result = {} {}".format(_t, _write_out(branch)))
+    else:
+        print("result = {}".format(_write_out(branch)))
+
+
+def _completion_append_module(completion, current):
+    _result = []
+    for _row in dir(current):
+        if _row[0] != "_":
+            _result2 = _completion_append_module(completion, eval("current.{}".format(_row)))
+            for _row2 in _result2:
+                if _row2:
+                    _result.append("{}.{}".format(_row, _row2))
+                else:
+                    _result.append(_row)
+    _result.append("")
+    return _result
+
+
+def completion_append_module(completion, module):
+    return _completion_append_module(completion, module)
+
+
+def read_file(path):
+    try:
+        f = open(path, "r")
+    except Exception:
+        raise
+    else:
+        data = f.read()
+        f.close()
+        return data
+
+
+FILE = read_file
+
+
+def license():
+    print("FastRPC-Netcat  Copyright (C) 2007  Eduard Veleba")
+    print("This program comes with ABSOLUTELLY NO WARRANTY; for details see COPYING file.")
+    print("This is free software, and you are welcome to redistribute it")
+    print("under certain conditions; see COPYING file for details.")
+    print()
+
+
+def main():
+
+    sys.AUTOCOMMIT = True
+    sys.AUTOSORT = True
+    sys.CONSOLENAME = str(getpid())
+
+    _do_rc = True
+
+    global client
+    global completion
+
+    license()
+
+    if not sys.FASTRPC:
+        print("FastRPC not found, using XML-RPC instead.")
+        print(
+            "Consider installing FastRPC for Python {}.".format(
+                ".".join(sys.version.split(".")[:2])
+            )
+        )
+        print()
+
+    if not sys.MYSQL:
+        print("Pymysql not found, disabling MySQL support.")
+        print(
+            "Consider installing MySQL client library for Python {}.".format(
+                ".".join(sys.version.split(".")[:2])
+            )
+        )
+        print()
+
+    _exit_val = 0
+    _lang = getenv('LANG')
+    if _lang.find('UTF-8') != -1:
+        sys.CHARSET = 'utf8'
+    else:
+        sys.CHARSET = 'ascii'
+    if len(argv) not in [1, 2, 3] or argv[1:] in [['-h'], ['--help']]:
+        print("Usage: {}".format(argv[0]))
+        print("       {} http://{{host}}:{{port}}/{{path}}".format(argv[0]))
+        print("       {} {{host}} {{port}}".format(argv[0]))
+        exit(0)
+
+    _is_a_tty = isatty(stdin.fileno())
+    _read_timeout = 60000
+
+    _proxy_via = environ.get('http_proxy', '')
+    if _proxy_via:
+        environ['HTTP_PROXY'] = _proxy_via
+
+    if len(argv) > 1:
+        _do_rc = False
+        _host = argv[1]
+
+        if _host.find('/') != -1:
+            _server = _host
+        else:
+            if len(argv) == 3:
+                _port = argv[2]
+            else:
+                _port = 80
+
+            if _host == '0':
+                _host = '127.0.0.1'
+
+            _server = '{}:{}/RPC2'.format(_host, _port)
+        if _server.find('://') == -1:
+            _server = 'http://{}'.format(_server)
+
+        if sys.FASTRPC:
+            if _proxy_via:
+                client = ServerProxy(
+                    _server,
+                    readTimeout=_read_timeout,
+                    writeTimeout=5000,
+                    connectTimeout=_read_timeout,
+                    useBinary=ON_SUPPORT_ON_KEEP_ALIVE,
+                    proxyVia=_proxy_via
+                )
+            else:
+                client = ServerProxy(
+                    _server,
+                    readTimeout=_read_timeout,
+                    writeTimeout=5000,
+                    connectTimeout=_read_timeout,
+                    useBinary=ON_SUPPORT_ON_KEEP_ALIVE
+                )
+        else:
+            client = ServerProxy(_server, transport=my_transport, allow_none=True)
+        _have_client = True
+    else:
+        _have_client = False
+        client = None
+
+    completion = []
+
+    if _have_client:
+        if _is_a_tty:
+            try:
+                _result = client.system.listMethods()
+                for _row in _result:
+                    if _row.split('.')[0] != 'system':
+                        completion.append('client.{}'.format(_row))
+            except ProtocolException as _e:
+                if (sys.FASTRPC and _e.status == 1) or (not sys.FASTRPC and _e[1][0] == 111):
+                    print("Connection refused while connecting to {}".format(_server))
+                    _have_client = False
+            except Exception:
+                pass
+
+    if _is_a_tty:
+        completion.append("FILE")
+        completion.append("exit")
+        completion.append("help")
+        completion.append("DateTime")
+        completion.append("Boolean")
+        completion.append("connect")
+        completion.append("connectdb")
+        completion.append("timeout")
+        completion.append("charset")
+        completion.append("autocommit")
+        completion.append("autosort")
+        completion.append("name")
+        completion.append("shell")
+        completion.append("?")
+        _completer = Completer(completion)
+        readline.set_completer(_completer.complete)
+        readline.parse_and_bind('tab: complete')
+        _hist_file = path.join(environ['HOME'], '.fastrpc-netcat_history')
+        try:
+            readline.read_history_file(_hist_file)
+        except Exception:
+            pass
+        atexitRegister(readline.write_history_file, _hist_file)
+
+    if _have_client:
+        _client_no = 1
+        global client1
+        client1 = client
+        _client_newest = client
+    else:
+        _client_no = 0
+        client1 = None
+        _client_newest = None
+        _server = ""
+
+    _run = True
+    _interrupt = False
+    _line = 0
+
+    try:
+        import fn
+        fn.globals = globals()
+        fn.init()
+    except Exception:
+        pass
+
+    if _do_rc:
+        _rc_file = path.expanduser('~/.fastrpc-netcatrc')
+        try:
+            _rc_file = open(_rc_file)
+            _rc_data = _rc_file.read().split("\n")
+            _rc_file.close()
+        except Exception:
+            _rc_data = []
+    else:
+        _rc_data = []
+
+    while _run:
+        try:
+            if _rc_data:
+                _command = _rc_data.pop(0).replace('\n', '').replace('\r', '').strip(' ')
+            else:
+                if _is_a_tty:
+                    _command = input(
+                        "fastrpc-netcat[{}] > ".format(sys.CONSOLENAME)
+                    ).replace('\n', '').replace('\r', '').strip(' ')
+                else:
+                    _command = input().replace('\n', '').replace('\r', '').strip(' ')
+            _splitted = _command.split(' ')
+
+            _line += 1
+            _interrupt = False
+
+            if len(_splitted) > 1 and _splitted[-1] in ['-h', '--help']:
+                c = _splitted[0]
+                bracket_pos = c.find('(')
+                if bracket_pos != -1:
+                    c = c[:bracket_pos]
+                _command = '? {}'.format(c)
+                _splitted = ['?', c]
+            if _splitted:
+                _first_token = _splitted[0]
+            else:
+                _first_token = ''
+
+            if _first_token == 'connectdb':
+                if not sys.MYSQL:
+                    raise Exception("You don't have pymysql library!")
+                _first_token = 'connect'
+                _connect_db = True
+            else:
+                _connect_db = False
+
+            if _first_token and _first_token[0] == '#':
+                # comment
+                pass
+            elif _command in ['exit', 'quit']:
+                if len(_splitted) == 2:
+                    _exit_val = int(_splitted[1])
+                _run = False
+            elif _first_token == 'license':
+                license()
+            elif _first_token == 'connect':
+                if len(_splitted) < 2:
+                    raise Exception("Missing arguments")
+                try:
+                    int(_splitted[2])
+                except Exception:
+                    _num = False
+                else:
+                    _num = True
+                if len(_splitted) > 3 or (len(_splitted) == 3 and not _num):
+                    _splitted = _splitted[1:]
+                    _client_name = _splitted[0]
+                else:
+                    _client_name = None
+
+                _host = _splitted[1]
+
+                _user = None
+                if _host.find('/') != -1:
+                    _server = _host
+                else:
+                    if len(_splitted) in [4, 5] and _connect_db:
+                        _port = _splitted[2]
+                        _user = _splitted[3]
+                        if len(_splitted) == 5:
+                            _passwd = _splitted[4]
+                        else:
+                            _passwd = ''
+                    elif len(_splitted) == 3:
+                        _port = _splitted[2]
+                    else:
+                        if _connect_db:
+                            raise Exception("You must specify database name")
+                        _port = 80
+
+                    if _host == '0':
+                        _host = '127.0.0.1'
+
+                    _server = '{}:{}/RPC2'.format(_host, _port)
+                if _server.find('://') == -1:
+                    _server = 'http://{}'.format(_server)
+
+                if _connect_db:
+                    if _user is None:
+                        raise Exception("You must specify database name, username and password")
+
+                    client = DbConn(
+                        host=_host,
+                        port=3306,
+                        db=_port,
+                        user=_user,
+                        passwd=_passwd
+                    )
+
+                    if _client_name is None:
+                        _client_no += 1
+                        _client_name = 'client{}'.format(_client_no)
+                    try:
+                        exec('global {}'.format(_client_name))
+                    except Exception:
+                        pass
+                    exec('{} = client'.format(_client_name))
+
+                    if _is_a_tty:
+                        completion.append('{}.execute'.format(_client_name))
+                        completion.append('{}.begin()'.format(_client_name))
+                        completion.append('{}.commit()'.format(_client_name))
+                        completion.append('{}.rollback()'.format(_client_name))
+
+                    print("New database client is now known as {}".format(_client_name))
+
+                else:
+
+                    _proxy_via = environ.get('http_proxy', '')
+
+                    if sys.FASTRPC:
+                        if _proxy_via:
+                            client = ServerProxy(
+                                _server,
+                                readTimeout=_read_timeout,
+                                writeTimeout=5000,
+                                connectTimeout=_read_timeout,
+                                useBinary=ON_SUPPORT_ON_KEEP_ALIVE,
+                                proxyVia=_proxy_via
+                            )
+                        else:
+                            client = ServerProxy(
+                                _server,
+                                readTimeout=_read_timeout,
+                                writeTimeout=5000,
+                                connectTimeout=_read_timeout,
+                                useBinary=ON_SUPPORT_ON_KEEP_ALIVE
+                            )
+                    else:
+                        client = ServerProxy(_server, transport=my_transport)
+
+                    if _client_name is None:
+                        _client_no += 1
+                        _client_name = 'client{}'.format(_client_no)
+                    try:
+                        exec('global {}'.format(_client_name))
+                    except Exception:
+                        pass
+                    exec('{} = client'.format(_client_name))
+
+                    if _is_a_tty:
+                        _client_ok = True
+                        try:
+                            _result = client.system.listMethods()
+                            for _row in _result:
+                                if _row.split('.')[0] != 'system':
+                                    completion.append('{}.{}'.format(_client_name, _row))
+                        except ProtocolException as _e:
+                            if ((sys.FASTRPC and _e.status == 1)
+                                    or (not sys.FASTRPC and _e[1][0] == 111)):
+                                print("Connection refused while connecting to {}".format(_server))
+                                _client_ok = False
+                        except Exception:
+                            pass
+                        if _client_ok:
+                            print("New client is now known as {}".format(_client_name))
+
+            elif _first_token == 'charset' and len(_splitted) == 2:
+                sys.CHARSET = _splitted[1]
+            elif _first_token == 'name' and len(_splitted) == 2:
+                sys.CONSOLENAME = _splitted[1]
+            elif _first_token == 'autocommit' and len(_splitted) == 2:
+                if _splitted[1] in ['1', 'on', 'true']:
+                    sys.AUTOCOMMIT = True
+                elif _splitted[1] in ['0', 'off', 'false']:
+                    sys.AUTOCOMMIT = False
+                elif not _is_a_tty:
+                    print("Bad autocommit value on line {}".format(_line))
+                    exit(-1)
+            elif _first_token == 'autosort' and len(_splitted) == 2:
+                if _splitted[1] in ['1', 'on', 'true']:
+                    sys.AUTOSORT = True
+                elif _splitted[1] in ['0', 'off', 'false']:
+                    sys.AUTOSORT = False
+                elif not _is_a_tty:
+                    print("Bad autosort value on line {}".format(_line))
+                    exit(-1)
+            elif _first_token == 'timeout' and len(_splitted) == 2:
+                try:
+                    _read_timeout = 1000*int(_splitted[1])
+                except Exception:
+                    if not _is_a_tty:
+                        print("Bad timeout value on line {}".format(_line))
+                        exit(-1)
+            elif _first_token == 'import':
+                if len(_splitted) == 2:
+                    exec('import {}'.format(_splitted[1]))
+                    _result = completion_append_module(completion, eval(_splitted[1]))
+                    for _row in _result:
+                        if _row:
+                            completion.append('{}.{}'.format(_splitted[1], _row))
+                        else:
+                            completion.append(_splitted[1])
+            elif _first_token == 'shell':
+                if len(_splitted) == 1:
+                    _status = spawnv(P_WAIT, '/bin/bash', ['/bin/bash'])
+                    print("Subshell returned status {}".format(_status))
+            elif _first_token == 'exec':
+                if len(_splitted) >= 2:
+                    _status = spawnvp(P_WAIT, _splitted[1], _splitted[1:])
+                    print("Command returned status {}".format(_status))
+            elif _first_token in ['?', '??', 'help']:
+                if len(_splitted) == 1:
+                    print("fastrpc-netcat help")
+                    print("==================")
+                    print()
+                    print("connect - connect to RPC server")
+                    print("    connect [NAME] {HOST} {PORT}")
+                    print("    connect [NAME] http://{HOST}:{PORT}/{URL}")
+                    print()
+                    print("connectdb - connect to mysql database")
+                    print("    connectdb {NAME} {HOST} {DBNAME} {USER} [PASSWORD]")
+                    print()
+                    print("timeout - set RPC timeout")
+                    print("    timeout {MILLISECONDS}")
+                    print()
+                    print("charset - set input/output charset")
+                    print("    charset {CHARSET}")
+                    print()
+                    print("autocommit - enable/disable autocommit (default on)")
+                    print("    autocommit {1|on|true|0|off|false}")
+                    print()
+                    print("autosort - enable/disable autosort (default on)")
+                    print("    autosort {1|on|true|0|off|false}")
+                    print()
+                    print("name - rename console (PID is default name)")
+                    print("    name test")
+                    print()
+                    print("help - print help")
+                    print("    help [METHOD]")
+                    print("    {METHOD} -h")
+                    print()
+                    print("exit - exit fastrpc-netcat")
+                    print("    exit [RESULT]")
+                    print("    quit [RESULT]")
+                    print()
+                    print("shell - spawn subshell")
+                    print("    shell")
+                    print()
+                    print("exec - run command")
+                    print("    exec {COMMAND} [ARG1] [ARG2] ...")
+                    print()
+                    print("FILE() - readfile function - returns file contents")
+                    print("    FILE(\"{FILENAME}\")")
+                    print()
+                    print("! - python command execution")
+                    print("    lines beginning with exclamation mark are executed instead of evaluation")
+                    print()
+                    print("?? - help on python modules")
+                    print("    Open python documentation of given object")
+                    print()
+                elif len(_splitted) == 2:
+                    method_name = _splitted[1]
+                    if _first_token != '??':
+                        _client_name = None
+                        _a = method_name.split('.')
+                        for i in range(1, len(_a)):
+                            res_type = str(type(eval('.'.join(_a[:i]))))[:19]
+                            if res_type in ('<class \'ServerProxy', '<class \'xmlrpc.clie'):
+                                _client_name = '.'.join(_a[:i])
+                                break
+                        if _client_name is not None:
+                            method_name = method_name[len(_client_name)+1:]
+                            _result = eval('{}.system.methodHelp(method_name)'.format(_client_name))
+                            print()
+                            print(_result)
+                            print()
+                    else:
+                        exec('help({})'.format(method_name))
+            elif _command:
+                try:
+                    _py_out = False
+                    if _command[-1] == '*':
+                        _command = _command[:-1]
+                        _py_out = True
+                    if _command:
+                        if _command[0] == '!':
+                            exec(_command[1:].strip())
+                        else:
+                            _t = time()
+                            _result = eval('{}'.format(_command))
+                            _time_len = time() - _t
+                            if _result is not None:
+                                print()
+                                if _py_out:
+                                    print(str(convert_frpc(_result)))
+                                else:
+                                    write_out(_result)
+                                print()
+                                if _time_len >= 1:
+                                    print("Method returned after {:.3f} seconds".format(_time_len))
+                                elif _time_len >= 0.001:
+                                    print(
+                                        "Method returned after {:.3f} milliseconds".format(
+                                            _time_len * 1000.0
+                                        )
+                                    )
+                                else:
+                                    print(
+                                        "Method returned after {:.3f} microseconds".format(
+                                            _time_len * 1000000.0
+                                        )
+                                    )
+                                print()
+                except Fault as _f:
+                    if not _is_a_tty:
+                        print("{} on line {}".format(_f, _line))
+                        exit(-1)
+                    print(_f)
+                except ProtocolError as _e:
+                    if not _is_a_tty:
+                        print("{} on line {}".format(_e, _line))
+                        exit(-1)
+                    print(_e)
+            _interrupt = False
+        except KeyboardInterrupt:
+            if not _is_a_tty:
+                print("Keyboard interrupt (current line {})".format(_line))
+                exit(-1)
+            if _interrupt:
+                _run = False
+            else:
+                print(
+                    "\nYou have pressed Ctrl+C. "
+                    "If you really want to exit, press Ctrl+C one more time."
+                )
+                _interrupt = True
+        except EOFError as _e:
+            return 0
+        except Exception as _e:
+            if not _is_a_tty:
+                print("{} on line {}".format(_e, _line))
+                exit(-1)
+            print(_e)
+    print()
+    return _exit_val
+
+
+if __name__ == '__main__':
+    exit(main())
