@@ -2,21 +2,29 @@
 """
 Flask extension that allows it to be used as a fastrpc/xmlrpc server.
 
-If no fastrpc is found, xmlrpc will be used instead - for environments where fastrpc is just not possible (windows)
+If no fastrpc is found, xmlrpc will be used instead - for environments where fastrpc is just not possible (windows).
 
-Python 3.5 and later is supported.
+Python 3.5 and later is supported (3.4 if you have typing installed manually).
+
+The current versions only handles binary requests under uWSGI, more on line 102.
 
 Author David Jetelina <david.jetelina@firma.seznam.cz>.
 Based on fastrpc aiohttp handler by Dan Milde, which was based on fastrpc Tornado handler by Jan Seifert :).
 """
 import inspect
 from typing import Any, Callable, List, Set, Optional, Dict, Union
+
 try:
     import fastrpc
 except ImportError:
     fastrpc = None
     from xmlrpc import client as xmlrpc
+try:
+    import uwsgi
+except ImportError:
+    uwsgi = None
 import logging
+from traceback import format_exc
 from flask import Response, request, Flask
 from typeguard import typechecked
 
@@ -52,7 +60,7 @@ class FastRPCHandler:
         else:
             self.allowed_content_types = {RPC_CONTENT_TYPE}
             if fastrpc:
-                self.allowed_content_types.add(FRPC_CONTENT_TYPE)
+                self.allowed_content_types = {FRPC_CONTENT_TYPE, RPC_CONTENT_TYPE}
 
         if register_introspection_methods:
             self.register_method('system.listMethods', self._system_list_methods)
@@ -89,7 +97,20 @@ class FastRPCHandler:
             return 'Content-Type not supported', 400
 
         if fastrpc:
-            args, method_name = fastrpc.loads(request.data)
+            if FRPC_CONTENT_TYPE == request.headers['Content-Type']:
+                # We will be loading binary data, which is sent through chunked transfer encoding - not very friendly.
+                # Werkzeug doesn't recognize the header, so the data should be in request.stream BUT
+                # since chunked transfer encoding isn't sending Content-Length header, as it does not make sense,
+                # werkzeug needs some kind of middleware that handles it. In ideal world, we could use stream
+                # because the middleware would set request.environ['wsgi.input_terminated'] - I found none that do that
+                # which means for now we'll be supporting just uwsgi until I figure out how to do with with the others
+                # like gunicorn etc. big TODO !
+                if uwsgi is None:
+                    raise NotImplementedError("This application needs to be running on uWSGI, I'm sorry! TODO :) ")
+                request_data = uwsgi.chunked_read()
+            else:
+                request_data = request.data
+            args, method_name = fastrpc.loads(request_data)
         else:
             args, method_name = xmlrpc.loads(request.data)
 
@@ -116,7 +137,9 @@ class FastRPCHandler:
                 method = self.methods[method_name]
                 response = method(*args)
             except Exception as ex:
-                logging.exception('In method call')
+                # .error() instead of .exception(), because that way it doesn't break log parsing when someone
+                # is using that, because it inserts the exception into the message itself, instead of paste after
+                logging.error('In method call %s: \n%s', method_name, format_exc())
                 response = {
                     'status': 500,
                     'statusMessage': str(ex)
@@ -135,6 +158,7 @@ class FastRPCHandler:
             headers['Content-Type'] = RPC_CONTENT_TYPE
 
         if fastrpc:
+            headers['Accept'] = ','.join(self.allowed_content_types)
             body = fastrpc.dumps((response,), methodresponse=True, useBinary=use_binary)
         else:
             body = xmlrpc.dumps((response,), methodresponse=True)
