@@ -199,4 +199,8 @@ void Struct_t::clear() {
 
 }
 
+Struct_t::size_type Struct_t::erase(const Struct_t::key_type &key) {
+    return structData.erase(key);
+}
+
 }

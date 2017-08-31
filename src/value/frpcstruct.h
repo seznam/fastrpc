@@ -230,6 +230,13 @@ public:
          return structData.find(key);
     }
 
+    /**
+        @brief Remove Value_t from Struct_t with key
+        @param key is reference to Struct_t::key_type
+        @return Struct_t& reference with apended value
+    */
+    size_type erase(const key_type &key);
+
     /// static member
     static const Struct_t &FRPC_EMPTY;
 

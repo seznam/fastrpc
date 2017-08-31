@@ -1,3 +1,9 @@
+libfastrpc (6.1.0) UNRELEASED; urgency=low
+
+  * new method erase of FRPC::Struct_t class
+
+ -- Ondrej Tuma <ondrej.tuma@firma.seznam.cz>  Wed, 30 Aug 2017 11:03:04 +0200
+
 libfastrpc (6.0.5) testing; urgency=low
 
   * timout exception includes server url
