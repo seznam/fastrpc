@@ -20,6 +20,12 @@ cd fastrpc/python
 sudo python setup.py install
 ```
 
+If you have `gcc` version less than 6.0, you need to pass flag `-std=c++11`:
+
+```
+CXXFLAGS='-std=c++11' CFLAGS='-std=c++11' CPPFLAGS='-std=c++11' sudo python setup.py install
+```
+
 ## Usage
 
 ### Client
