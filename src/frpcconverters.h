@@ -41,7 +41,15 @@
 #include <iterator>
 #include <algorithm>
 
-#include "frpcarray.h"
+#include <frpcpool.h>
+#include <frpcbool.h>
+#include <frpcint.h>
+#include <frpcdouble.h>
+#include <frpcstring.h>
+#include <frpcbinary.h>
+#include <frpcdatetime.h>
+#include <frpcstruct.h>
+#include <frpcarray.h>
 
 namespace FRPC {
 
