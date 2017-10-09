@@ -1,3 +1,61 @@
+libfastrpc (8.0.7) stable; urgency=medium
+
+  * missing includes
+  * fixed the README handing in setup.py after it was renamed
+  * Fixed flask handler to actually accept and handle x-frpc content type.
+  * 
+  * Due to the negotiation in all my previous test I didn't notice that the server didn't and couldn't accept binary data with x-frpc header. Fixed this to work with uWSGI, support for the rest of WSGI servers should be added eventually.
+  * Fixed build
+  * 
+  * automake requires file README by default
+  * Add fastrpc-netcat3 to deb package
+  * added python3 dependencies
+  * check python version
+  * fixed long lines
+  * fixed compatibility with xmlrpc.client.Transport
+  * oldstyle % formatting replaced by string format
+  * single quotes for strings not printed to user
+  * lol fix :)
+  * module_name is not used
+  * fixed variable and function names and some indention
+  * write_out renamed and little bit refactored
+  * long lines
+  * is None
+  * fixed error handling during begin operation
+  * removed unused
+  * pymysql instead of python-mysqldb
+  * 
+  * python-mysqldb is outdated, not maintained anymore
+  * pymysql is drop-in replacement
+  * help for xml-rpc fixed
+  * removed some hacking
+  * python docs added to help message
+  * help fixed
+  * environ access via get
+  * strip python commands
+  * encoding/decoding fixed
+  * binary is no more
+  * binary is no more
+  * HTTP -> HTTPConnection
+  * some formatting
+  * type -> isinstance
+  * empty except
+  * removed #end comments
+  * 2to3
+  * basis for python 3 netcat
+  * Arch python package
+  * Markdown README added
+  * handlers for using FastRPC with Flask, Aiohttp and Tornado (Shelter)
+  * server example renamed
+  * python package instead of module
+  * add header
+  * #! python8.0.1
+  * Revert " support for native string in signature for python 3"
+  * 
+  * This reverts commit 3f303dbdfe72831833faa65056b2bdb3f303c86c.
+
+ -- Lubos Vondra <lubos.vondra@firma.seznam.cz>  Mon, 09 Oct 2017 13:07:19 +0100
+
 libfastrpc (8.0.6) stable; urgency=medium
 
   * binary ref
