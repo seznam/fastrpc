@@ -1,3 +1,13 @@
+libfastrpc (8.0.8) stable; urgency=medium
+
+  * Revert " #! v8.0.8"
+  * 
+  * This reverts commit d84ba455f0c6ab884b5a062c6b704f4f7233d941.
+  * #! v8.0.8
+  * enable frpcbinref only when compiling with c++11 and above
+
+ -- Lubos Vondra <lubos.vondra@firma.seznam.cz>  Thu, 12 Oct 2017 16:16:11 +0100
+
 libfastrpc (8.0.7) stable; urgency=medium
 
   * missing includes
