@@ -38,6 +38,9 @@
 #include <frpcvalue.h>
 #include <frpcpool.h>
 
+
+#if __cplusplus >= 201103L
+
 namespace FRPC {
 
 /** The collection of two methods that provides access to list of chunks and
@@ -183,5 +186,6 @@ inline FRPC_DLLEXPORT const BinaryRef_t &BinaryRef(const Value_t &value) {
 
 } // namespace FRPC
 
-#endif /* FRPCBINARYREF_H */
+#endif /* __cplusplus >= 201103L */
 
+#endif /* FRPCBINARYREF_H */
