@@ -1,9 +1,3 @@
-libfastrpc (8.0.8) stable; urgency=medium
-
-  * enable frpcbinref only when compiling with c++11 and above
-
- -- Lubos Vondra <lubos.vondra@firma.seznam.cz>  Thu, 12 Oct 2017 16:03:03 +0100
-
 libfastrpc (8.0.7) stable; urgency=medium
 
   * missing includes
