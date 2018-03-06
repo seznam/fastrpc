@@ -1,3 +1,25 @@
+python-fastrpc (8.0.2) stable; urgency=medium
+
+  * Revert "Merge pull request #42 from Dundee/netcat-python3"
+  * 
+  * This reverts commit ce4afbedb840e589af7627b2d6c9ed2d17570b2f, reversing
+  * changes made to dec9b53e13b81140ff60644fb975b37894b0240f.
+  * Revert "Merge pull request #46 from iScrE4m/master"
+  * 
+  * This reverts commit edcaf368acc1fa39287e2877f6b1a947caa89c64, reversing
+  * changes made to b290578bfdc1b77603d12b8e599169aafbb5a96c.
+  * fixed the README handing in setup.py after it was renamed
+  * Fixed flask handler to actually accept and handle x-frpc content type.
+  * 
+  * Due to the negotiation in all my previous test I didn't notice that the server didn't and couldn't accept binary data with x-frpc header. Fixed this to work with uWSGI, support for the rest of WSGI servers should be added eventually.
+  * Arch python package
+  * Markdown README added
+  * handlers for using FastRPC with Flask, Aiohttp and Tornado (Shelter)
+  * server example renamed
+  * python package instead of module
+
+ -- Filip Volejnik <filip.volejnik@firma.seznam.cz>  Tue, 06 Mar 2018 09:44:31 +0100
+
 python-fastrpc (8.0.1) stable; urgency=medium
 
   * Revert " support for native string in signature for python 3"
