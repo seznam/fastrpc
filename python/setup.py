@@ -27,7 +27,7 @@ from debian.changelog import Changelog
 from distutils import sysconfig
 from os import uname
 from os.path import dirname, join
-from setuptools import find_packages, setup, Extension
+from setuptools import setup, Extension
 
 
 def _init_posix(init):
@@ -78,7 +78,7 @@ setup(
     description=__doc__.strip().split("\n")[0],
     long_description=open(readme, 'rt').read().strip(),
     url="http://github.com/seznam/fastrpc/python",
-    packages=find_packages(include=['fastrpc*']),
+    py_modules=['fastrpc'],
     ext_modules=[
         Extension("_fastrpc", [
             "fastrpcmodule.cc", "pythonserver.cc", "pyerrors.cc",

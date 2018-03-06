@@ -3,6 +3,6 @@ Version: __VERSION__
 Architecture: __ARCHITECTURE__
 Installed-Size: __INSTALLED_SIZE__
 Maintainer: __MAINTAINER__
-Depends: python | python3
-Recommends: python2.5-fastrpc | python2.4-fastrpc | python2.3-fastrpc | python3-fastrpc, python-mysqldb | python3-pymysql
+Depends: python
+Recommends: python2.5-fastrpc | python2.4-fastrpc | python2.3-fastrpc, python-mysqldb
 Description: (XML|Fast)RPC Python console (which now also supports MySQL)
