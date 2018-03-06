@@ -1,3 +1,11 @@
+python-fastrpc (8.0.3) stable; urgency=medium
+
+  * Revert "fixed the README handing in setup.py after it was renamed"
+  * 
+  * This reverts commit bb135802139d88738d260253792a554151f9433a.
+
+ -- Filip Volejnik <filip.volejnik@firma.seznam.cz>  Tue, 06 Mar 2018 09:48:19 +0100
+
 python-fastrpc (8.0.2) stable; urgency=medium
 
   * Revert "Merge pull request #42 from Dundee/netcat-python3"
