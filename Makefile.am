@@ -34,8 +34,6 @@
 #                   Created.
 #
 
-AUTOMAKE_OPTIONS = foreign
-
 SUBDIRS = src
 
 EXTRA_DIST = debian/libfastrpc.control debian/libfastrpc-dev.control \
