@@ -29,12 +29,10 @@ mkdir -m755 -p $WORKDIR/usr/share/man/man1
 mkdir -m755 -p $WORKDIR/usr/share/fastrpc-netcat
 
 cp fastrpc-netcat $WORKDIR/usr/bin
-cp fastrpc-netcat3 $WORKDIR/usr/bin
 cat fastrpc-netcat.1 | gzip > $WORKDIR/usr/share/man/man1/fastrpc-netcat.1.gz
 cp COPYING $WORKDIR/usr/share/fastrpc-netcat
 
 chmod 755 $WORKDIR/usr/bin/fastrpc-netcat
-chmod 755 $WORKDIR/usr/bin/fastrpc-netcat3
 chmod 644 $WORKDIR/usr/share/man/man1/fastrpc-netcat.1.gz
 chmod 644 $WORKDIR/usr/share/fastrpc-netcat/COPYING
 
