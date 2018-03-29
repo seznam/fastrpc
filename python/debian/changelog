@@ -1,3 +1,9 @@
+python-fastrpc (8.0.4) stable; urgency=medium
+
+  * fix: fixed problem with dump sensitive data with treeDump #GDPR_RS-108
+
+ -- Martin Junk <martin.junk@firma.seznam.cz>  Thu, 29 Mar 2018 15:54:56 +0200
+
 python-fastrpc (8.0.3) stable; urgency=medium
 
   * Revert "fixed the README handing in setup.py after it was renamed"

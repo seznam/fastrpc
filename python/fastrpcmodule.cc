@@ -2690,14 +2690,11 @@ int printPyFastRPCTree(PyObject *tree, std::ostringstream &out,
 
                 // put key && value
                 out << os.str() << ": ";
-
-                std::string xkey = os.str();
-                if (!xkey.empty() && *(xkey.end() - 1) == '"') {
-                    std::string::const_iterator end = xkey.end() - 1;
-                    std::string::const_iterator begin = xkey.begin();
-                    while (*begin++ != '"');
-                    xkey = std::string(begin, end);
-                }
+#if PY_MAJOR_VERSION == 2
+                std::string xkey = PyString_AsString(key);
+#else
+                std::string xkey = PyUnicode_AsUTF8(key);
+#endif
                 if (PyMapping_HasKeyString(names,
                                            const_cast<char *>(xkey.c_str()))) {
                     out << "-hidden-";
