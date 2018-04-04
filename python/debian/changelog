@@ -1,3 +1,9 @@
+python-fastrpc (8.0.5) stable; urgency=medium
+
+  * fix: fixed problem with dump dict key if is not string #GDPR_RS-108
+
+ -- Martin Junk <martin.junk@firma.seznam.cz>  Wed, 04 Apr 2018 07:31:04 +0200
+
 python-fastrpc (8.0.4) stable; urgency=medium
 
   * fix: fixed problem with dump sensitive data with treeDump #GDPR_RS-108
