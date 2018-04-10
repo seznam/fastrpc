@@ -36,6 +36,7 @@
 
 #include <frpcmarshaller.h>
 #include <vector>
+#include <functional>
 #include <frpcwriter.h>
 #include <frpcinternals.h>
 #include <frpcint.h>
