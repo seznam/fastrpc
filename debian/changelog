@@ -1,3 +1,34 @@
+libfastrpc (8.0.9) stable; urgency=medium
+
+  * added missing include
+  * fix: fixed problem with dump dict key if is not string #GDPR_RS-108
+  * fix: fixed problem with dump sensitive data with treeDump #GDPR_RS-108
+  * #! python8.0.3
+  * Revert "fixed the README handing in setup.py after it was renamed"
+  * 
+  * This reverts commit bb135802139d88738d260253792a554151f9433a.
+  * #! python8.0.2
+  * Revert "Merge pull request #42 from Dundee/netcat-python3"
+  * 
+  * This reverts commit ce4afbedb840e589af7627b2d6c9ed2d17570b2f, reversing
+  * changes made to dec9b53e13b81140ff60644fb975b37894b0240f.
+  * Revert "Merge pull request #43 from Dundee/patch-1"
+  * 
+  * This reverts commit 700ea4bcbd3733e318c8a96a6f5e7f547740e910, reversing
+  * changes made to ce4afbedb840e589af7627b2d6c9ed2d17570b2f.
+  * Revert "Merge pull request #44 from Dundee/patch-2"
+  * 
+  * This reverts commit b290578bfdc1b77603d12b8e599169aafbb5a96c, reversing
+  * changes made to 700ea4bcbd3733e318c8a96a6f5e7f547740e910.
+  * Revert "Merge pull request #46 from iScrE4m/master"
+  * 
+  * This reverts commit edcaf368acc1fa39287e2877f6b1a947caa89c64, reversing
+  * changes made to b290578bfdc1b77603d12b8e599169aafbb5a96c.
+  * Removed obsolete test lines
+  * erase method for FRPC::Struct_t
+
+ -- Filip Volejnik <filip.volejnik@firma.seznam.cz>  Tue, 10 Apr 2018 08:21:19 +0100
+
 libfastrpc (8.0.8) stable; urgency=medium
 
   * Revert " #! v8.0.8"
