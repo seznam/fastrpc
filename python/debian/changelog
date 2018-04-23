@@ -1,13 +1,11 @@
-python-fastrpc (8.0.6) UNRELEASED; urgency=medium
+python-fastrpc (8.0.5) unstable; urgency=medium
 
+  [ Aleksey Rembish ]
   * Wheel support
   * Fixing header includes to the source package
   * Fixing python package naming
 
- -- Aleksey Rembish <aleksey.rembish@firma.seznam.cz>  Fri, 15 Sep 2017 10:41:24 +0200
-
-python-fastrpc (8.0.5) stable; urgency=medium
-
+  [ Martin Junk ]
   * fix: fixed problem with dump dict key if is not string #GDPR_RS-108
 
  -- Martin Junk <martin.junk@firma.seznam.cz>  Wed, 04 Apr 2018 07:31:04 +0200
@@ -21,7 +19,7 @@ python-fastrpc (8.0.4) stable; urgency=medium
 python-fastrpc (8.0.3) stable; urgency=medium
 
   * Revert "fixed the README handing in setup.py after it was renamed"
-  * 
+  *
   * This reverts commit bb135802139d88738d260253792a554151f9433a.
 
  -- Filip Volejnik <filip.volejnik@firma.seznam.cz>  Tue, 06 Mar 2018 09:48:19 +0100
@@ -29,16 +27,16 @@ python-fastrpc (8.0.3) stable; urgency=medium
 python-fastrpc (8.0.2) stable; urgency=medium
 
   * Revert "Merge pull request #42 from Dundee/netcat-python3"
-  * 
+  *
   * This reverts commit ce4afbedb840e589af7627b2d6c9ed2d17570b2f, reversing
   * changes made to dec9b53e13b81140ff60644fb975b37894b0240f.
   * Revert "Merge pull request #46 from iScrE4m/master"
-  * 
+  *
   * This reverts commit edcaf368acc1fa39287e2877f6b1a947caa89c64, reversing
   * changes made to b290578bfdc1b77603d12b8e599169aafbb5a96c.
   * fixed the README handing in setup.py after it was renamed
   * Fixed flask handler to actually accept and handle x-frpc content type.
-  * 
+  *
   * Due to the negotiation in all my previous test I didn't notice that the server didn't and couldn't accept binary data with x-frpc header. Fixed this to work with uWSGI, support for the rest of WSGI servers should be added eventually.
   * Arch python package
   * Markdown README added
