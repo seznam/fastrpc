@@ -1,3 +1,9 @@
+libfastrpc (8.0.10) UNRELEASED; urgency=medium
+
+  * fix: http client when using unix socket
+
+ -- Pavol Otto <pavol.otto@firma.seznam.cz>  Thu, 03 May 2018 09:38:53 +0200
+
 libfastrpc (8.0.9) stable; urgency=medium
 
   * added missing include
