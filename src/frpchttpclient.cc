@@ -91,7 +91,7 @@ inline void addHeader(StreamHolder_t& stream, const std::string& name, const T& 
 
 namespace FRPC {
 
-const std::string HTTPClient_t::HOST = "HOST";
+const std::string HTTPClient_t::HOST = "Host";
 const std::string HTTPClient_t::POST = "POST";
 const std::string HTTPClient_t::HTTP10 = "HTTP/1.0";
 const std::string HTTPClient_t::HTTP11 = "HTTP/1.1";
@@ -267,8 +267,15 @@ void HTTPClient_t::sendRequest(bool last) {
         StreamHolder_t os;
 
         //create header
-        os.os << POST << " " << url.path << ' ' << (useHTTP10 ? HTTP10 : HTTP11) << "\r\n";
-        os.os << HOST << ": " << url.host << ':' << url.port << "\r\n";
+        os.os << POST << ' ' << (url.isUnix() ? "/" : url.path) << ' '
+              << (useHTTP10 ? HTTP10 : HTTP11) << "\r\n";
+        if (!useHTTP10) {
+            os.os << HOST << ": ";
+            if (!url.isUnix()) {
+                os.os << url.host << ':' << url.port;
+            }
+            os.os << "\r\n";
+        }
 
         switch(useProtocol) {
         case XML_RPC:
