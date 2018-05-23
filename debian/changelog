@@ -1,4 +1,4 @@
-libfastrpc (8.0.10) UNRELEASED; urgency=medium
+libfastrpc (8.0.10) stable; urgency=medium
 
   * fix: http client when using unix socket
 
