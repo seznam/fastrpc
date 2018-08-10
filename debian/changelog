@@ -1,3 +1,9 @@
+libfastrpc (8.0.11) stable; urgency=medium
+
+  * fix: allow parse huge xml data
+
+ -- Martin Junk <martin.junk@firma.seznam.cz>  Fri, 10 Aug 2018 16:32:14 +0200
+
 libfastrpc (8.0.10) stable; urgency=medium
 
   * fix: http client when using unix socket
