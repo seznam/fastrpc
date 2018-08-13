@@ -245,6 +245,7 @@ XmlUnMarshaller_t::XmlUnMarshaller_t(DataBuilder_t & dataBuilder)
     callbacks.characters = (charactersSAXFunc)&charactersXML;
 
     parser =  xmlCreatePushParserCtxt(&callbacks,this,0,0,0);
+    parser->options = parser->options | XML_PARSE_HUGE;
 
 //    xmlCtxtResetPush(parser,0,0,0,"UTF-8");
 
