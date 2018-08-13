@@ -71,7 +71,7 @@ author = u"Miroslav Talášek"
 author_email = "miroslav.talasek@firma.seznam.cz"
 
 setup(
-    name="fastrpc",
+    name="python-fastrpc",
     version=version,
     author=author,
     author_email=author_email,
