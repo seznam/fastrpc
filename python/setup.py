@@ -80,10 +80,11 @@ setup(
     url="http://github.com/seznam/fastrpc/python",
     py_modules=['fastrpc'],
     ext_modules=[
-        Extension("_fastrpc", [
-            "fastrpcmodule.cc", "pythonserver.cc", "pyerrors.cc",
-            "pythonbuilder.cc", "pythonfeeder.cc"
-        ], libraries=["fastrpc"]),
+        Extension("_fastrpc", ["fastrpcmodule.cc", "pythonserver.cc", "pyerrors.cc",
+                               "pythonbuilder.cc", "pythonfeeder.cc"],
+                  libraries=['xml2'],
+                  extra_objects=[join(here, '../src/.libs/libfastrpc.a')],
+                  ),
     ],
     test_suite='test'
 )
