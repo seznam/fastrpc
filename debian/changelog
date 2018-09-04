@@ -1,3 +1,9 @@
+libfastrpc (8.0.12) stable; urgency=medium
+
+  * fixed version in configure.ac
+
+ -- Filip Volejnik <filip.volejnik@firma.seznam.cz>  Tue, 04 Sep 2018 13:20:38 +0100
+
 libfastrpc (8.0.11) stable; urgency=medium
 
   * fix: allow parse huge xml data
