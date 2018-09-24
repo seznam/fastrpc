@@ -82,11 +82,13 @@ public:
                                   const char *data, unsigned int len,
                                   bool rn = true);
 
+#if __cplusplus >= 201103L
     using Chunks_t = std::function<BinaryRefFeeder_t::Chunk_t()>;
 
     static void writeEncodeBase64(Writer_t &writer,
                                   Chunks_t chunks,
                                   bool rn = true);
+#endif
 
 private:
     XmlMarshaller_t();
