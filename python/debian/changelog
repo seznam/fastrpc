@@ -1,3 +1,9 @@
+python-fastrpc (8.0.6) stable; urgency=medium
+
+  * enforce new frpc lib that includes the <c++11 fix
+
+ -- Filip Volejnik <filip.volejnik@firma.seznam.cz>  Mon, 24 Sep 2018 10:27:14 +0100
+
 python-fastrpc (8.0.5) stable; urgency=medium
 
   * fix: fixed problem with dump dict key if is not string #GDPR_RS-108
