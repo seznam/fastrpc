@@ -32,6 +32,8 @@
 
 #if PY_MAJOR_VERSION >= 3
 
+using PyStrDataType_t = const char *;
+
 // python string to string and size
 # define STR_ASSTRANDSIZE(str, data, len) \
     data = PyUnicode_AsUTF8AndSize(str, &len); \
@@ -43,6 +45,8 @@
 #define PyInt_AsLong PyLong_AsLong
 
 #else
+
+using PyStrDataType_t = char *;
 
 // Python string to string and size
 # define STR_ASSTRANDSIZE(str, data, len) \

@@ -229,7 +229,7 @@ namespace {
 
     PyObject *stringToSignature(PyObject *signature) {
         Py_ssize_t size;
-        char *buffer;
+        PyStrDataType_t buffer;
         STR_ASSTRANDSIZE(signature, buffer, size) {
             return 0;
         }
@@ -435,7 +435,7 @@ namespace {
         PyObjectWrapper_t pyMessage =
             PyUnicode_Format(Fault_message_format, formatArgs);
 
-        char *faultStgring;
+        PyStrDataType_t faultStgring;
         Py_ssize_t faultStringSize;
         STR_ASSTRANDSIZE(pyMessage, faultStgring, faultStringSize) {
             throw PyError_t();
@@ -730,7 +730,7 @@ namespace {
 
         // fetch string as C string
         Py_ssize_t size;
-        char *buf;
+        PyStrDataType_t buf;
         STR_ASSTRANDSIZE(message, buf, size) {
             return 0;
         }
@@ -870,11 +870,12 @@ PyObject* Server_t::serve(int fd, PyObjectWrapper_t addr) {
                         PyObjectWrapper_t pyFaultString
                             (PyObject_GetAttrString(result, "faultString"));
                         if (!pyFaultString) throw PyError_t();
-                        char *faultString;
+                        PyStrDataType_t faultString;
                         Py_ssize_t faultStringSize;
                         STR_ASSTRANDSIZE(pyFaultString,
-                                                     faultString,
-                                                     faultStringSize) {
+                                         faultString,
+                                         faultStringSize)
+                        {
                             throw PyError_t();
                         }
 
@@ -1888,7 +1889,7 @@ DECL_METHOD(MethodRegistryObject, system_multicall) {
         }
 
         Py_ssize_t len;
-        char *name;
+        PyStrDataType_t name;
         STR_ASSTRANDSIZE(methodName, name, len) {
             PyObjectWrapper_t type;
             PyObjectWrapper_t value;
@@ -2202,7 +2203,7 @@ namespace {
 #else
         if (PyUnicode_Check(signature)) {
 #endif
-            char *sig;
+            PyStrDataType_t sig;
             Py_ssize_t sigSize;
             STR_ASSTRANDSIZE(signature, sig, sigSize) {
                 throw PyError_t();

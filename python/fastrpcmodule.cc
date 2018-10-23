@@ -330,7 +330,7 @@ int TimeObject_init_parseString(DateTimeObject *self, PyObject *pyValue) {
     char month, day, hour, min, sec;
 
     Py_ssize_t len;
-    char *data;
+    PyStrDataType_t data;
     STR_ASSTRANDSIZE(pyValue, data, len) {
         return 0;
     }
@@ -1677,7 +1677,7 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
                                    0};
 
     // parse arguments
-    char *serverUrl;
+    PyStrDataType_t serverUrl;
     int serverUrlLen;
     int readTimeout = -1;
     int writeTimeout = -1;
@@ -2391,7 +2391,7 @@ PyObject* fastrpc_dumps(PyObject *, PyObject *args, PyObject *keywds) {
                 return 0;
             }
 
-            char *str;
+            PyStrDataType_t str;
             Py_ssize_t strSize;
             STR_ASSTRANDSIZE(faultString.get(), str, strSize) {
                 return 0;
@@ -2466,13 +2466,15 @@ PyObject* fastrpc_loads(PyObject *, PyObject *args, PyObject *keywds) {
     StringMode_t stringMode = parseStringMode(stringMode_);
     if (stringMode == STRING_MODE_INVALID) return 0;
 
-    char *dataStr;
+    PyStrDataType_t dataStr;
     Py_ssize_t dataSize;
 #if PY_MAJOR_VERSION >= 3
     if (PyBytes_Check(data)) {
-        if (PyBytes_AsStringAndSize(data, &dataStr, &dataSize) < 0) {
+        char *ncDataStr;
+        if (PyBytes_AsStringAndSize(data, &ncDataStr, &dataSize) < 0) {
             return 0;
         }
+        dataStr = ncDataStr;
     } else STR_ASSTRANDSIZE(data, dataStr, dataSize) {
         return 0;
     }
@@ -2573,7 +2575,7 @@ inline int printString(std::ostringstream &out, PyObject *obj,
                        Py_ssize_t limit = 10, bool binary = false)
 {
     // 7bit string
-    char *str;
+    PyStrDataType_t str;
     Py_ssize_t len;
     STR_ASSTRANDSIZE(obj, str, len) {
         // oops, cannot get string

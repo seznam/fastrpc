@@ -143,7 +143,7 @@ void Feeder_t::feedValue(PyObject *value)
             i = PyLong_AsUnsignedLongLong(value);
         else
             i = PyLong_AsLongLong(value);
-               
+
         // check for error
         if (PyErr_Occurred()) throw PyError_t();
         marshaller->packInt(i);
@@ -186,11 +186,11 @@ void Feeder_t::feedValue(PyObject *value)
         marshaller->packBinary(str, strLen);
     } else if (PyUnicode_Check(value)) {
         // get string and marshall it
-        char *str;
+        PyStrDataType_t str;
         Py_ssize_t strLen;
-        str = PyUnicode_AsUTF8AndSize(value, &strLen); \
-        if (str == NULL)
+        STR_ASSTRANDSIZE(value, str, strLen) {
             throw PyError_t();
+        }
 
         marshaller->packString(str, strLen);
 #else
@@ -278,7 +278,7 @@ void Feeder_t::feedValue(PyObject *value)
             }
 #endif
 
-            char *str;
+            PyStrDataType_t str;
             Py_ssize_t strLen;
             STR_ASSTRANDSIZE(key, str, strLen) {
                 throw PyError_t();
@@ -319,7 +319,7 @@ void Feeder_t::feedValue(PyObject *value)
         std::string objectRepr = "unknown";
         if (PyObjectWrapper_t repr = PyObject_Repr(value)) {
             Py_ssize_t len;
-            char *data;
+            PyStrDataType_t data;
             STR_ASSTRANDSIZE(repr, data, len) {
                 throw PyError_t();
             }
@@ -343,6 +343,3 @@ void destroy_frpc_python_feeder(FRPC::Python::FeederInterface_t *feeder) {
 }
 
 } // extern "C"
-
-
-
