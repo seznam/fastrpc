@@ -78,6 +78,23 @@ std::string getISODateTime(short year, char month,
  * @short Dump FastRPC tree to string.
  * @param value FastRPC value.
  * @param outstr dump storage string.
+ * @param level dump only to this level. (-1 = unlimited)
+ * @param names mask all struct members with this names
+ * @param pos mask all array members at these positions in top level array.
+ * @param maxlen maximum length of string or binary values (-1 = unlimited)
+ * @return zero
+ */
+int FRPC_DLLEXPORT dumpFastrpcTree(
+    const Value_t &value,
+    std::string &outstr,
+    int level,
+    const std::set<std::string> &names,
+    const std::bitset<sizeof(unsigned long) * 8> &pos,
+    long maxlen);
+/**
+ * @short Dump FastRPC tree to string.
+ * @param value FastRPC value.
+ * @param outstr dump storage string.
  * @param level dump only to this level.
  * @param names mask all struct members with this names
  * @param pos mask all array members at these positions in top level array.
