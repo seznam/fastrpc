@@ -266,18 +266,24 @@ void parseISODateTime(const char *data, long len, short &year, char &month,
 
 }
 
-/**
- * @short Dump FastRPC tree to string.
- * @param value FastRPC value.
- * @param outstr dump storage string.
- * @param level dump only to this level.
- * @param names mask all struct members with this names
- * @param pos mask all array members at these positions in top level array.
- * @return zero
- */
-int FRPC_DLLEXPORT dumpFastrpcTree(const Value_t &value, std::string &outstr,
-                                   int level, std::set<std::string> names,
-                                   std::bitset<sizeof(unsigned long) * 8> pos) {
+int FRPC_DLLEXPORT dumpFastrpcTree(
+    const Value_t &value,
+    std::string &outstr,
+    int level,
+    std::set<std::string> names,
+    std::bitset<sizeof(unsigned long) * 8> pos)
+{
+    return dumpFastrpcTree(value, outstr, level, names, pos, MAX_LEN);
+}
+
+int FRPC_DLLEXPORT dumpFastrpcTree(
+    const Value_t &value,
+    std::string &outstr,
+    int level,
+    const std::set<std::string> &names,
+    const std::bitset<sizeof(unsigned long) * 8> &pos,
+    long maxlen)
+{
     std::ostringstream out;
 
     switch (value.getType()) {
@@ -299,8 +305,8 @@ int FRPC_DLLEXPORT dumpFastrpcTree(const Value_t &value, std::string &outstr,
     case String_t::TYPE: {
 
             out << '"';
-            if (String(value).size() > MAX_LEN)
-                out << String(value).getString().substr(0,MAX_LEN) << "...";
+            if (maxlen != -1 && String(value).size() > (unsigned long)maxlen)
+                out << String(value).getString().substr(0,maxlen) << "...";
             else
                 out << String(value).getString();
             out << '"';
@@ -311,12 +317,13 @@ int FRPC_DLLEXPORT dumpFastrpcTree(const Value_t &value, std::string &outstr,
 
     case Binary_t::TYPE: {
             out << "b\"";
-            auto len = MAX_LEN;
+            auto len = maxlen;
             auto &bin = Binary(value);
             HexWriter_t hexWriter(out);
             for (decltype(bin.size()) i = 0; i < bin.size(); ++i) {
                 *hexWriter = bin.data()[i];
-                if (--len == 0) break;
+                if ((maxlen != -1) && (--len == 0))
+                    break;
             }
             if (!len) out << "...";
             out << '"';
@@ -324,12 +331,12 @@ int FRPC_DLLEXPORT dumpFastrpcTree(const Value_t &value, std::string &outstr,
         break;
 
     case BinaryRef_t::TYPE: {
-            auto len = MAX_LEN;
+            auto len = maxlen;
             HexWriter_t hexWriter(out);
             for (auto chunk: BinaryRef(value).chunks()) {
                 for (decltype(chunk.size) i = 0; i < chunk.size; ++i) {
                     *hexWriter = chunk.data[i];
-                    if (--len == 0) break;
+                    if ((maxlen != -1) && (--len == 0)) break;
                 }
                 if (len == 0) break;
             }
@@ -363,7 +370,7 @@ int FRPC_DLLEXPORT dumpFastrpcTree(const Value_t &value, std::string &outstr,
             bool first = true;
             out << '{';
 
-            if (level) {
+            if (level || (level == -1)) {
                 for (Struct_t::const_iterator
                         i = structVal.begin();
                         i != structVal.end(); ++i) {
@@ -378,8 +385,9 @@ int FRPC_DLLEXPORT dumpFastrpcTree(const Value_t &value, std::string &outstr,
 
                     } else {
                         std::string val_str;
-                        dumpFastrpcTree(*(i->second), val_str, level - 1,
-                                        names, 0);
+                        dumpFastrpcTree(*(i->second), val_str,
+                                        level == -1 ? -1 : (level - 1),
+                                        names, 0, maxlen);
                         out << i->first << ": " << val_str;
                     }
 
@@ -396,7 +404,7 @@ int FRPC_DLLEXPORT dumpFastrpcTree(const Value_t &value, std::string &outstr,
             const Array_t &array = Array(value);
             bool first = true;
             out << '(';
-            if (level) {
+            if (level || (level == -1)) {
 
                 for (Array_t::const_iterator
                         i = array.begin(), e = array.end(), b = array.begin();
@@ -412,7 +420,9 @@ int FRPC_DLLEXPORT dumpFastrpcTree(const Value_t &value, std::string &outstr,
 
                     } else {
                         std::string str;
-                        dumpFastrpcTree(**i, str, level - 1, names, 0);
+                        dumpFastrpcTree(**i, str,
+                                        level == -1 ? -1 : (level - 1),
+                                        names, 0, maxlen);
                         out << str;
                     }
                 }
