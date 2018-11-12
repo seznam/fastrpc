@@ -1,3 +1,14 @@
+libfastrpc (8.0.14) stable; urgency=medium
+
+  * dumpFastrpcTree unlimited
+  * Fixed compilation of python module for python3
+  * #! python8.0.7
+  * #! python8.0.6
+  * enforce new frpc lib that includes the <c++11 fix
+  * added js (es2015) protocol implementation
+
+ -- Filip Volejnik <filip.volejnik@firma.seznam.cz>  Mon, 12 Nov 2018 14:10:14 +0100
+
 libfastrpc (8.0.13) stable; urgency=medium
 
   * only allow binaryref in marshaller for c++11 compilers
