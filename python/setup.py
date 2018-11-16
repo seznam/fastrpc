@@ -27,7 +27,8 @@ from debian.changelog import Changelog
 from distutils import sysconfig
 from os import uname
 from os.path import dirname, join
-from setuptools import setup, Extension
+from setuptools import find_packages, setup, Extension
+import sys
 
 
 def _init_posix(init):
@@ -62,13 +63,17 @@ sysconfig._init_posix = _init_posix(sysconfig._init_posix)
 
 
 here = dirname(__file__)
-readme = join(here, 'README')
+readme = join(here, 'README.md')
 changelog = join(here, "debian/changelog")
 
 version = str(Changelog(open(changelog, 'rt')).get_version())
 
 author = u"Miroslav Talášek"
 author_email = "miroslav.talasek@firma.seznam.cz"
+exclude = []
+
+if sys.version_info.major < 3:
+    exclude.append('fastrpc.handler*')
 
 setup(
     name="fastrpc",
@@ -78,7 +83,7 @@ setup(
     description=__doc__.strip().split("\n")[0],
     long_description=open(readme, 'rt').read().strip(),
     url="http://github.com/seznam/fastrpc/python",
-    py_modules=['fastrpc'],
+    packages=find_packages(include=['fastrpc*'], exclude=exclude),
     ext_modules=[
         Extension("_fastrpc", [
             "fastrpcmodule.cc", "pythonserver.cc", "pyerrors.cc",
