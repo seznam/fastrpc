@@ -1,3 +1,20 @@
+libfastrpc (8.0.15) stable; urgency=medium
+
+  * #74 Do not default to v1.0 in xmlrpc mode if no protocolVersion is specified in the server output.
+  * #! python8.0.8
+  * added typescript implementation
+  * Fixed flask handler to actually accept and handle x-frpc content type.
+  * 
+  * Due to the negotiation in all my previous test I didn't notice that the server didn't and couldn't accept binary data with x-frpc header. Fixed this to work with uWSGI, support for the rest of WSGI servers should be added eventually.
+  * Arch python package
+  * Markdown README added
+  * handlers for using FastRPC with Flask, Aiohttp and Tornado (Shelter)
+  * server example renamed
+  * python package instead of module
+  * Added install instruction for older gcc
+
+ -- Filip Volejnik <filip.volejnik@firma.seznam.cz>  Mon, 03 Dec 2018 14:01:27 +0100
+
 libfastrpc (8.0.14) stable; urgency=medium
 
   * dumpFastrpcTree unlimited
