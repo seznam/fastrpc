@@ -286,8 +286,6 @@ void XmlUnMarshaller_t::unMarshall(
                                            + versionStr.size() ) - 0x30;
             protocolVersion.versionMinor = buffer.at(idx
                                            + versionStr.size() + 2 ) - 0x30;
-        } else {
-            protocolVersion = ProtocolVersion_t(1,0);
         }
         versionCheck = false;
     }
