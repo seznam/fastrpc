@@ -233,7 +233,7 @@ public:
     /**
         @brief Remove Value_t from Struct_t with key
         @param key is reference to Struct_t::key_type
-        @return Struct_t& reference with apended value
+        @return the number of elements erased
     */
     size_type erase(const key_type &key);
 
