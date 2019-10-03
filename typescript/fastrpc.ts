@@ -21,7 +21,6 @@ Radlická 3294/10, Praha 5, 15000, Czech Republic
 http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
 */
 
-const TYPE_MAGIC     = 25;
 const TYPE_CALL      = 13;
 const TYPE_RESPONSE  = 14;
 const TYPE_FAULT     = 15;
@@ -42,10 +41,14 @@ export let surrogateFlag = false;
 
 let _hints: null | any = null;
 let _path: string[] = [];
-let _data: number[] = [];
+let _data: Uint8Array;
 let _pointer = 0;
 
-function _parseValue() {
+interface Dict {[name:string]:any};
+interface Hints {[name:string]:string};
+type BYTES = number[]
+
+function _parseValue(): any {
 	/* pouzite optimalizace:
 	 * - zkracena cesta ke konstantam v ramci redukce tecek
 	 * - posun nejpouzivanejsich typu nahoru
@@ -128,12 +131,12 @@ function _parseValue() {
 	}
 }
 
-function _append(arr1, arr2) {
+function _append(arr1: BYTES, arr2: BYTES) {
 	let len = arr2.length;
 	for (let i=0;i<len;i++) { arr1.push(arr2[i]); }
 }
 
-function _parseMember(result) {
+function _parseMember(result: Dict) {
 	let nameLength = _getInt(1);
 	let name = _decodeUTF8(nameLength);
 	result[name] = _parseValue();
@@ -142,7 +145,7 @@ function _parseMember(result) {
 /**
  * In little endian
  */
-function _getInt(bytes) {
+function _getInt(bytes:number) {
 	let result = 0;
 	let factor = 1;
 
@@ -159,7 +162,7 @@ function _getByte() {
 	return _data[_pointer++];
 }
 
-function _decodeUTF8(length) {
+function _decodeUTF8(length: number) {
 	/* pouzite optimalizace:
 	 * - pracujeme nad stringem namisto pole; FF i IE to kupodivu (!) maji rychlejsi
 	 * - while namisto for
@@ -226,8 +229,8 @@ function _decodeUTF8(length) {
 	return result;
 }
 
-function _encodeUTF8(str) {
-	let result: number[] = [];
+function _encodeUTF8(str:string) {
+	let result: BYTES = [];
 	for (let i=0;i<str.length;i++) {
 		let c = str.charCodeAt(i);
 		if (c >= 55296 && c <= 56319) { /* surrogates */
@@ -255,7 +258,7 @@ function _encodeUTF8(str) {
 }
 
 function _getDouble() {
-	let bytes: number[] = [];
+	let bytes: BYTES = [];
 	let index = 8;
 	while (index--) { bytes[index] = _getByte(); }
 
@@ -295,7 +298,7 @@ function _getDouble() {
 	return Math.pow(-1, sign) * Math.pow(2, exponent) * (1+mantissa);
 }
 
-function _serializeValue(result, value) {
+function _serializeValue(result: BYTES, value: any) {
 	if (value === null) {
 		result.push(TYPE_NULL << 3);
 		return;
@@ -355,7 +358,7 @@ function _serializeValue(result, value) {
 	}
 }
 
-function _serializeArray(result, data) {
+function _serializeArray(result: BYTES, data: any[]) {
 	if (_getHint() == "binary") { /* binarni data */
 		let first = TYPE_BINARY << 3;
 		let intData = _encodeInt(data.length);
@@ -381,9 +384,10 @@ function _serializeArray(result, data) {
 	}
 }
 
-function _serializeStruct(result, data) {
+function _serializeStruct(result: BYTES, data: Dict) {
 	let numMembers = 0;
-	for (let p in data) { numMembers++; }
+	let p;
+	for (p in data) { numMembers++; }
 
 	let first = TYPE_STRUCT << 3;
 	let intData = _encodeInt(numMembers);
@@ -404,7 +408,7 @@ function _serializeStruct(result, data) {
 	}
 }
 
-function _serializeDate(result, date) {
+function _serializeDate(result: BYTES, date: Date) {
 	result.push(TYPE_DATETIME << 3);
 
 	/* 1 bajt, zona */
@@ -441,7 +445,7 @@ function _serializeDate(result, date) {
 /**
  * Zakoduje KLADNE cele cislo, little endian
  */
-function _encodeInt(data) {
+function _encodeInt(data: number) {
 	if (!data) { return [0]; }
 
 	let result: number[] = [];
@@ -459,7 +463,7 @@ function _encodeInt(data) {
 /**
  * Zakoduje IEEE-754 double
  */
-function _encodeDouble(num) {
+function _encodeDouble(num: number) {
 	let result: number[] = [];
 
 	let expBits = 11;
@@ -535,7 +539,7 @@ function _getHint() {
  * @param {object} hints hinty, ktera cisla maji byt floaty a kde jsou binarni data (klic = cesta, hodnota = "float"/"binary")
  * @returns {number[]}
  */
-export function serialize(data, hints) {
+export function serialize(data: any, hints?: Hints) {
 	let result: number[] = [];
 	_path = [];
 	_hints = hints;
@@ -554,7 +558,7 @@ export function serialize(data, hints) {
  * pak mnozina dvojic "cesta":"datovy typ"; cesta je teckami dodelena posloupnost
  * klicu a/nebo indexu v datech. Typ je "float" nebo "binary".
  */
-export function serializeCall(method, data, hints) {
+export function serializeCall(method:string, data:any, hints?: Hints) {
 	let result = serialize(data, hints);
 
 	/* utrhnout hlavicku pole (dva bajty) */
@@ -574,7 +578,7 @@ export function serializeCall(method, data, hints) {
  * @param {number[]} data
  * @returns {object}
  */
-export function parse(data) {
+export function parse(data: Uint8Array) {
 	surrogateFlag = false;
 	_pointer = 0;
 	_data = data;
@@ -583,7 +587,7 @@ export function parse(data) {
 	let magic2 = _getByte();
 
 	if (magic1 != 0xCA || magic2 != 0x11) {
-		_data = [];
+		_data = new Uint8Array();
 		throw new Error("Missing FRPC magic");
 	}
 
@@ -596,7 +600,7 @@ export function parse(data) {
 	if (type == TYPE_FAULT) {
 		let num = _parseValue();
 		let msg = _parseValue();
-		_data = [];
+		_data = new Uint8Array()
 		throw new Error("FRPC/"+num+": "+msg);
 	}
 
@@ -606,7 +610,7 @@ export function parse(data) {
 		case TYPE_RESPONSE:
 			result = _parseValue();
 			if (_pointer < _data.length) {
-				_data = [];
+				_data = new Uint8Array();
 				throw new Error("Garbage after FRPC data");
 			}
 		break;
@@ -616,16 +620,16 @@ export function parse(data) {
 			let name = _decodeUTF8(nameLength);
 			let params: any[] = [];
 			while (_pointer < _data.length) { params.push(_parseValue()); }
-			_data = [];
+			_data = new Uint8Array();
 			return {method:name, params:params};
 		break;
 
 		default:
-			_data = [];
+			_data = new Uint8Array()
 			throw new Error("Unsupported TYPE "+type);
 		break;
 	}
 
-	_data = [];
+	_data = new Uint8Array()
 	return result;
 }
