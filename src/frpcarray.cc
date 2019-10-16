@@ -162,7 +162,7 @@ void Array_t::checkItems(const std::string &items) const
 
     if(arrayData.size() != itemsSize) {
         throw LenError_t::format("Array must have %zd parameters.",
-                                 items.size());
+                                 itemsSize);
     }
 
     unsigned int itemNum = 0;
