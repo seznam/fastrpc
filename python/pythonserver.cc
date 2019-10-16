@@ -1194,8 +1194,8 @@ void Server_t::sendResponse() {
         queryStorage.back().erase();
     } else {
         while (queryStorage.size() != 1) {
-            io.sendData(queryStorage.back().data(),queryStorage.back().size());
-            queryStorage.pop_back();
+            io.sendData(queryStorage.front().data(),queryStorage.front().size());
+            queryStorage.pop_front();
         }
 
         io.sendData(queryStorage.back().data(),queryStorage.back().size());
