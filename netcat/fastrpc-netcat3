@@ -27,7 +27,13 @@ if not PY3:
     exit(1)
 
 try:
+    # FastRPC does not provide HTTP Auth
+    if len(argv) > 1 and '@' in argv[1]:
+        sys.AUTH = True
+        raise Exception('HTTP AUTH')
+
     sys.FASTRPC = True
+    sys.AUTH = False
     from fastrpc import (
         Fault, ProtocolError, ServerProxy,
         ON_SUPPORT_ON_KEEP_ALIVE, DateTime, Boolean
@@ -386,7 +392,7 @@ def main():
 
     license()
 
-    if not sys.FASTRPC:
+    if not sys.FASTRPC and not sys.AUTH:
         print("FastRPC not found, using XML-RPC instead.")
         print(
             "Consider installing FastRPC for Python {}.".format(
@@ -413,6 +419,7 @@ def main():
     if len(argv) not in [1, 2, 3] or argv[1:] in [['-h'], ['--help']]:
         print("Usage: {}".format(argv[0]))
         print("       {} http://{{host}}:{{port}}/{{path}}".format(argv[0]))
+        print("       {} http://{{user}}:{{pass}}@{{host}}:{{port}}/{{path}}".format(argv[0]))
         print("       {} {{host}} {{port}}".format(argv[0]))
         exit(0)
 
