@@ -1,6 +1,6 @@
 /*
 FastRPC library written in TypeScript
-Copyright (C) 2005-2019 Seznam.cz, a.s.
+Copyright (C) 2005-2018 Seznam.cz, a.s.
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -39,14 +39,21 @@ const TYPE_NULL      = 12;
 
 export let surrogateFlag = false;
 
-let _hints: null | any = null;
+let _hints: undefined | Hints;
 let _path: string[] = [];
 let _data: Uint8Array;
 let _pointer = 0;
+let _version: number;
+let _typedArrays: boolean;
 
 interface Dict {[name:string]:any};
 interface Hints {[name:string]:string};
-type BYTES = number[]
+interface Options {
+	version: number;
+	typedArrays: boolean;
+}
+
+type BYTES = number[];
 
 function _parseValue(): any {
 	/* pouzite optimalizace:
@@ -59,14 +66,17 @@ function _parseValue(): any {
 
 	switch (type) {
 		case TYPE_STRING:
-			lengthBytes = (first & 7) + 1;
+			lengthBytes = (first & 7);
+			if (_version > 1) { lengthBytes++; }
+			if (!lengthBytes) { throw new Error("Bad string size"); }
 			length = _getInt(lengthBytes);
 			return _decodeUTF8(length);
 		break;
 
 		case TYPE_STRUCT:
 			result = {};
-			lengthBytes = (first & 7) + 1;
+			lengthBytes = (first & 7);
+			if (_version > 1) { lengthBytes++; }
 			members = _getInt(lengthBytes);
 			while (members--) { _parseMember(result); }
 			return result;
@@ -74,27 +84,36 @@ function _parseValue(): any {
 
 		case TYPE_ARRAY:
 			result = [];
-			lengthBytes = (first & 7) + 1;
+			lengthBytes = (first & 7);
+			if (_version > 1) { lengthBytes++; }
 			members = _getInt(lengthBytes);
 			while (members--) { result.push(_parseValue()); }
 			return result;
 		break;
 
 		case TYPE_BOOL:
-			return (first & 1 ? true : false);
+			result = (first & 7);
+			if (result > 1) { throw new Error(`Invalid bool value ${result}`); }
+			return !!result;
 		break;
 
 		case TYPE_INT:
 			length = first & 7;
-			let max = Math.pow(2, 8*length);
-			result = _getInt(length);
-			if (result >= max/2) { result -= max; }
-			return result;
+			if (_version == 3) {
+				return _getZigzag(length+1);
+			} else {
+				if (!length) { throw new Error("Bad int size"); }
+				let max = 0x80000000;
+				result = _getInt(length);
+				if (result >= max) { result -= max; }
+				return result;
+			}
 		break;
 
 		case TYPE_DATETIME:
 			_getByte();
-			let ts = _getInt(4);
+			let tsBytes = (_version == 3 ? 8 : 4);
+			let ts = _getInt(tsBytes);
 			for (let i=0;i<5;i++) { _getByte(); }
 			return new Date(1000*ts);
 		break;
@@ -104,10 +123,17 @@ function _parseValue(): any {
 		break;
 
 		case TYPE_BINARY:
-			lengthBytes = (first & 7) + 1;
+			lengthBytes = (first & 7);
+			if (_version > 1) { lengthBytes++; }
+			if (!lengthBytes) { throw new Error("Bad binary size"); }
 			length = _getInt(lengthBytes);
-			result = [];
-			while (length--) { result.push(_getByte()); }
+			if (_typedArrays) {
+				result = new Uint8Array(length);
+				for (let i=0;i<length;i++) { result[i] = _getByte(); }
+			} else {
+				result = [];
+				while (length--) { result.push(_getByte()); }
+			}
 			return result;
 		break;
 
@@ -118,11 +144,12 @@ function _parseValue(): any {
 
 		case TYPE_INT8N:
 			length = (first & 7) + 1;
-			return -_getInt(length);
+			result = _getInt(length);
+			return (result ? -result : 0); // no negative zero
 		break;
 
 		case TYPE_NULL:
-			return null;
+			if (_version > 1) { return null; } else { throw new Error("Null value not supported in protocol v1"); }
 		break;
 
 		default:
@@ -142,10 +169,16 @@ function _parseMember(result: Dict) {
 	result[name] = _parseValue();
 }
 
-/**
- * In little endian
- */
-function _getInt(bytes:number) {
+function _getZigzag(bytes: number) {
+	let result = _getInt(bytes);
+	let minus = result % 2;
+	result = Math.floor(result/2);
+
+	return (minus ? -1*(result+1) : result);
+}
+
+/// In little endian
+function _getInt(bytes: number) {
 	let result = 0;
 	let factor = 1;
 
@@ -158,7 +191,7 @@ function _getInt(bytes:number) {
 }
 
 function _getByte() {
-	if ((_pointer + 1) > _data.length) { throw new Error("Cannot read byte from buffer"); }
+	if ((_pointer + 1) > _data.length) { throw new Error(`Cannot read byte ${_pointer} from buffer`); }
 	return _data[_pointer++];
 }
 
@@ -318,21 +351,28 @@ function _serializeValue(result: BYTES, value: any) {
 		break;
 
 		case "number":
-			if (_getHint() == "float") { /* float */
+			if (_getHint() == "float") { // float
 				let first = TYPE_DOUBLE << 3;
 				let floatData = _encodeDouble(value);
 
 				result.push(first);
 				_append(result, floatData);
-			} else { /* int */
-				let first = (value >= 0 ? TYPE_INT8P : TYPE_INT8N);
-				first = first << 3;
+			} else { // int
+				if (_version == 3) {
+					let data = _encodeZigzag(value);
+					let first = (TYPE_INT << 3) + (data.length-1);
+					result.push(first);
+					_append(result, data);
+				} else {
+					let first = (value >= 0 ? TYPE_INT8P : TYPE_INT8N);
+					first = first << 3;
 
-				let data = _encodeInt(Math.abs(value));
-				first += (data.length-1);
+					let data = _encodeInt(Math.abs(value));
+					first += (data.length-1);
 
-				result.push(first);
-				_append(result, data);
+					result.push(first);
+					_append(result, data);
+				}
 			}
 		break;
 
@@ -342,7 +382,7 @@ function _serializeValue(result: BYTES, value: any) {
 			result.push(data);
 		break;
 
-		case "object":
+		case "object": // FIXME uint8array
 			if (value instanceof Date) {
 				_serializeDate(result, value);
 			} else if (value instanceof Array) {
@@ -352,14 +392,14 @@ function _serializeValue(result: BYTES, value: any) {
 			}
 		break;
 
-		default: /* undefined, function, ... */
-			throw new Error("FRPC does not allow value "+value);
+		default: // undefined, function, ...
+			throw new Error(`FRPC does not allow value ${value}`);
 		break;
 	}
 }
 
 function _serializeArray(result: BYTES, data: any[]) {
-	if (_getHint() == "binary") { /* binarni data */
+	if (_getHint() == "binary") {
 		let first = TYPE_BINARY << 3;
 		let intData = _encodeInt(data.length);
 		first += (intData.length-1);
@@ -401,30 +441,38 @@ function _serializeStruct(result: BYTES, data: Dict) {
 		result.push(strData.length);
 		_append(result, strData);
 		_path.push(p);
-//      let index = result.length;
 		_serializeValue(result, data[p]);
 		_path.pop();
-//      console.log(p, data[p], result.slice(index, result.length));
 	}
 }
 
 function _serializeDate(result: BYTES, date: Date) {
 	result.push(TYPE_DATETIME << 3);
 
-	/* 1 bajt, zona */
-	let zone = date.getTimezoneOffset()/15; /* pocet ctvrthodin */
-	if (zone < 0) { zone += 256; } /* dvojkovy doplnek */
+	// 1 bajt, zona 
+	let zone = date.getTimezoneOffset()/15; // pocet ctvrthodin
+	if (zone < 0) { zone += 256; } // dvojkovy doplnek
 	result.push(zone);
 
-	/* 4 bajty, timestamp */
+	// 4/8 bajty, timestamp
 	let ts = Math.round(date.getTime() / 1000);
-	if (ts < 0 || ts >= Math.pow(2, 31)) { ts = -1; }
-	if (ts < 0) { ts += Math.pow(2, 32); } /* dvojkovy doplnek */
-	let tsData = _encodeInt(ts);
-	while (tsData.length < 4) { tsData.push(0); } /* do 4 bajtu */
-	_append(result, tsData);
+	if (_version == 3) {
+		if (ts < 0) { // 64bit -1 neumime v JS zapsat
+			_append(result, [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]);
+		} else {
+			let tsData = _encodeInt(ts);
+			while (tsData.length < 8) { tsData.push(0); } // do maximalniho poctu bajtu
+			_append(result, tsData);
+		}
+	} else {
+		if (ts < 0 || ts >= Math.pow(2, 31)) { ts = -1; }
+		if (ts < 0) { ts += Math.pow(2, 32); } // dvojkovy doplnek
+		let tsData = _encodeInt(ts);
+		while (tsData.length < 4) { tsData.push(0); } // do maximalniho poctu bajtu
+		_append(result, tsData);
+	}
 
-	/* 5 bajtu, zbyle haluze */
+	// 5 bajtu, zbyle haluze
 	let year = date.getFullYear()-1600;
 	year = Math.max(year, 0);
 	year = Math.min(year, 2047);
@@ -442,13 +490,24 @@ function _serializeDate(result: BYTES, date: Date) {
 	result.push( (year & 0x07f8) >> 3 );
 }
 
+function _encodeZigzag(num: number) {
+	let lastBit = 0;
+	if (num < 0) {
+		lastBit = 1;
+		num *= -1;
+	}
+
+	num = 2*num + lastBit;
+	return _encodeInt(num);
+}
+
 /**
  * Zakoduje KLADNE cele cislo, little endian
  */
 function _encodeInt(data: number) {
 	if (!data) { return [0]; }
 
-	let result: number[] = [];
+	let result: BYTES = [];
 	let remain = data;
 
 	while (remain) {
@@ -464,7 +523,7 @@ function _encodeInt(data: number) {
  * Zakoduje IEEE-754 double
  */
 function _encodeDouble(num: number) {
-	let result: number[] = [];
+	let result: BYTES = [];
 
 	let expBits = 11;
 	let fracBits = 52;
@@ -497,7 +556,7 @@ function _encodeDouble(num: number) {
 		}
 	}
 
-	let bits: number[] = [];
+	let bits: BYTES = [];
 	for (let i = fracBits; i>0; i--) {
 		bits.push(fraction % 2 ? 1 : 0);
 		fraction = Math.floor(fraction/2);
@@ -537,18 +596,20 @@ function _getHint() {
  * @param {string} method
  * @param {?} data
  * @param {object} hints hinty, ktera cisla maji byt floaty a kde jsou binarni data (klic = cesta, hodnota = "float"/"binary")
- * @returns {number[]}
+ * @returns {BYTES}
  */
-export function serialize(data: any, hints?: Hints) {
-	let result: number[] = [];
+export function serialize(data: any, hints?: Hints, options?: Partial<Options>) {
+	let result: BYTES = [];
 	_path = [];
 	_hints = hints;
 
+	_version = (options && options.version) || 2;
 	_serializeValue(result, data);
 
-	_hints = null;
+	_hints = undefined;
 	return result;
 }
+
 
 /**
  * @param {string} method
@@ -557,9 +618,10 @@ export function serialize(data: any, hints?: Hints) {
  * pokud string, pak typ (skalarni) hodnoty "data". Pokud objekt,
  * pak mnozina dvojic "cesta":"datovy typ"; cesta je teckami dodelena posloupnost
  * klicu a/nebo indexu v datech. Typ je "float" nebo "binary".
+ * @param {options}
  */
-export function serializeCall(method:string, data:any, hints?: Hints) {
-	let result = serialize(data, hints);
+export function serializeCall(method:string, data:any, hints?: Hints, options?: Partial<Options>) {
+	let result = serialize(data, hints, options);
 
 	/* utrhnout hlavicku pole (dva bajty) */
 	result.shift(); result.shift();
@@ -569,16 +631,21 @@ export function serializeCall(method:string, data:any, hints?: Hints) {
 	result.unshift(encodedMethod.length);
 
 	result.unshift(TYPE_CALL << 3);
-	result.unshift(0xCA, 0x11, 0x02, 0x01);
+
+	let major = _version;
+	let minor = (_version == 2 ? 1 : 0);
+	result.unshift(0xCA, 0x11, major, minor);
 
 	return result;
 }
 
 /**
- * @param {number[]} data
+ * @param {BYTES} data
  * @returns {object}
  */
-export function parse(data: Uint8Array) {
+export function parse(data: Uint8Array, options?: Partial<Options>) {
+	_typedArrays = (options && options.typedArrays) || false;
+
 	surrogateFlag = false;
 	_pointer = 0;
 	_data = data;
@@ -590,10 +657,8 @@ export function parse(data: Uint8Array) {
 		_data = new Uint8Array();
 		throw new Error("Missing FRPC magic");
 	}
-
-	/* zahodit zbytek hlavicky */
-	_getByte();
-	_getByte();
+	_version = _getByte();
+	_getByte(); // minor
 
 	let first = _getInt(1);
 	let type = first >> 3;
@@ -618,6 +683,7 @@ export function parse(data: Uint8Array) {
 		case TYPE_CALL:
 			let nameLength = _getInt(1);
 			let name = _decodeUTF8(nameLength);
+			if (!name.length) { throw new Error("Method name is an empty string"); }
 			let params: any[] = [];
 			while (_pointer < _data.length) { params.push(_parseValue()); }
 			_data = new Uint8Array();
@@ -633,3 +699,4 @@ export function parse(data: Uint8Array) {
 	_data = new Uint8Array()
 	return result;
 }
+ 
