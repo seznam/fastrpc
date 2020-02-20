@@ -158,7 +158,7 @@ function _parseValue(): any {
 	}
 }
 
-function _append(arr1: BYTES, arr2: BYTES) {
+function _append(arr1: BYTES, arr2: BYTES | Uint8Array) {
 	let len = arr2.length;
 	for (let i=0;i<len;i++) { arr1.push(arr2[i]); }
 }
@@ -382,8 +382,10 @@ function _serializeValue(result: BYTES, value: any) {
 			result.push(data);
 		break;
 
-		case "object": // FIXME uint8array
-			if (value instanceof Date) {
+		case "object":
+			if (value instanceof ArrayBuffer) {
+				_serializeArrayBuffer(result, value);
+			} else if (value instanceof Date) {
 				_serializeDate(result, value);
 			} else if (value instanceof Array) {
 				_serializeArray(result, value);
@@ -396,6 +398,17 @@ function _serializeValue(result: BYTES, value: any) {
 			throw new Error(`FRPC does not allow value ${value}`);
 		break;
 	}
+}
+
+function _serializeArrayBuffer(result: BYTES, data: ArrayBuffer) {
+	let first = TYPE_BINARY << 3;
+	let intData = _encodeInt(data.byteLength);
+	first += (intData.length-1);
+
+	result.push(first);
+	_append(result, intData);
+	_append(result, new Uint8Array(data));
+	return;
 }
 
 function _serializeArray(result: BYTES, data: any[]) {
@@ -449,7 +462,7 @@ function _serializeStruct(result: BYTES, data: Dict) {
 function _serializeDate(result: BYTES, date: Date) {
 	result.push(TYPE_DATETIME << 3);
 
-	// 1 bajt, zona 
+	// 1 bajt, zona
 	let zone = date.getTimezoneOffset()/15; // pocet ctvrthodin
 	if (zone < 0) { zone += 256; } // dvojkovy doplnek
 	result.push(zone);
@@ -699,4 +712,3 @@ export function parse(data: Uint8Array, options?: Partial<Options>) {
 	_data = new Uint8Array()
 	return result;
 }
- 
