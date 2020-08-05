@@ -128,6 +128,15 @@ struct ProtocolVersion_t{
  */
 void FRPC_DLLEXPORT initFastrpc();
 
+/**
+ @brief cleanup fastrpc library
+ * call once in the main thread 
+ * cleanup xmllib parser
+ */
+void FRPC_DLLEXPORT cleanupFastrpc();
+
+#define FRPC_HAVE_CLEANUP_FASTRPC
+
 } // namespace FRPC
 
 #endif

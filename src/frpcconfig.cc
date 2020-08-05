@@ -37,9 +37,11 @@ namespace FRPC {
         if ( LibConfig_t::m_instance == 0 ) {
         const char *cfgFn = getenv("FASTRPC_CONFIG");
             if (cfgFn == 0) {
-                m_instance = new LibConfig_t();
+                static LibConfig_t config;
+                m_instance = &config;
             } else {
-                m_instance = new LibConfig_t(cfgFn);
+                static LibConfig_t config(cfgFn);
+                m_instance = &config;
             }
         }
         return LibConfig_t::m_instance;
@@ -65,5 +67,5 @@ namespace FRPC {
         // Intentionaly left empty.
         return *this;
     }
-};
+}
 

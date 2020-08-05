@@ -74,6 +74,7 @@ public:
     std::string localBuffer;
     /*! init xmlInitParser() for its thread sahttp://xmlsoft.org/threads.html */
     static void initXmlUnMarshaller_t();
+    static void cleanupXmlUnMarshaller_t();
 private:
     //static void initCallbacks();
 

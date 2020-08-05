@@ -636,3 +636,7 @@ void XmlUnMarshaller_t::closeEntity(const char *name) {
 void XmlUnMarshaller_t::initXmlUnMarshaller_t() {
     xmlInitParser();
 }
+
+void XmlUnMarshaller_t::cleanupXmlUnMarshaller_t() {
+    xmlCleanupParser();
+}

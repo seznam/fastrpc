@@ -463,6 +463,10 @@ void initFastrpc() {
     XmlUnMarshaller_t::initXmlUnMarshaller_t();
 }
 
+/*! cleanup libxml2 parser in xmlunmarshaller */
+void cleanupFastrpc() {
+    XmlUnMarshaller_t::cleanupXmlUnMarshaller_t();
+}
 
 /**
 @brief method print fastrpc value to stdout in human readable format
