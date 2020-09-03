@@ -1,3 +1,9 @@
+libfastrpc (8.1.0) UNRELEASED; urgency=medium
+
+  * Python: fix: on sending request release GIL
+
+ -- Martin Quarda <martin.quarda@firma.seznam.cz>  Thu, 03 Sep 2020 17:50:46 +0200
+
 libfastrpc (8.0.15) stable; urgency=medium
 
   * #74 Do not default to v1.0 in xmlrpc mode if no protocolVersion is specified in the server output.

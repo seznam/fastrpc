@@ -1,3 +1,9 @@
+python-fastrpc (8.1.0) UNRELEASED; urgency=medium
+
+  * fix: on sending request release GIL
+
+ -- Martin Quarda <martin.quarda@firma.seznam.cz>  Thu, 03 Sep 2020 18:17:20 +0200
+
 python-fastrpc (8.0.8) stable; urgency=medium
 
   * Fixed compilation of python module for python3
