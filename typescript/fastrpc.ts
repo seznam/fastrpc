@@ -1,6 +1,6 @@
 /*
 FastRPC library written in TypeScript
-Copyright (C) 2005-2018 Seznam.cz, a.s.
+Copyright (C) 2005-2020 Seznam.cz, a.s.
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
