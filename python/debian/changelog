@@ -1,3 +1,13 @@
+python-fastrpc (8.0.9) stable; urgency=medium
+
+  [Vladimir Burian]
+  * fix http 1.0 response of python server
+
+  [Lukas Antalov]
+  * add cleanup of xmlrpclib to python interface
+
+ -- Lukas Antalov <lukas.antalov@firma.seznam.cz>  Mon, 16 Nov 2020 7:56:27 +0100
+
 python-fastrpc (8.0.8) stable; urgency=medium
 
   * Fixed compilation of python module for python3

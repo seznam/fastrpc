@@ -2231,6 +2231,9 @@ extern "C"
 
     static PyObject* fastrpc_loads(PyObject *self, PyObject *args,
                                    PyObject *keywds);
+
+    static PyObject* fastrpc_cleanup(PyObject *self, PyObject *args,
+                                   PyObject *keywds);
 }
 
 static char fastrpc_boolean__doc__[] =
@@ -2276,6 +2279,14 @@ PyObject* fastrpc_boolean(PyObject *, PyObject *args, PyObject *keywds) {
         return 0;
 
     return reinterpret_cast<PyObject*>(newBoolean(truthValue));
+}
+
+static char fastrpc_cleanup__doc__[] =
+    "Cleanup libxml2 parser in xmlunmarshaller\n";
+
+PyObject* fastrpc_cleanup(PyObject *, PyObject *args, PyObject *keywds) {
+    FRPC::cleanupFastrpc();
+    Py_RETURN_NONE;
 }
 
 namespace {
@@ -2788,6 +2799,11 @@ static PyMethodDef frpc_methods[] =
             (PyCFunction) fastrpc_boolean,
             METH_VARARGS | METH_KEYWORDS,
             fastrpc_boolean__doc__
+        }, {
+            "cleanup",
+            (PyCFunction) fastrpc_cleanup,
+            METH_VARARGS | METH_KEYWORDS,
+            fastrpc_cleanup__doc__
         }, {
             "dumps",
             (PyCFunction) fastrpc_dumps,
