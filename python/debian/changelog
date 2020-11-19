@@ -1,4 +1,7 @@
-python-fastrpc (8.0.9) stable; urgency=medium
+python-fastrpc (8.1.0) UNRELEASED; urgency=medium
+
+  [Martin Quarda]
+  * fix: on sending request release GIL
 
   [Vladimir Burian]
   * fix http 1.0 response of python server
@@ -6,7 +9,7 @@ python-fastrpc (8.0.9) stable; urgency=medium
   [Lukas Antalov]
   * add cleanup of xmlrpclib to python interface
 
- -- Lukas Antalov <lukas.antalov@firma.seznam.cz>  Mon, 16 Nov 2020 7:56:27 +0100
+ -- Filip Volejnik <filip.volejnik@firma.seznam.cz>  Thu, 19 Nov 2020 10:38:18 +0100
 
 python-fastrpc (8.0.8) stable; urgency=medium
 

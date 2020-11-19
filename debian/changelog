@@ -1,4 +1,4 @@
-libfastrpc (8.0.16) stable; urgency=medium
+libfastrpc (8.1.0) stable; urgency=medium
 
   [Filip Volejnik]
   * fix for the misleading doxygen return comment
@@ -7,10 +7,10 @@ libfastrpc (8.0.16) stable; urgency=medium
   [Michal Bukovský]
   * add cleanup of xmlrpclib
 
-  [Lukas Antalov]
-  * #! python8.0.9
+  [Martin Quarda]
+  * Python: fix: on sending request release GIL
 
- -- Lukas Antalov <lukas.antalov@firma.seznam.cz>  Mon, 16 Nov 2020 7:56:27 +0100
+ -- Filip Volejnik <filip.volejnik@firma.seznam.cz>  Thu, 18 Nov 2020 10:38:18 +0100
 
 libfastrpc (8.0.15) stable; urgency=medium
 

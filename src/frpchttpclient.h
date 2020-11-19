@@ -136,6 +136,11 @@ public:
     virtual void flush();
 
     /**
+     * @brief tries to poll data before actual read, can be skipped
+     */
+    inline void waitOnReadyRead(){httpIO.waitOnReadyRead();};
+
+    /**
     * @brief write data to HTTP client
     * @param data pointer to data
     * @param size size of data
