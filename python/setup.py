@@ -76,7 +76,7 @@ if sys.version_info.major < 3:
     exclude.append('fastrpc.handler*')
 
 setup(
-    name="fastrpc",
+    name="szn-fastrpc",
     version=version,
     author=author,
     author_email=author_email,
@@ -87,8 +87,33 @@ setup(
     ext_modules=[
         Extension("_fastrpc", [
             "fastrpcmodule.cc", "pythonserver.cc", "pyerrors.cc",
-            "pythonbuilder.cc", "pythonfeeder.cc"
-        ], libraries=["fastrpc"]),
+            "pythonbuilder.cc", "pythonfeeder.cc",
+            "../src/frpcvalue.cc", "../src/frpcarray.cc",
+            "../src/frpcstruct.cc", "../src/frpcbinary.cc",
+            "../src/frpcdatetime.cc", "../src/frpcstring.cc",
+            "../src/frpcbool.cc", "../src/frpcint.cc",
+            "../src/frpcdouble.cc", "../src/frpcpool.cc",
+            "../src/frpcerror.cc", "../src/frpckeyerror.cc",
+            "../src/frpctypeerror.cc", "../src/frpcindexerror.cc",
+            "../src/frpcstreamerror.cc", "../src/frpclenerror.cc",
+            "../src/frpcserverproxy.cc", "../src/frpcdatabuilder.cc",
+            "../src/frpcmarshaller.cc", "../src/frpcunmarshaller.cc",
+            "../src/frpcwriter.cc", "../src/frpcbinmarshaller.cc",
+            "../src/frpcxmlmarshaller.cc", "../src/frpcbinunmarshaller.cc",
+            "../src/frpcxmlunmarshaller.cc", "../src/frpcprotocolerror.cc",
+            "../src/frpchttperror.cc", "../src/frpcencodingerror.cc",
+            "../src/frpchttpio.cc", "../src/frpchttp.cc",
+            "../src/frpchttpclient.cc", "../src/frpctreebuilder.cc",
+            "../src/frpctreefeeder.cc", "../src/frpcfault.cc",
+            "../src/frpc.cc", "../src/frpcmethodregistry.cc",
+            "../src/frpcserver.cc", "../src/frpcresponseerror.cc",
+            "../src/frpcconnector.cc", "../src/frpcnull.cc",
+            "../src/frpcurlunmarshaller.cc", "../src/frpcjsonmarshaller.cc",
+            "../src/frpcb64unmarshaller.cc", "../src/frpcbase64.cc",
+            "../src/frpcb64writer.cc", "../src/frpcconfig.cc",
+            "../src/frpccompare.cc"
+        ], libraries=["xml2"],
+           include_dirs=["/usr/include/libxml2", "../src/"]),
     ],
     test_suite='test'
 )
