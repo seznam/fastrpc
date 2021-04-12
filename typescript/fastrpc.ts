@@ -1,6 +1,6 @@
 /*
 FastRPC library written in TypeScript
-Copyright (C) 2005-2020 Seznam.cz, a.s.
+Copyright (C) 2005-2021 Seznam.cz, a.s.
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -44,13 +44,13 @@ let _path: string[] = [];
 let _data: Uint8Array;
 let _pointer = 0;
 let _version: number;
-let _typedArrays: boolean;
+let _arrayBuffers: boolean;
 
 interface Dict {[name:string]:any};
 interface Hints {[name:string]:string};
 interface Options {
 	version: number;
-	typedArrays: boolean;
+	arrayBuffers: boolean;
 }
 
 type BYTES = number[];
@@ -127,9 +127,10 @@ function _parseValue(): any {
 			if (_version > 1) { lengthBytes++; }
 			if (!lengthBytes) { throw new Error("Bad binary size"); }
 			length = _getInt(lengthBytes);
-			if (_typedArrays) {
-				result = new Uint8Array(length);
-				for (let i=0;i<length;i++) { result[i] = _getByte(); }
+			if (_arrayBuffers) {
+				let view = new Uint8Array(length);
+				for (let i=0;i<length;i++) { view[i] = _getByte(); }
+				result = view.buffer;
 			} else {
 				result = [];
 				while (length--) { result.push(_getByte()); }
@@ -657,7 +658,7 @@ export function serializeCall(method:string, data:any, hints?: Hints, options?: 
  * @returns {object}
  */
 export function parse(data: Uint8Array, options?: Partial<Options>) {
-	_typedArrays = (options && options.typedArrays) || false;
+	_arrayBuffers = (options && options.arrayBuffers) || false;
 
 	surrogateFlag = false;
 	_pointer = 0;

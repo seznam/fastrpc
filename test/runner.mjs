@@ -12,9 +12,10 @@ function serialize(value) {
 	if (value instanceof Array) {
 		return `(${value.map(serialize).join(", ")})`;
 	}
-	if (value instanceof Uint8Array) {
+	if (value instanceof ArrayBuffer) {
+		let view = new Uint8Array(value);
 		let bytes = [];
-		value.forEach(b => bytes.push(b.toString(16).padStart(2, "0").toLowerCase()));
+		view.forEach(b => bytes.push(b.toString(16).padStart(2, "0").toLowerCase()));
 		return `b"${bytes.join(" ")}"`;
 	}
 	if (value instanceof Date) {
@@ -151,7 +152,7 @@ function run() {
 	let failed = 0;
 	let errors = [];
 
-	let parse = str => fastrpc.parse(str, {typedArrays:true});
+	let parse = str => fastrpc.parse(str, {arrayBuffers:true});
 
 	while (tests.length) {
 		let test = tests.shift();
