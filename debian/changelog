@@ -1,3 +1,11 @@
+libfastrpc (8.1.1) stable; urgency=medium
+
+  * generate shlibs including library version
+  * s/typedArrays/arrayBuffers/
+  * fixing python frpc dep (new api calls)
+
+ -- Lubos Vondra <lubos.vondra@firma.seznam.cz>  Fri, 07 May 2021 12:24:35 +0100
+
 libfastrpc (8.1.0) stable; urgency=medium
 
   [Filip Volejnik]
