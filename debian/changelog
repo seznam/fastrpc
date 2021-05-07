@@ -1,3 +1,9 @@
+libfastrpc (8.1.2) stable; urgency=medium
+
+  * maybe tab will do the job
+
+ -- Lubos Vondra <lubos.vondra@firma.seznam.cz>  Fri, 07 May 2021 12:31:33 +0100
+
 libfastrpc (8.1.1) stable; urgency=medium
 
   * generate shlibs including library version
