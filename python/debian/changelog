@@ -1,3 +1,10 @@
+python-fastrpc (8.1.1) stable; urgency=medium
+
+  * using chunked encoding is configurable now
+  * fixing python frpc dep (new api calls)
+
+ -- Michal Bukovský <burlog@seznam.cz>  Mon, 10 May 2021 13:43:47 +0100
+
 python-fastrpc (8.1.0) UNRELEASED; urgency=medium
 
   [Martin Quarda]
