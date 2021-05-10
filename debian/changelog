@@ -1,3 +1,10 @@
+libfastrpc (8.1.3) stable; urgency=medium
+
+  * #! python8.1.1
+  * using chunked encoding is configurable now
+
+ -- Michal Bukovský <burlog@seznam.cz>  Mon, 10 May 2021 13:56:03 +0100
+
 libfastrpc (8.1.2) stable; urgency=medium
 
   * maybe tab will do the job
