@@ -122,7 +122,8 @@ public:
                 unsigned char protocolVersionMinor = 0, bool useHTTP10 = false)
             : connectTimeout(connectTimeout),readTimeout(readTimeout),
               writeTimeout(writeTimeout),
-              keepAlive(keepAlive), useBinary(useBinary), useHTTP10(useHTTP10),
+              keepAlive(keepAlive), useBinary(useBinary),
+              useHTTP10(useHTTP10), useChunks(!useHTTP10),
               protocolVersion(protocolVersionMajor,protocolVersionMinor)
         {}
 
@@ -137,7 +138,7 @@ public:
         Config_t()
             : connectTimeout(10000), readTimeout(10000), writeTimeout(1000),
               keepAlive(false), useBinary(ON_SUPPORT_ON_KEEP_ALIVE),
-              useHTTP10(false)
+              useHTTP10(false), useChunks(true)
         {}
 
         ///@brief internal representation of connectTimeout value
@@ -152,7 +153,8 @@ public:
         unsigned int useBinary;
         ///@brief use HTTP protocol version 1.0
         bool useHTTP10;
-
+        ///@brief use chunked encoding
+        bool useChunks;
         ///@brief URL of proxy (empty if none)
         std::string proxyUrl;
         ///@brief Protocol version
