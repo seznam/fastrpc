@@ -84,6 +84,8 @@ class FRPC_DLLEXPORT HTTPClient_t : public Writer_t {
 public:
     HTTPClient_t(HTTPIO_t &httpIO, URL_t &url, Connector_t *connector,
                  bool useHTTP10 = false);
+    HTTPClient_t(HTTPIO_t &httpIO, URL_t &url, Connector_t *connector,
+                 bool useHTTP10, bool useChunks);
 
 
     enum {XML_RPC = 0x01, BINARY_RPC = 0x02};
@@ -104,7 +106,7 @@ public:
 
         case BINARY_RPC:
             useProtocol = contentType;
-            useChunks = !useHTTP10;
+            useChunks = useChunks && !useHTTP10;
             break;
 
         default:

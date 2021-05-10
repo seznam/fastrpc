@@ -112,6 +112,17 @@ HTTPClient_t::HTTPClient_t(HTTPIO_t &httpIO, URL_t &url,
     queryStorage.back().reserve(BUFFER_SIZE + HTTP_BALLAST);
 }
 
+HTTPClient_t::HTTPClient_t(HTTPIO_t &httpIO, URL_t &url,
+                           Connector_t *connector, bool useHTTP10, bool useChunks)
+    : httpIO(httpIO), url(url), connector(connector),
+      headersSent(false), useChunks(useChunks), supportedProtocols(XML_RPC),
+      useProtocol(XML_RPC), contentLenght(0), connectionMustClose(false),
+      unmarshaller(0), useHTTP10(useHTTP10)
+{
+    queryStorage.push_back(std::string());
+    queryStorage.back().reserve(BUFFER_SIZE + HTTP_BALLAST);
+}
+
 
 HTTPClient_t::~HTTPClient_t() {
     delete unmarshaller;

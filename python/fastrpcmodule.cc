@@ -1273,7 +1273,8 @@ class Proxy_t
 public:
     Proxy_t(const std::string &serverUrl, int readTimeout,
             int writeTimeout, int connectTimeout, bool keepAlive,
-            int rpcTransferMode, const std::string &encoding, bool useHTTP10,
+            int rpcTransferMode, const std::string &encoding,
+            bool useHTTP10, bool useChunks,
             const std::string &proxyVia, StringMode_t stringMode,
             const ProtocolVersion_t &protocolVersion, int nativeBoolean,
             PyObject *datetimeBuilder, PyObject *preCall, PyObject *postCall)
@@ -1281,7 +1282,8 @@ public:
           io(-1, readTimeout, writeTimeout, -1, -1),
           rpcTransferMode(rpcTransferMode), encoding(encoding),
           serverSupportedProtocols(HTTPClient_t::XML_RPC),
-          useHTTP10(useHTTP10), stringMode(stringMode),
+          useHTTP10(useHTTP10), useChunks(useChunks),
+          stringMode(stringMode),
           protocolVersion(protocolVersion),
           connector(new SimpleConnectorIPv6_t(url, connectTimeout, keepAlive)),
           nativeBoolean(nativeBoolean), datetimeBuilder(datetimeBuilder),
@@ -1346,6 +1348,7 @@ private:
     unsigned int serverSupportedProtocols;
 
     bool useHTTP10;
+    bool useChunks;
     std::string lastCall;
     StringMode_t stringMode;
     ProtocolVersion_t protocolVersion;
@@ -1668,7 +1671,8 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
     static const char *kwlist[] = {"serverUrl", "readTimeout", "writeTimeout",
                                    "connectTimeout",
                                    "keepAlive", "useBinary","encoding",
-                                   "useHTTP10", "proxyVia", "stringMode",
+                                   "useHTTP10", "useChunks",
+                                   "proxyVia", "stringMode",
                                    "protocolVersionMajor",
                                    "protocolVersionMinor",
                                    "nativeBoolean", "datetimeBuilder",
@@ -1687,6 +1691,7 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
     char *stringMode_ = 0;
     char *encoding = "utf-8";
     int useHTTP10 = false;
+    int useChunks = true;
     char *proxyVia = "";
     int protocolVersionMajor = 2;
     int protocolVersionMinor = 1;
@@ -1698,11 +1703,11 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
     PyObject *headers = 0;
     PyObject *allowSurrogates = 0;
 
-    static const char *kwtypes = "siiiiisissiiOOO";
+    static const char *kwtypes = "siiiiisiissiiOOO";
     const void *kwvars[] = { serverUrl, &readTimeout,
         &writeTimeout, &connectTimeout,
         &keepAlive, &mode, encoding,
-        &useHTTP10, proxyVia, stringMode_,
+        &useHTTP10, &useChunks, proxyVia, stringMode_,
         &protocolVersionMajor,
         &protocolVersionMinor,
         &nativeBoolean, &datetimeBuilder,
@@ -1710,12 +1715,12 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
 
     // Normal initialization
     if (!PyArg_ParseTupleAndKeywords(args, keywds,
-                                     "s#|iiiiisissiiOOOOiOO:ServerProxy.__init__",
+                                     "s#|iiiiisiissiiOOOOiOO:ServerProxy.__init__",
                                      (char **)kwlist,
                                      &serverUrl, &serverUrlLen, &readTimeout,
                                      &writeTimeout, &connectTimeout,
                                      &keepAlive, &mode, &encoding,
-                                     &useHTTP10, &proxyVia, &stringMode_,
+                                     &useHTTP10, &useChunks, &proxyVia, &stringMode_,
                                      &protocolVersionMajor,
                                      &protocolVersionMinor, &nativeBoolean,
                                      &datetimeBuilder, &preCall, &postCall,
@@ -1845,7 +1850,7 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
         new (&proxy->proxy) Proxy_t(std::string(serverUrl, serverUrlLen),
                                     readTimeout, writeTimeout,
                                     connectTimeout, keepAlive, mode, encoding,
-                                    useHTTP10, proxyVia, stringMode,
+                                    useHTTP10, useChunks, proxyVia, stringMode,
                                     ProtocolVersion_t(protocolVersionMajor,
                                             protocolVersionMinor),
                                     nativeBoolean != 0 ? PyObject_IsTrue(nativeBoolean) : true,
@@ -2009,7 +2014,7 @@ PyObject* Proxy_t::operator()(MethodObject *methodObject, PyObject *args) {
     // remember last method
     lastCall = methodObject->name;
 
-    HTTPClient_t client(io, url, connector.get(), useHTTP10);
+    HTTPClient_t client(io, url, connector.get(), useHTTP10, useChunks);
     Builder_t builder(reinterpret_cast<PyObject*>(methodObject),
                       stringMode, nativeBoolean, datetimeBuilder);
 
