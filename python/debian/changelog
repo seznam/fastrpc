@@ -1,3 +1,9 @@
+python-fastrpc (8.1.2) stable; urgency=medium
+
+  * fix changelog
+
+ -- Michal Bukovský <burlog@seznam.cz>  Mon, 10 May 2021 14:29:23 +0100
+
 python-fastrpc (8.1.1) stable; urgency=medium
 
   * using chunked encoding is configurable now
