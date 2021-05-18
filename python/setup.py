@@ -71,7 +71,7 @@ except NameError:
 
 try:
     from setuptools import dist
-    dist.Distribution(dict(setup_requires='pkginfo'))
+    dist.Distribution(dict(setup_requires="pkginfo"))
     from pkginfo import UnpackedSDist
     d = UnpackedSDist(__file__)
     version = d.version
@@ -116,7 +116,7 @@ setup(
         "pythonfeeder.h",
         "fastrpcmodule.h",
     ], install_requires=[
-        "markdown",
+        "pkginfo",
     ], test_suite='test'
 )
 
