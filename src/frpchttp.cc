@@ -296,13 +296,10 @@ std::string URL_t::getUrl() const {
     // return just path part if we use proxy
     if (usesProxy) return path;
 
+    const unsigned int default_port = isSSL? 443 : 80;
     std::ostringstream os;
     os << (isSSL ? "https://" : "http://") << host;
-    if (isSSL) {
-        if (port != 443) os  << ':' << port;
-    } else {
-        if (port != 80) os  << ':' << port;
-    }
+    if (port != default_port) { os  << ':' << port; }
     os << path;
     return os.str();
 }
