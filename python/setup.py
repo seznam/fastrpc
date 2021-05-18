@@ -104,12 +104,14 @@ setup(
             "pythonfeeder.cc",
         ], libraries=["fastrpc"]),
     ], headers=[
-            "frpcpythonhelper.h",
-            "pyobjectwrapper.h",
-            "pythonbuilder.h",
-            "pythoncompat.h",
-            "pythonfeeder.h",
-            "fastrpcmodule.h",
+        "frpcpythonhelper.h",
+        "pyobjectwrapper.h",
+        "pythonbuilder.h",
+        "pythoncompat.h",
+        "pythonfeeder.h",
+        "fastrpcmodule.h",
+    ], install_requires=[
+        "markdown",
     ], test_suite='test'
 )
 
