@@ -65,6 +65,11 @@ here = dirname(__file__)
 readme = join(here, 'README.md')
 
 try:
+    ModuleNotFoundError
+except NameError:
+    ModuleNotFoundError = ImportError
+
+try:
     from setuptools import dist
     dist.Distribution(dict(setup_requires='pkginfo'))
     from pkginfo import UnpackedSDist
