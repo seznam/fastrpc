@@ -23,7 +23,6 @@ Radlická 3294/10, Praha 5, 15000, Czech Republic
 http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
 """
 
-from debian.changelog import Changelog
 from distutils import sysconfig
 from os import uname
 from os.path import dirname, join
@@ -64,9 +63,21 @@ sysconfig._init_posix = _init_posix(sysconfig._init_posix)
 
 here = dirname(__file__)
 readme = join(here, 'README.md')
-changelog = join(here, "debian/changelog")
 
-version = str(Changelog(open(changelog, 'rt')).get_version())
+try:
+    from setuptools import dist
+    dist.Distribution(dict(setup_requires='pkginfo'))
+    from pkginfo import UnpackedSDist
+    d = UnpackedSDist(__file__)
+    version = d.version
+except (ModuleNotFoundError, ValueError):
+    try:
+        from debian.changelog import Changelog
+        changelog = join(here, "debian/changelog")
+        version = str(Changelog(open(changelog, 'rt')).get_version())
+    except ModuleNotFoundError:
+        print("don't know how to determine module version")
+        sys.exit(1)
 
 author = u"Miroslav Talášek"
 author_email = "miroslav.talasek@firma.seznam.cz"
