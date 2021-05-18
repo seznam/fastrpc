@@ -1,3 +1,10 @@
+python-fastrpc (8.1.6) stable; urgency=medium
+
+  * fix setup.py
+  * use PKG-INFO, if available
+
+ -- Michal Bukovsky <michal.bukovsky@firma.seznam.cz>  Tue, 18 May 2021 13:43:46 +0100
+
 python-fastrpc (8.1.5) stable; urgency=medium
 
   * version
