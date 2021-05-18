@@ -97,9 +97,19 @@ setup(
     packages=find_packages(include=['fastrpc*'], exclude=exclude),
     ext_modules=[
         Extension("_fastrpc", [
-            "fastrpcmodule.cc", "pythonserver.cc", "pyerrors.cc",
-            "pythonbuilder.cc", "pythonfeeder.cc"
+            "fastrpcmodule.cc",
+            "pythonserver.cc",
+            "pyerrors.cc",
+            "pythonbuilder.cc",
+            "pythonfeeder.cc",
         ], libraries=["fastrpc"]),
-    ],
-    test_suite='test'
+    ], headers=[
+            "frpcpythonhelper.h",
+            "pyobjectwrapper.h",
+            "pythonbuilder.h",
+            "pythoncompat.h",
+            "pythonfeeder.h",
+            "fastrpcmodule.h",
+    ], test_suite='test'
 )
+
