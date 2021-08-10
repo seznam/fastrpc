@@ -263,7 +263,8 @@ Marshaller_t* ServerProxyImpl_t::createMarshaller(HTTPClient_t &client) {
  * Multifaceted data structure used to cache ServerProxy_t objects.
  * Maintains map for lookup by url, and timer queues for removing old objects.
  * The map and queues are interlinked. Timer queues are organized in powers of
- * two.
+ * two so it takes al most log2(t) steps to retire timer scheduled
+ * for time (now+t).
  */
 class ProxyCache_t {
     struct LessURL_t {
@@ -314,12 +315,18 @@ class ProxyCache_t {
 
         bool is_linked() const { return next != this; }
 
+        // Pimpl pointer
         std::unique_ptr<ServerProxyImpl_t> impl;
 
     protected:
+        // Linked-list pointers
         TimeoutListHead *next;
         TimeoutListHead *prev;
+
+        // Used to remove self from the map
         Map_t::iterator self;
+
+        // Timer counters
         Time next_setoff_time = 0;
         Time final_setoff_time = 0;
     };
