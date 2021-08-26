@@ -134,6 +134,14 @@ void Server_t::serve(int fd,
             marshaller->flush();
             continue;
 
+        } catch(const ProtocolError_t &err) {
+            if (err.errorNum() == HTTP_NO_REQUEST_RECEIVED) {
+                // Failed to receive request. Connection was terminated (closed or timed out)
+                // before receiving anything -> finish silently.
+                break;
+            } else {
+                throw;
+            }
         } catch(const HTTPError_t &httpError) {
             sendHttpError(httpError);
             break;
@@ -208,10 +216,12 @@ void Server_t::readRequest(DataBuilder_t &builder,
         for (;;)
         {
             // read line from the socket, we check security limits for url
-            std::string line(io.readLine(true));
+            std::string line(io.readLineOpt(true, true));
 
-            if (line.empty())
-                continue;
+            if (line.empty()) {
+                throw ProtocolError_t(HTTP_NO_REQUEST_RECEIVED, "No request received");
+            }
+
             // break request line down
             std::vector<std::string> header(io.splitBySpace(line, 3));
             if (header.size() != 3)
