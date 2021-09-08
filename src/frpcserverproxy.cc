@@ -32,10 +32,14 @@
  */
 
 #include <sstream>
+#include <map>
 #include <memory>
+#include <mutex>
 
 #include <stdarg.h>
 
+#include "frpcconnector.h"
+#include "frpchttp.h"
 #include "frpcserverproxy.h"
 #include <frpc.h>
 #include <frpctreebuilder.h>
@@ -51,9 +55,9 @@
 
 
 namespace {
-    FRPC::Pool_t localPool;
+    static FRPC::Pool_t localPool;
 
-    int getTimeout(const FRPC::Struct_t &config, const std::string &name,
+    static int getTimeout(const FRPC::Struct_t &config, const std::string &name,
                    int defaultValue)
     {
         // get key from config and check for existence
@@ -64,7 +68,7 @@ namespace {
         return FRPC::Int(*val);
     }
 
-    FRPC::ProtocolVersion_t parseProtocolVersion(const FRPC::Struct_t &config,
+    static FRPC::ProtocolVersion_t parseProtocolVersion(const FRPC::Struct_t &config,
                                                  const std::string &name)
     {
         std::string strver
@@ -81,8 +85,7 @@ namespace {
         return FRPC::ProtocolVersion_t(major, minor);
     }
 
-    FRPC::ServerProxy_t::Config_t configFromStruct(const FRPC::Struct_t &s)
-    {
+    static FRPC::ServerProxy_t::Config_t configFromStruct(const FRPC::Struct_t &s) {
         FRPC::ServerProxy_t::Config_t config;
 
         config.proxyUrl = FRPC::String(s.get("proxyUrl", FRPC::String_t::FRPC_EMPTY));
@@ -97,7 +100,7 @@ namespace {
         return config;
     }
 
-    FRPC::Connector_t* makeConnector(
+    static FRPC::Connector_t* makeConnector(
         const FRPC::URL_t &url,
         const unsigned &connectTimeout,
         const bool &keepAlive)
@@ -114,15 +117,16 @@ namespace FRPC {
 
 class ServerProxyImpl_t {
 public:
-    ServerProxyImpl_t(const std::string &server,
+    ServerProxyImpl_t(URL_t url,
                       const ServerProxy_t::Config_t &config)
-        : url(server, config.proxyUrl),
+        : url(std::move(url)),
           io(-1, config.readTimeout, config.writeTimeout, -1 ,-1),
-          rpcTransferMode(config.useBinary), useHTTP10(config.useHTTP10),
+          rpcTransferMode(config.useBinary),
+          useHTTP10(config.useHTTP10),
           serverSupportedProtocols(HTTPClient_t::XML_RPC),
           protocolVersion(config.protocolVersion),
-          connector(makeConnector(url, config.connectTimeout,
-                                          config.keepAlive))
+          connector(makeConnector(this->url, config.connectTimeout,
+                                             config.keepAlive))
     {}
 
     /** Set new read timeout */
@@ -138,6 +142,18 @@ public:
     /** Set new connect timeout */
     void setConnectTimeout(int timeout) {
         connector->setTimeout(timeout);
+    }
+    
+    void setRpcTransferMode(unsigned int v) {
+        rpcTransferMode = v;
+    }
+
+    void setUseHTTP10(bool v) {
+        useHTTP10 = v;
+    }
+
+    void setProtocolVersion(ProtocolVersion_t v) {
+        protocolVersion = v;
     }
 
     const URL_t& getURL() {
@@ -167,6 +183,8 @@ public:
     void addRequestHttpHeader(const HTTPClient_t::HeaderVector_t& headers);
 
     void deleteRequestHttpHeaders();
+
+    const Connector_t& getConnector() const { return *connector; }
 
 private:
     URL_t url;
@@ -241,18 +259,227 @@ Marshaller_t* ServerProxyImpl_t::createMarshaller(HTTPClient_t &client) {
     return marshaller;
 }
 
+/**
+ * Multifaceted data structure used to cache ServerProxy_t objects.
+ * Maintains map for lookup by url, and timer queues for removing old objects.
+ * The map and queues are interlinked. Timer queues are organized in powers of
+ * two so it takes al most log2(t) steps to retire timer scheduled
+ * for time (now+t).
+ */
+class ProxyCache_t {
+    struct LessURL_t {
+        bool operator()(const URL_t &lhs, const URL_t &rhs) const {
+            if (lhs.port == rhs.port && lhs.path == rhs.path) {
+                return lhs.host < rhs.host;
+            }
+
+            if (lhs.port == rhs.port) {
+                return lhs.path < rhs.path;
+            }
+
+            return lhs.port < rhs.port;
+        }
+    };
+
+    class TimeoutListHead;
+    using Time = uint64_t;
+    using Key_t = URL_t;
+    using Value_t = std::unique_ptr<TimeoutListHead>;
+    using Map_t = std::multimap<Key_t, Value_t, LessURL_t>;
+    static constexpr size_t TIMEOUT_QUEUES = 20;
+
+    ProxyCache_t(int timeout) : timeout(timeout) {}
+
+    static Time gettimemilliseconds() {
+        timeval tv;
+        gettimeofday(&tv, nullptr);
+        return tv.tv_sec * 1000 + ((tv.tv_usec + 500) / 1000);
+    };
+
+    /** Intrusive linked-list structure for timer queues. */
+    class TimeoutListHead {
+        friend class ProxyCache_t;
+        TimeoutListHead() : next(this), prev(this) {}
+
+    public:
+        TimeoutListHead(std::unique_ptr<ServerProxyImpl_t> impl)
+            : impl(std::move(impl)), next(this), prev(this)
+        {}
+        ~TimeoutListHead() { delink(); }
+
+        void delink() {
+            next->prev = prev;
+            prev->next = next;
+            prev = next = this;
+        }
+
+        bool is_linked() const { return next != this; }
+
+        // Pimpl pointer
+        std::unique_ptr<ServerProxyImpl_t> impl;
+
+    protected:
+        // Linked-list pointers
+        TimeoutListHead *next;
+        TimeoutListHead *prev;
+
+        // Used to remove self from the map
+        Map_t::iterator self;
+
+        // Timer counters
+        Time next_setoff_time = 0;
+        Time final_setoff_time = 0;
+    };
+
+    /** Inserts timer into correct queue */
+    void schedule(TimeoutListHead &t, Time now) {
+        if (t.is_linked()) {
+            t.delink();
+        }
+
+        // find the correct timer queue
+        auto timeout = t.final_setoff_time - now;
+        t.next_setoff_time = t.final_setoff_time;
+        size_t i = 0;
+        for (; i < TIMEOUT_QUEUES - 1; ++i) {
+            timeout >>= 1;
+            if (timeout == 0) {
+                timeout = 1 << i;
+                t.next_setoff_time = now + timeout;
+                break;
+            }
+        }
+
+        // insert into the queue
+        auto &queue = timeouts[i];
+        queue.prev->next = &t;
+        t.next = &queue;
+        t.prev = queue.prev;
+        queue.prev = &t;
+        if (timeouts[i].next_setoff_time > t.next_setoff_time) {
+            timeouts[i].next_setoff_time = t.next_setoff_time;
+        }
+    }
+
+    /** Reschedule to msec from now */
+    void scheduleRelative(TimeoutListHead &t, Time now, uint32_t msec) {
+        t.final_setoff_time = now + msec;
+        schedule(t, now);
+    }
+
+    /** Retire old timers and update queues */
+    void perform_upkeep_locked() {
+        Time now = gettimemilliseconds();
+        for (size_t i = 0; i < TIMEOUT_QUEUES; ++i) {
+            if (timeouts[i].next_setoff_time > now) {
+                continue;
+            }
+
+            while (timeouts[i].is_linked()) {
+                auto current_timeout = timeouts[i].next;
+                if (current_timeout->next_setoff_time > now) {
+                    // There are no more timers to retire.
+                    timeouts[i].next_setoff_time = current_timeout->next_setoff_time;
+                    break;
+                }
+
+                if (current_timeout->final_setoff_time > now) {
+                    // The timer is retired in this queue but has some time left yet
+                    schedule(*current_timeout, now);
+                }
+                else {
+                    // The timer is completely retired and should be removed
+                    map.erase(current_timeout->self);
+                }
+            }
+        }
+    }
+
+public:
+    /** Creates singleton object */
+    static ProxyCache_t* instance() {
+        auto factory = []() -> ProxyCache_t* {
+            const char *s = getenv("FASTRPC_SERVER_PROXY_CACHE_TIMEOUT");
+            int timeout = (s == nullptr) ? 0 : atoi(s);
+            return new ProxyCache_t(timeout);
+        };
+
+        static std::unique_ptr<ProxyCache_t> cache(factory());
+        return cache.get();
+    }
+
+    /** Pull ServerProxyImpl_t object from cache. */
+    std::unique_ptr<ServerProxyImpl_t> lookup(const URL_t &url, const ServerProxy_t::Config_t &config) {
+        if (timeout == 0) return nullptr;
+
+        std::lock_guard<std::mutex> lock(mutex);
+        perform_upkeep_locked();
+        auto it = map.find(url);
+        if (it == map.end()) {
+            return nullptr;
+        }
+        auto impl = std::move(it->second->impl);
+        map.erase(it);
+        impl->setReadTimeout(config.readTimeout);
+        impl->setWriteTimeout(config.writeTimeout);
+        impl->setRpcTransferMode(config.useBinary);
+        impl->setUseHTTP10(config.useHTTP10);
+        impl->setProtocolVersion(config.protocolVersion);
+        impl->setConnectTimeout(config.connectTimeout);
+
+        return impl;
+    }
+
+    /** Put used ServerProxyImpl_t object into cache */
+    void move_into(std::auto_ptr<ServerProxyImpl_t> &sp) {
+        if (timeout == 0) return;
+
+        std::lock_guard<std::mutex> lock(mutex);
+        perform_upkeep_locked();
+        std::unique_ptr<ServerProxyImpl_t> impl(sp.release());
+        std::unique_ptr<TimeoutListHead> tlh(new TimeoutListHead(std::move(impl)));
+        auto &url = tlh->impl->getURL();
+        auto it = map.emplace(url, std::move(tlh));
+        it->second->self = it;
+        auto now = gettimemilliseconds();
+        scheduleRelative(*it->second, now, timeout * 1000);
+    }
+
+protected:
+    std::mutex mutex;
+    Map_t map;
+    const int timeout = 0;
+    TimeoutListHead timeouts[TIMEOUT_QUEUES];
+};
+
+static ServerProxyImpl_t* createImpl(const std::string &server, const ServerProxy_t::Config_t &config) {
+    URL_t url(server, config.proxyUrl);
+    if (config.keepAlive) {
+        auto *cache = ProxyCache_t::instance();
+        auto *impl = cache->lookup(url, config).release();
+        if (impl) {
+            return impl;
+        }
+    }
+
+    return new ServerProxyImpl_t(std::move(url), config);
+}
+
 ServerProxy_t::ServerProxy_t(const std::string &server, const Config_t &config)
-    : sp(new ServerProxyImpl_t(server, config))
+    : sp(createImpl(server, config))
 {}
 
 ServerProxy_t::ServerProxy_t(const std::string &server, const Struct_t &config)
-    : sp(new ServerProxyImpl_t(server, configFromStruct(config)))
+    : sp(createImpl(server, configFromStruct(config)))
 {}
-
 
 ServerProxy_t::~ServerProxy_t() {
     // get rid of implementation
+    if (sp->getConnector().getKeepAlive()) {
+        ProxyCache_t::instance()->move_into(sp);
+    }
 }
+
 
 Value_t& ServerProxyImpl_t::call(Pool_t &pool, const std::string &methodName,
                                  const Array_t &params)
