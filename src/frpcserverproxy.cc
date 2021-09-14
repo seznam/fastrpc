@@ -47,6 +47,7 @@
 #include <memory>
 #include <frpcfault.h>
 #include <frpcresponseerror.h>
+#include "frpcinternals.h"
 
 #include <frpcstruct.h>
 #include <frpcstring.h>
@@ -163,11 +164,6 @@ public:
     /** Create marshaller.
      */
     Marshaller_t* createMarshaller(HTTPClient_t &client);
-
-    /** Call method.
-     */
-    Value_t& call(Pool_t &pool, const std::string &methodName,
-                  const Array_t &params);
 
     void call(DataBuilder_t &builder, const std::string &methodName,
                                  const Array_t &params);
@@ -481,105 +477,117 @@ ServerProxy_t::~ServerProxy_t() {
 }
 
 
-Value_t& ServerProxyImpl_t::call(Pool_t &pool, const std::string &methodName,
-                                 const Array_t &params)
+void ServerProxyImpl_t::call(
+        DataBuilder_t &builder,
+        const std::string &methodName,
+        const Array_t &params)
 {
-    HTTPClient_t client(io, url, connector.get(), useHTTP10);
-    {
-        client.addCustomRequestHeader(requestHttpHeaders);
-        client.addCustomRequestHeader(requestHttpHeadersForCall);
-        requestHttpHeadersForCall.clear();
-    }
-    TreeBuilder_t builder(pool);
-    std::unique_ptr<Marshaller_t>marshaller(createMarshaller(client));
-    TreeFeeder_t feeder(*marshaller);
+    LogEventData_t event;
+    event.callStart.methodName = methodName.c_str();
+    event.callStart.params = &params;
+    event.callStart.url = &url;
+    callLoggerCallback(LogEvent_t::CALL_START, event);
 
     try {
-        marshaller->packMethodCall(methodName.c_str());
-        for (Array_t::const_iterator
-                 iparams = params.begin(),
-                 eparams = params.end();
-             iparams != eparams; ++iparams) {
-            feeder.feedValue(**iparams);
+        HTTPClient_t client(io, url, connector.get(), useHTTP10);
+        {
+            client.addCustomRequestHeader(requestHttpHeaders);
+            client.addCustomRequestHeader(requestHttpHeadersForCall);
+            requestHttpHeadersForCall.clear();
         }
+        std::unique_ptr<Marshaller_t>marshaller(createMarshaller(client));
+        TreeFeeder_t feeder(*marshaller);
 
-        marshaller->flush();
-    } catch (const ResponseError_t &e) {}
+        try {
+            marshaller->packMethodCall(methodName.c_str());
+            for (Array_t::const_iterator
+                     iparams = params.begin(),
+                     eparams = params.end();
+                 iparams != eparams; ++iparams) {
+                feeder.feedValue(**iparams);
+            }
 
-    client.readResponse(builder);
-    serverSupportedProtocols = client.getSupportedProtocols();
-    protocolVersion = client.getProtocolVersion();
+            marshaller->flush();
+        } catch (const ResponseError_t &e) {}
 
-    // OK, return unmarshalled data (throws fault if NULL)
-    return builder.getUnMarshaledData();
-}
+        client.readResponse(builder);
+        serverSupportedProtocols = client.getSupportedProtocols();
+        protocolVersion = client.getProtocolVersion();
+        return;
 
+    } catch (const Fault_t &f) {
+        event.callFault.methodName = methodName.c_str();
+        event.callFault.params = &params;
+        event.callFault.url = &url;
+        event.callFault.statusCode = f.errorNum();
+        event.callFault.msg = &f.message();
+        callLoggerCallback(LogEvent_t::CALL_FAULT, event);
+        throw;
 
-void ServerProxyImpl_t::call(DataBuilder_t &builder, const std::string &methodName,
-                                 const Array_t &params)
-{
-    HTTPClient_t client(io, url, connector.get(), useHTTP10);
-    {
-        client.addCustomRequestHeader(requestHttpHeaders);
-        client.addCustomRequestHeader(requestHttpHeadersForCall);
-        requestHttpHeadersForCall.clear();
+    } catch (const std::exception &e) {
+        event.callError.methodName = methodName.c_str();
+        event.callError.params = &params;
+        event.callError.url = &url;
+        event.callError.what = e.what();
+        callLoggerCallback(LogEvent_t::CALL_ERROR, event);
+        throw;
     }
-    std::unique_ptr<Marshaller_t>marshaller(createMarshaller(client));
-    TreeFeeder_t feeder(*marshaller);
-
-    try {
-        marshaller->packMethodCall(methodName.c_str());
-        for (Array_t::const_iterator
-                 iparams = params.begin(),
-                 eparams = params.end();
-             iparams != eparams; ++iparams) {
-            feeder.feedValue(**iparams);
-        }
-
-        marshaller->flush();
-    } catch (const ResponseError_t &e) {}
-
-    client.readResponse(builder);
-    serverSupportedProtocols = client.getSupportedProtocols();
-    protocolVersion = client.getProtocolVersion();
-}
-
-
-Value_t& ServerProxy_t::call(Pool_t &pool, const std::string &methodName,
-                             const Array_t &params)
-{
-    return sp->call(pool, methodName, params);
 }
 
 Value_t& ServerProxyImpl_t::call(Pool_t &pool, const char *methodName,
                                  va_list args)
 {
-    HTTPClient_t client(io, url, connector.get(), useHTTP10);
-    {
-        client.addCustomRequestHeader(requestHttpHeaders);
-        client.addCustomRequestHeader(requestHttpHeadersForCall);
-        requestHttpHeadersForCall.clear();
-    }
-    TreeBuilder_t builder(pool);
-    std::unique_ptr<Marshaller_t>marshaller(createMarshaller(client));
-    TreeFeeder_t feeder(*marshaller);
+    LogEventData_t event;
+    event.callStart.methodName = methodName;
+    event.callStart.params = nullptr;
+    event.callStart.url = &url;
+    callLoggerCallback(LogEvent_t::CALL_START, event);
 
     try {
-        marshaller->packMethodCall(methodName);
+        HTTPClient_t client(io, url, connector.get(), useHTTP10);
+        {
+            client.addCustomRequestHeader(requestHttpHeaders);
+            client.addCustomRequestHeader(requestHttpHeadersForCall);
+            requestHttpHeadersForCall.clear();
+        }
+        TreeBuilder_t builder(pool);
+        std::unique_ptr<Marshaller_t>marshaller(createMarshaller(client));
+        TreeFeeder_t feeder(*marshaller);
 
-        // marshall all passed values until null pointer
-        while (const Value_t *value = va_arg(args, Value_t*))
-            feeder.feedValue(*value);
+        try {
+            marshaller->packMethodCall(methodName);
 
-        marshaller->flush();
-    } catch (const ResponseError_t &e) {}
+            // marshall all passed values until null pointer
+            while (const Value_t *value = va_arg(args, Value_t*))
+                feeder.feedValue(*value);
 
-    client.readResponse(builder);
-    serverSupportedProtocols = client.getSupportedProtocols();
-    protocolVersion = client.getProtocolVersion();
+            marshaller->flush();
+        } catch (const ResponseError_t &e) {}
 
-    // OK, return unmarshalled data (throws fault if NULL)
-    return builder.getUnMarshaledData();
+        client.readResponse(builder);
+        serverSupportedProtocols = client.getSupportedProtocols();
+        protocolVersion = client.getProtocolVersion();
+
+        // OK, return unmarshalled data (throws fault if NULL)
+        return builder.getUnMarshaledData();
+
+    } catch (const Fault_t &f) {
+        event.callFault.methodName = methodName;
+        event.callFault.params = nullptr;
+        event.callFault.url = &url;
+        event.callFault.statusCode = f.errorNum();
+        event.callFault.msg = &f.message();
+        callLoggerCallback(LogEvent_t::CALL_FAULT, event);
+        throw;
+
+    } catch (const std::exception &e) {
+        event.callError.methodName = methodName;
+        event.callError.params = nullptr;
+        event.callError.url = &url;
+        event.callError.what = e.what();
+        callLoggerCallback(LogEvent_t::CALL_ERROR, event);
+        throw;
+    }
 }
 
 void ServerProxyImpl_t::addRequestHttpHeaderForCall(const HTTPClient_t::Header_t& header)
@@ -628,13 +636,40 @@ Value_t& ServerProxy_t::call(Pool_t &pool, const char *methodName, ...) {
     VaListHolder_t argsHolder(args);
 
     // use implementation
-    return sp->call(pool, methodName, args);
+    auto &val = sp->call(pool, methodName, args);
+    LogEventData_t event;
+    event.callSuccess.methodName = methodName;
+    event.callSuccess.params = nullptr;
+    event.callSuccess.url = &sp->getURL();
+    event.callSuccess.response = &val;
+    callLoggerCallback(LogEvent_t::CALL_SUCCESS, event);
+    return val;
+}
+
+Value_t& ServerProxy_t::call(Pool_t &pool, const std::string &methodName,
+                             const Array_t &params)
+{
+    TreeBuilder_t builder(pool);
+    sp->call(builder, methodName, params);
+    LogEventData_t event;
+    event.callSuccess.methodName = methodName.c_str();
+    event.callSuccess.params = &params;
+    event.callSuccess.url = &sp->getURL();
+    event.callSuccess.response = &builder.getUnMarshaledData();
+    callLoggerCallback(LogEvent_t::CALL_SUCCESS, event);
+    return builder.getUnMarshaledData();
 }
 
 void ServerProxy_t::call(DataBuilder_t &builder,
         const std::string &methodName, const Array_t &params)
 {
     sp->call(builder, methodName, params);
+    LogEventData_t event;
+    event.callSuccess.methodName = methodName.c_str();
+    event.callSuccess.params = &params;
+    event.callSuccess.url = &sp->getURL();
+    event.callSuccess.response = nullptr;
+    callLoggerCallback(LogEvent_t::CALL_SUCCESS, event);
 }
 
 void ServerProxy_t::setReadTimeout(int timeout) {

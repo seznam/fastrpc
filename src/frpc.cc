@@ -584,6 +584,20 @@ ProtocolVersion_t::ProtocolVersion_t()
     return *this;
 }*/
 
+static void dummyLogger(LogEvent_t, LogEventData_t&, void*) {}
+
+LoggerFn_t loggerFn = dummyLogger;
+void *loggerData = nullptr;
+
+void FRPC_DLLEXPORT setLoggerCallback(LoggerFn_t loggerFn, void *loggerData) {
+    FRPC::loggerFn = loggerFn;
+    FRPC::loggerData = loggerData;
+}
+
+void FRPC_DLLEXPORT callLoggerCallback(LogEvent_t event, LogEventData_t &eventData) {
+    loggerFn(event, eventData, loggerData);
+}
+
 } // namespace FRPC
 
 //some constants
@@ -604,3 +618,4 @@ const FRPC::Binary_t &FRPC::Binary_t::FRPC_EMPTY = pool.Binary("");
 const FRPC::DateTime_t &FRPC::DateTime_t::FRPC_EPOCH = pool.DateTime(0, 0);
 const FRPC::DateTime_t &
     FRPC::DateTime_t::FRPC_NULL = pool.DateTime(0, 0, 0, 0, 0, 0, 0, -1, 0);
+
