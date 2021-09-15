@@ -36,6 +36,7 @@
 #include <sstream>
 #include <frpcint.h>
 #include <frpcstreamerror.h>
+#include <frpclogging.h>
 
 #include <sys/param.h>
 
@@ -268,6 +269,11 @@ struct DateTimeDataV3_t
 const unsigned int HTTP_BALLAST = 1 << 10;
 const unsigned int  BUFFER_SIZE = (1 << 16) - HTTP_BALLAST;
 const size_t MAX_LEN = 20;
+
+/**
+ * Helper function that calls logger callback function.
+*/
+void FRPC_DLLEXPORT callLoggerCallback(LogEvent_t event, LogEventData_t &eventData);
 
 }
 
