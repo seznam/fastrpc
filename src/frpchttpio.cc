@@ -310,29 +310,6 @@ std::string HTTPIO_t::readLineOpt(bool checkLimit, bool optional)
     }
 }
 
-void HTTPIO_t::waitOnReadyRead()
-{
-    pollfd pfd;
-    pfd.fd = fd;
-    pfd.events = POLLIN;
-    // èekání na data na socketu
-    int ready = TEMP_FAILURE_RETRY(
-            poll(&pfd, 1, readTimeout < 0 ? -1 : readTimeout));
-
-    switch (ready)
-    {
-    case 0:
-        throw ProtocolError_t(HTTP_TIMEOUT, "Timeout while reading.");
-
-    case -1:
-        // other error
-        STRERROR_PRE();
-        throw ProtocolError_t::format(HTTP_SYSCALL,
-                                        "Syscall error: <%d, %s>.",
-                                        ERRNO, STRERROR(ERRNO));
-    }
-}
-
 void HTTPIO_t::sendData(const char *data, size_t length, bool watchForResponse)
 {
     // zjistíme, kolik máme poslat
