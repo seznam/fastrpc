@@ -1,3 +1,12 @@
+python-fastrpc (8.1.9~volcarollbackgil-1) stable; urgency=medium
+
+  * Revert GIL release patch
+  * Create MANIFEST.in
+  * 
+  * include headers in source archive
+
+ -- Filip Volejnik <filip.volejnik@firma.seznam.cz>  Mon, 04 Oct 2021 14:29:50 +0100
+
 python-fastrpc (8.1.9) stable; urgency=medium
 
   * fix deps
