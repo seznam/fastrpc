@@ -188,7 +188,11 @@ std::string HTTPIO_t::readLineOpt(bool checkLimit, bool optional)
         switch (ready)
         {
         case 0:
-            throw ProtocolError_t(HTTP_TIMEOUT, "Timeout while reading.");
+            if (optional) {
+                return "";
+            } else {
+                throw ProtocolError_t(HTTP_TIMEOUT, "Timeout while reading.");
+            }
 
         case -1:
             // other error
