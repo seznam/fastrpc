@@ -1,3 +1,39 @@
+libfastrpc (8.1.5) stable; urgency=medium
+
+  * #! python8.1.10
+  * Revert "fix: on sending request release GIL"
+  * 
+  * This reverts commit 4b900ee82f2b710c29082535a897bb34004368d6.
+  * callback function for logging can be provided
+  * do not report disconnected client if no request is in progress
+  * 
+  * This should silently ignore TCP probes which just open and close TCP connection.
+  * documentation comments
+  * add ServerProxy_t cache for keep-alive connections
+  * improve port formatting
+  * Create MANIFEST.in
+  * 
+  * include headers in source archive
+  * #! python8.1.9
+  * fix deps
+  * #! python8.1.8
+  * py2 ModuleNotFoundError
+  * #! python8.1.7
+  * deps
+  * #! python8.1.6
+  * fix setup.py
+  * use PKG-INFO, if available
+  * #! python8.1.5
+  * version
+  * #! python8.1.4
+  * libfastrpc-dev (>= 8.1.4)
+  * #! python8.1.3
+  * uff, again
+  * #! python8.1.2
+  * fix changelog
+
+ -- Filip Volejnik <filip.volejnik@firma.seznam.cz>  Mon, 11 Oct 2021 14:36:42 +0100
+
 libfastrpc (8.1.4) stable; urgency=medium
 
   * add useChunks into Config_t
