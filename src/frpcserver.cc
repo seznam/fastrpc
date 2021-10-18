@@ -134,6 +134,9 @@ void Server_t::serve(int fd,
             marshaller->flush();
             continue;
 
+        } catch(const HTTPError_t &httpError) {
+            sendHttpError(httpError);
+            break;
         } catch(const ProtocolError_t &err) {
             if (err.errorNum() == HTTP_NO_REQUEST_RECEIVED) {
                 // Failed to receive request. Connection was terminated (closed or timed out)
@@ -142,9 +145,6 @@ void Server_t::serve(int fd,
             } else {
                 throw;
             }
-        } catch(const HTTPError_t &httpError) {
-            sendHttpError(httpError);
-            break;
         }
 
         headerOut = HTTPHeader_t();
