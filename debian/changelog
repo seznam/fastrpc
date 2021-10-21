@@ -1,3 +1,9 @@
+libfastrpc (8.1.6) stable; urgency=medium
+
+  * misplaced catch of protocolerror in frpcserver
+
+ -- Filip Volejnik <filip.volejnik@firma.seznam.cz>  Thu, 21 Oct 2021 14:46:12 +0100
+
 libfastrpc (8.1.5) stable; urgency=medium
 
   * #! python8.1.10
