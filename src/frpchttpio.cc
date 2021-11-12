@@ -188,7 +188,11 @@ std::string HTTPIO_t::readLineOpt(bool checkLimit, bool optional)
         switch (ready)
         {
         case 0:
-            throw ProtocolError_t(HTTP_TIMEOUT, "Timeout while reading.");
+            if (optional) {
+                return "";
+            } else {
+                throw ProtocolError_t(HTTP_TIMEOUT, "Timeout while reading.");
+            }
 
         case -1:
             // other error
@@ -307,29 +311,6 @@ std::string HTTPIO_t::readLineOpt(bool checkLimit, bool optional)
                 break;
             }
         }
-    }
-}
-
-void HTTPIO_t::waitOnReadyRead()
-{
-    pollfd pfd;
-    pfd.fd = fd;
-    pfd.events = POLLIN;
-    // èekání na data na socketu
-    int ready = TEMP_FAILURE_RETRY(
-            poll(&pfd, 1, readTimeout < 0 ? -1 : readTimeout));
-
-    switch (ready)
-    {
-    case 0:
-        throw ProtocolError_t(HTTP_TIMEOUT, "Timeout while reading.");
-
-    case -1:
-        // other error
-        STRERROR_PRE();
-        throw ProtocolError_t::format(HTTP_SYSCALL,
-                                        "Syscall error: <%d, %s>.",
-                                        ERRNO, STRERROR(ERRNO));
     }
 }
 

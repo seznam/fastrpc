@@ -68,7 +68,7 @@ public:
 
     /**
      * @short Return mame and value of item from http header.
-     *
+     * 
      * @param line item of header
      * @param name name if item
      * @param  value value of item
@@ -80,7 +80,7 @@ public:
     /**
      * @short Read line from socket.
      *
-     * @param checkLimit limit check
+     * @param checkLimit limit check  
      * @return read line
      */
     std::string readLine(bool checkLimit = false);
@@ -93,11 +93,6 @@ public:
      * @return read line
      */
     std::string readLineOpt(bool checkLimit = false, bool optional=false);
-
-    /**
-     * @short tries to poll data on socket without reading
-     */
-    void waitOnReadyRead();
 
     void readHeader(HTTPHeader_t &header);
     void readHeader(HTTPHeader_t &header, bool optional);
@@ -147,7 +142,7 @@ public:
     /** @short Send data to socket.
      *
      * @param data pointer to data
-     * @param length  data length
+     * @param length  data length 
      * @param watchForResponse says that sender receive too
      */
     void sendData(const char *data, size_t length,

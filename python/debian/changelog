@@ -1,3 +1,14 @@
+python-fastrpc (8.1.10) stable; urgency=medium
+
+  * Revert "fix: on sending request release GIL"
+  * 
+  * This reverts commit 4b900ee82f2b710c29082535a897bb34004368d6.
+  * Create MANIFEST.in
+  * 
+  * include headers in source archive
+
+ -- Filip Volejnik <filip.volejnik@firma.seznam.cz>  Mon, 04 Oct 2021 15:32:35 +0100
+
 python-fastrpc (8.1.9) stable; urgency=medium
 
   * fix deps

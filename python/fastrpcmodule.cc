@@ -2091,23 +2091,15 @@ PyObject* Proxy_t::operator()(MethodObject *methodObject, PyObject *args) {
             }
         }
 
-        PyThreadState *_save = nullptr;
         Feeder_t feeder(marshaller,encoding);
         try {
-            try {
-                marshaller->packMethodCall(methodObject->name.c_str());
-                feeder.feed(args);
-                _save = PyEval_SaveThread(); // release GIL
-                marshaller->flush();
-            } catch(const ResponseError_t &e) {
-                // premature response occured => just ignore here
-            }
-            client.waitOnReadyRead();
-        } catch(...){
-            if(_save)PyEval_RestoreThread(_save); // acquire GIL
-            throw;
+            marshaller->packMethodCall(methodObject->name.c_str());
+            feeder.feed(args);
+            marshaller->flush();
+        } catch(const ResponseError_t &e) {
+            // premature response occured => just ignore here
         }
-        PyEval_RestoreThread(_save); // acquire GIL
+
         client.readResponse(builder);
         serverSupportedProtocols = client.getSupportedProtocols();
         protocolVersion = client.getProtocolVersion();

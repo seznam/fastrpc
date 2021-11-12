@@ -208,6 +208,8 @@ namespace FRPC {
                               // request
         HTTP_RESPONSE_NOT_READ, // attempt to send request without reading
                                 // response
+        HTTP_NO_REQUEST_RECEIVED, // attempted to read request, but connection was closed
+                                  // or timed out without receiving anything.
     };
     
 
