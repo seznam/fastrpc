@@ -89,7 +89,20 @@ inline void addHeader(StreamHolder_t& stream, const std::string& name, const T& 
 
 } // namespace
 
+static HeadersCallback_t headersCallback = nullptr;
+static void *headersCallbackData = nullptr;
+
+void callHeadersCallback(HTTPClient_t &client) {
+    if (headersCallback == nullptr) return;
+    headersCallback(client, headersCallbackData);
+}
+
 namespace FRPC {
+
+void setHeadersCallback(HeadersCallback_t cb, void *cbdata) {
+    headersCallback = cb;
+    headersCallbackData = cbdata;
+}
 
 const std::string HTTPClient_t::HOST = "Host";
 const std::string HTTPClient_t::POST = "POST";
@@ -287,6 +300,8 @@ void HTTPClient_t::sendRequest(bool last) {
             }
             os.os << "\r\n";
         }
+
+        callHeadersCallback(*this);
 
         switch(useProtocol) {
         case XML_RPC:
