@@ -194,6 +194,14 @@ private:
     std::ostringstream m_customRequestHeaders;
 };
 
+using HeadersCallback_t = void (*)(HTTPClient_t &client, void *);
+
+/**
+ * Set callback function that is called when the HTTP request are prepared so
+ * one can set custom headers before the request is sent to the server.
+ */
+void setHeadersCallback(HeadersCallback_t cb, void *cbdata);
+
 } // namespace FRPC
 
 #endif
