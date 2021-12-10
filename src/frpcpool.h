@@ -69,6 +69,10 @@ public:
     */
     Pool_t();
 
+    /** Allow move. */
+    Pool_t(Pool_t &&) = default;
+    Pool_t &operator=(Pool_t &&) = default;
+
     /**
         @brief Destructor of memory pool
     */
@@ -381,6 +385,13 @@ public:
         @brief Create new  Null_t
     */
     Null_t& Null();
+
+    void steal_pointers(Pool_t &o) throw() {
+        o.pointerStorage.reserve(pointerStorage.size() + o.pointerStorage.size());
+        for (auto &ptr: o.pointerStorage)
+            pointerStorage.push_back(ptr);
+        o.pointerStorage.clear();
+    }
 
     //private:
     std::vector< Value_t* > pointerStorage; ///@brief pointer storage of pool
