@@ -1,3 +1,12 @@
+libfastrpc (8.1.7) stable; urgency=medium
+
+  * Update src/frpcpool.h
+  * Co-authored-by: lubosan80 <lubosan80@users.noreply.github.com>
+  * allow pool to move and steal pointers from another one
+  * Introduce setHeadersCallback function for setting custom headers in FRPC requests.
+
+ -- Filip Volejnik <filip.volejnik@firma.seznam.cz>  Mon, 13 Dec 2021 10:35:06 +0100
+
 libfastrpc (8.1.6) stable; urgency=medium
 
   * misplaced catch of protocolerror in frpcserver
