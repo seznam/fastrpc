@@ -387,7 +387,7 @@ public:
     Null_t& Null();
 
     void steal_pointers(Pool_t &o) throw() {
-        o.pointerStorage.reserve(pointerStorage.size() + o.pointerStorage.size());
+        pointerStorage.reserve(pointerStorage.size() + o.pointerStorage.size());
         for (auto &ptr: o.pointerStorage)
             pointerStorage.push_back(ptr);
         o.pointerStorage.clear();
