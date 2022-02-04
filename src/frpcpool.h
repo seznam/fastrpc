@@ -22,13 +22,13 @@
  *
  * FILE          $Id: frpcpool.h,v 1.8 2011-02-11 08:56:17 burlog Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #ifndef FRPCFRPCPOOL_H
 #define FRPCFRPCPOOL_H
@@ -50,6 +50,7 @@ class Binary_t;
 class BinaryRef_t;
 struct BinaryRefFeeder_t;
 class String_t;
+class StringView_t;
 class Array_t;
 class DateTime_t;
 class Struct_t;
@@ -58,7 +59,7 @@ class Null_t;
 /**
 @author Miroslav Talasek
 @brief Memory pool
- 
+
 Thic obbject has completely control of pointers to all Value_t
 */
 class FRPC_DLLEXPORT Pool_t
@@ -134,7 +135,7 @@ public:
         @brief Create new DateTime_t object from unix tm structure
         You should specify your timezone!
 
-        @param year - Year is offset (0 - 2047) to zero-year 1600 
+        @param year - Year is offset (0 - 2047) to zero-year 1600
         (0=1600, ... 370 = 1970, ...)
         @param month - Month is 1 - 12
         @param day -   Day is 1 - 31
@@ -168,7 +169,7 @@ public:
     DateTime_t&  DateTime(const std::string &isoFormat);
     /**
         @brief Create new DateTime_t object from data and local timezone
-        @param year - Year is offset (0 - 2047) to zero-year 1600 
+        @param year - Year is offset (0 - 2047) to zero-year 1600
         (0=1600, ... 370 = 1970, ...)
         @param month - Month is 1 - 12
         @param day -   Day is 1 - 31
@@ -192,7 +193,7 @@ public:
     DateTime_t&  LocalTime();
     /**
         @brief Create new DateTime_t object from data and UTC timezone
-        @param year - Year is offset (0 - 2047) to zero-year 1600 
+        @param year - Year is offset (0 - 2047) to zero-year 1600
         (0=1600, ... 370 = 1970, ...)
         @param month - Month is 1 - 12
         @param day -   Day is 1 - 31
@@ -232,13 +233,13 @@ public:
 
     /**
         @brief Create new String_t object from std::string
-        @param value is a std::string 
+        @param value is a std::string
         @return reference to String_t
     */
     String_t&  String(const std::string &value);
     /**
         @brief Create new String_t object from std::wstring
-        @param value is a std::wstring 
+        @param value is a std::wstring
         @return reference to String_t
     */
     String_t&  String(const std::wstring &value);
@@ -261,25 +262,43 @@ public:
                      std::string::size_type dataSize);
 
     /**
-        @brief Create new empty Array_t 
+        @brief Create new StringView_t object from pointer and size of data
+        @param ptr is a pointer to string data
+        @param length is a size of string data
+        @return reference to String_t
+    */
+    StringView_t &StringView(const char *data, std::size_t dataSize);
+
+    /**
+        @brief Create new StringView_t object from std::string_view
+        @param value is a std::string_view
+        @return reference to StringView_t
+    */
+    template <typename View_t>
+    StringView_t &StringView(View_t &&value) {
+        return StringView(value.data(), value.size());
+    }
+
+    /**
+        @brief Create new empty Array_t
         @return reference to Array_t
     */
     Array_t& Array();
     /**
-        @brief Create new  Array_t with one item 
+        @brief Create new  Array_t with one item
         @param item1 is a Value_t reference
         @return reference to Array_t
     */
     Array_t& Array(const Value_t &item1);
     /**
-        @brief Create new  Array_t with two items 
+        @brief Create new  Array_t with two items
         @param item1 is a Value_t reference
         @param item2 is a Value_t reference
         @return reference to Array_t
     */
     Array_t& Array(const Value_t &item1, const Value_t &item2);
     /**
-        @brief Create new  Array_t with three items 
+        @brief Create new  Array_t with three items
         @param item1 is a Value_t reference
         @param item2 is a Value_t reference
         @param item3 is a Value_t reference
@@ -288,7 +307,7 @@ public:
     Array_t& Array(const Value_t &item1, const Value_t &item2,
                    const Value_t &item3);
     /**
-        @brief Create new  Array_t with four items 
+        @brief Create new  Array_t with four items
         @param item1 is a Value_t reference
         @param item2 is a Value_t reference
         @param item3 is a Value_t reference
@@ -298,7 +317,7 @@ public:
     Array_t& Array(const Value_t &item1, const Value_t &item2,
                    const Value_t &item3, const Value_t &item4);
     /**
-        @brief Create new  Array_t with five items 
+        @brief Create new  Array_t with five items
         @param item1 is a Value_t reference
         @param item2 is a Value_t reference
         @param item3 is a Value_t reference

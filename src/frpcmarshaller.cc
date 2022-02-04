@@ -85,12 +85,13 @@ void Marshaller_t::packStructMember(const char* memberName) {
 void  Marshaller_t::packString(const char* value){
     unsigned int size = strlen(value);
     packString(value,size);
-
 }
+
 void Marshaller_t::packFault(int errNumber, const char* errMsg){
     unsigned int size = strlen(errMsg);
     packFault(errNumber,errMsg,size);
 }
+
 void Marshaller_t::packMethodCall(const char* methodName){
     unsigned int size = strlen(methodName);
     packMethodCall(methodName,size);

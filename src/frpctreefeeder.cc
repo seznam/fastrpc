@@ -31,6 +31,7 @@
  *
  */
 
+#include "frpcstring_view.h"
 #include "frpcbinmarshaller.h"
 #include "frpcxmlmarshaller.h"
 #include "frpcjsonmarshaller.h"
@@ -82,7 +83,8 @@ template <
     marshaller.packNull();
 }
 
-void packString(Marshaller_t &marshaller, const String_t &str) {
+template <typename StringT>
+void packString(Marshaller_t &marshaller, StringT &&str) {
     marshaller.packString(str.data(), str.size());
 }
 
@@ -147,6 +149,10 @@ void feedValueImpl(Marshaller_t &marshaller, const Value_t &value) {
 
     case String_t::TYPE:
         packString(marshaller, String(value));
+        break;
+
+    case StringView_t::TYPE:
+        packString(marshaller, StringView(value));
         break;
 
     case BinaryRef_t::TYPE:
