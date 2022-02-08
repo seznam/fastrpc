@@ -33,7 +33,7 @@
 #ifndef FRPCSTRINGVIEW_H
 #define FRPCSTRINGVIEW_H
 
-#if __cplusplus < 201703L
+#if __cplusplus >= 201703L
 #include <string_view>
 #endif /* __cplusplus < 201703L */
 
