@@ -54,7 +54,7 @@ include_HEADERS = frpc.h frpcvalue.h frpcarray.h frpcstruct.h frpcbinary.h frpcd
                   frpcversion.h frpcconnector.h frpcconverters.h frpcnull.h \
                   frpcbinmarshaller.h frpcxmlmarshaller.h frpcinternals.h frpccompare.h frpcb64marshaller.h \
                   frpcjsonmarshaller.h frpcb64writer.h frpcconfig.h frpcbinunmarshaller-extras.h            \
-				  frpcbinaryref.h frpclogging.h
+				  frpcbinaryref.h frpclogging.h frpcstring_view.h
 
 
 noinst_HEADERS = frpcbinunmarshaller.h frpcxmlunmarshaller.h frpcurlunmarshaller.h frpcb64unmarshaller.h frpcbase64.h \
@@ -75,7 +75,7 @@ libfastrpc_la_SOURCES = frpcvalue.cc frpcarray.cc frpcstruct.cc frpcbinary.cc fr
                         frpctreebuilder.cc frpctreefeeder.cc frpcfault.cc frpc.cc frpcmethodregistry.cc \
                         frpcserver.cc frpcresponseerror.cc frpcconnector.cc frpcnull.cc \
                         frpcurlunmarshaller.cc frpcjsonmarshaller.cc frpcb64unmarshaller.cc frpcbase64.cc \
-                        frpcb64writer.cc frpcconfig.cc frpccompare.cc
+                        frpcb64writer.cc frpcconfig.cc frpccompare.cc frpcstring_view.cc
 
 # with these flags (version info etc.)
 libfastrpc_la_LDFLAGS = @VERSION_INFO@ $(DEPS_LIBS)

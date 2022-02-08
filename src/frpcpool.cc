@@ -30,9 +30,12 @@
  * HISTORY
  *
  */
-#include <frpc.h>
+
 //remove
 #include <stdio.h>
+
+#include "frpc.h"
+#include "frpcpool.h"
 
 namespace FRPC
 {
@@ -285,6 +288,16 @@ String_t& Pool_t::String(const std::string::value_type *data,
 
     return *newValue;
 }
+
+StringView_t &Pool_t::StringView(const char *ptr, std::size_t length)
+{
+    StringView_t *newValue = new StringView_t(ptr, length);
+
+    pointerStorage.push_back(newValue);
+
+    return *newValue;
+}
+
 
 
 Array_t& Pool_t::Array()
