@@ -315,6 +315,19 @@ int FRPC_DLLEXPORT dumpFastrpcTree(
         }
         break;
 
+    case StringView_t::TYPE: {
+
+            out << '"';
+            if (maxlen != -1 && StringView(value).size() > (unsigned long)maxlen)
+                out << StringView(value).getString().substr(0,maxlen) << "...";
+            else
+                out << StringView(value).getString();
+            out << '"';
+
+
+        }
+        break;
+
     case Binary_t::TYPE: {
             out << "b\"";
             auto len = maxlen;
