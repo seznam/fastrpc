@@ -625,6 +625,7 @@ const FRPC::Double_t &FRPC::Double_t::FRPC_ZERO = pool.Double(0);
 const FRPC::Bool_t &FRPC::Bool_t::FRPC_TRUE = pool.Bool(true);
 const FRPC::Bool_t &FRPC::Bool_t::FRPC_FALSE = pool.Bool(false);
 const FRPC::String_t &FRPC::String_t::FRPC_EMPTY = pool.String("");
+const FRPC::StringView_t &FRPC::StringView_t::FRPC_EMPTY = pool.StringView("", 0);
 const FRPC::Struct_t &FRPC::Struct_t::FRPC_EMPTY = pool.Struct();
 const FRPC::Array_t &FRPC::Array_t::FRPC_EMPTY = pool.Array();
 const FRPC::Binary_t &FRPC::Binary_t::FRPC_EMPTY = pool.Binary("");
