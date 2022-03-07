@@ -1,3 +1,10 @@
+libfastrpc (8.1.10) stable; urgency=medium
+
+  * adding missing FRPC::StringView_t::FRPC_EMPTY value
+  * dumpFastrpc() dumps StringView now
+
+ -- Filip Volejnik <filip.volejnik@firma.seznam.cz>  Mon, 07 Mar 2022 09:20:24 +0100
+
 libfastrpc (8.1.9) stable; urgency=medium
 
   * string_view conditional include had the guarding condition inverted

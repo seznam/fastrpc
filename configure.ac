@@ -35,7 +35,7 @@
 #
 
 # initialize autoconf
-AC_INIT([fastrpc], [8.1.9], fastrpc@firma.seznam.cz)
+AC_INIT([fastrpc], [8.1.10], fastrpc@firma.seznam.cz)
 
 # initialize automake(use AC_INIT's arguments)
 AM_INIT_AUTOMAKE([subdir-objects])
