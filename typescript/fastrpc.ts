@@ -54,6 +54,8 @@ interface Options {
 }
 
 type BYTES = number[];
+let te = new TextEncoder();
+
 
 function _parseValue(): any {
 	/* pouzite optimalizace:
@@ -263,34 +265,6 @@ function _decodeUTF8(length: number) {
 	return result;
 }
 
-function _encodeUTF8(str:string) {
-	let result: BYTES = [];
-	for (let i=0;i<str.length;i++) {
-		let c = str.charCodeAt(i);
-		if (c >= 55296 && c <= 56319) { /* surrogates */
-			let c2 = str.charCodeAt(++i);
-			c = ((c & 0x3FF) << 10) + (c2 & 0x3FF) + 0x10000;
-		}
-
-		if (c < 128) {
-			result.push(c);
-		} else if (c < 2048) {
-			result.push((c >> 6) | 192);
-			result.push((c & 63) | 128);
-		} else if (c < 65536) {
-			result.push((c >> 12) | 224);
-			result.push(((c >> 6) & 63) | 128);
-			result.push((c & 63) | 128);
-		} else {
-			result.push((c >> 18) | 240);
-			result.push(((c >> 12) & 63) | 128);
-			result.push(((c >> 6) & 63) | 128);
-			result.push((c & 63) | 128);
-		}
-	}
-	return result;
-}
-
 function _getDouble() {
 	let bytes: BYTES = [];
 	let index = 8;
@@ -340,7 +314,7 @@ function _serializeValue(result: BYTES, value: any) {
 
 	switch (typeof(value)) {
 		case "string":
-			let strData = _encodeUTF8(value);
+			let strData = te.encode(value);
 			let intData = _encodeInt(strData.length);
 
 			let first = TYPE_STRING << 3;
@@ -352,7 +326,7 @@ function _serializeValue(result: BYTES, value: any) {
 		break;
 
 		case "number":
-			if (_getHint() == "float") { // float
+			if (_getHint() == "float") {
 				let first = TYPE_DOUBLE << 3;
 				let floatData = _encodeDouble(value);
 
@@ -451,7 +425,7 @@ function _serializeStruct(result: BYTES, data: Dict) {
 	_append(result, intData);
 
 	for (let p in data) {
-		let strData = _encodeUTF8(p);
+		let strData = te.encode(p);
 		result.push(strData.length);
 		_append(result, strData);
 		_path.push(p);
@@ -602,7 +576,7 @@ function _encodeDouble(num: number) {
  */
 function _getHint() {
 	if (!_hints) { return null; }
-	if (typeof(_hints) != "object") { return _hints; } /* skalarni varianta */
+	if (typeof(_hints) != "object") { return _hints; } // skalarni varianta
 	return _hints && _hints[_path.join(".")];
 }
 
@@ -637,10 +611,10 @@ export function serialize(data: any, hints?: Hints, options?: Partial<Options>) 
 export function serializeCall(method:string, data:any, hints?: Hints, options?: Partial<Options>) {
 	let result = serialize(data, hints, options);
 
-	/* utrhnout hlavicku pole (dva bajty) */
+	// utrhnout hlavicku pole (dva bajty)
 	result.shift(); result.shift();
 
-	let encodedMethod = _encodeUTF8(method);
+	let encodedMethod = te.encode(method);
 	result.unshift.apply(result, encodedMethod);
 	result.unshift(encodedMethod.length);
 
@@ -710,6 +684,6 @@ export function parse(data: Uint8Array, options?: Partial<Options>) {
 		break;
 	}
 
-	_data = new Uint8Array()
+	_data = new Uint8Array();
 	return result;
 }
