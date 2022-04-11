@@ -34,15 +34,13 @@ const TYPE_INT8N = 8;
 const TYPE_STRUCT = 10;
 const TYPE_ARRAY = 11;
 const TYPE_NULL = 12;
-export let surrogateFlag = false;
 let _hints;
 let _path = [];
 let _data;
 let _pointer = 0;
 let _version;
 let _arrayBuffers;
-;
-;
+export let surrogateFlag = false;
 let te = new TextEncoder();
 function _parseValue() {
     /* pouzite optimalizace:

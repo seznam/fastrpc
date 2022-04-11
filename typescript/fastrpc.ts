@@ -37,7 +37,13 @@ const TYPE_STRUCT    = 10;
 const TYPE_ARRAY     = 11;
 const TYPE_NULL      = 12;
 
-export let surrogateFlag = false;
+type Hints = Record<string, string>;
+type BYTES = number[];
+
+interface Options {
+	version: number;
+	arrayBuffers: boolean;
+}
 
 let _hints: undefined | Hints;
 let _path: string[] = [];
@@ -46,14 +52,7 @@ let _pointer = 0;
 let _version: number;
 let _arrayBuffers: boolean;
 
-interface Dict {[name:string]:any};
-interface Hints {[name:string]:string};
-interface Options {
-	version: number;
-	arrayBuffers: boolean;
-}
-
-type BYTES = number[];
+export let surrogateFlag = false;
 let te = new TextEncoder();
 
 
@@ -166,7 +165,7 @@ function _append(arr1: BYTES, arr2: BYTES | Uint8Array) {
 	for (let i=0;i<len;i++) { arr1.push(arr2[i]); }
 }
 
-function _parseMember(result: Dict) {
+function _parseMember(result: Record<string, any>) {
 	let nameLength = _getInt(1);
 	let name = _decodeUTF8(nameLength);
 	result[name] = _parseValue();
@@ -412,7 +411,7 @@ function _serializeArray(result: BYTES, data: any[]) {
 	}
 }
 
-function _serializeStruct(result: BYTES, data: Dict) {
+function _serializeStruct(result: BYTES, data: Record<string, any>) {
 	let numMembers = 0;
 	let p;
 	for (p in data) { numMembers++; }
