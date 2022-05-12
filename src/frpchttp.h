@@ -131,6 +131,9 @@ namespace FRPC {
 
 
         public:
+            const std::string *get(const std::string &name,
+                    unsigned int index = 0) const;
+
             int get(const std::string &name, std::string &value,
                     unsigned int index = 0) const;
         

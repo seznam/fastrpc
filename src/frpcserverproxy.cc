@@ -182,6 +182,8 @@ public:
 
     const Connector_t& getConnector() const { return *connector; }
 
+    const HTTPHeader_t &getResponseHeaders() const { return responseHeaders; }
+
 private:
     URL_t url;
     HTTPIO_t io;
@@ -192,6 +194,7 @@ private:
     std::unique_ptr<Connector_t> connector;
     HTTPClient_t::HeaderVector_t requestHttpHeadersForCall;
     HTTPClient_t::HeaderVector_t requestHttpHeaders;
+    HTTPHeader_t responseHeaders;
 };
 
 Marshaller_t* ServerProxyImpl_t::createMarshaller(HTTPClient_t &client) {
@@ -510,7 +513,7 @@ void ServerProxyImpl_t::call(
             marshaller->flush();
         } catch (const ResponseError_t &e) {}
 
-        client.readResponse(builder);
+        client.readResponse(builder, responseHeaders);
         serverSupportedProtocols = client.getSupportedProtocols();
         protocolVersion = client.getProtocolVersion();
         return;
@@ -521,6 +524,7 @@ void ServerProxyImpl_t::call(
         event.callFault.url = &url;
         event.callFault.statusCode = f.errorNum();
         event.callFault.msg = &f.message();
+        event.callFault.responseHeaders = &responseHeaders;
         callLoggerCallback(LogEvent_t::CALL_FAULT, event);
         throw;
 
@@ -529,6 +533,7 @@ void ServerProxyImpl_t::call(
         event.callError.params = &params;
         event.callError.url = &url;
         event.callError.what = e.what();
+        event.callError.responseHeaders = &responseHeaders;
         callLoggerCallback(LogEvent_t::CALL_ERROR, event);
         throw;
     }
@@ -564,7 +569,7 @@ Value_t& ServerProxyImpl_t::call(Pool_t &pool, const char *methodName,
             marshaller->flush();
         } catch (const ResponseError_t &e) {}
 
-        client.readResponse(builder);
+        client.readResponse(builder, responseHeaders);
         serverSupportedProtocols = client.getSupportedProtocols();
         protocolVersion = client.getProtocolVersion();
 
@@ -577,6 +582,7 @@ Value_t& ServerProxyImpl_t::call(Pool_t &pool, const char *methodName,
         event.callFault.url = &url;
         event.callFault.statusCode = f.errorNum();
         event.callFault.msg = &f.message();
+        event.callFault.responseHeaders = &responseHeaders;
         callLoggerCallback(LogEvent_t::CALL_FAULT, event);
         throw;
 
@@ -585,6 +591,7 @@ Value_t& ServerProxyImpl_t::call(Pool_t &pool, const char *methodName,
         event.callError.params = nullptr;
         event.callError.url = &url;
         event.callError.what = e.what();
+        event.callError.responseHeaders = &responseHeaders;
         callLoggerCallback(LogEvent_t::CALL_ERROR, event);
         throw;
     }
@@ -642,6 +649,7 @@ Value_t& ServerProxy_t::call(Pool_t &pool, const char *methodName, ...) {
     event.callSuccess.params = nullptr;
     event.callSuccess.url = &sp->getURL();
     event.callSuccess.response = &val;
+    event.callSuccess.responseHeaders = &sp->getResponseHeaders();
     callLoggerCallback(LogEvent_t::CALL_SUCCESS, event);
     return val;
 }
@@ -656,6 +664,7 @@ Value_t& ServerProxy_t::call(Pool_t &pool, const std::string &methodName,
     event.callSuccess.params = &params;
     event.callSuccess.url = &sp->getURL();
     event.callSuccess.response = &builder.getUnMarshaledData();
+    event.callSuccess.responseHeaders = &sp->getResponseHeaders();
     callLoggerCallback(LogEvent_t::CALL_SUCCESS, event);
     return builder.getUnMarshaledData();
 }
@@ -669,6 +678,7 @@ void ServerProxy_t::call(DataBuilder_t &builder,
     event.callSuccess.params = &params;
     event.callSuccess.url = &sp->getURL();
     event.callSuccess.response = nullptr;
+    event.callSuccess.responseHeaders = &sp->getResponseHeaders();
     callLoggerCallback(LogEvent_t::CALL_SUCCESS, event);
 }
 

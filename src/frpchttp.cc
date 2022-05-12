@@ -93,6 +93,19 @@ int HTTPHeader_t::get
         return -1;
     }
 
+const std::string *
+HTTPHeader_t::get(const std::string &name_, unsigned int index) const {
+    static const std::string empty;
+    std::string name(polishName(name_));
+    unsigned int current = 0;
+    for (HeaderMap_t::const_iterator iheader = header.begin();
+            iheader != header.end(); ++iheader)
+        if (name == iheader->first)
+            if (index == current++)
+                return &iheader->second;
+    return nullptr;
+}
+
 std::vector<std::string>
 HTTPHeader_t::getList(const std::string &name_) const
 {

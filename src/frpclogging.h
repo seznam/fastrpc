@@ -32,6 +32,7 @@ namespace FRPC {
 class URL_t;
 class Value_t;
 class Array_t;
+class HTTPHeader_t;
 
 enum class LogEvent_t {
     CALL_START,
@@ -54,6 +55,7 @@ union LogEventData_t {
         const Array_t *params;
         const URL_t *url;
         const Value_t *response;
+        const HTTPHeader_t *responseHeaders;
     };
 
     struct CallFault_t {
@@ -62,6 +64,7 @@ union LogEventData_t {
         const URL_t *url;
         int statusCode;
         const std::string *msg;
+        const HTTPHeader_t *responseHeaders;
     };
 
     struct CallError_t {
@@ -69,6 +72,7 @@ union LogEventData_t {
         const Array_t *params;
         const URL_t *url;
         const char *what;
+        const HTTPHeader_t *responseHeaders;
     };
 
     CallStart_t callStart;
