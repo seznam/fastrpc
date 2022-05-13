@@ -1,3 +1,11 @@
+libfastrpc (8.1.11) stable; urgency=medium
+
+  * add response http headers to log callback
+  * ts: Record types, reorg
+  * ts/js impl uses TextEncoder (Bring Your Own Polyfill)
+
+ -- Filip Volejnik <filip.volejnik@firma.seznam.cz>  Fri, 13 May 2022 14:21:52 +0100
+
 libfastrpc (8.1.10) stable; urgency=medium
 
   * adding missing FRPC::StringView_t::FRPC_EMPTY value
