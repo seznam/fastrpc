@@ -150,6 +150,13 @@ public:
     */
     void readResponse(DataBuilder_t &builder);
 
+    /**
+    *@brief read response from socket and unmarshaling
+    *@param builder is a builder required for unmarshaller to build data tree
+    *@param responseHeaders where store response headers
+    */
+    void readResponse(DataBuilder_t &builder, HTTPHeader_t &responseHeaders);
+
     static const std::string HOST;
     static const std::string POST;
     static const std::string HTTP10;

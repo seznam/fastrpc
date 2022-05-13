@@ -172,6 +172,10 @@ void HTTPClient_t::write(const char* data, unsigned int size) {
 
 void HTTPClient_t::readResponse(DataBuilder_t &builder) {
     HTTPHeader_t httpHead;
+    readResponse(builder, httpHead);
+}
+
+void HTTPClient_t::readResponse(DataBuilder_t &builder, HTTPHeader_t &httpHead) {
     std::string protocol;
     std::string contentType;
     SocketCloser_t closer(httpIO.socket());
