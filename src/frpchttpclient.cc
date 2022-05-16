@@ -180,6 +180,7 @@ void HTTPClient_t::readResponse(DataBuilder_t &builder, HTTPHeader_t &httpHead) 
     std::string contentType;
     SocketCloser_t closer(httpIO.socket());
     bool closeConnection = false;
+    httpHead.clear();
 
     // read header
     try {
