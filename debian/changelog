@@ -1,3 +1,9 @@
+libfastrpc (8.1.12) stable; urgency=medium
+
+  * make response headers local
+
+ -- Michal Bukovský <burlog@seznam.cz>  Mon, 16 May 2022 15:27:22 +0100
+
 libfastrpc (8.1.11) stable; urgency=medium
 
   * add response http headers to log callback
