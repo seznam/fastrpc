@@ -30,35 +30,36 @@ from setuptools import find_packages, setup, Extension
 import sys
 
 
-def _init_posix(init):
-    """
-    Forces g++ instead of gcc on most systems
-    credits to eric jones (eric@enthought.com) (found at Google Groups)
-    """
-    def wrapper():
-        init()
+if hasattr(sysconfig, "_init_posix"):
+    def _init_posix(init):
+        """
+        Forces g++ instead of gcc on most systems
+        credits to eric jones (eric@enthought.com) (found at Google Groups)
+        """
+        def wrapper():
+            init()
 
-        config_vars = sysconfig.get_config_vars()  # by reference
-        if config_vars["MACHDEP"].startswith("sun"):
-            # Sun needs forced gcc/g++ compilation
-            config_vars['CC'] = 'gcc'
-            config_vars['CXX'] = 'g++'
+            config_vars = sysconfig.get_config_vars()  # by reference
+            if config_vars["MACHDEP"].startswith("sun"):
+                # Sun needs forced gcc/g++ compilation
+                config_vars['CC'] = 'gcc'
+                config_vars['CXX'] = 'g++'
 
-        # FIXME raises hardening-no-fortify-functions lintian warning.
-        else:
-            # Non-Sun needs linkage with g++
-            config_vars['LDSHARED'] = 'g++ -shared -g -W -Wall -Wno-deprecated'
+            # FIXME raises hardening-no-fortify-functions lintian warning.
+            else:
+                # Non-Sun needs linkage with g++
+                config_vars['LDSHARED'] = 'g++ -shared -g -W -Wall -Wno-deprecated'
 
-        if uname()[0] == 'SunOS':
-            config_vars['CFLAGS'] = '-g -W -Wall -Wno-deprecated -I/opt/szn/include -m64'
-            config_vars['LDFLAGS'] = '-L/opt/szn/lib/amd64'
-        else:
-            config_vars['CFLAGS'] = '-g -W -Wall -Wno-deprecated'
+            if uname()[0] == 'SunOS':
+                config_vars['CFLAGS'] = '-g -W -Wall -Wno-deprecated -I/opt/szn/include -m64'
+                config_vars['LDFLAGS'] = '-L/opt/szn/lib/amd64'
+            else:
+                config_vars['CFLAGS'] = '-g -W -Wall -Wno-deprecated'
 
-        config_vars['OPT'] = '-g -W -Wall -Wno-deprecated'
+            config_vars['OPT'] = '-g -W -Wall -Wno-deprecated'
 
-    return wrapper
-sysconfig._init_posix = _init_posix(sysconfig._init_posix)
+        return wrapper
+    sysconfig._init_posix = _init_posix(sysconfig._init_posix)
 
 
 here = dirname(__file__)
