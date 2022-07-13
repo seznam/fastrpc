@@ -1,3 +1,11 @@
+libfastrpc (8.1.13) stable; urgency=medium
+
+  * tuning log strunctures
+  * fix calling logger callback in case of fault
+  * python >= 3.9.12 has no sysconfig._init_posix
+
+ -- Filip Volejnik <filip.volejnik@firma.seznam.cz>  Wed, 13 Jul 2022 14:33:13 +0100
+
 libfastrpc (8.1.12) stable; urgency=medium
 
   * make response headers local
