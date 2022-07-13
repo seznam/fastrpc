@@ -44,33 +44,27 @@ enum class LogEvent_t {
 union LogEventData_t {
     LogEventData_t() {}
 
-    struct CallStart_t {
+    struct CallBasics_t {
         const char *methodName;
         const Array_t *params;
         const URL_t *url;
     };
 
-    struct CallSuccess_t {
-        const char *methodName;
-        const Array_t *params;
-        const URL_t *url;
+    struct CallStart_t: CallBasics_t {
+    };
+
+    struct CallSuccess_t: CallBasics_t {
         const Value_t *response;
         const HTTPHeader_t *responseHeaders;
     };
 
-    struct CallFault_t {
-        const char *methodName;
-        const Array_t *params;
-        const URL_t *url;
+    struct CallFault_t: CallBasics_t {
         int statusCode;
         const std::string *msg;
         const HTTPHeader_t *responseHeaders;
     };
 
-    struct CallError_t {
-        const char *methodName;
-        const Array_t *params;
-        const URL_t *url;
+    struct CallError_t: CallBasics_t {
         const char *what;
         const HTTPHeader_t *responseHeaders;
     };

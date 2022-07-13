@@ -605,9 +605,6 @@ namespace {
             val = call();
 
         } catch (const Fault_t &f) {
-            event.callFault.methodName = methodName;
-            event.callFault.params = params;
-            event.callFault.url = url;
             event.callFault.statusCode = f.errorNum();
             event.callFault.msg = &f.message();
             event.callFault.responseHeaders = &responseHeaders;
@@ -615,17 +612,11 @@ namespace {
             throw;
 
         } catch (const std::exception &e) {
-            event.callError.methodName = methodName;
-            event.callError.params = params;
-            event.callError.url = url;
             event.callError.what = e.what();
             event.callError.responseHeaders = &responseHeaders;
             callLoggerCallback(LogEvent_t::CALL_ERROR, event);
             throw;
         }
-        event.callSuccess.methodName = methodName;
-        event.callSuccess.params = params;
-        event.callSuccess.url = url;
         event.callSuccess.response = val;
         event.callSuccess.responseHeaders = &responseHeaders;
         callLoggerCallback(LogEvent_t::CALL_SUCCESS, event);
