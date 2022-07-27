@@ -54,6 +54,7 @@ let _arrayBuffers: boolean;
 
 export let surrogateFlag = false;
 let te = new TextEncoder();
+let td = new TextDecoder();
 
 
 function _parseValue(): any {
@@ -198,70 +199,11 @@ function _getByte() {
 }
 
 function _decodeUTF8(length: number) {
-	/* pouzite optimalizace:
-	 * - pracujeme nad stringem namisto pole; FF i IE to kupodivu (!) maji rychlejsi
-	 * - while namisto for
-	 * - cachovani fromCharcode, _data i _pointer
-	 * - vyhozeni _getByte
-	 */
-	let remain = length;
-	let result = "";
-	if (!length) { return result; }
-
-	let c = 0, c1 = 0, c2 = 0, c3 = 0;
-	let SfCC = String.fromCharCode;
-	let data = _data;
-	let pointer = _pointer;
-
-	while (1) {
-		remain--;
-		c = data[pointer];
-		pointer += 1;  /* FIXME safari bug */
-		if (c < 128) {
-			result += SfCC(c);
-		} else if ((c > 191) && (c < 224)) {
-			c1 = data[pointer] & 63;
-			pointer += 1; /* FIXME safari bug */
-			result += SfCC(((c & 31) << 6) | c1);
-			remain -= 1;
-		} else if (c < 240) {
-			c1 = data[pointer++] & 63;
-			c2 = data[pointer++] & 63;
-			let cp = ((c & 15) << 12) | (c1 << 6) | c2;
-			result += SfCC(cp);
-			remain -= 2;
-
-			/* zapamatovat si, ze jsme narazili na (nekorektni) surrogate pair */
-			if (cp >= 55296 && cp <= 56319) { surrogateFlag = true; }
-
-		} else if (c < 248) { /* 4 byte stuff */
-			c1 = data[pointer++] & 63;
-			c2 = data[pointer++] & 63;
-			c3 = data[pointer++] & 63;
-			let cp = ((c & 0x07) << 0x12) | (c1 << 0x0C) | (c2 << 0x06) | c3;
-
-			if (cp > 0xFFFF) { /* surrogates */
-				cp -= 0x10000;
-				result += SfCC((cp >>> 10) & 0x3FF | 0xD800);
-				cp = cp & 0x3FF | 0xDC00;
-			}
-			result += SfCC(cp);
-			remain -= 3;
-		} else if (c < 252) { /* 5 byte stuff, throw away */
-			pointer += 4;
-			remain -= 4;
-		} else { /* 6 byte stuff, throw away */
-			pointer += 5;
-			remain -= 5;
-		}
-
-		/* pokud bylo na vstupu nevalidni UTF-8, mohli jsme podlezt... */
-		if (remain <= 0) { break; }
+	let ab = new Uint8Array(length);
+	for (let i=0;i<length;i++) {
+		ab[i] = _data[_pointer++];
 	}
-
-	/* normalne je v tuto chvili remain = 0; pokud byla ale na vstupu chyba, mohlo klesnout pod nulu. vratime pointer na spravny konec stringu */
-	_pointer = pointer + remain;
-	return result;
+	return td.decode(ab);
 }
 
 function _getDouble() {
