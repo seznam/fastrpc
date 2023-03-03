@@ -148,6 +148,7 @@ pkg.generate(lib, name: 'libfastrpc')
 
 libfastrpc_dep = declare_dependency(link_with: lib,
                                     include_directories: inc)
+meson.override_dependency('libfastrpc', libfastrpc_dep)
 
 test_base64 = executable('test_base64', 'test/base64.cc',
                          include_directories: inc,
