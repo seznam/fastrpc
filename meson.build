@@ -147,6 +147,7 @@ install_headers([headers, version_header])
 pkg.generate(lib, name: 'libfastrpc')
 
 libfastrpc_dep = declare_dependency(link_with: lib,
+                                    dependencies: lib_deps,
                                     include_directories: inc)
 meson.override_dependency('libfastrpc', libfastrpc_dep)
 
