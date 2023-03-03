@@ -142,7 +142,7 @@ lib = static_library('fastrpc', [sources, version_header],
                      install: true)
 
 # NOT IN SUBDIR! FRPC headers are prefixed 'frpc'
-install_headers(headers)
+install_headers([headers, version_header])
 
 pkg.generate(lib, name: 'libfastrpc')
 
