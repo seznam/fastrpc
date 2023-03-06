@@ -86,7 +86,7 @@ void test_decode(std::string value, unsigned line_num) {
 
 // encode -> decode test
 // g++ base64.cc ../src/frpcwriter.cc  ../src/frpcbase64.cc ../src/frpcb64writer.cc && ./a.out
-int main(int argc, const char *argv[])
+int main(int /*argc*/, const char */*argv*/[])
 {
     for (int i=0; i<500; ++i) {
         test_decode(std::string(i, 'a'), __LINE__);

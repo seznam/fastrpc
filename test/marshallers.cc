@@ -526,15 +526,14 @@ size_t passedChecks = 0;
 size_t passedTests  = 0;
 
 /** Runs the core test, returns corrected result */
-TestResult_t runTest(FRPC::Pool_t &pool, const TestSettings_t &ts,
+TestResult_t runTest(FRPC::Pool_t &pool, const TestSettings_t &/*ts*/,
                      const TestInstance_t &ti,
-                     size_t testNum, size_t lineNum, FRPC::Value_t &value,
+                     size_t /*testNum*/, size_t lineNum, FRPC::Value_t &value,
                      const std::string &origTxt,
                      size_t offset, size_t step)
 {
     TestResult_t result(TEST_PASSED);
     std::string secondTxtForm;
-    bool waserror = false;
 
     FRPC::TreeBuilder_t builder(pool);
 

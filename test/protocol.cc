@@ -66,7 +66,7 @@ FRPC::Value_t &makeTestValue(FRPC::Pool_t &pool) {
     return arr;
 }
 
-void reviewValue(FRPC::Value_t &val, int verMaj, int verMin)
+void reviewValue(FRPC::Value_t &val, int verMaj, int /*verMin*/)
 {
     FRPC::Array_t &arr = FRPC::Array(val);
     FRPC::DateTime_t &dt = FRPC::DateTime(arr[0]);
@@ -122,7 +122,7 @@ void testEncodeDecode(int major, int minor) {
     reviewValue(tb.getUnMarshaledData(), major, minor);
 }
 
-int main(int argc, char *argv[]) {
+int main(int /*argc*/, char */*argv*/[]) {
     testEncodeDecode(2, 1);
     testEncodeDecode(3, 1);
     return fails ? EXIT_FAILURE : EXIT_SUCCESS;

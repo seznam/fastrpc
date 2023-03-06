@@ -51,11 +51,11 @@ namespace FRPC {
     : m_validateDatetime(true), m_validateString(false), m_preallocatedArraySize(4) {
     }
 
-    LibConfig_t::LibConfig_t(const std::string &cfgFn) {
+    LibConfig_t::LibConfig_t(const std::string &/*cfgFn*/) {
         throw std::runtime_error("Not yet implemented");
     }
 
-    bool LibConfig_t::hasFeature(const std::string &feature) const {
+    bool LibConfig_t::hasFeature(const std::string &/*feature*/) const {
         return false;
     }
 
@@ -68,4 +68,3 @@ namespace FRPC {
         return *this;
     }
 }
-
