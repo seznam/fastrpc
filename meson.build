@@ -2,7 +2,7 @@ project('fastrpc', 'cpp',
        version: '8.1.13',
        default_options: [
          'cpp_std=c++14',
-         'warning_level=3',
+         'warning_level=2',
          'buildtype=debugoptimized'
        ])
 
