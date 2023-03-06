@@ -36,27 +36,27 @@
 namespace FRPC
 {
 
-Value_t& Value_t::operator[](std::vector<Value_t*>::size_type index) {
+Value_t& Value_t::operator[](std::vector<Value_t*>::size_type) {
     throw TypeError_t::format("Type of object is %s but array operator used.",
                               this->getTypeName());
 }
 
 const Value_t& Value_t::operator[](
-    std::vector<Value_t*>::size_type index) const
+    std::vector<Value_t*>::size_type) const
 {
     throw TypeError_t::format("Type of object is %s but array operator used.",
                               this->getTypeName());
 }
 
 Value_t& Value_t::operator[](
-    const std::map<std::string, Value_t*>::key_type& key)
+    const std::map<std::string, Value_t*>::key_type&)
 {
     throw TypeError_t::format("Type of object is %s but struct operator used.",
                               this->getTypeName());
 }
 
 const Value_t& Value_t::operator[](
-    const std::map<std::string, Value_t*>::key_type& key) const
+    const std::map<std::string, Value_t*>::key_type&) const
 {
     throw TypeError_t::format("Type of object is %s but struct operator used.",
                               this->getTypeName());
