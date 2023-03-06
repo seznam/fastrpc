@@ -144,7 +144,7 @@ public:
     void setConnectTimeout(int timeout) {
         connector->setTimeout(timeout);
     }
-    
+
     void setRpcTransferMode(unsigned int v) {
         rpcTransferMode = v;
     }
@@ -432,7 +432,7 @@ public:
     }
 
     /** Put used ServerProxyImpl_t object into cache */
-    void move_into(std::auto_ptr<ServerProxyImpl_t> &sp) {
+    void move_into(std::unique_ptr<ServerProxyImpl_t> &sp) {
         if (timeout == 0) return;
 
         std::lock_guard<std::mutex> lock(mutex);

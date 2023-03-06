@@ -64,7 +64,7 @@ Marshaller_t* Marshaller_t::create(unsigned int contentType, Writer_t& writer,
         break;
 
     case BASE64_RPC: {
-            std::auto_ptr<Base64Writer_t> b64writer(new Base64Writer_t(writer));
+            std::unique_ptr<Base64Writer_t> b64writer(new Base64Writer_t(writer));
             marshaller = new Base64Marshaller_t(b64writer, protocolVersion);
             break;
         }
