@@ -297,26 +297,27 @@ public:
         throw StreamError_t("Invalid state: method response");
     }
 
-    virtual void buildBinary(const char* data, unsigned int size) {
+    virtual void buildBinary(const char*, unsigned int) {
         throw StreamError_t("Fault cannot contain binary value");
     }
 
-    virtual void buildBinary(const std::string &data) {
+    virtual void buildBinary(const std::string &) {
         throw StreamError_t("Fault cannot contain binary value");
     }
 
-    virtual void buildBool(bool value) {
+    virtual void buildBool(bool ) {
         throw StreamError_t("Fault cannot contain boolean");
     }
 
-    virtual void buildDateTime(short year, char month, char day,char hour,
-                               char minute, char sec, char weekDay,
-                               time_t unixTime, int timeZone)
+    virtual void buildDateTime(short /*year*/, char /*month*/, char /*day*/,
+                               char /*hour*/, char /*minute*/, char /*sec*/,
+                               char /*weekDay*/, time_t /*unixTime*/,
+                               int /*timeZone*/)
     {
         throw StreamError_t("Fault cannot contain datatime");
     }
 
-    virtual void buildDouble(double value) {
+    virtual void buildDouble(double) {
         throw StreamError_t("Fault cannot contain double");
     }
 
@@ -324,7 +325,7 @@ public:
         throw StreamError_t("Fault cannot contain another fault");
     }
 
-    virtual void buildFault(int errNumber, const std::string &errMsg) {
+    virtual void buildFault(int, const std::string &) {
         throw StreamError_t("Fault cannot contain another fault");
     }
 
@@ -336,11 +337,11 @@ public:
         driver.faultState() = 2;
     }
 
-    virtual void buildMethodCall(const char* methodName, unsigned int size) {
+    virtual void buildMethodCall(const char*, unsigned int) {
         throw StreamError_t("Invalid state: method call");
     }
 
-    virtual void buildMethodCall(const std::string &methodName) {
+    virtual void buildMethodCall(const std::string &) {
         throw StreamError_t("Invalid state: method call");
     }
 
@@ -360,11 +361,11 @@ public:
         driver.faultState() = 3;
     }
 
-    virtual void buildStructMember(const char *memberName, unsigned int size) {
+    virtual void buildStructMember(const char *, unsigned int) {
         throw StreamError_t("Fault cannot contain struct");
     }
 
-    virtual void buildStructMember(const std::string &memberName) {
+    virtual void buildStructMember(const std::string &) {
         throw StreamError_t("Fault cannot contain struct");
     }
 
@@ -376,11 +377,11 @@ public:
         throw StreamError_t("Fault cannot contain struct");
     }
 
-    virtual void openArray(unsigned int numOfItems) {
+    virtual void openArray(unsigned int /*numOfItems*/) {
         throw StreamError_t("Fault cannot contain array");
     }
 
-    virtual void openStruct(unsigned int numOfMembers) {
+    virtual void openStruct(unsigned int /*numOfMembers*/) {
         throw StreamError_t("Fault cannot contain struct");
     }
 
