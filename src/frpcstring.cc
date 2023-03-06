@@ -73,11 +73,10 @@ String_t::String_t(const std::string &value)
     validateBytes(value.data(), value.size());
 }
 
-
+#ifdef WIN32
 String_t::String_t(const std::wstring &value_w)
 
 {
-#ifdef WIN32
 
     LPCWSTR wszValue = value_w.c_str();
     int iMultiByteValueLen = WideCharToMultiByte(CP_UTF8, NULL, wszValue,
@@ -94,9 +93,13 @@ String_t::String_t(const std::wstring &value_w)
 
 
     delete szValue;
-#else //WIN32
-#endif //WIN32
 }
+#else //WIN32
+String_t::String_t(const std::wstring &/*value_w*/)
+{
+}
+#endif //WIN32
+
 
 String_t::operator std::wstring () const
 {
