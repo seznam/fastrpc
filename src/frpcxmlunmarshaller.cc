@@ -45,13 +45,13 @@ using namespace FRPC;
 
 extern "C" {
 
-    static void startDocumentXML(void *p) {
+    static void startDocumentXML(void *) {
     }
 
-    static void endDocumentXML(void *p) {
+    static void endDocumentXML(void *) {
     }
 
-    static void startElementXML(void *p, const xmlChar *name, const xmlChar **attrs) {
+    static void startElementXML(void *p, const xmlChar *name, const xmlChar **) {
         XmlUnMarshaller_t *unm = reinterpret_cast<XmlUnMarshaller_t*>(p);
 
         // Just stop processing if error happenend
