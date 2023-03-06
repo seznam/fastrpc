@@ -43,13 +43,13 @@ namespace FRPC {
 
 class Base64Marshaller_t : public BinMarshaller_t {
 public:
-    Base64Marshaller_t(std::auto_ptr<Base64Writer_t> &b64writer,
+    Base64Marshaller_t(std::unique_ptr<Base64Writer_t> &b64writer,
                     const ProtocolVersion_t &protocolVersion)
-        : BinMarshaller_t(*b64writer, protocolVersion), b64writer(b64writer)
+        : BinMarshaller_t(*b64writer, protocolVersion), b64writer(std::move(b64writer))
     {}
 
 protected:
-    std::auto_ptr<Base64Writer_t> b64writer;
+    std::unique_ptr<Base64Writer_t> b64writer;
 };
 
 }; // namespace FRPC
