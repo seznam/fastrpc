@@ -79,20 +79,20 @@ enum{NONE=0, INT=1,BOOL,DOUBLE,STRING,DATETIME,BINARY,INTP8,INTN8,
 enum{CHAR8=0,SHORT16=1,LONG24,LONG32,LONG40,LONG48,LONG56,LONG64};
 const Int_t::value_type ZERO = 0;
 const Int_t::value_type ALLONES = ~ZERO;
-const Int_t::value_type INT8_MASK = ALLONES << 8;
-const Int_t::value_type INT16_MASK = ALLONES << 16;
-const Int_t::value_type INT24_MASK = ALLONES << 24;
-const Int_t::value_type INT31_MASK = ALLONES << 31;
-const Int_t::value_type INT32_MASK = ALLONES << 32;
-const Int_t::value_type INT40_MASK = ALLONES << 40;
-const Int_t::value_type INT48_MASK = ALLONES << 48;
-const Int_t::value_type INT56_MASK = ALLONES << 56;
+const Int_t::value_type INT8_MASK =  (int64_t)((uint64_t)ALLONES <<  8);
+const Int_t::value_type INT16_MASK = (int64_t)((uint64_t)ALLONES << 16);
+const Int_t::value_type INT24_MASK = (int64_t)((uint64_t)ALLONES << 24);
+const Int_t::value_type INT31_MASK = (int64_t)((uint64_t)ALLONES << 31);
+const Int_t::value_type INT32_MASK = (int64_t)((uint64_t)ALLONES << 32);
+const Int_t::value_type INT40_MASK = (int64_t)((uint64_t)ALLONES << 40);
+const Int_t::value_type INT48_MASK = (int64_t)((uint64_t)ALLONES << 48);
+const Int_t::value_type INT56_MASK = (int64_t)((uint64_t)ALLONES << 56);
 
 const int32_t OLD_ZERO = 0;
 const int32_t OLD_ALLONES = ~ZERO;
-const int32_t OLD_INT8_MASK = OLD_ALLONES << 8;
-const int32_t OLD_INT16_MASK = OLD_ALLONES << 16;
-const int32_t OLD_INT24_MASK = OLD_ALLONES << 24;
+const int32_t OLD_INT8_MASK =  (int32_t)((uint32_t)OLD_ALLONES <<  8);
+const int32_t OLD_INT16_MASK = (int32_t)((uint32_t)OLD_ALLONES << 16);
+const int32_t OLD_INT24_MASK = (int32_t)((uint32_t)OLD_ALLONES << 24);
 const int32_t OLD_INT32_MASK = OLD_ZERO;
 
 

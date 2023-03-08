@@ -562,7 +562,7 @@ private:
 
     ServerProxy_t& operator=(const ServerProxy_t&);
 
-    std::auto_ptr<ServerProxyImpl_t> sp;
+    std::unique_ptr<ServerProxyImpl_t> sp;
 };
 
 } // namespace FRPC

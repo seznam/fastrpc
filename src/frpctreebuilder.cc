@@ -203,7 +203,7 @@ void TreeBuilder_t::openArray(unsigned int numOfItems)
     entityStorage.push_back(ValueTypeStorage_t(&array,ARRAY));
 }
 
-void TreeBuilder_t::openStruct(unsigned int numOfMembers)
+void TreeBuilder_t::openStruct(unsigned int /*numOfMembers*/)
 {
     Value_t &structVal = pool.Struct();
 

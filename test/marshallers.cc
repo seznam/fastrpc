@@ -425,14 +425,14 @@ std::string toStr(int i) {
     return s.str();
 }
 
-std::auto_ptr<FRPC::UnMarshaller_t> unmarshall(FRPC::TreeBuilder_t &builder,
+std::unique_ptr<FRPC::UnMarshaller_t> unmarshall(FRPC::TreeBuilder_t &builder,
                                                const char *data,
                                                size_t size,
                                                size_t offset = 0,
                                                size_t step = 0)
 {
-    std::auto_ptr<FRPC::UnMarshaller_t>
-        unmarshaller = std::auto_ptr<FRPC::UnMarshaller_t>(
+    std::unique_ptr<FRPC::UnMarshaller_t>
+        unmarshaller = std::unique_ptr<FRPC::UnMarshaller_t>(
                 FRPC::UnMarshaller_t::create(
                         FRPC::UnMarshaller_t::BINARY_RPC,
                             builder));
@@ -484,7 +484,7 @@ FRPC::Value_t& serDeser(FRPC::Pool_t &pool,
     StrWriter_t sw(bintarget);
     std::string mname = orig.getUnMarshaledMethodName();
 
-    std::auto_ptr<FRPC::Marshaller_t> marshaller
+    std::unique_ptr<FRPC::Marshaller_t> marshaller
         (FRPC::Marshaller_t::create
          (FRPC::Marshaller_t::BINARY_RPC, sw,
           pv));
@@ -509,7 +509,7 @@ FRPC::Value_t& serDeser(FRPC::Pool_t &pool,
 
     // after this we deserialize again
     FRPC::TreeBuilder_t builder(pool);
-    std::auto_ptr<FRPC::UnMarshaller_t> unm
+    std::unique_ptr<FRPC::UnMarshaller_t> unm
         = unmarshall(builder, bintarget.data(), bintarget.size(), offset, step);
 
     if (FRPC::compare(orig.getUnMarshaledData(),
@@ -526,19 +526,18 @@ size_t passedChecks = 0;
 size_t passedTests  = 0;
 
 /** Runs the core test, returns corrected result */
-TestResult_t runTest(FRPC::Pool_t &pool, const TestSettings_t &ts,
+TestResult_t runTest(FRPC::Pool_t &pool, const TestSettings_t &/*ts*/,
                      const TestInstance_t &ti,
-                     size_t testNum, size_t lineNum, FRPC::Value_t &value,
+                     size_t /*testNum*/, size_t /*lineNum*/, FRPC::Value_t &value,
                      const std::string &origTxt,
                      size_t offset, size_t step)
 {
     TestResult_t result(TEST_PASSED);
     std::string secondTxtForm;
-    bool waserror = false;
 
     FRPC::TreeBuilder_t builder(pool);
 
-    std::auto_ptr<FRPC::UnMarshaller_t> unmarshaller
+    std::unique_ptr<FRPC::UnMarshaller_t> unmarshaller
         = unmarshall(builder, ti.binary.data(), ti.binary.size(),
                      offset, step);
 
@@ -585,7 +584,7 @@ runTest(const TestSettings_t &ts, const TestInstance_t &ti,
         FRPC::Pool_t pool;
         FRPC::TreeBuilder_t builder(pool);
 
-        std::auto_ptr<FRPC::UnMarshaller_t> unmarshaller
+        std::unique_ptr<FRPC::UnMarshaller_t> unmarshaller
             = unmarshall(builder, ti.binary.data(), ti.binary.size(),
                          0, ti.binary.size());
 

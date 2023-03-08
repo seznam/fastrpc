@@ -94,13 +94,18 @@ private:
     XmlMarshaller_t();
     void packMagic();
     void writeQuotedString(const char *data, unsigned int len);
+#ifdef XML_HUMAN_FORMAT
     inline void packSpaces(unsigned int numSpaces)
     {
-#ifdef XML_HUMAN_FORMAT
         for(unsigned int i=0; i< numSpaces; i++)
             writer.write(" ",1);
-#endif
     }
+#else
+    inline void packSpaces(unsigned int /*numSpaces*/)
+    {
+    }
+#endif
+
     inline void decrementItem()
     {
         //is vaule any ittem or no ?

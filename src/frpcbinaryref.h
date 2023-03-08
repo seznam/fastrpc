@@ -75,23 +75,13 @@ public:
     struct Chunks_t {
         Chunks_t(BinaryRefFeeder_t feeder): feeder(feeder) {}
 
-        /// The standard parent of all iterators.
-        using const_iterator_parent_t = std::iterator<
-            std::forward_iterator_tag,
-            BinaryRefFeeder_t::Chunk_t,
-            std::ptrdiff_t,
-            const BinaryRefFeeder_t::Chunk_t *,
-            const BinaryRefFeeder_t::Chunk_t &
-        >;
-
         /// The chunks iterator.
-        struct const_iterator: public const_iterator_parent_t {
+        struct const_iterator {
         public:
-            using parent_t = const_iterator_parent_t;
-            using difference_type = typename parent_t::difference_type;
-            using value_type = typename parent_t::value_type;
-            using reference = typename parent_t::reference;
-            using pointer = typename parent_t::pointer;
+            using value_type      = BinaryRefFeeder_t::Chunk_t;
+            using difference_type = std::ptrdiff_t;
+            using pointer         = const BinaryRefFeeder_t::Chunk_t *;
+            using reference       = const BinaryRefFeeder_t::Chunk_t &;
 
             const_iterator(const BinaryRefFeeder_t *feeder, value_type value)
                 : feeder(feeder), value(value)
