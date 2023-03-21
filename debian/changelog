@@ -1,3 +1,10 @@
+libfastrpc (8.1.14) stable; urgency=medium
+
+  * initialize struct tm
+  * ts/js impl uses TextDecoder (Bring Your Own Polyfill)
+
+ -- Michal Bukovský <burlog@seznam.cz>  Tue, 21 Mar 2023 10:40:08 +0100
+
 libfastrpc (8.1.13) stable; urgency=medium
 
   * tuning log strunctures
