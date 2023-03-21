@@ -60,6 +60,7 @@ DateTime_t::DateTime_t(short year, char month, char day,
         time_tm.tm_isdst = -1; // we know nothing about daylight savings time
         time_t time_l = mktime(&time_tm);
         struct tm timeValid;
+        memset(&timeValid, 0, sizeof(tm));
         localtime_r(&time_l, &timeValid);
 
         this->unixTime = time_l;
@@ -82,6 +83,7 @@ DateTime_t::DateTime_t(short year, char month, char day,
     time_tm.tm_isdst = -1; // we know nothing about daylight savings time
     time_t time_l = mktime(&time_tm);
     struct tm timeValid;
+    memset(&timeValid, 0, sizeof(tm));
     localtime_r(&time_l, &timeValid);
 
     unixTime = time_l;
@@ -96,6 +98,7 @@ DateTime_t::DateTime_t(short year, char month, char day,
 DateTime_t::DateTime_t(const time_t &unixTime)
 {
     struct tm time_tm;
+    memset(&time_tm, 0, sizeof(tm));
     localtime_r(&unixTime, &time_tm);
     year = time_tm.tm_year + 1900;
     month = time_tm.tm_mon + 1;
@@ -117,6 +120,7 @@ DateTime_t::DateTime_t(time_t unixTime, int timeZone)
     : timeZone(timeZone)
 {
     struct tm time_tm;
+    memset(&time_tm, 0, sizeof(tm));
     localtime_r(&unixTime, &time_tm);
     year = time_tm.tm_year + 1900;
     month = time_tm.tm_mon + 1;
@@ -145,6 +149,7 @@ DateTime_t::DateTime_t()
 {
     time_t unix_time =  time(0);
     struct tm time_tm;
+    memset(&time_tm, 0, sizeof(tm));
     localtime_r(&unix_time, &time_tm);
     year = time_tm.tm_year + 1900;
     month = time_tm.tm_mon + 1;
@@ -177,6 +182,7 @@ DateTime_t::DateTime_t(const std::string &isoFormat)
     time_tm.tm_isdst = -1; // we know nothing about daylight savings time
     time_t time_l = mktime(&time_tm);
     struct tm timeValid;
+    memset(&timeValid, 0, sizeof(tm));
     localtime_r(&time_l, &timeValid);
 
     this->unixTime =  time_l;
