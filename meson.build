@@ -3,7 +3,8 @@ project('fastrpc', 'cpp',
        default_options: [
          'cpp_std=c++14',
          'warning_level=2',
-         'buildtype=debugoptimized'
+         'buildtype=debugoptimized',
+         'wrap_mode=nofallback'
        ])
 
 pkg = import('pkgconfig')
