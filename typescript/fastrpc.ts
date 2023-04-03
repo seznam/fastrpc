@@ -45,6 +45,24 @@ interface Options {
 	arrayBuffers: boolean;
 }
 
+interface Binary {
+	_hint: "binary";
+	value: BYTES;
+}
+
+interface Double {
+	_hint: "float";
+	value: number;
+}
+
+function isBinary(object: object): object is Binary {
+	return '_hint' in object && (object as Binary)._hint === 'binary';
+}
+
+function isDouble(object: object): object is Double {
+    return '_hint' in object && (object as Double)._hint === 'float';
+}
+
 let _hints: undefined | Hints;
 let _path: string[] = [];
 let _data: Uint8Array;
@@ -247,7 +265,7 @@ function _getDouble() {
 	return Math.pow(-1, sign) * Math.pow(2, exponent) * (1+mantissa);
 }
 
-function _serializeValue(result: BYTES, value: any) {
+function _serializeValue(result: BYTES, value: unknown) {
 	if (value === null) {
 		result.push(TYPE_NULL << 3);
 		return;
@@ -268,11 +286,7 @@ function _serializeValue(result: BYTES, value: any) {
 
 		case "number":
 			if (_getHint() == "float") {
-				let first = TYPE_DOUBLE << 3;
-				let floatData = _encodeDouble(value);
-
-				result.push(first);
-				_append(result, floatData);
+				_serializeDouble(result, value);
 			} else { // int
 				if (_version == 3) {
 					let data = _encodeZigzag(value);
@@ -303,8 +317,10 @@ function _serializeValue(result: BYTES, value: any) {
 				_serializeArrayBuffer(result, value);
 			} else if (value instanceof Date) {
 				_serializeDate(result, value);
-			} else if (value instanceof Array) {
+			} else if (isBinary(value) || value instanceof Array) {
 				_serializeArray(result, value);
+			} else if (isDouble(value)) {
+				_serializeDouble(result, value);
 			} else {
 				_serializeStruct(result, value);
 			}
@@ -327,8 +343,18 @@ function _serializeArrayBuffer(result: BYTES, data: ArrayBuffer) {
 	return;
 }
 
-function _serializeArray(result: BYTES, data: any[]) {
-	if (_getHint() == "binary") {
+function _serializeArray(result: BYTES, data: any[] | Binary) {
+	if (isBinary(data)) {
+		const value = data.value;
+		let first = TYPE_BINARY << 3;
+		const intData = _encodeInt(value.length);
+		first += (intData.length - 1);
+		
+		result.push(first);
+		_append(result, intData);
+		_append(result, value);
+		return;
+	} else if (_getHint() == "binary") {
 		let first = TYPE_BINARY << 3;
 		let intData = _encodeInt(data.length);
 		first += (intData.length-1);
@@ -351,6 +377,18 @@ function _serializeArray(result: BYTES, data: any[]) {
 		_serializeValue(result, data[i]);
 		_path.pop();
 	}
+}
+
+function _serializeDouble(result: BYTES, data: number | Double) {
+	if (typeof data == "object") {
+		data = data.value;
+	}
+
+	let first = TYPE_DOUBLE << 3;
+	let floatData = _encodeDouble(data);
+
+	result.push(first);
+	_append(result, floatData);
 }
 
 function _serializeStruct(result: BYTES, data: Record<string, any>) {
