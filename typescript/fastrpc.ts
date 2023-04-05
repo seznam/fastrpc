@@ -1,6 +1,6 @@
 /*
 FastRPC library written in TypeScript
-Copyright (C) 2005-2021 Seznam.cz, a.s.
+Copyright (C) 2005-2023 Seznam.cz, a.s.
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -317,10 +317,12 @@ function _serializeValue(result: BYTES, value: unknown) {
 				_serializeArrayBuffer(result, value);
 			} else if (value instanceof Date) {
 				_serializeDate(result, value);
-			} else if (isBinary(value) || value instanceof Array) {
-				_serializeArray(result, value);
+			} else if (value instanceof Array) {
+				_serializeArray(result, value, _getHint() == "binary");
+			} else if (isBinary(value)) {
+				_serializeArray(result, value.value, true);
 			} else if (isDouble(value)) {
-				_serializeDouble(result, value);
+				_serializeDouble(result, value.value);
 			} else {
 				_serializeStruct(result, value);
 			}
@@ -343,34 +345,18 @@ function _serializeArrayBuffer(result: BYTES, data: ArrayBuffer) {
 	return;
 }
 
-function _serializeArray(result: BYTES, data: any[] | Binary) {
-	if (isBinary(data)) {
-		const value = data.value;
-		let first = TYPE_BINARY << 3;
-		const intData = _encodeInt(value.length);
-		first += (intData.length - 1);
-		
-		result.push(first);
-		_append(result, intData);
-		_append(result, value);
-		return;
-	} else if (_getHint() == "binary") {
-		let first = TYPE_BINARY << 3;
-		let intData = _encodeInt(data.length);
-		first += (intData.length-1);
+function _serializeArray(result: BYTES, data: any[], isBinary = false) {
+	let first = TYPE_BINARY << 3;
+	const intData = _encodeInt(data.length);
+	first += (intData.length-1);
+	
+	result.push(first);
+	_append(result, intData);
 
-		result.push(first);
-		_append(result, intData);
+	if (isBinary) {
 		_append(result, data);
 		return;
 	}
-
-	let first = TYPE_ARRAY << 3;
-	let intData = _encodeInt(data.length);
-	first += (intData.length-1);
-
-	result.push(first);
-	_append(result, intData);
 
 	for (let i=0;i<data.length;i++) {
 		_path.push(i.toString());
@@ -379,11 +365,7 @@ function _serializeArray(result: BYTES, data: any[] | Binary) {
 	}
 }
 
-function _serializeDouble(result: BYTES, data: number | Double) {
-	if (typeof data == "object") {
-		data = data.value;
-	}
-
+function _serializeDouble(result: BYTES, data: number) {
 	let first = TYPE_DOUBLE << 3;
 	let floatData = _encodeDouble(data);
 
