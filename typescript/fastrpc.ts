@@ -318,9 +318,13 @@ function _serializeValue(result: BYTES, value: unknown) {
 			} else if (value instanceof Date) {
 				_serializeDate(result, value);
 			} else if (value instanceof Array) {
-				_serializeArray(result, value, _getHint() == "binary");
+				if (_getHint() == "binary") {
+					_serializeBinary(result, value);
+				} else {
+					_serializeArray(result, value);
+				}
 			} else if (isBinary(value)) {
-				_serializeArray(result, value.value, true);
+				_serializeBinary(result, value.value);
 			} else if (isDouble(value)) {
 				_serializeDouble(result, value.value);
 			} else {
@@ -342,27 +346,31 @@ function _serializeArrayBuffer(result: BYTES, data: ArrayBuffer) {
 	result.push(first);
 	_append(result, intData);
 	_append(result, new Uint8Array(data));
-	return;
 }
 
-function _serializeArray(result: BYTES, data: any[], isBinary = false) {
-	let first = TYPE_BINARY << 3;
-	const intData = _encodeInt(data.length);
+function _serializeArray (result: BYTES, data: any[]) {
+	let first = TYPE_ARRAY << 3;
+	let intData = _encodeInt(data.length);
 	first += (intData.length-1);
-	
+
 	result.push(first);
 	_append(result, intData);
-
-	if (isBinary) {
-		_append(result, data);
-		return;
-	}
 
 	for (let i=0;i<data.length;i++) {
 		_path.push(i.toString());
 		_serializeValue(result, data[i]);
 		_path.pop();
 	}
+}
+
+function _serializeBinary(result: BYTES, data: any[]) {
+	let first = TYPE_BINARY << 3;
+	const intData = _encodeInt(data.length);
+	first += (intData.length-1);
+	
+	result.push(first);
+	_append(result, intData);
+	_append(result, data);
 }
 
 function _serializeDouble(result: BYTES, data: number) {
