@@ -37,20 +37,20 @@ const TYPE_STRUCT    = 10;
 const TYPE_ARRAY     = 11;
 const TYPE_NULL      = 12;
 
-type Hints = Record<string, string>;
+export type Hints = Record<string, string>;
 type BYTES = number[];
 
-interface Options {
+export interface Options {
 	version: number;
 	arrayBuffers: boolean;
 }
 
-interface Binary {
+export interface Binary {
 	_hint: "binary";
 	value: BYTES;
 }
 
-interface Double {
+export interface Double {
 	_hint: "float";
 	value: number;
 }
@@ -550,12 +550,11 @@ function _getHint() {
 }
 
 /**
- * @param {string} method
- * @param {?} data
+ * @param {unknown} data
  * @param {object} hints hinty, ktera cisla maji byt floaty a kde jsou binarni data (klic = cesta, hodnota = "float"/"binary")
  * @returns {BYTES}
  */
-export function serialize(data: any, hints?: Hints, options?: Partial<Options>) {
+export function serialize(data: unknown, hints?: Hints, options?: Partial<Options>) {
 	let result: BYTES = [];
 	_path = [];
 	_hints = hints;
@@ -570,14 +569,14 @@ export function serialize(data: any, hints?: Hints, options?: Partial<Options>) 
 
 /**
  * @param {string} method
- * @param {array} data
+ * @param {unknown} data
  * @param {object || string} hints Napoveda datovych typu:
  * pokud string, pak typ (skalarni) hodnoty "data". Pokud objekt,
  * pak mnozina dvojic "cesta":"datovy typ"; cesta je teckami dodelena posloupnost
  * klicu a/nebo indexu v datech. Typ je "float" nebo "binary".
  * @param {options}
  */
-export function serializeCall(method:string, data:any, hints?: Hints, options?: Partial<Options>) {
+export function serializeCall(method: string, data: unknown, hints?: Hints, options?: Partial<Options>) {
 	let result = serialize(data, hints, options);
 
 	// utrhnout hlavicku pole (dva bajty)

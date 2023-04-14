@@ -529,8 +529,7 @@ function _getHint() {
     return _hints && _hints[_path.join(".")];
 }
 /**
- * @param {string} method
- * @param {?} data
+ * @param {unknown} data
  * @param {object} hints hinty, ktera cisla maji byt floaty a kde jsou binarni data (klic = cesta, hodnota = "float"/"binary")
  * @returns {BYTES}
  */
@@ -545,7 +544,7 @@ export function serialize(data, hints, options) {
 }
 /**
  * @param {string} method
- * @param {array} data
+ * @param {unknown} data
  * @param {object || string} hints Napoveda datovych typu:
  * pokud string, pak typ (skalarni) hodnoty "data". Pokud objekt,
  * pak mnozina dvojic "cesta":"datovy typ"; cesta je teckami dodelena posloupnost
