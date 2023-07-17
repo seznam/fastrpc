@@ -632,12 +632,24 @@ Value_t& ServerProxy_t::call(Pool_t &pool, const char *methodName, ...) {
     va_start(args, methodName);
     VaListHolder_t argsHolder(args);
 
+    Array_t *paramptr = nullptr;
+#ifdef DEBUG
+    va_list tmpa;
+    va_copy(tmpa, args);
+    Array_t &tmparray = pool.Array();
+    paramptr = &tmparray;;
+
+    // marshall all passed values until null pointer
+    while (const Value_t *value = va_arg(tmpa, Value_t*))
+        tmparray.push_back(*value);
+#endif
+
     // use implementation
     HTTPHeader_t responseHeaders;
     return *with_logger(
         methodName,
         &sp->getURL(),
-        nullptr,
+        paramptr,
         responseHeaders,
         [&] {return &sp->call(pool, methodName, args, responseHeaders);}
     );
