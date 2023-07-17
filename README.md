@@ -1,7 +1,7 @@
 # FastRPC-static
 
 FastRPC is a XML-RPC based protocol that uses binary data serialization format (see [Binary protocol specification](https://github.com/seznam/fastrpc/wiki/FastRPC-binary-protocol-specification)).
-Library includes C++ and Python implementations and a console client.
+Library includes C++, Python and TypeScript/JavaScript implementations and a console client.
 
 The library supports both protocols due to FastRPC's full data compatibility
 with the XML-RPC. Data format is negotiated via the HTTP content negotiation.
@@ -29,3 +29,7 @@ See [examples](https://github.com/seznam/fastrpc/tree/master/example) for learni
 ## Python
 
 * Python module build is unsupported for now - feel free to send MRs.
+
+## TypeScript/JavaScript
+
+See separate [instructions on how to install and use TypeScript/JavaScript library](typescript/README.md).

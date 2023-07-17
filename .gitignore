@@ -34,3 +34,6 @@ solaris/build/
 solaris/cfgfiles
 solaris/pkg/
 solaris/*.pkg.gz
+
+node_modules
+package-lock.json

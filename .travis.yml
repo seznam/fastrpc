@@ -1,0 +1,39 @@
+dist: focal
+language: node_js
+node_js:
+  - "18"
+
+install:
+  - cd typescript && npm i
+
+jobs:
+  include:
+    - name: "CI"
+      script:
+       - |
+         if ! (git diff --name-only $TRAVIS_COMMIT_RANGE | grep -qE '^typescript/'); then
+          echo "No changes in 'typescript', skipping build & test."
+          exit 0
+         else
+          ts_changes=$(git diff --name-only $TRAVIS_COMMIT_RANGE | grep -E '^typescript/fastrpc.ts')
+          mjs_changes=$(git diff --name-only $TRAVIS_COMMIT_RANGE | grep -E '^javascript/fastrpc.mjs')
+          if [ -n "$ts_changes" ] && [ -z "$mjs_changes" ]; then
+            echo "Error: 'typescript/fastrpc.ts' was changed but 'javascript/fastrpc.mjs' was not. Please run 'npm run build-mjs:...' and commit the changes."
+            exit 1
+          elif [ -z "$ts_changes" ] && [ -n "$mjs_changes" ]; then
+            echo "Error: 'javascript/fastrpc.mjs' was changed but 'typescript/fastrpc.ts' was not. Please modify 'typescript/fastrpc.ts' and commit the changes."
+            exit 1
+          fi
+          npm run test
+         fi
+    - stage: "deploy"
+      if: branch = master AND type != pull_request
+      script:
+       - |
+         if ! (git diff --name-only $TRAVIS_COMMIT_RANGE | grep -qE '^typescript/'); then
+          echo "No changes in 'typescript', skipping publish."
+          exit 0
+         else
+          echo "//registry.npmjs.org/:_authToken=\${NPM_TOKEN}" >> $HOME/.npmrc 2> /dev/null
+          npm publish
+         fi

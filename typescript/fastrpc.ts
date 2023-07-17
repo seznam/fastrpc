@@ -1,6 +1,6 @@
 /*
 FastRPC library written in TypeScript
-Copyright (C) 2005-2021 Seznam.cz, a.s.
+Copyright (C) 2005-2023 Seznam.cz, a.s.
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -37,12 +37,30 @@ const TYPE_STRUCT    = 10;
 const TYPE_ARRAY     = 11;
 const TYPE_NULL      = 12;
 
-type Hints = Record<string, string>;
+export type Hints = Record<string, string>;
 type BYTES = number[];
 
-interface Options {
+export interface Options {
 	version: number;
 	arrayBuffers: boolean;
+}
+
+export interface Binary {
+	_hint: "binary";
+	value: BYTES;
+}
+
+export interface Double {
+	_hint: "float";
+	value: number;
+}
+
+function isBinary(object: object): object is Binary {
+	return '_hint' in object && (object as Binary)._hint === 'binary';
+}
+
+function isDouble(object: object): object is Double {
+    return '_hint' in object && (object as Double)._hint === 'float';
 }
 
 let _hints: undefined | Hints;
@@ -247,7 +265,7 @@ function _getDouble() {
 	return Math.pow(-1, sign) * Math.pow(2, exponent) * (1+mantissa);
 }
 
-function _serializeValue(result: BYTES, value: any) {
+function _serializeValue(result: BYTES, value: unknown) {
 	if (value === null) {
 		result.push(TYPE_NULL << 3);
 		return;
@@ -268,11 +286,7 @@ function _serializeValue(result: BYTES, value: any) {
 
 		case "number":
 			if (_getHint() == "float") {
-				let first = TYPE_DOUBLE << 3;
-				let floatData = _encodeDouble(value);
-
-				result.push(first);
-				_append(result, floatData);
+				_serializeDouble(result, value);
 			} else { // int
 				if (_version == 3) {
 					let data = _encodeZigzag(value);
@@ -304,7 +318,15 @@ function _serializeValue(result: BYTES, value: any) {
 			} else if (value instanceof Date) {
 				_serializeDate(result, value);
 			} else if (value instanceof Array) {
-				_serializeArray(result, value);
+				if (_getHint() == "binary") {
+					_serializeBinary(result, value);
+				} else {
+					_serializeArray(result, value);
+				}
+			} else if (isBinary(value)) {
+				_serializeBinary(result, value.value);
+			} else if (isDouble(value)) {
+				_serializeDouble(result, value.value);
 			} else {
 				_serializeStruct(result, value);
 			}
@@ -324,21 +346,9 @@ function _serializeArrayBuffer(result: BYTES, data: ArrayBuffer) {
 	result.push(first);
 	_append(result, intData);
 	_append(result, new Uint8Array(data));
-	return;
 }
 
-function _serializeArray(result: BYTES, data: any[]) {
-	if (_getHint() == "binary") {
-		let first = TYPE_BINARY << 3;
-		let intData = _encodeInt(data.length);
-		first += (intData.length-1);
-
-		result.push(first);
-		_append(result, intData);
-		_append(result, data);
-		return;
-	}
-
+function _serializeArray (result: BYTES, data: any[]) {
 	let first = TYPE_ARRAY << 3;
 	let intData = _encodeInt(data.length);
 	first += (intData.length-1);
@@ -351,6 +361,24 @@ function _serializeArray(result: BYTES, data: any[]) {
 		_serializeValue(result, data[i]);
 		_path.pop();
 	}
+}
+
+function _serializeBinary(result: BYTES, data: any[]) {
+	let first = TYPE_BINARY << 3;
+	const intData = _encodeInt(data.length);
+	first += (intData.length-1);
+	
+	result.push(first);
+	_append(result, intData);
+	_append(result, data);
+}
+
+function _serializeDouble(result: BYTES, data: number) {
+	let first = TYPE_DOUBLE << 3;
+	let floatData = _encodeDouble(data);
+
+	result.push(first);
+	_append(result, floatData);
 }
 
 function _serializeStruct(result: BYTES, data: Record<string, any>) {
@@ -522,12 +550,11 @@ function _getHint() {
 }
 
 /**
- * @param {string} method
- * @param {?} data
+ * @param {unknown} data
  * @param {object} hints hinty, ktera cisla maji byt floaty a kde jsou binarni data (klic = cesta, hodnota = "float"/"binary")
  * @returns {BYTES}
  */
-export function serialize(data: any, hints?: Hints, options?: Partial<Options>) {
+export function serialize(data: unknown, hints?: Hints, options?: Partial<Options>) {
 	let result: BYTES = [];
 	_path = [];
 	_hints = hints;
@@ -542,14 +569,14 @@ export function serialize(data: any, hints?: Hints, options?: Partial<Options>) 
 
 /**
  * @param {string} method
- * @param {array} data
+ * @param {unknown} data
  * @param {object || string} hints Napoveda datovych typu:
  * pokud string, pak typ (skalarni) hodnoty "data". Pokud objekt,
  * pak mnozina dvojic "cesta":"datovy typ"; cesta je teckami dodelena posloupnost
  * klicu a/nebo indexu v datech. Typ je "float" nebo "binary".
  * @param {options}
  */
-export function serializeCall(method:string, data:any, hints?: Hints, options?: Partial<Options>) {
+export function serializeCall(method: string, data: unknown, hints?: Hints, options?: Partial<Options>) {
 	let result = serialize(data, hints, options);
 
 	// utrhnout hlavicku pole (dva bajty)
