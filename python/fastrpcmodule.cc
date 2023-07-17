@@ -30,6 +30,8 @@
  */
 
 #define __ENABLE_WSTRING
+// defined here to indicate # args to PyArgs_ParseTuple use Py_ssize_t instead of int
+#define PY_SSIZE_T_CLEAN
 
 // Included first to get rid of the _POSIX_C_SOURCE warning
 #include <Python.h>
@@ -1682,7 +1684,7 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
 
     // parse arguments
     PyStrDataType_t serverUrl;
-    int serverUrlLen;
+    Py_ssize_t serverUrlLen;
     int readTimeout = -1;
     int writeTimeout = -1;
     int connectTimeout = -1;
@@ -1734,7 +1736,7 @@ PyObject* ServerProxy_ServerProxy(ServerProxyObject *, PyObject *args,
         // Initialization from ConfigParser and section
         PyObject *cfgParser;
         char *cfgSection;
-        int cfgSectionLen;
+        Py_ssize_t cfgSectionLen;
 
         if (!PyArg_ParseTuple(args, "Os#:ServerProxy.__init__",
                 &cfgParser, &cfgSection, &cfgSectionLen)) {
