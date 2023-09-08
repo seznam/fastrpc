@@ -119,7 +119,8 @@ namespace FRPC {
 class ServerProxyImpl_t {
 public:
     ServerProxyImpl_t(URL_t url,
-                      const ServerProxy_t::Config_t &config)
+                      const ServerProxy_t::Config_t &config,
+                      const std::string &remoteApp)
         : url(std::move(url)),
           io(-1, config.readTimeout, config.writeTimeout, -1 ,-1),
           rpcTransferMode(config.useBinary),
@@ -127,7 +128,8 @@ public:
           serverSupportedProtocols(HTTPClient_t::XML_RPC),
           protocolVersion(config.protocolVersion),
           connector(makeConnector(this->url, config.connectTimeout,
-                                             config.keepAlive))
+                                             config.keepAlive)),
+          remoteApp(remoteApp)
     {}
 
     /** Set new read timeout */
@@ -159,6 +161,11 @@ public:
 
     const URL_t& getURL() {
         return url;
+    }
+
+    const char *getRemoteApp() {
+        if (remoteApp.empty()) return nullptr;
+        return remoteApp.c_str();
     }
 
     /** Create marshaller.
@@ -197,6 +204,7 @@ private:
     std::unique_ptr<Connector_t> connector;
     HTTPClient_t::HeaderVector_t requestHttpHeadersForCall;
     HTTPClient_t::HeaderVector_t requestHttpHeaders;
+    std::string remoteApp;
 };
 
 Marshaller_t* ServerProxyImpl_t::createMarshaller(HTTPClient_t &client) {
@@ -453,7 +461,9 @@ protected:
     TimeoutListHead timeouts[TIMEOUT_QUEUES];
 };
 
-static ServerProxyImpl_t* createImpl(const std::string &server, const ServerProxy_t::Config_t &config) {
+static ServerProxyImpl_t* createImpl(const std::string &server,
+                                     const ServerProxy_t::Config_t &config,
+                                     const std::string &remoteApp) {
     URL_t url(server, config.proxyUrl);
     if (config.keepAlive) {
         auto *cache = ProxyCache_t::instance();
@@ -463,15 +473,25 @@ static ServerProxyImpl_t* createImpl(const std::string &server, const ServerProx
         }
     }
 
-    return new ServerProxyImpl_t(std::move(url), config);
+    return new ServerProxyImpl_t(std::move(url), config, remoteApp);
 }
 
 ServerProxy_t::ServerProxy_t(const std::string &server, const Config_t &config)
-    : sp(createImpl(server, config))
+    : ServerProxy_t(server, config, "")
+{}
+
+ServerProxy_t::ServerProxy_t(const std::string &server, const Config_t &config,
+                             const std::string &remoteApp)
+    : sp(createImpl(server, config, remoteApp))
 {}
 
 ServerProxy_t::ServerProxy_t(const std::string &server, const Struct_t &config)
-    : sp(createImpl(server, configFromStruct(config)))
+    : ServerProxy_t(server, config, "")
+{}
+
+ServerProxy_t::ServerProxy_t(const std::string &server, const Struct_t &config,
+                             const std::string &remoteApp)
+    : sp(createImpl(server, configFromStruct(config), remoteApp))
 {}
 
 ServerProxy_t::~ServerProxy_t() {
@@ -589,6 +609,7 @@ namespace {
     Value_t *with_logger(
         const char *methodName,
         const URL_t *url,
+        const char *remoteApp,
         const Array_t *params,
         const HTTPHeader_t &responseHeaders,
         CallT &&call
@@ -598,6 +619,7 @@ namespace {
         event.callStart.methodName = methodName;
         event.callStart.params = params;
         event.callStart.url = url;
+        event.callStart.remoteApp = remoteApp;
         callLoggerCallback(LogEvent_t::CALL_START, event);
 
         Value_t *val = nullptr;
@@ -649,6 +671,7 @@ Value_t& ServerProxy_t::call(Pool_t &pool, const char *methodName, ...) {
     return *with_logger(
         methodName,
         &sp->getURL(),
+        sp->getRemoteApp(),
         paramptr,
         responseHeaders,
         [&] {return &sp->call(pool, methodName, args, responseHeaders);}
@@ -662,6 +685,7 @@ Value_t& ServerProxy_t::call(Pool_t &pool, const std::string &methodName,
     return *with_logger(
         methodName.c_str(),
         &sp->getURL(),
+        sp->getRemoteApp(),
         &params,
         responseHeaders,
         [&] {
@@ -679,6 +703,7 @@ void ServerProxy_t::call(DataBuilder_t &builder,
     with_logger(
         methodName.c_str(),
         &sp->getURL(),
+        sp->getRemoteApp(),
         &params,
         responseHeaders,
         [&] {
