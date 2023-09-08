@@ -172,6 +172,9 @@ public:
     */
     ServerProxy_t(const std::string &server, const Config_t &config);
 
+    ServerProxy_t(const std::string &server, const Config_t &config,
+                  const std::string &remoteApp);
+
     /**
         @brief Constructor
         @param server string containing address of FarstRpc server
@@ -182,6 +185,9 @@ public:
         @param config generic configuration via FRPC::Struct_t
     */
     ServerProxy_t(const std::string &server, const Struct_t &config);
+
+    ServerProxy_t(const std::string &server, const Struct_t &config,
+                  const std::string &remoteApp);
 
     /**
         @brief Default destructor

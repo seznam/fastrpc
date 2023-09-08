@@ -48,6 +48,7 @@ union LogEventData_t {
         const char *methodName;
         const Array_t *params;
         const URL_t *url;
+        const char *remoteApp = nullptr;
     };
 
     struct CallStart_t: CallBasics_t {
