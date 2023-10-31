@@ -23,6 +23,8 @@ conf_data.set('FASTRPC_MINOR', FASTRPC_MINOR)
 version_header = configure_file(input: 'src/frpcversion.h.in',
                                 output: 'frpcversion.h',
                                 configuration: conf_data)
+# include path to the gen. header (needed why?)
+generated_inc = include_directories('.')
 
 headers = files('''
     src/frpc.h
@@ -139,7 +141,7 @@ inc = include_directories('src')
 
 lib = static_library('fastrpc', [sources, version_header],
                      dependencies: lib_deps,
-                     include_directories: inc,
+                     include_directories: [inc, generated_inc],
                      install: true)
 
 # NOT IN SUBDIR! FRPC headers are prefixed 'frpc'
@@ -150,7 +152,7 @@ pkg.generate(lib, name: 'libfastrpc')
 libfastrpc_dep = declare_dependency(link_with: lib,
                                     sources: [version_header], # added here so include path to build dir is added
                                     dependencies: lib_deps,
-                                    include_directories: inc)
+                                    include_directories: [inc, generated_inc])
 meson.override_dependency('libfastrpc', libfastrpc_dep)
 
 test_base64 = executable('test_base64', 'test/base64.cc',
