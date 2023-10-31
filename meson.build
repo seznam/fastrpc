@@ -137,15 +137,19 @@ sources = files('''
     src/frpcstring_view.cc
 '''.split())
 
+install_files = not meson.is_subproject()
+
 inc = include_directories('src')
 
 lib = static_library('fastrpc', [sources, version_header],
                      dependencies: lib_deps,
                      include_directories: [inc, generated_inc],
-                     install: true)
+                     install: install_files)
 
-# NOT IN SUBDIR! FRPC headers are prefixed 'frpc'
-install_headers([headers, version_header])
+if install_files
+  # NOT IN SUBDIR! FRPC headers are prefixed 'frpc'
+  install_headers([headers, version_header])
+endif
 
 pkg.generate(lib, name: 'libfastrpc')
 
