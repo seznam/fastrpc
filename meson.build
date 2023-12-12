@@ -7,6 +7,10 @@ project('fastrpc', 'cpp',
          'wrap_mode=nofallback'
        ])
 
+# the trailing versioning for the installation of the shared lib
+# ignored for static library builds
+shlib_version = '13.1.0'
+
 pkg = import('pkgconfig')
 
 lib_deps = [
@@ -63,7 +67,6 @@ headers = files('''
     src/frpcmethodregistry.h
     src/frpcserver.h
     src/frpcresponseerror.h
-    src/frpcplatform.h
     src/frpcheadmethod.h
     src/frpcsocket.h
     src/frpcsocketunix.h
@@ -141,17 +144,18 @@ install_files = not meson.is_subproject()
 
 inc = include_directories('src')
 
-lib = static_library('fastrpc', [sources, version_header],
-                     dependencies: lib_deps,
-                     include_directories: [inc, generated_inc],
-                     install: install_files)
+lib = library('fastrpc', [sources, version_header],
+              dependencies: lib_deps,
+              include_directories: [inc, generated_inc],
+              install: install_files,
+              version: shlib_version)
 
 if install_files
   # NOT IN SUBDIR! FRPC headers are prefixed 'frpc'
   install_headers([headers, version_header])
 endif
 
-pkg.generate(lib, name: 'libfastrpc')
+pkg.generate(lib, name: 'libfastrpc', description: 'The seznam fastrpc library')
 
 libfastrpc_dep = declare_dependency(link_with: lib,
                                     sources: [version_header], # added here so include path to build dir is added

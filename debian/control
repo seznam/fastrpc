@@ -1,0 +1,30 @@
+Source: libfastrpc
+Section: Seznam
+Priority: optional
+Maintainer: Seznam.cz a.s. <opensource@firma.seznam.cz>
+Build-Depends: debhelper (>=8), libxml2-dev, meson, libtool, dh-autoreconf, pkg-config
+Standards-Version: 3.9.1
+Vcs-Git: https://github.com/seznam/fastrpc.git
+Vcs-Browser: https://github.com/seznam/fastrpc
+
+
+Package: libfastrpc8
+Architecture: any
+Section: Seznam
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Fastrpc - RPC library, supports binary and XML encoding
+ Fastrpc is a powerful and easy to make distributed applications.
+
+Package: libfastrpc-dev
+Architecture: any
+Section: Seznam
+Depends: libfastrpc8 (= ${binary:Version}), ${misc:Depends}, libxml2-dev
+Description: Development files for fastrpc library
+ Here are files necessary for developing new applications
+ that use fastrpc library and its C/C++ interface.
+
+Package: libfastrpc8-dbg
+Architecture: any
+Section: Seznam
+Depends: libfastrpc8 (= ${binary:Version}), ${misc:Depends}
+Description: Debug symbols for fastrpc library.

@@ -1,0 +1,17 @@
+#!/usr/bin/make -f
+
+# Uncomment this to turn on verbose mode.
+# export DH_VERBOSE=1
+
+%:
+	dh $@
+
+override_dh_auto_install:
+	dh_auto_install
+
+.PHONY: override_dh_strip
+override_dh_strip:
+	dh_strip --dbg-package=libfastrpc8-dbg
+
+override_dh_makeshlibs:
+	dh_makeshlibs -V
