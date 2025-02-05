@@ -37,80 +37,73 @@
 #define FRPCFRPCARRAY_H
 
 #include <frpcvalue.h>
+#include <frpctypeerror.h>
 #include <vector>
 
-namespace FRPC
-{
+namespace FRPC {
 class Pool_t;
 /**
 @brief Array type can storage any type of Value_t
 @author Miroslav Talasek
 */
-class FRPC_DLLEXPORT Array_t : public Value_t
-{
+class FRPC_DLLEXPORT Array_t : public Value_t {
     friend class Pool_t;
 public:
 
     /**
        @brief Array_t iterator
     */
-    typedef std::vector<Value_t*>::iterator iterator;
+    using iterator = std::vector<Value_t *>::iterator;
     /**
        @brief Array_t const_iterator
     */
-    typedef std::vector<Value_t*>::const_iterator const_iterator;
+    using const_iterator = std::vector<Value_t *>::const_iterator;
     /**
       @brief Array_t size_type
     */
-    typedef std::vector<Value_t*>::size_type size_type;
+    using size_type = std::vector<Value_t *>::size_type;
 
     // value types
-    typedef Value_t &reference;
-    typedef const Value_t &const_reference;
-    typedef Value_t value_type;
+    using reference = Value_t &;
+    using const_reference = const Value_t &;
+    using value_type = Value_t;
 
     enum{TYPE = 0x0B};
     /**
         @brief  Default destructor
     */
-    virtual ~Array_t();
+    ~Array_t() override;
     /**
        @brief Method to clone/copy Array_t
        @param newPool is reference of Pool_t which is used for allocate objects
      * @return reference to new Array_t as Value_t
     */
 
-    virtual Value_t& clone(Pool_t &newPool) const;
+    Value_t& clone(Pool_t &newPool) const override;
     /**
         @brief Getting type of value
         @return  @b unsigned @b short always
         @li @b Array_t::TYPE - identificator of array value
     */
-    virtual unsigned short getType() const
-    {
-        return TYPE;
-    }
+    uint16_t getType() const override {return TYPE;}
     /**
         @brief Getting typename of value
         @return @b const @b char * always
         @li @b "Array" - typename of Array_t
     */
-    virtual const char* getTypeName() const
-    {
-        return "array";
-    }
+    const char* getTypeName() const override {return "array";}
 
     /**
         @brief operator []
         @return reference to Value_t or exception IndexError_t if index is out of range
     */
-    Value_t& operator[] (size_type index);
+    Value_t &operator[] (size_type index) override;
 
     /**
         @brief operator []
         @return reference to Value_t or exception IndexError_t if index is out of range
     */
-    const Value_t& operator[] (size_type index) const;
+    const Value_t &operator[] (size_type index) const override;
 
     /**
         @brief getting iterator to first item
@@ -196,20 +189,22 @@ public:
 
     ///static member
     static const Array_t &FRPC_EMPTY;
+
 private:
+    using Value_t::operator[];
 
     /**
         @brief Costructor empty Array_t
         @param pool is a reference to Pool_t used for allocating
     */
     Array_t();
+
     /**
         @brief Costructor Array_t with one Value_t item
         @param pool is a reference to Pool_t used for allocating
         @param item  is a new item
     */
     explicit Array_t(const Value_t &item);
-
 
     std::vector<Value_t*> arrayData;///Internal array data
 
@@ -224,7 +219,7 @@ private:
 */
 inline FRPC_DLLEXPORT Array_t& Array(Value_t &value)
 {
-    Array_t *array = dynamic_cast<Array_t*>(&value);
+    auto *array = dynamic_cast<Array_t*>(&value);
 
     if(!array)
         throw TypeError_t::format("Type is %s but not array",
@@ -242,7 +237,7 @@ inline FRPC_DLLEXPORT Array_t& Array(Value_t &value)
 */
 inline FRPC_DLLEXPORT const Array_t& Array(const Value_t &value)
 {
-    const Array_t *array = dynamic_cast<const Array_t*>(&value);
+    const auto *array = dynamic_cast<const Array_t*>(&value);
 
     if(!array)
         throw TypeError_t::format("Type is %s but not array",
@@ -250,6 +245,6 @@ inline FRPC_DLLEXPORT const Array_t& Array(const Value_t &value)
     return *array;
 }
 
-};
+} // namespace FRPC
 
 #endif

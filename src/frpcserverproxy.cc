@@ -32,11 +32,11 @@
  */
 
 #include <sstream>
+#include <cstdarg>
 #include <map>
 #include <memory>
 #include <mutex>
 
-#include <stdarg.h>
 
 #include "frpcconnector.h"
 #include "frpchttp.h"
@@ -44,7 +44,6 @@
 #include <frpc.h>
 #include <frpctreebuilder.h>
 #include <frpctreefeeder.h>
-#include <memory>
 #include <frpcfault.h>
 #include <frpcresponseerror.h>
 #include "frpcinternals.h"
@@ -54,67 +53,67 @@
 #include <frpcint.h>
 #include <frpcbool.h>
 
-
+namespace FRPC {
 namespace {
-    static FRPC::Pool_t localPool;
 
-    static int getTimeout(const FRPC::Struct_t &config, const std::string &name,
-                   int defaultValue)
-    {
-        // get key from config and check for existence
-        const FRPC::Value_t *val(config.get(name));
-        if (!val) return defaultValue;
+FRPC::Pool_t localPool;
 
-        // OK
-        return FRPC::Int(*val);
-    }
+int getTimeout(const FRPC::Struct_t &config, const std::string &name,
+               int defaultValue)
+{
+    // get key from config and check for existence
+    const FRPC::Value_t *val(config.get(name));
+    if (!val) return defaultValue;
 
-    static FRPC::ProtocolVersion_t parseProtocolVersion(const FRPC::Struct_t &config,
-                                                 const std::string &name)
-    {
-        std::string strver
-            (FRPC::String(config.get(name, FRPC::String_t::FRPC_EMPTY)));
-        // empty/undefined => current version
-        if (strver.empty()) return FRPC::ProtocolVersion_t();
-
-        // parse input
-        std::istringstream is(strver);
-        int major, minor;
-        is >> major >> minor;
-
-        // OK
-        return FRPC::ProtocolVersion_t(major, minor);
-    }
-
-    static FRPC::ServerProxy_t::Config_t configFromStruct(const FRPC::Struct_t &s) {
-        FRPC::ServerProxy_t::Config_t config;
-
-        config.proxyUrl = FRPC::String(s.get("proxyUrl", FRPC::String_t::FRPC_EMPTY));
-        config.readTimeout = getTimeout(s, "readTimeout", 10000);
-        config.writeTimeout = getTimeout(s, "writeTimeout", 1000);
-        config.useBinary = FRPC::Int(s.get("transferMode", FRPC::Int_t::FRPC_ZERO));
-        config.useHTTP10 = FRPC::Bool(s.get("useHTTP10", FRPC::Bool_t::FRPC_FALSE));
-        config.protocolVersion = parseProtocolVersion(s, "protocolVersion");
-        config.connectTimeout = getTimeout(s, "connectTimeout", 10000);
-        config.keepAlive = FRPC::Bool(s.get("keepAlive", FRPC::Bool_t::FRPC_FALSE));
-
-        return config;
-    }
-
-    static FRPC::Connector_t* makeConnector(
-        const FRPC::URL_t &url,
-        const unsigned &connectTimeout,
-        const bool &keepAlive)
-    {
-        if (url.isUnix()) {
-            return new FRPC::SimpleConnectorUnix_t(
-               url, connectTimeout, keepAlive);
-        }
-        return new FRPC::SimpleConnectorIPv6_t(url, connectTimeout, keepAlive);
-    }
+    // OK
+    return FRPC::Int(*val);
 }
 
-namespace FRPC {
+FRPC::ProtocolVersion_t parseProtocolVersion(const FRPC::Struct_t &config,
+                                             const std::string &name)
+{
+    std::string strver
+        (FRPC::String(config.get(name, FRPC::String_t::FRPC_EMPTY)));
+    // empty/undefined => current version
+    if (strver.empty()) return FRPC::ProtocolVersion_t();
+
+    // parse input
+    std::istringstream is(strver);
+    int major, minor;
+    is >> major >> minor;
+
+    // OK
+    return FRPC::ProtocolVersion_t(major, minor);
+}
+
+FRPC::ServerProxy_t::Config_t configFromStruct(const FRPC::Struct_t &s) {
+    FRPC::ServerProxy_t::Config_t config;
+
+    config.proxyUrl = FRPC::String(s.get("proxyUrl", FRPC::String_t::FRPC_EMPTY));
+    config.readTimeout = getTimeout(s, "readTimeout", 10000);
+    config.writeTimeout = getTimeout(s, "writeTimeout", 1000);
+    config.useBinary = FRPC::Int(s.get("transferMode", FRPC::Int_t::FRPC_ZERO));
+    config.useHTTP10 = FRPC::Bool(s.get("useHTTP10", FRPC::Bool_t::FRPC_FALSE));
+    config.protocolVersion = parseProtocolVersion(s, "protocolVersion");
+    config.connectTimeout = getTimeout(s, "connectTimeout", 10000);
+    config.keepAlive = FRPC::Bool(s.get("keepAlive", FRPC::Bool_t::FRPC_FALSE));
+
+    return config;
+}
+
+FRPC::Connector_t* makeConnector(
+    const FRPC::URL_t &url,
+    const unsigned &connectTimeout,
+    const bool &keepAlive)
+{
+    if (url.isUnix()) {
+        return new FRPC::SimpleConnectorUnix_t(
+           url, connectTimeout, keepAlive);
+    }
+    return new FRPC::SimpleConnectorIPv6_t(url, connectTimeout, keepAlive);
+}
+
+} // namespace
 
 class ServerProxyImpl_t {
 public:
@@ -240,7 +239,7 @@ Marshaller_t* ServerProxyImpl_t::createMarshaller(HTTPClient_t &client) {
     default:
         {
             if ((serverSupportedProtocols & HTTPClient_t::XML_RPC)
-                || connector->getKeepAlive() == false
+                || !connector->getKeepAlive()
                 || io.socket() != -1) {
                 //using XML_RPC
                 marshaller= Marshaller_t::create
@@ -292,10 +291,10 @@ class ProxyCache_t {
     ProxyCache_t(int timeout) : timeout(timeout) {}
 
     static Time gettimemilliseconds() {
-        timeval tv;
+        timeval tv = {};
         gettimeofday(&tv, nullptr);
-        return tv.tv_sec * 1000 + ((tv.tv_usec + 500) / 1000);
-    };
+        return (tv.tv_sec * 1000) + ((tv.tv_usec + 500) / 1000);
+    }
 
     /** Intrusive linked-list structure for timer queues. */
     class TimeoutListHead {

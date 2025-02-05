@@ -38,28 +38,26 @@
 
 namespace FRPC {
 
-class Base64Writer_t : public Writer_t {
+class Base64Writer_t: public Writer_t {
 public:
-    Base64Writer_t(Writer_t &writer) : Writer_t(), writer(writer), state()
-    {};
+    Base64Writer_t(Writer_t &writer): writer(writer), state() {}
 
-    virtual ~Base64Writer_t();
+    ~Base64Writer_t() override;
 
     /// Encoder's state (current byte position in tripplet)
     enum States_t { STATE_FIRST = 0x0, STATE_SECOND = 0x1, STATE_THIRD = 0x2 };
 
     /// Complex encoder's state
     struct State_t {
-        State_t() : state(STATE_FIRST), lineLen(0), prev(0x0)
-        {};
+        State_t() : state(STATE_FIRST), lineLen(0), prev(0x0) {}
 
-        inline void next(unsigned char pr, size_t count) {
+        void next(unsigned char pr, size_t count) {
             lineLen += count;
             prev = pr;
             state = STATE_NEXT[state];
         }
 
-        inline void reset() {
+        void reset() {
             state = STATE_FIRST;
             prev = 0;
             lineLen = 0;
@@ -72,14 +70,14 @@ public:
         static const States_t STATE_NEXT[3];
     };
 
-    virtual void write(const char *data, unsigned int size);
-    virtual void flush();
+    void write(const char *data, unsigned int size) override;
+    void flush() override;
 
 private:
     Writer_t &writer;
     State_t state;
 };
 
-}; // namespace FRPC
+} // namespace FRPC
 
 #endif // FRPCB64WRITER_H

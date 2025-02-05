@@ -22,13 +22,13 @@
  *
  * FILE          $Id: frpctreebuilder.h,v 1.5 2010-04-21 08:48:03 edois Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #ifndef FRPCFRPCTREEBUILDER_H
 #define FRPCFRPCTREEBUILDER_H
@@ -39,15 +39,13 @@
 #include <frpc.h>
 #include <frpcfault.h>
 
-namespace FRPC
-{
-struct ValueTypeStorage_t
-{
+namespace FRPC {
 
-    ValueTypeStorage_t(Value_t *container, char type):type(type),container(container)
+struct ValueTypeStorage_t {
+    ValueTypeStorage_t(Value_t *container, char type)
+        :type(type), container(container)
     {}
-    ~ValueTypeStorage_t()
-    {}
+    ~ValueTypeStorage_t() = default;
     char type;
     Value_t* container;
 };
@@ -57,109 +55,81 @@ struct ValueTypeStorage_t
 */
 class Pool_t;
 
-class FRPC_DLLEXPORT TreeBuilder_t : public DataBuilder_t
-{
+class FRPC_DLLEXPORT TreeBuilder_t : public DataBuilder_t {
 public:
-    TreeBuilder_t(Pool_t &pool):DataBuilder_t(),
-                  pool(pool),first(true),retValue(0),errNum(-500)
+    TreeBuilder_t(Pool_t &pool)
+        : pool(pool), first(true), retValue(nullptr), errNum(-500)
     {}
     enum{ARRAY=0,STRUCT};
-    virtual ~TreeBuilder_t();
+    ~TreeBuilder_t() override;
 
-    virtual void buildBinary(const char* data, unsigned int size);
-    virtual void buildBinary(const std::string& data);
-    virtual void buildBool(bool value);
-    virtual void buildDateTime(short year, char month, char day, 
+    void buildBinary(const char* data, unsigned int size) override;
+    void buildBinary(const std::string& data) override;
+    void buildBool(bool value) override;
+    void buildDateTime(short year, char month, char day,
                                char hour, char min, char sec, char weekDay,
-                                time_t unixTime, int timeZone);
-    virtual void buildDouble(double value);
-    virtual void buildFault(int errNumber, const char* errMsg, unsigned int size);
-    virtual void buildFault(int errNumber, const std::string& errMsg);
-    virtual void buildInt(Int_t::value_type value);
-    virtual void buildMethodCall(const char* methodName, unsigned int size);
-    virtual void buildMethodCall(const std::string& methodName);
-    virtual void buildMethodResponse();
-    virtual void buildString(const char* data, unsigned int size);
-    virtual void buildString(const std::string& data);
-    virtual void buildStructMember(const char* memberName, unsigned int size);
-    virtual void buildStructMember(const std::string& memberName);
-    virtual void closeArray();
-    virtual void closeStruct();
-    virtual void openArray(unsigned int numOfItems);
-    virtual void openStruct(unsigned int numOfMembers);
+                                time_t unixTime, int timeZone) override;
+    void buildDouble(double value) override;
+    void buildFault(int errNumber, const char* errMsg, unsigned int size) override;
+    void buildFault(int errNumber, const std::string& errMsg) override;
+    void buildInt(Int_t::value_type value) override;
+    void buildMethodCall(const char* methodName, unsigned int size) override;
+    void buildMethodCall(const std::string& methodName) override;
+    void buildMethodResponse() override;
+    void buildString(const char* data, unsigned int size) override;
+    void buildString(const std::string& data) override;
+    void buildStructMember(const char* memberName, unsigned int size) override;
+    void buildStructMember(const std::string& memberName) override;
+    void closeArray() override;
+    void closeStruct() override;
+    void openArray(unsigned int numOfItems) override;
+    void openStruct(unsigned int numOfMembers) override;
     void buildNull();
-    inline bool isFirst( Value_t  &value )
-    {
-        if(first)
-        {
+    bool isFirst(Value_t  &value) {
+        if (first) {
             retValue = &value;
             first = false;
             return true;
         }
         return false;
     }
-    inline bool isMember(Value_t &value )
-    {
-        if(entityStorage.size() < 1)
+    bool isMember(Value_t &value ) {
+        if (entityStorage.size() < 1)
             return false;
-        switch(entityStorage.back().type)
-        {
+        switch(entityStorage.back().type) {
         case ARRAY:
-            {
-
-                dynamic_cast<Array_t*>(entityStorage.back().container)->append(value);
-
-                //entityStorage.back().numOfItems--;
-            }
+            dynamic_cast<Array_t*>(entityStorage.back().container)->append(value);
             break;
         case STRUCT:
-            {
-                dynamic_cast<Struct_t*>(entityStorage.back().container)->
-                        append(memberName ,value);
-
-
-                //entityStorage.back().numOfItems--;
-
-            }
+            dynamic_cast<Struct_t*>(entityStorage.back().container)->
+                append(memberName ,value);
             break;
         default:
             //OOPS
             break;
 
         }
-        /*if(entityStorage.back().numOfItems == 0)
-        entityStorage.pop_back();*/
         return true;
     }
 
-    inline Value_t& getUnMarshaledData()
-    {
+    Value_t& getUnMarshaledData() {
         if (!retValue)
             throw Fault_t(static_cast<int>(getUnMarshaledErrorNumber()),
                           getUnMarshaledErrorMessage());
         return *retValue;
     }
 
-    inline Value_t* getUnMarshaledDataPtr()
-    {
-        return retValue;
-    }
+    Value_t* getUnMarshaledDataPtr() {return retValue;}
 
-    inline const std::string getUnMarshaledMethodName()
-    {
-        return methodName;
-    }
+    const std::string getUnMarshaledMethodName() {return methodName;}
 
-    inline const std::string getUnMarshaledErrorMessage()
-    {
+    const std::string getUnMarshaledErrorMessage() {
         if(errMsg.size() != 0)
             return errMsg;
-        else
-            return "No data unmarshalled";
+        return "No data unmarshalled";
     }
 
-    inline long getUnMarshaledErrorNumber()
-    {
+    long getUnMarshaledErrorNumber() {
         return errNum;
     }
 
@@ -174,6 +144,6 @@ private:
     std::vector<ValueTypeStorage_t> entityStorage;
 };
 
-};
+} // namespace FRPC
 
 #endif

@@ -38,7 +38,6 @@
 #include <string>
 #include <vector>
 #include <map>
-#include "frpctypeerror.h"
 
 namespace FRPC
 {
@@ -47,16 +46,15 @@ class Pool_t;
 @brief Abstract Value type
 @author Miroslav Talasek
 */
-class FRPC_DLLEXPORT Value_t
-{
+class FRPC_DLLEXPORT Value_t {
     friend class Pool_t;
 public:
     /**
         @brief Default constructor
         @param pool is reference to Pool_t (memory pool)
     */
-    Value_t()
-    {}
+    Value_t() = default;
+
     /**
         @brief  Destructor
     */
@@ -117,9 +115,7 @@ public:
     virtual Value_t& operator[] (const std::map<std::string,Value_t*>::key_type &key);
     virtual const Value_t& operator[] (const std::map<std::string,Value_t*>::key_type &key) const;
 
-
 private:
-
     /**
         @brief Default constructor is disabled
     */
@@ -128,6 +124,6 @@ private:
     Value_t& operator=(const Value_t&);
 };
 
-}
+} // namespace FRPC
 
 #endif

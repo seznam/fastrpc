@@ -35,31 +35,29 @@
 
 #include <string>
 #include <frpcvalue.h>
+#include <frpctypeerror.h>
 
-
-namespace FRPC
-{
+namespace FRPC {
 class Pool_t;
 
 /**
 @brief String type
 @author Miroslav Talasek
 */
-class FRPC_DLLEXPORT String_t : public Value_t
-{
+class FRPC_DLLEXPORT String_t : public Value_t {
     friend class Pool_t;
 public:
     enum{ TYPE = 0x04 };
 
-    typedef std::string value_type;
+    using value_type = std::string;
 
-    virtual ~String_t();
+    ~String_t() override;
     /**
         @brief Getting type of value
         @return  @b unsigned @b short always
         @li @b Binary_t::TYPE - identificator of binary value
     */
-    virtual unsigned short getType() const
+    unsigned short getType() const override
     {
         return TYPE;
     }
@@ -69,7 +67,7 @@ public:
         @return @b const @b char* always
         @li @b "String" - typename of String_t
     */
-    virtual const char* getTypeName() const
+    const char* getTypeName() const override
     {
         return "string";
     }
@@ -110,12 +108,12 @@ public:
         @brief Method to clone/copy Binary_t
         @param newPool is reference of Pool_t which is used for allocate objects
     */
-    virtual Value_t& clone(Pool_t &newPool) const;
+    Value_t& clone(Pool_t &newPool) const override;
 
     /**
         @brief operator const std::string
     */
-    inline operator const std::string& () const
+    operator const std::string& () const
     {
         return value;
     }
@@ -133,6 +131,7 @@ public:
         @param dataSize - is a size of data in bytes
     */
     static void validateBytes(const std::string::value_type *pData, std::string::size_type dataSize);
+
 private:
     /**
         @brief Default constructor is disabled
@@ -178,7 +177,7 @@ private:
 */
 inline FRPC_DLLEXPORT String_t& String(Value_t &value)
 {
-    String_t *string_v = dynamic_cast<String_t*>(&value);
+    auto *string_v = dynamic_cast<String_t*>(&value);
 
     if(!string_v)
         throw TypeError_t::format("Type is %s but not string",
@@ -197,7 +196,7 @@ inline FRPC_DLLEXPORT String_t& String(Value_t &value)
 */
 inline FRPC_DLLEXPORT const String_t& String(const Value_t &value)
 {
-    const String_t *string_v = dynamic_cast<const String_t*>(&value);
+    const auto *string_v = dynamic_cast<const String_t*>(&value);
 
     if(!string_v)
         throw TypeError_t::format("Type is %s but not string",
@@ -206,7 +205,6 @@ inline FRPC_DLLEXPORT const String_t& String(const Value_t &value)
     return *string_v;
 }
 
-
-};
+} // namespace FRPC
 
 #endif

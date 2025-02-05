@@ -34,32 +34,32 @@
 #define FRPCBOOL_H
 
 #include <frpcvalue.h>
+#include <frpctypeerror.h>
 
-namespace FRPC
-{
+namespace FRPC {
 class Pool_t;
 
 /**
 @brief Bool type
 @author Miroslav Talasek
 */
-class FRPC_DLLEXPORT  Bool_t : public Value_t
-{
+class FRPC_DLLEXPORT Bool_t: public Value_t {
     friend class Pool_t;
 public:
     enum{TYPE = 0x02};
-    typedef bool value_type;
+    using value_type = bool;
 
     /**
         @brief Destructor
     */
-    virtual ~Bool_t();
+    ~Bool_t() override;
+
     /**
         @brief Getting type of value
         @return @b unsigned @b short always
         @li @b Bool_t::TYPE - identificator of boolean value
     */
-    virtual unsigned short getType() const
+    unsigned short getType() const override
     {
         return TYPE;
     }
@@ -68,7 +68,7 @@ public:
         @return @b const @b char* always
         @li @b "Bool" - typename of Bool_t
     */
-    virtual const char* getTypeName() const
+    const char* getTypeName() const override
     {
         return "bool";
     }
@@ -84,7 +84,7 @@ public:
     /**
         @brief Operator bool const
     */
-    inline operator bool() const
+    operator bool() const
     {
         return value;
     }
@@ -93,7 +93,8 @@ public:
         @brief Method to clone/copy Bool_t
         @param newPool is reference of Pool_t which is used for allocate objects
     */
-    virtual Value_t& clone(Pool_t &newPool) const;
+    Value_t& clone(Pool_t &newPool) const override;
+
     ///static members
     static const Bool_t &FRPC_TRUE;
     static const Bool_t &FRPC_FALSE;
@@ -102,7 +103,7 @@ private :
     /**
         @brief Default constructor
     */
-    Bool_t() {}
+    Bool_t() = default;
 
     /**
         @brief Costructor from bool value
@@ -113,7 +114,7 @@ private :
         :value(boolean)
     {}
 
-    bool value; /**  Internal bool value */
+    bool value{}; /**  Internal bool value */
 };
 
 /**
@@ -125,7 +126,7 @@ private :
 */
 inline FRPC_DLLEXPORT Bool_t& Bool(Value_t &value)
 {
-    Bool_t *boolean = dynamic_cast<Bool_t*>(&value);
+    auto *boolean = dynamic_cast<Bool_t*>(&value);
 
     if(!boolean)
         throw TypeError_t::format("Type is %s but not bool",
@@ -136,7 +137,7 @@ inline FRPC_DLLEXPORT Bool_t& Bool(Value_t &value)
 
 inline FRPC_DLLEXPORT const Bool_t& Bool(const Value_t &value)
 {
-    const Bool_t *boolean = dynamic_cast<const Bool_t*>(&value);
+    const auto *boolean = dynamic_cast<const Bool_t*>(&value);
 
     if(!boolean)
         throw TypeError_t::format("Type is %s but not bool",
@@ -144,6 +145,7 @@ inline FRPC_DLLEXPORT const Bool_t& Bool(const Value_t &value)
 
     return *boolean;
 }
-};
+
+} // namespace FRPC
 
 #endif

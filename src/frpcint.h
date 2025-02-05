@@ -33,38 +33,33 @@
 #ifndef FRPCINT_H
 #define FRPCINT_H
 
+#include <cstdint>
 #include <frpcvalue.h>
-#include <stdint.h>
-
-
-
 #include <frpctypeerror.h>
-namespace FRPC
-{
+
+namespace FRPC {
 class Pool_t;
 /**
 @brief Int type
 @author Miroslav Talasek
 */
-class FRPC_DLLEXPORT Int_t : public Value_t
-{
+class FRPC_DLLEXPORT Int_t : public Value_t {
     friend class Pool_t;
 public:
 
-    typedef int64_t value_type;
+    using value_type = int64_t;
 
     /**
     @brief Destructor
     */
-    virtual ~Int_t()
-    {}
+    ~Int_t() override = default;
 
     /**
     @brief Getting type of value
     @return  @b unsigned @b short always
     @li @b Int_t::type - identificator of inteeger value
     */
-    virtual unsigned short getType() const
+    unsigned short getType() const override
     {
         return TYPE;
     }
@@ -74,7 +69,7 @@ public:
         @return @b const @b char  always
         @li @b "Int" - typename of Int_t
     */
-    virtual const char* getTypeName() const
+    const char* getTypeName() const override
     {
         return "int";
     }
@@ -100,7 +95,7 @@ public:
         @brief Method for clone/copy Double_t
         @param newPool is reference of Pool_t which is used for allocate objects
     */
-    virtual Value_t& clone(Pool_t &newPool) const;
+    Value_t& clone(Pool_t &newPool) const override;
 
     ///staic
     static const Int_t &FRPC_ZERO;
@@ -135,7 +130,7 @@ private:
 */
 inline FRPC_DLLEXPORT Int_t& Int(Value_t &value)
 {
-    Int_t *integer = dynamic_cast<Int_t*>(&value);
+    auto *integer = dynamic_cast<Int_t*>(&value);
 
     if(!integer)
         throw TypeError_t::format("Type is %s but not int",
@@ -153,13 +148,14 @@ inline FRPC_DLLEXPORT Int_t& Int(Value_t &value)
 */
 inline FRPC_DLLEXPORT const Int_t& Int(const Value_t &value)
 {
-    const Int_t *integer = dynamic_cast<const Int_t*>(&value);
+    const auto *integer = dynamic_cast<const Int_t*>(&value);
 
     if(!integer)
         throw TypeError_t::format("Type is %s but not int",
                                   value.getTypeName());
     return *integer;
 }
-};
+
+} // namespace FRPC
 
 #endif

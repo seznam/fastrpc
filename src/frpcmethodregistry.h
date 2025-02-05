@@ -33,12 +33,9 @@
 #ifndef FRPCFRPCMETHODREGISTRY_H
 #define FRPCFRPCMETHODREGISTRY_H
 
-#include<map>
-#include<string>
-#include<frpcmethod.h>
-
-#include "frpcsocket.h"
-
+#include <map>
+#include <string>
+#include <frpcmethod.h>
 
 namespace FRPC {
 
@@ -71,7 +68,7 @@ public:
          };
 
     struct RegistryEntry_t {
-        RegistryEntry_t(Method_t* method, const std::string &signature,const std::string &help)
+        RegistryEntry_t(Method_t* method, const std::string &signature, const std::string &help)
                 :method(method),signature(signature),help(help) {}
         ~RegistryEntry_t() {}
 
@@ -83,9 +80,9 @@ public:
 
     class Reader_t {
     public:
-        Reader_t() {}
+        Reader_t() = default;
         virtual unsigned int read(char *data, unsigned int size) = 0;
-        virtual ~Reader_t() {}
+        virtual ~Reader_t() = default;
     }
     ;
 
@@ -104,25 +101,25 @@ public:
     */
     class Callbacks_t {
     public :
-        Callbacks_t() {}
+        Callbacks_t() = default;
         /**
-        @brief this method was called before rocket read 
+        @brief this method was called before rocket read
         */
         virtual void preRead() = 0;
         /**
-        @brief this method was called before method call 
+        @brief this method was called before method call
         */
         virtual void preProcess(const std::string &methodName, const std::string &clientIP
                                 ,Array_t &params) = 0;
 
         /**
-        @brief this method was called after method call if status ok 
+        @brief this method was called after method call if status ok
         */
         virtual void postProcess(const std::string &methodName, const std::string &clientIP,
                                  const Array_t &params,
                                  const Value_t &result, const TimeDiff_t &time) = 0;
         /**
-        @brief this method was called after method call if status is fault 
+        @brief this method was called after method call if status is fault
         */
 
         virtual void postProcess(const std::string &methodName, const std::string &clientIP,
@@ -130,14 +127,8 @@ public:
                                  const Fault_t &fault, const TimeDiff_t &time) = 0 ;
 
 
-        virtual ~Callbacks_t() {}
+        virtual ~Callbacks_t() = default;
 
-//         /**
-//         @brief this method was called before reading from socket
-//         */
-
-//         virtual void preRead(const std::string &clientIP, int requestCount)
-//         {}
     }
     ;
     /**
@@ -149,7 +140,7 @@ public:
      * @li  string system.methodHelp(string) - Return given method help
      * @li  array  system.methodSignature(string) - Return given method signature
      * @li struct  system.multicall(struct) - Call given methods
-     * 
+     *
      */
     MethodRegistry_t(Callbacks_t *callbacks, bool introspectionEnabled);
 
@@ -167,16 +158,16 @@ public:
                         const std::string help = "No help" );
     /**
     @brief call head method on HTTP HEAD
-    @return long 
+    @return long
     @li @b   0 -OK
     @li @b   1 - error
-    @li @b  -1 method not registered    
+    @li @b  -1 method not registered
 
     */
     int headCall();
 
     /**
-    @brief call method  
+    @brief call method
     */
     int processCall(const std::string &clientIP, Reader_t &reader, unsigned int typeIn,
                     Writer_t &writer, unsigned int typeOut);
@@ -201,7 +192,7 @@ public:
     void registerHeadMethod(HeadMethod_t *headMethod);
     ~MethodRegistry_t();
     /**
-    @brief 
+    @brief
      */
     void preReadCallback() {
         if (callbacks) {
@@ -217,7 +208,6 @@ private:
     Value_t& methodSignature(Pool_t &pool, Array_t &params);
     Value_t& multicall(Pool_t &pool, Array_t &params);
 
-
     std::map<std::string, RegistryEntry_t> methodMap;
 
     Callbacks_t *callbacks;
@@ -226,6 +216,6 @@ private:
     HeadMethod_t *headMethod;
 };
 
-};
+} // namespace FRPC
 
 #endif
