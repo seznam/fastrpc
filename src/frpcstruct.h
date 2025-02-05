@@ -38,65 +38,62 @@
 #include <map>
 #include <string>
 
-
-namespace FRPC
-{
+namespace FRPC {
 class Pool_t;
 
 /**
-@brief Srtruct type
+@brief Struct type
 @author Miroslav Talasek
 */
-class FRPC_DLLEXPORT Struct_t : public Value_t
-{
+class FRPC_DLLEXPORT Struct_t : public Value_t {
     friend class Pool_t;
 public:
     /**
         @brief Struct_t iterator
     */
-    typedef std::map<std::string,Value_t*>::iterator        iterator;
+    using iterator = std::map<std::string, Value_t *>::iterator;
     /**
          @brief Struct_t const_iterator
     */
-    typedef std::map<std::string,Value_t*>::const_iterator  const_iterator;
+    using const_iterator = std::map<std::string, Value_t *>::const_iterator;
     /**
          @brief Struct_t size_type
     */
-    typedef std::map<std::string,Value_t*>::size_type       size_type;
+    using size_type = std::map<std::string, Value_t *>::size_type;
     /**
         @brief Struct_t key_type
     */
-    typedef std::map<std::string,Value_t*>::key_type        key_type;
+    using key_type = std::map<std::string, Value_t *>::key_type;
     /**
          @brief Struct_t value_type
     */
-    typedef std::map<std::string,Value_t*>::value_type      value_type;
+    using value_type = std::map<std::string, Value_t *>::value_type;
     /**
         @brief Struct_t pair
     */
-    typedef std::pair<std::string, Value_t*>                 pair;
+    using pair = std::pair<std::string, Value_t *>;
 
     // value types
-    typedef const value_type &const_reference;
-    typedef value_type &reference;
+    using const_reference = const value_type &;
+    using reference = value_type &;
 
 
     enum{TYPE = 0x0A};
     /**
     `   @brief Default destructor
     */
-    virtual ~Struct_t();
+    ~Struct_t() override;
     /**
         @brief Method to clone/copy Struct_t
         @param newPool is pointer of Pool_t which is used for allocate objects
     */
-    virtual Value_t& clone(Pool_t& newPool) const;
+    Value_t& clone(Pool_t& newPool) const override;
     /**
         @brief Getting type of value
         @return  @b unsigned @b short always
         @li @b Struct_t::TYPE - identificator of struct value
     */
-    virtual unsigned short getType() const
+    unsigned short getType() const override
     {
         return TYPE;
     }
@@ -105,7 +102,7 @@ public:
         @return @b const @b char* always
         @li @b "Struct" - typename of Struct_t
     */
-    virtual const char* getTypeName() const
+    const char* getTypeName() const override
     {
         return "struct";
     }
@@ -208,13 +205,13 @@ public:
         @brief operator []
         @return reference to Value_t or exeption KeyError_t if key isn't exist
     */
-    Value_t& operator[] (const key_type &key);
+    Value_t &operator[] (const key_type &key) override;
 
     /**
         @brief operator []
         @return reference to Value_t or exeption KeyError_t if key isn't exist
     */
-    const Value_t& operator[] (const key_type &key) const;
+    const Value_t &operator[] (const key_type &key) const override;
 
     /**
          @brief Returns iterator to value or end()
@@ -241,6 +238,8 @@ public:
     static const Struct_t &FRPC_EMPTY;
 
 private:
+    using Value_t::operator[];
+
     /**
         @brief Costructor empty Struct_t
         @param pool is a reference to Pool_t used for allocating
@@ -260,12 +259,9 @@ private:
     */
     explicit Struct_t(const pair &value);
 
-
-
     std::map<std::string,Value_t*> structData; ///internal Struct_t data
-
-
 };
+
 /**
     @brief Inline method
 
@@ -276,7 +272,7 @@ private:
 */
 inline FRPC_DLLEXPORT Struct_t& Struct(Value_t &value)
 {
-    Struct_t *struct_v = dynamic_cast<Struct_t*>(&value);
+    auto *struct_v = dynamic_cast<Struct_t*>(&value);
 
     if(!struct_v)
         throw TypeError_t::format("Type is %s but not struct",
@@ -295,7 +291,7 @@ inline FRPC_DLLEXPORT Struct_t& Struct(Value_t &value)
 */
 inline FRPC_DLLEXPORT const Struct_t& Struct(const Value_t &value)
 {
-    const Struct_t *struct_v = dynamic_cast<const Struct_t*>(&value);
+    const auto *struct_v = dynamic_cast<const Struct_t*>(&value);
 
     if(!struct_v)
         throw TypeError_t::format("Type is %s but not struct",
@@ -303,6 +299,6 @@ inline FRPC_DLLEXPORT const Struct_t& Struct(const Value_t &value)
     return *struct_v;
 
 }
-}
+} // namespace FRPC
 
 #endif

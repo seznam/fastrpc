@@ -34,9 +34,9 @@
 #define FRPCDOUBLE_H
 
 #include <frpcvalue.h>
+#include <frpctypeerror.h>
 
-namespace FRPC
-{
+namespace FRPC {
 class Pool_t;
 
 /**
@@ -49,18 +49,18 @@ class FRPC_DLLEXPORT Double_t : public Value_t
 public:
     enum{TYPE = 0x03};
 
-    typedef double value_type;
+    using value_type = double;
 
     /**
     @brief Destructor
     */
-    virtual ~Double_t();
+    ~Double_t() override;
     /**
     @brief Getting type of value
     @return  @b unsigned @b short always
     @li @b Double_t::TYPE - identificator of double value
     */
-    virtual unsigned short getType() const
+    unsigned short getType() const override
     {
         return TYPE;
     }
@@ -69,7 +69,7 @@ public:
         @return @b const @b char* always
         @li @b "Double" - typename of Double_t
     */
-    virtual const char* getTypeName() const
+    const char* getTypeName() const override
     {
         return "double";
     }
@@ -86,7 +86,7 @@ public:
     /**
         @brief Operator double const
     */
-    inline operator value_type () const
+    operator value_type () const
     {
         return value;
     }
@@ -125,7 +125,7 @@ private:
 */
 inline FRPC_DLLEXPORT Double_t& Double(Value_t &value)
 {
-    Double_t *double_v = dynamic_cast<Double_t*>(&value);
+    auto *double_v = dynamic_cast<Double_t*>(&value);
 
     if(!double_v)
         throw TypeError_t::format("Type is %s but not double",
@@ -143,7 +143,7 @@ inline FRPC_DLLEXPORT Double_t& Double(Value_t &value)
 */
 inline FRPC_DLLEXPORT const Double_t& Double(const Value_t &value)
 {
-    const Double_t *double_v = dynamic_cast<const Double_t*>(&value);
+    const auto *double_v = dynamic_cast<const Double_t*>(&value);
 
     if(!double_v)
         throw TypeError_t::format("Type is %s but not double",
@@ -152,6 +152,6 @@ inline FRPC_DLLEXPORT const Double_t& Double(const Value_t &value)
     return *double_v;
 }
 
-};
+} // namespace FRPC
 
 #endif

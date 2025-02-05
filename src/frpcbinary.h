@@ -35,32 +35,30 @@
 
 #include <string>
 #include <frpcvalue.h>
+#include <frpctypeerror.h>
 
-
-namespace FRPC
-{
+namespace FRPC {
 class Pool_t;
 
 /**
 @brief Binary type
 @author Miroslav Talasek
 */
-class FRPC_DLLEXPORT  Binary_t : public Value_t
-{
+class FRPC_DLLEXPORT Binary_t : public Value_t {
     friend class Pool_t;
 public:
     enum{ TYPE = 0x06 };
 
-    typedef std::string value_type;
+    using value_type = std::string;
 
-    virtual ~Binary_t();
+    ~Binary_t() override;
 
     /**
         @brief Getting type of value
         @return  @b unsigned @b short always
         @li @b Binary_t::TYPE - identificator of binary value
     */
-    virtual unsigned short getType() const
+    unsigned short getType() const override
     {
         return TYPE;
     }
@@ -70,7 +68,7 @@ public:
         @return @b const @b char* always
         @li @b "Binary" - typename of Binary_t
     */
-    virtual const char* getTypeName() const
+    const char* getTypeName() const override
     {
         return "binary";
     }
@@ -103,12 +101,12 @@ public:
         @brief Method to clone/copy Binary_t
         @param newPool is reference of Pool_t which is used for allocate objects
     */
-    virtual Value_t& clone(Pool_t &newPool) const;
+    Value_t& clone(Pool_t &newPool) const override;
 
     /**
         @brief operator const std::string
     */
-    inline operator const std::string& () const
+    operator const std::string& () const
     {
         return value;
     }
@@ -159,7 +157,7 @@ private:
 */
 inline FRPC_DLLEXPORT Binary_t& Binary(Value_t &value)
 {
-    Binary_t *binary = dynamic_cast<Binary_t*>(&value);
+    auto *binary = dynamic_cast<Binary_t*>(&value);
 
     if(!binary)
         throw TypeError_t::format("Type is %s but not binary",
@@ -176,7 +174,7 @@ inline FRPC_DLLEXPORT Binary_t& Binary(Value_t &value)
 */
 inline FRPC_DLLEXPORT const Binary_t& Binary(const Value_t &value)
 {
-    const Binary_t *binary = dynamic_cast<const Binary_t*>(&value);
+    const auto *binary = dynamic_cast<const Binary_t*>(&value);
 
     if(!binary)
         throw TypeError_t::format("Type is %s but not binary",
@@ -184,6 +182,6 @@ inline FRPC_DLLEXPORT const Binary_t& Binary(const Value_t &value)
     return *binary;
 }
 
-}
+} // namespace FRPC
 
 #endif

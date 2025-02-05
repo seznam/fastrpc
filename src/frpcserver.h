@@ -30,22 +30,20 @@
  * HISTORY
  *
  */
+
 #ifndef FRPCFRPCSERVER_H
 #define FRPCFRPCSERVER_H
 
-#include <memory>
-
 #include <frpcplatform.h>
-
 #include <frpcmethodregistry.h>
 #include <frpchttpio.h>
 #include <frpchttp.h>
 #include <frpcwriter.h>
 #include <frpc.h>
 #include <frpchttperror.h>
+
 #include <list>
 #include <string>
-
 
 namespace FRPC {
 
@@ -55,7 +53,7 @@ class UnMarshaller_t;
 /**
 @author Miroslav Talasek
 */
-class FRPC_DLLEXPORT Server_t:public Writer_t {
+class FRPC_DLLEXPORT Server_t: public Writer_t {
 public:
     enum{XML_RPC = 0x01, BINARY_RPC = 0x02, JSON = 0x03, BASE64_RPC = 0x04};
 
@@ -128,7 +126,7 @@ public:
         Config_t()
             : readTimeout(10000), writeTimeout(1000), keepAlive(false),
               useBinary(true), maxKeepalive(0), introspectionEnabled(true),
-              callbacks(0)
+              callbacks(nullptr)
         {}
 
         ///@brief internal representation of readTimeout value
@@ -149,17 +147,16 @@ public:
     };
 
     Server_t(Config_t &config)
-        : Writer_t(),
-          methodRegistry(config.callbacks, config.introspectionEnabled),
+        : methodRegistry(config.callbacks, config.introspectionEnabled),
           io(0, config.readTimeout, config.writeTimeout, -1, -1),
           keepAlive(config.keepAlive), useBinary(config.useBinary),
           maxKeepalive(config.maxKeepalive), callbacks(config.callbacks),
           /*path(config.path), */outType(XML_RPC), closeConnection(true),
-          queryStorage(), contentLength(0), useChunks(false),
-          headersSent(false), head(false), headerOut(0x0)
+          contentLength(0), useChunks(false),
+          headersSent(false), head(false), headerOut(nullptr)
     {}
 
-    void serve(int fd, struct sockaddr_in* addr = 0);
+    void serve(int fd, struct sockaddr_in* addr = nullptr);
 
     void serve(int fd,
                struct sockaddr_in* addr,
@@ -171,7 +168,7 @@ public:
                HTTPHeader_t &headerIn,
                HTTPHeader_t &headerOut);
 
-    ~Server_t();
+    ~Server_t() override;
 
     MethodRegistry_t &registry() {
         return methodRegistry;
@@ -182,19 +179,17 @@ private:
 
     void readRequest(DataBuilder_t &builder,
                      HTTPHeader_t &headersIn);
-
-
     /**
     * @brief says to server that all data was writed
     *
     */
-    virtual void flush();
+    void flush() override;
     /**
     * @brief write data to server
     * @param data pointer to data
     * @param size size of data
     */
-    virtual void write(const char* data, unsigned int size);
+    void write(const char* data, unsigned int size) override;
     /**
     * @brief send response to client
     *
@@ -214,11 +209,9 @@ private:
     bool useBinary;                              //!< allow or disallow binary
     unsigned int maxKeepalive;
     MethodRegistry_t::Callbacks_t *callbacks;
-//     std::string path;
     unsigned int outType;
     bool closeConnection;
     std::list<std::string> queryStorage;
-    //UnMarshaller_t *unmarshaller;
     unsigned int contentLength;
     bool  useChunks;
     bool headersSent;
@@ -227,6 +220,6 @@ private:
     HTTPHeader_t *headerOut;
 };
 
-}
+} // namespace FRPC
 
 #endif

@@ -37,8 +37,7 @@
 
 #include <frpcerror.h>
 
-namespace FRPC
-{
+namespace FRPC {
 
 /**
 @brief Type Error  ysed in retyped functions
@@ -65,6 +64,6 @@ private:
 
 };
 
-}
+} // namespace FRPC
 
 #endif

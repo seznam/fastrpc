@@ -68,40 +68,60 @@
          byte2 = byte1 ^ byte2; \
          byte1 = byte1 ^ byte2;
 
-namespace FRPC
-{
+namespace FRPC {
 
-enum{NONE=0, INT=1,BOOL,DOUBLE,STRING,DATETIME,BINARY,INTP8,INTN8,
-     STRUCT=10,ARRAY,NULLTYPE,
-     METHOD_CALL=13,METHOD_RESPONSE,FAULT,
-     METHOD_NAME=100, MEMBER_NAME};
+enum {
+    NONE            = 0,
+    INT             = 1,
+    BOOL            = 2,
+    DOUBLE          = 3,
+    STRING          = 4,
+    DATETIME        = 5,
+    BINARY          = 6,
+    INTP8           = 7,
+    INTN8           = 8,
+    STRUCT          = 10,
+    ARRAY           = 11,
+    NULLTYPE        = 12,
+    METHOD_CALL     = 13,
+    METHOD_RESPONSE = 14,
+    FAULT           = 15,
+    METHOD_NAME     = 100,
+    MEMBER_NAME     = 101
+};
 
-enum{CHAR8=0,SHORT16=1,LONG24,LONG32,LONG40,LONG48,LONG56,LONG64};
+enum {
+    CHAR8   = 0,
+    SHORT16 = 1,
+    LONG24  = 2,
+    LONG32  = 3,
+    LONG40  = 4,
+    LONG48  = 5,
+    LONG56  = 6,
+    LONG64  = 7
+};
+
 const Int_t::value_type ZERO = 0;
-const Int_t::value_type ALLONES = ~ZERO;
-const Int_t::value_type INT8_MASK =  (int64_t)((uint64_t)ALLONES <<  8);
-const Int_t::value_type INT16_MASK = (int64_t)((uint64_t)ALLONES << 16);
-const Int_t::value_type INT24_MASK = (int64_t)((uint64_t)ALLONES << 24);
-const Int_t::value_type INT31_MASK = (int64_t)((uint64_t)ALLONES << 31);
-const Int_t::value_type INT32_MASK = (int64_t)((uint64_t)ALLONES << 32);
-const Int_t::value_type INT40_MASK = (int64_t)((uint64_t)ALLONES << 40);
-const Int_t::value_type INT48_MASK = (int64_t)((uint64_t)ALLONES << 48);
-const Int_t::value_type INT56_MASK = (int64_t)((uint64_t)ALLONES << 56);
+const Int_t::value_type ALLONES = ~ZERO; // NOLINT
+const Int_t::value_type INT8_MASK =  (int64_t)((uint64_t)ALLONES <<  8u);
+const Int_t::value_type INT16_MASK = (int64_t)((uint64_t)ALLONES << 16u);
+const Int_t::value_type INT24_MASK = (int64_t)((uint64_t)ALLONES << 24u);
+const Int_t::value_type INT31_MASK = (int64_t)((uint64_t)ALLONES << 31u);
+const Int_t::value_type INT32_MASK = (int64_t)((uint64_t)ALLONES << 32u);
+const Int_t::value_type INT40_MASK = (int64_t)((uint64_t)ALLONES << 40u);
+const Int_t::value_type INT48_MASK = (int64_t)((uint64_t)ALLONES << 48u);
+const Int_t::value_type INT56_MASK = (int64_t)((uint64_t)ALLONES << 56u);
 
 const int32_t OLD_ZERO = 0;
-const int32_t OLD_ALLONES = ~ZERO;
-const int32_t OLD_INT8_MASK =  (int32_t)((uint32_t)OLD_ALLONES <<  8);
-const int32_t OLD_INT16_MASK = (int32_t)((uint32_t)OLD_ALLONES << 16);
-const int32_t OLD_INT24_MASK = (int32_t)((uint32_t)OLD_ALLONES << 24);
+const int32_t OLD_ALLONES = ~ZERO; // NOLINT
+const int32_t OLD_INT8_MASK =  (int32_t)((uint32_t)OLD_ALLONES <<  8u);
+const int32_t OLD_INT16_MASK = (int32_t)((uint32_t)OLD_ALLONES << 16u);
+const int32_t OLD_INT24_MASK = (int32_t)((uint32_t)OLD_ALLONES << 24u);
 const int32_t OLD_INT32_MASK = OLD_ZERO;
 
-
-
-
-
-union Number_t
-{
-    Number_t(Int_t::value_type number):number(number)
+union Number_t {
+    Number_t(Int_t::value_type number)
+        :number(number)
     {
 #ifdef FRPC_BIG_ENDIAN
         //swap it
@@ -111,52 +131,37 @@ union Number_t
         SWAP_BYTE(data[4],data[3]);
 #endif
     }
-    char data[8];
+    char data[8]; // NOLINT
     Int_t::value_type number;
 };
 
-union Number32_t
-{
-    Number32_t(long number):number(number)
+union Number32_t {
+    Number32_t(long number)
+        :number(static_cast<int32_t>(number))
     {
-
 #ifdef FRPC_BIG_ENDIAN
         //swap it
         SWAP_BYTE(data[3],data[0]);
         SWAP_BYTE(data[2],data[1]);
 #endif
-
-
     }
-    char data[4];
+
+    char data[4]; // NOLINT
     int32_t number;
 };
 
-
-
-struct StreamHolder_t
-{
-    StreamHolder_t()
-            : os()
-    {}
-
-    ~StreamHolder_t()
-    {
-
-    }
-
+struct StreamHolder_t {
+    StreamHolder_t() = default;
+    ~StreamHolder_t() = default;
     std::ostringstream os;
 };
-
-
 
 /**
 @brief Structure to store data type and member count
 
 requiered in marshall and unmarshall
 */
-struct TypeStorage_t
-{
+struct TypeStorage_t {
     /**
         @brief Simple constructor
         @param type is data type  STRUCT or ARRAY
@@ -180,13 +185,12 @@ struct TypeStorage_t
     bool member;
 };
 
-
-struct DateTimeInternal_t
-{
+struct DateTimeInternal_t {
     DateTimeInternal_t()
     :timeZone(0), unixTime(0), weekDay(0), sec(0),
      minute(0), hour(0), day(0), month(0), year(0)
     {}
+    // NOLINTBEGIN
     char timeZone;
     time_t unixTime;
     unsigned char weekDay;
@@ -196,20 +200,15 @@ struct DateTimeInternal_t
     unsigned char day;
     unsigned char month;
     unsigned short year;
+    // NOLINTEND
 };
 
-
-struct DateTimeData_t
-{
-    DateTimeInternal_t dateTime;
-    char data[10];
-    DateTimeData_t()
-    {
+struct DateTimeData_t {
+    DateTimeData_t() {
         memset(data,0,sizeof(data));
     }
 
-    void pack()
-    {
+    void pack() {
         Int_t::value_type  unixTimeAbs = (dateTime.unixTime > 0)?
                                          dateTime.unixTime:
                                          -dateTime.unixTime;
@@ -219,31 +218,41 @@ struct DateTimeData_t
         if (unixTimeAbs & INT32_MASK)
             unixTime = -1;
         else
-            unixTime = dateTime.unixTime;
+            unixTime = static_cast<decltype(unixTime)>(dateTime.unixTime);
 
         memcpy(&data[1],reinterpret_cast<char*>(&unixTime),4) ;
-        data[5] = (dateTime.sec & 0x1f) << 3 | (dateTime.weekDay & 0x07);
-        data[6] = ((dateTime.minute & 0x3f) << 1) | ((dateTime.sec & 0x20) >> 5)
-                  | ((dateTime.hour & 0x01) << 7);
-        data[7] = ((dateTime.hour & 0x1e) >> 1) | ((dateTime.day & 0x0f) << 4);
-        data[8] = ((dateTime.day & 0x1f) >> 4) | ((dateTime.month & 0x0f) << 1)
-                  | ((dateTime.year & 0x07) << 5);
-        data[9] = ((dateTime.year & 0x07f8) >> 3);
+        data[5] = static_cast<char>(
+            ((dateTime.sec & 0x1f) << 3)
+            | (dateTime.weekDay & 0x07)
+        );
+        data[6] = static_cast<char>(
+            ((dateTime.minute & 0x3f) << 1)
+            | ((dateTime.sec & 0x20) >> 5)
+            | ((dateTime.hour & 0x01) << 7)
+        );
+        data[7] = static_cast<char>(
+            ((dateTime.hour & 0x1e) >> 1)
+            | ((dateTime.day & 0x0f) << 4)
+        );
+        data[8] = static_cast<char>(
+            ((dateTime.day & 0x1f) >> 4)
+            | ((dateTime.month & 0x0f) << 1)
+            | ((dateTime.year & 0x07) << 5)
+        );
+        data[9] = static_cast<char>(((dateTime.year & 0x07f8) >> 3));
     }
+
+    DateTimeInternal_t dateTime;
+    char data[10];
 };
 
 // the datetime data structure used since protocol version 3
-struct DateTimeDataV3_t
-{
-    DateTimeInternal_t dateTime;
-    char data[14];
-    DateTimeDataV3_t()
-    {
+struct DateTimeDataV3_t {
+    DateTimeDataV3_t() {
         memset(data,0,sizeof(data));
     }
 
-    void pack()
-    {
+    void pack() {
         data[0] = dateTime.timeZone;
 
         int64_t time64 = dateTime.unixTime;
@@ -256,14 +265,29 @@ struct DateTimeDataV3_t
         }
 
         memcpy(&data[1],reinterpret_cast<char*>(&time64), 8);
-        data[ 9] = (dateTime.sec & 0x1f) << 3 | (dateTime.weekDay & 0x07);
-        data[10] = ((dateTime.minute & 0x3f) << 1) | ((dateTime.sec & 0x20) >> 5)
-                  | ((dateTime.hour & 0x01) << 7);
-        data[11] = ((dateTime.hour & 0x1e) >> 1) | ((dateTime.day & 0x0f) << 4);
-        data[12] = ((dateTime.day & 0x1f) >> 4) | ((dateTime.month & 0x0f) << 1)
-                  | ((dateTime.year & 0x07) << 5);
-        data[13] = ((dateTime.year & 0x07f8) >> 3);
+        data[ 9] = static_cast<char>(
+            ((dateTime.sec & 0x1f) << 3)
+            | (dateTime.weekDay & 0x07)
+        );
+        data[10] = static_cast<char>(
+            ((dateTime.minute & 0x3f) << 1)
+            | ((dateTime.sec & 0x20) >> 5)
+            | ((dateTime.hour & 0x01) << 7)
+        );
+        data[11] = static_cast<char>(
+            ((dateTime.hour & 0x1e) >> 1)
+            | ((dateTime.day & 0x0f) << 4)
+        );
+        data[12] = static_cast<char>(
+            ((dateTime.day & 0x1f) >> 4)
+            | ((dateTime.month & 0x0f) << 1)
+            | ((dateTime.year & 0x07) << 5)
+        );
+        data[13] = static_cast<char>(((dateTime.year & 0x07f8) >> 3));
     }
+
+    DateTimeInternal_t dateTime;
+    char data[14];
 };
 
 const unsigned int HTTP_BALLAST = 1 << 10;
@@ -275,6 +299,6 @@ const size_t MAX_LEN = 20;
 */
 void FRPC_DLLEXPORT callLoggerCallback(LogEvent_t event, LogEventData_t &eventData);
 
-}
+} // namespace FRPC
 
 #endif

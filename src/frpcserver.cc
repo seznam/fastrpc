@@ -41,7 +41,6 @@
 #include <stdexcept>
 #include <frpchttpclient.h>
 #include <frpcstreamerror.h>
-#include <frpchttpclient.h>
 #include <frpctreebuilder.h>
 #include <frpcunmarshaller.h>
 #include <frpcmarshaller.h>
@@ -70,8 +69,7 @@ inline unsigned int chooseType(unsigned int type) {
 
 } // namespace
 
-Server_t::~Server_t()
-{}
+Server_t::~Server_t() = default;
 
 void Server_t::serve(int fd, struct sockaddr_in* addr) {
     HTTPHeader_t headerIn;
@@ -99,14 +97,13 @@ void Server_t::serve(int fd,
     serve(fd, clientIP, headerIn, headerOut);
 }
 
-
 void Server_t::serve(int fd,
                      const std::string &clientAddress,
                      HTTPHeader_t &headerIn,
                      HTTPHeader_t &headerOut)
 {
     // prepare query storage
-    queryStorage.push_back(std::string());
+    queryStorage.emplace_back();
     queryStorage.back().reserve(BUFFER_SIZE + HTTP_BALLAST);
     contentLength = 0;
     closeConnection = false;
@@ -142,9 +139,8 @@ void Server_t::serve(int fd,
                 // Failed to receive request. Connection was terminated (closed or timed out)
                 // before receiving anything -> finish silently.
                 break;
-            } else {
-                throw;
             }
+            throw;
         }
 
         headerOut = HTTPHeader_t();
@@ -162,7 +158,7 @@ void Server_t::serve(int fd,
                     throw HTTPError_t(HTTP_SERVICE_UNAVAILABLE,
                                       "Service Unavailable");
             } else {
-                if ( builder.getUnMarshaledDataPtr() == 0 )
+                if ( builder.getUnMarshaledDataPtr() == nullptr )
                     throw HTTPError_t(HTTP_BAD_REQUEST, "Demarshaller failed");
                 methodRegistry.processCall(clientAddress,
                                            builder.getUnMarshaledMethodName(),
@@ -177,7 +173,6 @@ void Server_t::serve(int fd,
         }
 
         requestCount++;
-
 
     } while (!(closeConnection == true
                || keepAlive == false
@@ -366,7 +361,7 @@ void Server_t::readRequest(DataBuilder_t &builder,
         std::string connection;
         headerIn.get("Connection", connection);
         std::transform(connection.begin(), connection.end(),
-                       connection.begin(), std::ptr_fun<int, int>(toupper));
+                       connection.begin(), toupper);
         closeConnection = false;
 
         if (protocol == "HTTP/1.1") {
@@ -501,7 +496,7 @@ void Server_t::sendResponse(bool last) {
             os.os << *headerOut;
             // for security reset the header ptr => next call can come without
             // http out headers then it can point to somewhere in memory...
-            headerOut = 0x0;
+            headerOut = nullptr;
         }
 
         // terminate header
@@ -561,4 +556,4 @@ void Server_t::sendResponse(bool last) {
     }
 }
 
-}
+} // namespace FRPC

@@ -30,11 +30,12 @@
  * HISTORY
  *
  */
+
 #include "frpcvalue.h"
+#include "frpctypeerror.h"
 #include "frpcnull.h"
 
-namespace FRPC
-{
+namespace FRPC {
 
 Value_t& Value_t::operator[](std::vector<Value_t*>::size_type) {
     throw TypeError_t::format("Type of object is %s but array operator used.",
@@ -62,12 +63,11 @@ const Value_t& Value_t::operator[](
                               this->getTypeName());
 }
 
-Value_t::~Value_t()
-{}
+Value_t::~Value_t() = default;
 
 bool Value_t::isNull() const
 {
     return FRPC::isNull(*this);
 }
 
-}
+} // namespace FRPC
