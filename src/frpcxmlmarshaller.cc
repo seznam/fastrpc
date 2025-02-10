@@ -34,7 +34,7 @@
 #include <sstream>
 #include <limits>
 #include <iomanip>
-#include <string.h>
+#include <cstring>
 #include <cstdio>
 
 #include "frpc.h"
@@ -43,10 +43,9 @@
 
 namespace FRPC {
 
-
 XmlMarshaller_t::XmlMarshaller_t(Writer_t &writer,
                                  const ProtocolVersion_t &protocolVersion)
-        :writer(writer),level(0),protocolVersion(protocolVersion) {
+    : writer(writer), level(0), mainType(), protocolVersion(protocolVersion) {
 
     if (protocolVersion.versionMajor > FRPC_MAJOR_VERSION) {
         throw Error_t("Not supported protocol version");
@@ -57,7 +56,6 @@ XmlMarshaller_t::XmlMarshaller_t(Writer_t &writer,
 XmlMarshaller_t::~XmlMarshaller_t() {
     entityStorage.clear();
 }
-
 
 void XmlMarshaller_t::packArray(unsigned int numOfItems) {
 
@@ -94,7 +92,7 @@ void XmlMarshaller_t::packArray(unsigned int numOfItems) {
         decrementItem();
     } else {
         //entity to storage
-        entityStorage.push_back(TypeStorage_t(ARRAY,numOfItems));
+        entityStorage.emplace_back(ARRAY, numOfItems);
     }
 }
 
@@ -205,7 +203,7 @@ void XmlMarshaller_t::packDateTime(short year, char month, char day, char hour,
     //write correct spaces
     packSpaces(level);
     writer.write("<value><dateTime.iso8601>",25);
-    writer.write(data.data(),data.size());
+    writer.write(data.data(), static_cast<uint32_t>(data.size()));
     writer.write("</dateTime.iso8601></value>\n",28);
 
 
@@ -237,11 +235,8 @@ void XmlMarshaller_t::packDouble(double value) {
     //write correct spaces
     packSpaces(level);
     writer.write("<value><double>",15);
-    writer.write(buff.data(), buff.size());
+    writer.write(buff.data(), static_cast<uint32_t>(buff.size()));
     writer.write("</double></value>\n",18);
-
-
-
 
     if (entityStorage.empty()) {
         packSpaces(level - 1);
@@ -263,7 +258,7 @@ void XmlMarshaller_t::packFault(int errNumber, const char* errMsg, unsigned int 
     writer.write("<fault>\n",8);
     level++;
 
-    entityStorage.push_back(TypeStorage_t(FAULT,0));
+    entityStorage.emplace_back(FAULT, 0);
 
     packStruct(2);
     packStructMember("faultCode",9);
@@ -303,11 +298,11 @@ void XmlMarshaller_t::packInt(Int_t::value_type value) {
             throw StreamError_t("Number is too big for protocol version 1.0");
 
         writer.write("<value><i8>",11);
-        writer.write(buff.str().data(),buff.str().size());
+        writer.write(buff.str().data(), static_cast<uint32_t>(buff.str().size()));
         writer.write("</i8></value>\n",14);
     } else {
         writer.write("<value><i4>",11);
-        writer.write(buff.str().data(),buff.str().size());
+        writer.write(buff.str().data(), static_cast<uint32_t>(buff.str().size()));
         writer.write("</i4></value>\n",14);
     }
 
@@ -464,15 +459,15 @@ void XmlMarshaller_t::packMagic() {
     if (protocolVersion.versionMajor < 2) {
         char magic[]="<?xml version=\"1.0\"?>\n";
         //write magic
-        writer.write(magic,strlen(magic));
+        writer.write(magic, static_cast<uint32_t>(strlen(magic)));
     } else if (protocolVersion.versionMajor == 2 && protocolVersion.versionMinor == 0) {
         char magic[]="<?xml version=\"1.0\"?>\n<!--protocolVersion=\"2.0\"-->\n";
         //write magic
-        writer.write(magic,strlen(magic));
+        writer.write(magic, static_cast<uint32_t>(strlen(magic)));
     } else {
         char magic[]="<?xml version=\"1.0\"?>\n<!--protocolVersion=\"2.1\"-->\n";
         //write magic
-        writer.write(magic,strlen(magic));
+        writer.write(magic, static_cast<uint32_t>(strlen(magic)));
     }
 
 }
@@ -485,7 +480,7 @@ void XmlMarshaller_t::writeEncodeBase64(Writer_t &writer,
     writeEncodeBase64(writer, [&] () -> BinaryRefFeeder_t::Chunk_t {
         if (written) return {nullptr, 0u};
         written = true;
-        return {(uint8_t *)data, len};
+        return {reinterpret_cast<const uint8_t *>(data), len};
     }, rn);
 }
 
@@ -576,4 +571,4 @@ void XmlMarshaller_t::writeQuotedString(const char *data, unsigned int len) {
     }
 }
 
-};
+} // namespace FRPC

@@ -3,6 +3,7 @@
 
 #include <cstring>
 #include <string>
+#include <utility>
 #include <vector>
 #include <stdexcept>
 #include <iostream>
@@ -22,6 +23,8 @@
 Uses external test file that contains both binary representation and resulting FRPC format
 
  */
+
+namespace {
 
 const std::string DEFAULT_TEST_FILE = "frpc.tests";
 
@@ -49,34 +52,30 @@ public:
     }
 };
 
-}
+} // namespace color
 
 class StrWriter_t : public FRPC::Writer_t {
 public:
     StrWriter_t(std::string &tgt)
-        : FRPC::Writer_t()
-        , target(tgt)
+        : target(tgt)
     {}
 
-    ~StrWriter_t()
-    {}
-
-    virtual void write(const char *data, unsigned int size) {
+    void write(const char *data, unsigned int size) override {
         target.append(data, size);
     }
 
-    virtual void flush() {}
+    void flush() override {}
 
 private:
     std::string &target;
 };
 
 
-static const color::Modifier_t cl_red(color::FG_RED);
-static const color::Modifier_t cl_green(color::FG_GREEN);
-static const color::Modifier_t cl_default(color::FG_DEFAULT);
+const color::Modifier_t cl_red(color::FG_RED);
+const color::Modifier_t cl_green(color::FG_GREEN);
+const color::Modifier_t cl_default(color::FG_DEFAULT);
 
-typedef std::vector<std::string> Args_t;
+using Args_t = std::vector<std::string>;
 
 std::string extract_arg(Args_t::const_iterator &it,
                         Args_t::const_iterator iend)
@@ -87,37 +86,30 @@ std::string extract_arg(Args_t::const_iterator &it,
 }
 
 struct TestSettings_t {
-    TestSettings_t()
-        : diffable(false),
-          usestdin(false),
-          testfile(DEFAULT_TEST_FILE),
-          verbose(false)
-    {}
-
-    bool diffable; //!< Diffable mode - outputs a corrected test input
-    bool usestdin;
-    std::string testfile;
-    bool verbose;
+    bool diffable = false; //!< Diffable mode - outputs a corrected test input
+    bool usestdin = false;
+    std::string testfile = DEFAULT_TEST_FILE;
+    uint32_t testnr = 0;
+    bool verbose = false;
 };
 
 void processArgs(TestSettings_t &s, const Args_t &args) {
-    for (Args_t::const_iterator
-             it = args.begin(),
-             iend = args.end();
-         it != iend;
-         ++it)
-    {
+    for (auto it = args.begin(), iend = args.end(); it != iend; ++it) {
         if (*it == "diffable") {
             s.diffable = true;
         } else if (*it == "stdin") {
             s.usestdin = true;
         } else if (*it == "testfile") {
             s.testfile = extract_arg(it, iend);
+        } else if (*it == "testnr") {
+            s.testnr = std::atoi(extract_arg(it, iend).c_str());
         } else if (*it == "verbose") {
             s.verbose = true;
         } else {
             std::cerr << "Unknown parameter " << *it
-                      << " expected [diffable] [stdin] [testfile filename]" << std::endl;
+                      << " expected [diffable] [stdin] [testfile filename]"
+                      << " [testnr number] [verbose]"
+                      << std::endl;
             return;
         }
     }
@@ -127,7 +119,7 @@ int nextHexNibble(std::string::const_iterator &it,
                   std::string::const_iterator &iend)
 {
     while (it != iend) {
-        unsigned char c = static_cast<unsigned char>(*it);
+        auto c = static_cast<unsigned char>(*it);
         ++it;
 
         switch (c) {
@@ -149,7 +141,7 @@ void skipWS(std::string::const_iterator &it,
             const std::string::const_iterator &iend)
 {
     for (;it != iend; ++it) {
-        unsigned char c = static_cast<unsigned char>(*it);
+        auto c = static_cast<unsigned char>(*it);
         switch (c) {
         // Whitespace moves us to the next character
         case '\n':
@@ -167,7 +159,7 @@ void pushString(std::string &buf,
     bool inEsc = false;
 
     for (; it != iend; ++it) {
-        unsigned char c = static_cast<unsigned char>(*it);
+        auto c = static_cast<unsigned char>(*it);
 
         if (c == '\\') {
             inEsc = true;
@@ -180,7 +172,7 @@ void pushString(std::string &buf,
         }
 
         inEsc = false;
-        buf.push_back(c);
+        buf.push_back(static_cast<char>(c));
     }
 
 }
@@ -211,24 +203,7 @@ std::string unhex(const std::string &hex) {
             throw std::runtime_error(
                     "encountered invalid character in hex stream");
 
-        result.push_back((a << 4) | b);
-    }
-
-    return result;
-}
-
-std::string hex(const std::string &binary) {
-    static const char *ht = "0123456789ABCDEF";
-    std::string result;
-
-    result.reserve(binary.size() * 2);
-
-    for (std::string::const_iterator it = binary.begin(), iend = binary.end();
-         it != iend;
-         ++it)
-    {
-        result.push_back(ht[(*it >> 4) & 0x0f]);
-        result.push_back(ht[*it        & 0x0f]);
+        result.push_back(static_cast<char>((a << 4) | b));
     }
 
     return result;
@@ -259,9 +234,9 @@ const char *errorTypeStr(ErrorType_t et) {
     case ERROR_UNEXPECTED_END:       return "unexpected data end";
     case ERROR_FAULT_TEST:           return "fault test";
     case ERROR_INVALID_TYPE:         return "unknown type";
-    case ERROR_INVALID_INT_SIZE:     return "bad size";
-    case ERROR_INVALID_STR_SIZE:     return "bad size";
-    case ERROR_INVALID_BIN_SIZE:     return "bad size";
+    case ERROR_INVALID_INT_SIZE:     return "bad int size";
+    case ERROR_INVALID_STR_SIZE:     return "bad string size";
+    case ERROR_INVALID_BIN_SIZE:     return "bad binary size";
     case ERROR_INVALID_STRUCT_KEY_SIZE: return "bad key length";
     case ERROR_INVALID_FAULT:        return "invalid fault";
     case ERROR_INVALID_BOOL_VALUE:   return "invalid bool value";
@@ -277,7 +252,7 @@ const char *errorTypeStr(ErrorType_t et) {
 }
 
 template<typename ExceptionT>
-ErrorType_t parseErrorType(const ExceptionT &ex) {
+ErrorType_t parseErrorType(const ExceptionT &) {
     return ERROR_UNKNOWN;
 }
 
@@ -401,8 +376,8 @@ enum TestResultType_t {
 };
 
 struct TestResult_t {
-    TestResult_t(TestResultType_t tr, const std::string &com = "")
-        : result(tr), comment(com)
+    TestResult_t(TestResultType_t tr, std::string com = "")
+        : result(tr), comment(std::move(com))
     {}
 
     void set(TestResultType_t tr, const std::string &com = "") {
@@ -425,11 +400,12 @@ std::string toStr(int i) {
     return s.str();
 }
 
-std::unique_ptr<FRPC::UnMarshaller_t> unmarshall(FRPC::TreeBuilder_t &builder,
-                                               const char *data,
-                                               size_t size,
-                                               size_t offset = 0,
-                                               size_t step = 0)
+std::unique_ptr<FRPC::UnMarshaller_t>
+unmarshall(FRPC::TreeBuilder_t &builder,
+           const char *data,
+           size_t size,
+           size_t offset = 0,
+           size_t step = 0)
 {
     std::unique_ptr<FRPC::UnMarshaller_t>
         unmarshaller = std::unique_ptr<FRPC::UnMarshaller_t>(
@@ -453,7 +429,7 @@ std::unique_ptr<FRPC::UnMarshaller_t> unmarshall(FRPC::TreeBuilder_t &builder,
         }
 
         unmarshaller->unMarshall(p,
-                                 ds,
+                                 static_cast<uint32_t>(ds),
                                  FRPC::UnMarshaller_t::TYPE_ANY);
         p += ds;
     }
@@ -462,15 +438,18 @@ std::unique_ptr<FRPC::UnMarshaller_t> unmarshall(FRPC::TreeBuilder_t &builder,
     return unmarshaller;
 }
 
-
 void formatTextDump(FRPC::TreeBuilder_t &builder, std::string &tgt) {
     std::string txtree;
     tgt = builder.getUnMarshaledMethodName();
     FRPC::dumpFastrpcTree(builder.getUnMarshaledData(), txtree, -1);
-
     tgt += txtree;
 }
 
+std::string formatTextDump(FRPC::TreeBuilder_t &builder) {
+    std::string txtree;
+    formatTextDump(builder, txtree);
+    return txtree;
+}
 
 FRPC::Value_t& serDeser(FRPC::Pool_t &pool,
                         FRPC::TreeBuilder_t &orig,
@@ -485,21 +464,15 @@ FRPC::Value_t& serDeser(FRPC::Pool_t &pool,
     std::string mname = orig.getUnMarshaledMethodName();
 
     std::unique_ptr<FRPC::Marshaller_t> marshaller
-        (FRPC::Marshaller_t::create
-         (FRPC::Marshaller_t::BINARY_RPC, sw,
-          pv));
+        (FRPC::Marshaller_t::create(FRPC::Marshaller_t::BINARY_RPC, sw, pv));
 
     FRPC::TreeFeeder_t feeder(*marshaller);
 
     if (!mname.empty()) {
         marshaller->packMethodCall(mname.c_str());
         FRPC::Array_t &params = FRPC::Array(orig.getUnMarshaledData());
-        for (FRPC::Array_t::const_iterator
-                 iparams = params.begin(),
-                 eparams = params.end();
-             iparams != eparams; ++iparams) {
-            feeder.feedValue(**iparams);
-        }
+        for (auto *param: params)
+            feeder.feedValue(*param);
     } else {
         marshaller->packMethodResponse();
         feeder.feedValue(orig.getUnMarshaledData());
@@ -509,13 +482,15 @@ FRPC::Value_t& serDeser(FRPC::Pool_t &pool,
 
     // after this we deserialize again
     FRPC::TreeBuilder_t builder(pool);
-    std::unique_ptr<FRPC::UnMarshaller_t> unm
-        = unmarshall(builder, bintarget.data(), bintarget.size(), offset, step);
+    auto unm = unmarshall(builder, bintarget.data(), bintarget.size(), offset, step);
 
     if (FRPC::compare(orig.getUnMarshaledData(),
                       builder.getUnMarshaledData()) != 0)
     {
-        throw std::runtime_error("remarshalled data yield different resuilt");
+        throw std::runtime_error(
+            "remarshalled data yield different result"
+            ": " + formatTextDump(builder)
+        );
     }
 
     return builder.getUnMarshaledData();
@@ -533,7 +508,6 @@ TestResult_t runTest(FRPC::Pool_t &pool, const TestSettings_t &/*ts*/,
                      size_t offset, size_t step)
 {
     TestResult_t result(TEST_PASSED);
-    std::string secondTxtForm;
 
     FRPC::TreeBuilder_t builder(pool);
 
@@ -624,7 +598,8 @@ runTest(const TestSettings_t &ts, const TestInstance_t &ti,
 
     } catch (const FRPC::StreamError_t &ex) {
         ErrorType_t ert = parseErrorType(ex);
-        result.corrected = std::string("error(")+errorTypeStr(ert)+")";
+        result.corrected = std::string("error(") + errorTypeStr(ert) + ")";
+
     } catch (const FRPC::Fault_t &ex) {
         if (ex.errorNum() > 0) {
             // fault contains integral error number, let's contain it in the output
@@ -635,6 +610,7 @@ runTest(const TestSettings_t &ts, const TestInstance_t &ti,
             ErrorType_t ert = parseErrorType(ex);
             result.corrected = std::string("error(") + errorTypeStr(ert) + ")";
         }
+
     } catch (const std::exception &ex) {
         result.corrected = std::string("error(")+ex.what()+")";
     }
@@ -645,7 +621,6 @@ runTest(const TestSettings_t &ts, const TestInstance_t &ti,
 
     return result;
 }
-
 
 enum ParseState_t {
     PS_BINARY,
@@ -675,6 +650,41 @@ bool parseTestName(const std::string &str, std::string &name) {
 }
 
 size_t errCount = 0;
+
+void
+runTest(
+    const TestSettings_t &ts,
+    TestInstance_t &ti,
+    size_t testNum,
+    size_t lineNum,
+    const std::string &testName
+) {
+    int outputs = -1;
+    if (ts.diffable) outputs = 1;
+
+    TestResult_t result = runTest(ts, ti, testNum, lineNum);
+    if (ts.diffable && outputs) {
+        std::cout << result.corrected << std::endl << std::endl;
+    }
+
+    if (result() != TEST_PASSED) {
+        ++errCount;
+        error() << "Failed test no. " << testNum
+                << " '" << testName << "'"
+                << " in " << ts.testfile << ":" << lineNum
+                << " with '" << result.comment << "'\n";
+    } else {
+        ++passedTests;
+
+        if (ts.verbose) {
+            success() << "Passed test no. "
+                      << testNum
+                      << " '" << testName << "'\n";
+        }
+    }
+
+    if (outputs != 0) --outputs;
+}
 
 void runTests(const TestSettings_t &ts, std::istream &input) {
     // parse the testfile. Anything starting with # is a skipped line
@@ -711,38 +721,13 @@ void runTests(const TestSettings_t &ts, std::istream &input) {
             if (ts.diffable)
                 std::cout << line << std::endl;
             break;
+
         case PS_TEXT:
             // empty line denotes expected result end.
             if (line.empty()) {
                 ps = PS_BINARY;
-
-                int outputs = -1;
-                if (ts.diffable) outputs = 1;
-
-                TestResult_t result = runTest(ts, ti, testNum, lineNum);
-
-                if (ts.diffable && outputs) {
-                    std::cout << result.corrected << std::endl << std::endl;
-                }
-
-                if (result() != TEST_PASSED) {
-                    ++errCount;
-                    error() << "Failed test no. " << testNum
-                            << " '" << testName << "'"
-                            << " in " << ts.testfile << ":" << lineNum
-                            << " with '" << result.comment << "'\n";
-                } else {
-                    ++passedTests;
-
-                    if (ts.verbose) {
-                        success() << "Passed test no. "
-                                  << testNum
-                                  << " '" << testName << "'\n";
-                    }
-                }
-
-                if (outputs != 0) --outputs;
-
+                if (!ts.testnr || (ts.testnr == testNum))
+                    runTest(ts, ti, testNum, lineNum, testName);
                 ti.reset();
                 ++testNum;
                 break;
@@ -765,6 +750,7 @@ void runTests(const TestSettings_t &ts, std::istream &input) {
 void runTests(const TestSettings_t &ts) {
     if (ts.usestdin) {
         runTests(ts, std::cin);
+
     } else {
         std::ifstream infile(ts.testfile.c_str());
         if (!infile.is_open()) {
@@ -775,24 +761,30 @@ void runTests(const TestSettings_t &ts) {
     }
 }
 
+} // namespace
+
 int main(int argc, const char *argv[]) {
-    doColor = ::isatty(::fileno(::stderr));
+    try {
+        doColor = ::isatty(::fileno(::stderr));
 
-    Args_t args(argv + 1, argv + argc);
-    TestSettings_t ts;
-    processArgs(ts, args);
+        Args_t args(argv + 1, argv + argc);
+        TestSettings_t ts;
+        processArgs(ts, args);
 
-    runTests(ts);
+        runTests(ts);
 
-    std::cerr << "----" << std::endl;
+        std::cerr << "----" << std::endl;
 
-    if (errCount) {
+        if (!errCount) {
+            success() << "Passed " << passedTests << " tests with "
+                      << passedChecks << " individual checks" << std::endl;
+            return EXIT_SUCCESS;
+        }
+
         error() << "Test contained " << errCount << " error(s)." << std::endl;
-        return 1;
-    } else {
-        success() << "Passed " << passedTests << " tests with "
-                  << passedChecks << " individual checks" << std::endl;
-    }
 
-    return 0;
+    } catch (const std::exception &ex) {
+        error() << "Exception: " << ex.what() << std::endl;
+    }
+    return EXIT_FAILURE;
 }

@@ -94,7 +94,7 @@ void reviewValue(FRPC::Value_t &val, int verMaj, int /*verMin*/)
     TEST(FRPC::Int(arr[9]) == std::numeric_limits<int64_t>::max());
 }
 
-void testEncodeDecode(int major, int minor) {
+void testEncodeDecode(char major, char minor) {
     //
     FRPC::Pool_t pool;
 
@@ -115,7 +115,7 @@ void testEncodeDecode(int major, int minor) {
     // now unpack the buffer in the sw.target
     FRPC::TreeBuilder_t tb(pool);
     FRPC::BinUnMarshaller_t bum(tb);
-    bum.unMarshall(sw.target.data(), sw.target.size(),
+    bum.unMarshall(sw.target.data(), static_cast<uint32_t>(sw.target.size()),
                    FRPC::UnMarshaller_t::TYPE_METHOD_RESPONSE);
     bum.finish();
 

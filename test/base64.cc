@@ -42,7 +42,7 @@ std::string encode_b64(std::string source) {
     MyWriter_t mywriter;
     Base64Writer_t writer((Writer_t &)mywriter);
 
-    writer.write(source.c_str(), source.size());
+    writer.write(source.c_str(), static_cast<uint32_t>(source.size()));
     writer.flush();
 
     return mywriter.data;

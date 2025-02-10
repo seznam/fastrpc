@@ -46,6 +46,7 @@ class Pool_t;
 class FRPC_DLLEXPORT Int_t : public Value_t {
     friend class Pool_t;
 public:
+    enum{ TYPE = 0x01 };
 
     using value_type = int64_t;
 
@@ -59,37 +60,25 @@ public:
     @return  @b unsigned @b short always
     @li @b Int_t::type - identificator of inteeger value
     */
-    unsigned short getType() const override
-    {
-        return TYPE;
-    }
+    TypeTag_t getType() const override {return TYPE;}
 
     /**
         @brief Getting typename of value
         @return @b const @b char  always
         @li @b "Int" - typename of Int_t
     */
-    const char* getTypeName() const override
-    {
-        return "int";
-    }
+    const char* getTypeName() const override {return "int";}
 
     /**
     @brief Getting internal integer value
     @return   @b long - internal value
     */
-    value_type getValue() const
-    {
-        return value;
-    }
+    value_type getValue() const {return value;}
 
     /**
     @brief Operator long
     */
-    operator value_type () const
-    {
-        return value;
-    }
+    operator value_type () const {return value;}
 
     /**
         @brief Method for clone/copy Double_t
@@ -97,11 +86,10 @@ public:
     */
     Value_t& clone(Pool_t &newPool) const override;
 
-    ///staic
+    /// static
     static const Int_t &FRPC_ZERO;
     static const Int_t &FRPC_MINUS_ONE;
 
-    enum{ TYPE = 0x01 };
 private:
     /**
     @brief default constructor  is disabled
@@ -116,9 +104,7 @@ private:
         :value(number)
     {}
 
-
     value_type value; /**  Internal long value */
-
 };
 /**
     @brief Inline method
@@ -128,8 +114,7 @@ private:
     @n If Value_t can't retype to Int_t: throw exception TypeError_t
 
 */
-inline FRPC_DLLEXPORT Int_t& Int(Value_t &value)
-{
+inline FRPC_DLLEXPORT Int_t& Int(Value_t &value) {
     auto *integer = dynamic_cast<Int_t*>(&value);
 
     if(!integer)
@@ -146,8 +131,7 @@ inline FRPC_DLLEXPORT Int_t& Int(Value_t &value)
     @n If Value_t can't retype to Int_t: throw exception TypeError_t
 
 */
-inline FRPC_DLLEXPORT const Int_t& Int(const Value_t &value)
-{
+inline FRPC_DLLEXPORT const Int_t& Int(const Value_t &value) {
     const auto *integer = dynamic_cast<const Int_t*>(&value);
 
     if(!integer)

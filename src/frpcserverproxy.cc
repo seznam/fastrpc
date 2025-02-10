@@ -66,7 +66,7 @@ int getTimeout(const FRPC::Struct_t &config, const std::string &name,
     if (!val) return defaultValue;
 
     // OK
-    return FRPC::Int(*val);
+    return static_cast<int>(FRPC::Int(*val));
 }
 
 FRPC::ProtocolVersion_t parseProtocolVersion(const FRPC::Struct_t &config,
@@ -79,7 +79,7 @@ FRPC::ProtocolVersion_t parseProtocolVersion(const FRPC::Struct_t &config,
 
     // parse input
     std::istringstream is(strver);
-    int major, minor;
+    uint8_t major, minor;
     is >> major >> minor;
 
     // OK
@@ -92,7 +92,7 @@ FRPC::ServerProxy_t::Config_t configFromStruct(const FRPC::Struct_t &s) {
     config.proxyUrl = FRPC::String(s.get("proxyUrl", FRPC::String_t::FRPC_EMPTY));
     config.readTimeout = getTimeout(s, "readTimeout", 10000);
     config.writeTimeout = getTimeout(s, "writeTimeout", 1000);
-    config.useBinary = FRPC::Int(s.get("transferMode", FRPC::Int_t::FRPC_ZERO));
+    config.useBinary = static_cast<uint32_t>(FRPC::Int(s.get("transferMode", FRPC::Int_t::FRPC_ZERO)));
     config.useHTTP10 = FRPC::Bool(s.get("useHTTP10", FRPC::Bool_t::FRPC_FALSE));
     config.protocolVersion = parseProtocolVersion(s, "protocolVersion");
     config.connectTimeout = getTimeout(s, "connectTimeout", 10000);
@@ -206,7 +206,7 @@ Marshaller_t* ServerProxyImpl_t::createMarshaller(HTTPClient_t &client) {
             if (serverSupportedProtocols & HTTPClient_t::BINARY_RPC) {
                 //using BINARY_RPC
                 marshaller= Marshaller_t::create(Marshaller_t::BINARY_RPC,
-                                                 client,protocolVersion);
+                                                 client, protocolVersion);
                 client.prepare(HTTPClient_t::BINARY_RPC);
             } else {
                 //using XML_RPC

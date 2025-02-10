@@ -98,7 +98,7 @@ void TreeBuilder_t::buildFault(int errNumber, const char* errMsg,
     this->errNum = errNumber;
     this->errMsg.erase();
     this->errMsg.append(errMsg, size);
-    retValue = 0;
+    retValue = nullptr;
     first = true;
 
 }
@@ -107,7 +107,7 @@ void TreeBuilder_t::buildFault(int errNumber, const std::string& errMsg)
 {
     this->errNum = errNumber;
     this->errMsg = errMsg;
-    retValue = 0;
+    retValue = nullptr;
     first = true;
 
 }

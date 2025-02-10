@@ -42,6 +42,7 @@
 
 namespace FRPC {
 class Pool_t;
+
 /**
 @brief Array type can storage any type of Value_t
 @author Miroslav Talasek
@@ -49,6 +50,7 @@ class Pool_t;
 class FRPC_DLLEXPORT Array_t : public Value_t {
     friend class Pool_t;
 public:
+    enum{TYPE = 0x0B};
 
     /**
        @brief Array_t iterator
@@ -68,11 +70,11 @@ public:
     using const_reference = const Value_t &;
     using value_type = Value_t;
 
-    enum{TYPE = 0x0B};
     /**
         @brief  Default destructor
     */
     ~Array_t() override;
+
     /**
        @brief Method to clone/copy Array_t
        @param newPool is reference of Pool_t which is used for allocate objects
@@ -85,7 +87,7 @@ public:
         @return  @b unsigned @b short always
         @li @b Array_t::TYPE - identificator of array value
     */
-    uint16_t getType() const override {return TYPE;}
+    TypeTag_t getType() const override {return TYPE;}
     /**
         @brief Getting typename of value
         @return @b const @b char * always
@@ -217,8 +219,7 @@ private:
     @return  If Value_t  can  retype to Array_t return reference to Array_t
     @n If Value_t can't retype to Array_t throw exception TypeError_t
 */
-inline FRPC_DLLEXPORT Array_t& Array(Value_t &value)
-{
+inline FRPC_DLLEXPORT Array_t& Array(Value_t &value) {
     auto *array = dynamic_cast<Array_t*>(&value);
 
     if(!array)
@@ -235,8 +236,7 @@ inline FRPC_DLLEXPORT Array_t& Array(Value_t &value)
     @return  If Value_t  can  retype to Array_t return reference to Array_t
     @n If Value_t can't retype to Array_t throw exception TypeError_t
 */
-inline FRPC_DLLEXPORT const Array_t& Array(const Value_t &value)
-{
+inline FRPC_DLLEXPORT const Array_t& Array(const Value_t &value) {
     const auto *array = dynamic_cast<const Array_t*>(&value);
 
     if(!array)

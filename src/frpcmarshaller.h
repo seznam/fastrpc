@@ -36,10 +36,7 @@
 #include <frpcplatform.h>
 #include <frpcint.h>
 
-#include <string>
-
-namespace FRPC
-{
+namespace FRPC {
 
 /**
 @brief Abstract Marshaller Class
@@ -48,18 +45,20 @@ namespace FRPC
 
 class Writer_t;
 struct  ProtocolVersion_t;
-class FRPC_DLLEXPORT Marshaller_t
-{
+class FRPC_DLLEXPORT Marshaller_t {
 public:
     enum{ BINARY_RPC, XML_RPC, JSON, BASE64_RPC};
+
     /**
         @brief Default constructor
     */
     Marshaller_t();
+
     /**
         @brief Default destructor
     */
     virtual ~Marshaller_t();
+
     /**
         @brief Marshall a sturct  member
         @param memberName pointer to struct's member name must ending with special character "\0"
@@ -196,11 +195,8 @@ public:
     */
     static Marshaller_t* create(unsigned int contentType, Writer_t& writer,
                                 const ProtocolVersion_t &protocolVersion);
-
-
-
 };
 
-};
+} // namespace FRPC
 
 #endif

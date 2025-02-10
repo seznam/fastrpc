@@ -32,22 +32,22 @@
  */
 
 #include "frpcmethodregistry.h"
+#include "frpcmethod.h"
+#include "frpcdefaultmethod.h"
+#include "frpcheadmethod.h"
+#include "frpctreebuilder.h"
+#include "frpctreefeeder.h"
+#include "frpcunmarshaller.h"
+#include "frpcmarshaller.h"
+#include "frpcstreamerror.h"
+#include "frpcfault.h"
+#include "frpclenerror.h"
+#include "frpckeyerror.h"
+#include "frpcindexerror.h"
+#include "frpcprotocolerror.h"
+#include "frpc.h"
+#include "frpcinternals.h"
 
-#include <frpcmethod.h>
-#include <frpcdefaultmethod.h>
-#include <frpcheadmethod.h>
-#include <frpctreebuilder.h>
-#include <frpctreefeeder.h>
-#include <frpcunmarshaller.h>
-#include <frpcmarshaller.h>
-#include <frpcstreamerror.h>
-#include <frpcfault.h>
-#include <frpclenerror.h>
-#include <frpckeyerror.h>
-#include <frpcindexerror.h>
-#include <frpcprotocolerror.h>
-#include <frpc.h>
-#include <frpcinternals.h>
 #include <memory>
 #include <stdexcept>
 
@@ -55,11 +55,9 @@
 #include <windows.h>
 #endif //WIN32
 
-namespace FRPC
-{
+namespace FRPC {
 
-MethodRegistry_t::TimeDiff_t::TimeDiff_t()
-{
+MethodRegistry_t::TimeDiff_t::TimeDiff_t() {
     // get current time
 #ifdef WIN32
         FILETIME ft;
@@ -69,16 +67,14 @@ MethodRegistry_t::TimeDiff_t::TimeDiff_t()
 
 #else //WIN32
 
-    struct timeval now;
-    gettimeofday(&now, 0);
+    struct timeval now = {};
+    gettimeofday(&now, nullptr);
     second = now.tv_sec;
     usecond = now.tv_usec;
 #endif //WIN32
 }
 
-MethodRegistry_t::TimeDiff_t MethodRegistry_t::TimeDiff_t::diff()
-{
-
+MethodRegistry_t::TimeDiff_t MethodRegistry_t::TimeDiff_t::diff() {
     TimeDiff_t now;
 
     // check for time skew
@@ -88,17 +84,17 @@ MethodRegistry_t::TimeDiff_t MethodRegistry_t::TimeDiff_t::diff()
 
     // compute difference
     if (now.usecond >= usecond)
-        return TimeDiff_t(now.second - second,
-                          now.usecond - usecond);
+        return TimeDiff_t(static_cast<uint32_t>(now.second - second),
+                          static_cast<uint32_t>(now.usecond - usecond));
 
     return TimeDiff_t
-           (now.second - second - 1L,
-            1000000L - usecond + now.usecond);
+           (static_cast<uint32_t>(now.second - second - 1L),
+            static_cast<uint32_t>(1000000L - usecond + now.usecond));
 }
 
 MethodRegistry_t::MethodRegistry_t(Callbacks_t *callbacks, bool introspectionEnabled)
         :callbacks(callbacks), introspectionEnabled(introspectionEnabled),
-        defaultMethod(0),headMethod(0)
+        defaultMethod(nullptr), headMethod(nullptr)
 {
     if(introspectionEnabled)
     {
@@ -120,7 +116,7 @@ MethodRegistry_t::MethodRegistry_t(Callbacks_t *callbacks, bool introspectionEna
 void MethodRegistry_t::registerMethod(const std::string &methodName, Method_t *method,
                                       const std::string signature , const std::string help )
 {
-    typedef std::map<std::string, RegistryEntry_t> Map_t;
+    using Map_t = std::map<std::string, RegistryEntry_t>;
 
     RegistryEntry_t entry(method, signature, help);
 
@@ -134,35 +130,21 @@ void MethodRegistry_t::registerMethod(const std::string &methodName, Method_t *m
     }
 }
 
-void MethodRegistry_t::registerDefaultMethod(DefaultMethod_t *defaultMethod)
-{
-    if(this->defaultMethod != 0)
-        delete  this->defaultMethod;
-
+void MethodRegistry_t::registerDefaultMethod(DefaultMethod_t *defaultMethod) {
+    delete this->defaultMethod;
     this->defaultMethod = defaultMethod;
 }
 
-void MethodRegistry_t::registerHeadMethod(HeadMethod_t *headMethod)
-{
-    if(this->headMethod != 0)
-        delete  this->headMethod;
-
+void MethodRegistry_t::registerHeadMethod(HeadMethod_t *headMethod) {
+    delete this->headMethod;
     this->headMethod = headMethod;
 }
-MethodRegistry_t::~MethodRegistry_t()
-{
-    for(std::map<std::string, RegistryEntry_t>::iterator i = methodMap.begin();
-            i != methodMap.end(); ++i)
-    {
-        delete i->second.method;
-    }
+
+MethodRegistry_t::~MethodRegistry_t() {
+    for (auto &m: methodMap)
+        delete m.second.method;
 }
-/*
-namespace
-{
-const long BUFFER_SIZE = 1<<16;
-}
-*/
+
 int MethodRegistry_t::processCall(const std::string &clientIP, const std::string &methodName,
                                    Array_t &params,
                                    Writer_t &writer, unsigned int typeOut,
@@ -238,9 +220,8 @@ Value_t& MethodRegistry_t::processCall(const std::string &clientIP,
                                        Pool_t &pool)
 {
     TimeDiff_t timeD;
-    Value_t *result;
-    try
-    {
+    Value_t *result = nullptr;
+    try {
         std::map<std::string, RegistryEntry_t>::const_iterator
             pos = methodMap.find(methodName);
 
@@ -303,12 +284,12 @@ Value_t& MethodRegistry_t::processCall(const std::string &clientIP, Reader_t &re
     std::unique_ptr<UnMarshaller_t>
         unmarshaller(UnMarshaller_t::create(typeIn, builder));
     char buffer[BUFFER_SIZE];
-    long readed;
+    uint32_t readed = 0;
     Value_t *result;
 
     try
     {
-        while((readed = reader.read(buffer,BUFFER_SIZE)))
+        while((readed = reader.read(buffer, BUFFER_SIZE)))
         {
             unmarshaller->unMarshall(buffer, readed,
                                      UnMarshaller_t::TYPE_METHOD_CALL);
@@ -599,4 +580,4 @@ Value_t& MethodRegistry_t::multicall(Pool_t &pool, Array_t &params)
     return array;
 }
 
-}
+} // namespace FRPC

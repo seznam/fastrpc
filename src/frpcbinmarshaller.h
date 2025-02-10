@@ -34,7 +34,6 @@
 #define FRPCFRPCBINMARSHALLER_H
 
 #include <frpcmarshaller.h>
-#include <vector>
 #include <frpcinternals.h>
 #include <frpc.h>
 #include <frpcwriter.h>
@@ -53,24 +52,24 @@ public:
     BinMarshaller_t(Writer_t &writer,
                     const ProtocolVersion_t &protocolVersion);
 
-    virtual ~BinMarshaller_t();
+    ~BinMarshaller_t() override;
 
-    virtual void packArray(unsigned int numOfItems);
-    virtual void packBinary(const char* value, unsigned int size);
-    virtual void packBool(bool value);
-    virtual void packDateTime(short year, char month, char day, char hour,
+    void packArray(unsigned int numOfItems) override;
+    void packBinary(const char* value, unsigned int size) override;
+    void packBool(bool value) override;
+    void packDateTime(short year, char month, char day, char hour,
                               char minute, char sec, char weekDay,
-                              time_t unixTime, int timeZone);
-    virtual void packDouble(double value);
-    virtual void packFault(int errNumber, const char* errMsg,
-                           unsigned int size);
-    virtual void packInt(Int_t::value_type value);
-    virtual void packMethodCall(const char* methodName, unsigned int size);
-    virtual void packString(const char* value, unsigned int size);
-    virtual void packStruct(unsigned int numOfMembers);
-    virtual void packStructMember(const char* memberName, unsigned int size);
-    virtual void packMethodResponse();
-    virtual void flush();
+                              time_t unixTime, int timeZone) override;
+    void packDouble(double value) override;
+    void packFault(int errNumber, const char* errMsg,
+                           unsigned int size) override;
+    void packInt(Int_t::value_type value) override;
+    void packMethodCall(const char* methodName, unsigned int size) override;
+    void packString(const char* value, unsigned int size) override;
+    void packStruct(unsigned int numOfMembers) override;
+    void packStructMember(const char* memberName, unsigned int size) override;
+    void packMethodResponse() override;
+    void flush() override;
 
     void packNull();
 
@@ -80,63 +79,12 @@ private:
 
     BinMarshaller_t();
 
-    inline unsigned int getNumberSize(unsigned int size) {
-        if (protocolVersion.versionMajor < 2)
-            return size;
-        return size + 1;
-    }
-
-    inline unsigned int getNumberType(Int_t::value_type number) {
-
-        if (protocolVersion.versionMajor < 2) {
-            int32_t oldNumber = int32_t(number);
-            // + 1 => old marking
-            if (!(oldNumber & OLD_INT8_MASK))
-                return CHAR8 + 1;
-
-            if (!(oldNumber & OLD_INT16_MASK))
-                return SHORT16 + 1;
-
-            if (!(oldNumber & OLD_INT24_MASK))
-                return LONG24 + 1;
-
-            if (!(oldNumber & OLD_INT32_MASK))
-                return LONG32 + 1;
-
-            throw StreamError_t("Number is too big for protocol version 1.0");
-        } else {
-            if (!(number & INT8_MASK))
-                return CHAR8;
-
-            if (!(number & INT16_MASK))
-                return SHORT16;
-
-            if (!(number & INT24_MASK))
-                return LONG24;
-
-            if (!(number & INT32_MASK))
-                return LONG32;
-
-            if (!(number & INT40_MASK))
-                return LONG40;
-
-            if (!(number & INT48_MASK))
-                return LONG48;
-
-            if (!(number & INT56_MASK))
-                return LONG56;
-
-            return LONG64;
-        }
-    }
-
     void packMagic();
 
-    //vector<TypeStorage_t> vectEntity; //not used
     Writer_t  &writer;
     ProtocolVersion_t protocolVersion;
 };
 
-}
+} // namespace FRPC
 
 #endif

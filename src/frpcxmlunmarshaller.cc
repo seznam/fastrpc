@@ -30,18 +30,16 @@
  * HISTORY
  *
  */
-#include <limits.h>
+#include <climits>
+#include <cstring>
+#include <cerrno>
+#include <memory.h>
+
 #include "frpcxmlunmarshaller.h"
 #include "frpctreebuilder.h"
 #include "frpcbase64.h"
-#include <frpc.h>
-#include <stdio.h>
-#include <string.h>
-#include <frpcstreamerror.h>
-#include <memory.h>
-#include <stdint.h>
-#include <errno.h>
-using namespace FRPC;
+#include "frpc.h"
+#include "frpcstreamerror.h"
 
 extern "C" {
 
@@ -52,75 +50,76 @@ extern "C" {
     }
 
     static void startElementXML(void *p, const xmlChar *name, const xmlChar **) {
-        XmlUnMarshaller_t *unm = reinterpret_cast<XmlUnMarshaller_t*>(p);
+        auto *unm = reinterpret_cast<FRPC::XmlUnMarshaller_t*>(p);
 
         // Just stop processing if error happenend
-        if (unm->exception != XmlUnMarshaller_t::EXC_NONE) {
+        if (unm->exception != FRPC::XmlUnMarshaller_t::EXC_NONE) {
             return;
         }
 
         try {
             unm->setValueType((const char*)name);
             unm->localBuffer.erase();
-        } catch (const StreamError_t &e) {
-            unm->exception = XmlUnMarshaller_t::EXC_STREAM;
+        } catch (const FRPC::StreamError_t &e) {
+            unm->exception = FRPC::XmlUnMarshaller_t::EXC_STREAM;
             unm->exErrMsg = e.message();
         }
         catch (std::bad_alloc &e) {
-            unm->exception = XmlUnMarshaller_t::EXC_BAD_ALLOC;
+            unm->exception = FRPC::XmlUnMarshaller_t::EXC_BAD_ALLOC;
         } catch (...) {
-            unm->exception = XmlUnMarshaller_t::EXC_UNKNOWN;
+            unm->exception = FRPC::XmlUnMarshaller_t::EXC_UNKNOWN;
             unm->exErrMsg = "Unknown error";
         }
     }
 
     static void endElementXML(void *p, const xmlChar *name) {
-        XmlUnMarshaller_t *unm = reinterpret_cast<XmlUnMarshaller_t*>(p);
+        auto *unm = reinterpret_cast<FRPC::XmlUnMarshaller_t*>(p);
 
         // Just stop processing if error happenend
-        if (unm->exception != XmlUnMarshaller_t::EXC_NONE) {
+        if (unm->exception != FRPC::XmlUnMarshaller_t::EXC_NONE) {
             return ;
         }
 
         try {
             unm->setValueData(unm->localBuffer.data(),
-                              unm->localBuffer.size());
+                              static_cast<uint32_t>(unm->localBuffer.size()));
 
-            unm->closeEntity((const char*)name);
-        } catch (const StreamError_t &e) {
-            unm->exception = XmlUnMarshaller_t::EXC_STREAM;
+            unm->closeEntity(reinterpret_cast<const char *>(name));
+        } catch (const FRPC::StreamError_t &e) {
+            unm->exception = FRPC::XmlUnMarshaller_t::EXC_STREAM;
             unm->exErrMsg = e.message();
         } catch (std::bad_alloc &e) {
-            unm->exception = XmlUnMarshaller_t::EXC_BAD_ALLOC;
+            unm->exception = FRPC::XmlUnMarshaller_t::EXC_BAD_ALLOC;
         } catch (...) {
-            unm->exception = XmlUnMarshaller_t::EXC_UNKNOWN;
+            unm->exception = FRPC::XmlUnMarshaller_t::EXC_UNKNOWN;
             unm->exErrMsg = "Unknown error";
         }
 
     }
 
     static void charactersXML(void *p, const xmlChar *ch, int len) {
-        XmlUnMarshaller_t *unm = reinterpret_cast<XmlUnMarshaller_t*>(p);
+        auto *unm = reinterpret_cast<FRPC::XmlUnMarshaller_t*>(p);
 
         // Just stop processing if error happenend
-        if (unm->exception != XmlUnMarshaller_t::EXC_NONE) {
+        if (unm->exception != FRPC::XmlUnMarshaller_t::EXC_NONE) {
             return ;
         }
         try {
             unm->localBuffer.append(reinterpret_cast<const char*>(ch),len);
-        } catch (const StreamError_t &e) {
-            unm->exception = XmlUnMarshaller_t::EXC_STREAM;
+        } catch (const FRPC::StreamError_t &e) {
+            unm->exception = FRPC::XmlUnMarshaller_t::EXC_STREAM;
             unm->exErrMsg = e.message();
         } catch (std::bad_alloc &e) {
-            unm->exception = XmlUnMarshaller_t::EXC_BAD_ALLOC;
+            unm->exception = FRPC::XmlUnMarshaller_t::EXC_BAD_ALLOC;
         } catch (...) {
-            unm->exception = XmlUnMarshaller_t::EXC_UNKNOWN;
+            unm->exception = FRPC::XmlUnMarshaller_t::EXC_UNKNOWN;
             unm->exErrMsg = "Unknown error";
         }
     }
 }
 
 namespace {
+
 const char *error_mapping[] = {
                                   "No error",
                                   "Internal error",
@@ -226,7 +225,10 @@ const char *error_mapping[] = {
                                   "XML_WAR_NS_URI_RELATIVE", /* 100 */
                                   "XML_ERR_MISSING_ENCODING" /* 101 */
                               };
-}
+} // namespace
+
+namespace FRPC {
+
 XmlUnMarshaller_t::XmlUnMarshaller_t(DataBuilder_t & dataBuilder)
         : exception(0),
           dataBuilder(dataBuilder),
@@ -238,13 +240,13 @@ XmlUnMarshaller_t::XmlUnMarshaller_t(DataBuilder_t & dataBuilder)
     memset(&callbacks, 0, sizeof(xmlSAXHandler));
 
     //callbacks.initialized = XML_SAX2_MAGIC;
-    callbacks.startDocument = (startDocumentSAXFunc)&startDocumentXML;
-    callbacks.endDocument =  (endDocumentSAXFunc)&endDocumentXML;
-    callbacks.startElement =  (startElementSAXFunc)&startElementXML;
-    callbacks.endElement = (endElementSAXFunc)&endElementXML;
-    callbacks.characters = (charactersSAXFunc)&charactersXML;
+    callbacks.startDocument = &startDocumentXML;
+    callbacks.endDocument =  &endDocumentXML;
+    callbacks.startElement =  &startElementXML;
+    callbacks.endElement = &endElementXML;
+    callbacks.characters = &charactersXML;
 
-    parser =  xmlCreatePushParserCtxt(&callbacks,this,0,0,0);
+    parser =  xmlCreatePushParserCtxt(&callbacks, this, nullptr, 0, nullptr);
     parser->options = parser->options | XML_PARSE_HUGE;
 
 //    xmlCtxtResetPush(parser,0,0,0,"UTF-8");
@@ -258,7 +260,7 @@ XmlUnMarshaller_t::~XmlUnMarshaller_t() {
 }
 
 void XmlUnMarshaller_t::finish() {
-    unMarshall(0,0,NONE);
+    unMarshall(nullptr, 0, NONE);
     if (internalType != NONE)
         throw StreamError_t("Stream not complete");
 }
@@ -282,19 +284,13 @@ void XmlUnMarshaller_t::unMarshall(
         std::string::size_type idx = buffer.find(versionStr);
 
         if (idx != std::string::npos && (idx + versionStr.size() + 2) < size ) {
-            protocolVersion.versionMajor = buffer.at(idx
-                                           + versionStr.size() ) - 0x30;
-            protocolVersion.versionMinor = buffer.at(idx
-                                           + versionStr.size() + 2 ) - 0x30;
+            protocolVersion.versionMajor = static_cast<uint8_t>(buffer.at(idx
+                                           + versionStr.size() ) - 0x30);
+            protocolVersion.versionMinor = static_cast<uint8_t>(buffer.at(idx
+                                           + versionStr.size() + 2 ) - 0x30);
         }
         versionCheck = false;
     }
-
-    // xmlSwitchEncoding(parser, XML_CHAR_ENCODING_UTF8);
-    /* xmlSwitchEncoding(parser,XML_CHAR_ENCODING_NONE);
-
-     xmlSwitchToEncoding(parser,
-    xmlGetCharEncodingHandler(XML_CHAR_ENCODING_UTF8));  */
 
     if (xmlParseChunk(parser, data, size, terminate)) {
         const char *msg;
@@ -326,7 +322,7 @@ void XmlUnMarshaller_t::unMarshall(
 
 namespace {
 
-inline char getValueType(const char *name) {
+char getValueType(const char *name) {
     long len = strlen(name);
     if (len < 2)
         return NONE;
@@ -571,7 +567,7 @@ void XmlUnMarshaller_t::setValueData(const char *data, unsigned int len) {
     case BINARY: {
 
         std::string binary = Base64::decode(data,len);
-        dataBuilder.buildBinary(binary.data(), binary.size());
+        dataBuilder.buildBinary(binary.data(), static_cast<uint32_t>(binary.size()));
         internalType = NONE;
     }
     break;
@@ -613,7 +609,7 @@ void XmlUnMarshaller_t::closeEntity(const char *name) {
 
     if (mainInternalType == FAULT) {
         if (type == FAULT) {
-            dataBuilder.buildFault(faultCode, faultString);
+            dataBuilder.buildFault(static_cast<int>(faultCode), faultString);
             faultCode = 0;
             faultString.clear();
         }
@@ -640,3 +636,5 @@ void XmlUnMarshaller_t::initXmlUnMarshaller_t() {
 void XmlUnMarshaller_t::cleanupXmlUnMarshaller_t() {
     xmlCleanupParser();
 }
+
+} // namespace FRPC

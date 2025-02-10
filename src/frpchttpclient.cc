@@ -34,37 +34,29 @@
 #include "nonglibc.h"
 
 #include <sys/types.h>
-#include <string.h>
-#include <errno.h>
-#include <ctype.h>
+#include <cctype>
 #include <fcntl.h>
 
 #include <string>
 #include <algorithm>
 #include <functional>
 #include <sstream>
-
 #include <stdexcept>
 
 
 #include "frpcsocket.h"
 #include "frpchttpclient.h"
-#include <frpchttperror.h>
-#include <frpcunmarshaller.h>
-#include <frpchttp.h>
-#include <frpcstreamerror.h>
-#include <frpcinternals.h>
-#include <frpcresponseerror.h>
-#include <frpc.h>
+#include "frpchttperror.h"
+#include "frpcunmarshaller.h"
+#include "frpchttp.h"
+#include "frpcstreamerror.h"
+#include "frpcinternals.h"
+#include "frpcresponseerror.h"
+#include "frpc.h"
 
 
-using namespace FRPC;
-
+namespace FRPC {
 namespace {
-
-inline bool canSendBody(const std::string &method) {
-    return (method == "POST") || (method == "PUT");
-};
 
 struct SocketCloser_t {
     SocketCloser_t(int &fd)
@@ -83,9 +75,9 @@ struct SocketCloser_t {
 };
 
 template <typename T>
-inline void addHeader(StreamHolder_t& stream, const std::string& name, const T& value) {
-        stream.os << name << ": " << value << "\r\n";
-    }
+void addHeader(StreamHolder_t& stream, const std::string& name, const T& value) {
+    stream.os << name << ": " << value << "\r\n";
+}
 
 } // namespace
 
@@ -96,8 +88,6 @@ void callHeadersCallback(HTTPClient_t &client) {
     if (headersCallback == nullptr) return;
     headersCallback(client, headersCallbackData);
 }
-
-namespace FRPC {
 
 void setHeadersCallback(HeadersCallback_t cb, void *cbdata) {
     headersCallback = cb;
@@ -119,9 +109,9 @@ HTTPClient_t::HTTPClient_t(HTTPIO_t &httpIO, URL_t &url,
     : httpIO(httpIO), url(url), connector(connector),
       headersSent(false), useChunks(false), supportedProtocols(XML_RPC),
       useProtocol(XML_RPC), contentLenght(0), connectionMustClose(false),
-      unmarshaller(0), useHTTP10(useHTTP10)
+      unmarshaller(nullptr), useHTTP10(useHTTP10)
 {
-    queryStorage.push_back(std::string());
+    queryStorage.emplace_back();
     queryStorage.back().reserve(BUFFER_SIZE + HTTP_BALLAST);
 }
 
@@ -130,9 +120,9 @@ HTTPClient_t::HTTPClient_t(HTTPIO_t &httpIO, URL_t &url,
     : httpIO(httpIO), url(url), connector(connector),
       headersSent(false), useChunks(useChunks), supportedProtocols(XML_RPC),
       useProtocol(XML_RPC), contentLenght(0), connectionMustClose(false),
-      unmarshaller(0), useHTTP10(useHTTP10)
+      unmarshaller(nullptr), useHTTP10(useHTTP10)
 {
-    queryStorage.push_back(std::string());
+    queryStorage.emplace_back();
     queryStorage.back().reserve(BUFFER_SIZE + HTTP_BALLAST);
 }
 
@@ -160,7 +150,7 @@ void HTTPClient_t::write(const char* data, unsigned int size) {
             queryStorage.back().append(data, size);
         } else {
             if (size > BUFFER_SIZE) {
-                queryStorage.push_back(std::string(data, size));
+                queryStorage.emplace_back(data, size);
             } else {
                 queryStorage.back().append(data, size);
             }
@@ -212,7 +202,7 @@ void HTTPClient_t::readResponse(DataBuilder_t &builder, HTTPHeader_t &httpHead) 
                         header[0].c_str());
             }
 
-            std::istringstream is(header[1].c_str());
+            std::istringstream is(header[1]);
             int status;
             is >> status;
 
@@ -232,7 +222,7 @@ void HTTPClient_t::readResponse(DataBuilder_t &builder, HTTPHeader_t &httpHead) 
         //create unmarshaller and datasink
 
         // what content-types are supported by server?
-        std::string accept("");
+        std::string accept;
         if (httpHead.get(HTTP_HEADER_ACCEPT, accept) == 0) {
             supportedProtocols = 0;
 
@@ -266,7 +256,7 @@ void HTTPClient_t::readResponse(DataBuilder_t &builder, HTTPHeader_t &httpHead) 
         std::string connection;
         httpHead.get("Connection", connection);
         std::transform(connection.begin(), connection.end(),
-                       connection.begin(),std::ptr_fun<int, int>(toupper));
+                       connection.begin(), toupper);
 
         if (protocol == HTTP11) {
             closeConnection = (connection == "CLOSE");

@@ -32,27 +32,23 @@
 */
 
 #include <sys/types.h>
-#include <string.h>
-#include <errno.h>
-#include <ctype.h>
-#include <stdarg.h>
+#include <cstring>
+#include <cctype>
+#include <cstdarg>
 #include <fcntl.h>
 
 #include <algorithm>
 #include <sstream>
 
 
-#include "frpcsocket.h"
-#include <frpchttp.h>
-#include <frpchttperror.h>
-#include <frpctypeerror.h>
+#include "frpchttp.h"
+#include "frpchttperror.h"
+#include "frpctypeerror.h"
 
-using namespace FRPC;
+namespace FRPC {
+namespace {
 
-namespace
-{
-std::string polishName(const std::string &name)
-{
+std::string polishName(const std::string &name) {
     std::string ret;
     ret.reserve(name.length());
     for (std::string::const_iterator it = name.begin(); it < name.end(); ++it)
@@ -60,9 +56,9 @@ std::string polishName(const std::string &name)
         if (isalnum(*it))
         {
             if ((it != name.begin()) && (isalnum(*(it - 1))))
-                ret.push_back(tolower(*it));
+                ret.push_back(static_cast<char>(tolower(*it)));
             else
-                ret.push_back(toupper(*it));
+                ret.push_back(static_cast<char>(toupper(*it)));
         }
         else
             ret.push_back(*it);
@@ -70,7 +66,8 @@ std::string polishName(const std::string &name)
 
     return ret;
 }
-}
+
+} // namespace
 
 int HTTPHeader_t::get
     (const std::string &name_, std::string &value,
@@ -176,30 +173,26 @@ void HTTPHeader_t::appendValue(const std::string &value)
     header.back().second.append(value);
 }
 
-namespace FRPC {
-
 std::ostream& operator<<(std::ostream &os, const HTTPHeader_t &header)
 {
     // serialize header
-    for (HTTPHeader_t::HeaderMap_t::const_iterator
-            iheader = header.header.begin();
-            iheader != header.header.end(); ++iheader)
-        os << iheader->first << ": " << iheader->second << "\r\n";
+    for (const auto &header: header.header)
+        os << header.first << ": " << header.second << "\r\n";
 
     // pass stream
     return os;
 }
 
-} // namespace FRPC
-
 namespace {
-    const std::string HTTP_SCHEMA("http://");
-    const std::string UNIX_SCHEMA("unix://");
 
-    inline bool nocaseCmp(char l, char r) {
-        return toupper(l) == toupper(r);
-    }
+const std::string HTTP_SCHEMA("http://");
+const std::string UNIX_SCHEMA("unix://");
+
+inline bool nocaseCmp(char l, char r) {
+    return toupper(l) == toupper(r);
 }
+
+} // namespace
 
 void URL_t::parse(const std::string &url) {
     static const std::string https_schema("https://");
@@ -258,7 +251,7 @@ void URL_t::parse(const std::string &url) {
         host = url.substr(hostStart, colon_pos - hostStart);
         ++colon_pos;
         // port pøevedeme na èíslo
-        std::istringstream(url.substr(colon_pos, slash_pos - colon_pos).c_str()) >> port;
+        std::istringstream(url.substr(colon_pos, slash_pos - colon_pos)) >> port;
     }
     else
     {
@@ -290,7 +283,7 @@ bool URL_t::isUnix() const
 }
 
 URL_t::URL_t(const std::string &url, const std::string &proxyVia)
-    : usesProxy(!proxyVia.empty()), isSSL(false)
+    : port(), usesProxy(!proxyVia.empty()), isSSL(false)
 {
     if (!usesProxy) {
         // parse URL and resolve host to IP
@@ -320,3 +313,5 @@ std::string URL_t::getUrl() const {
 bool URL_t::sslUsed() const {
     return isSSL;
 }
+
+} // namespace FRPC

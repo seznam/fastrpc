@@ -85,7 +85,7 @@ template <
 
 template <typename StringT>
 void packString(Marshaller_t &marshaller, StringT &&str) {
-    marshaller.packString(str.data(), str.size());
+    marshaller.packString(str.data(), static_cast<uint32_t>(str.size()));
 }
 
 template <
@@ -103,28 +103,35 @@ template <
 }
 
 void packBinary(Marshaller_t &marshaller, const Binary_t &bin) {
-    marshaller.packBinary(bin.data(), bin.size());
+    marshaller.packBinary(bin.data(), static_cast<uint32_t>(bin.size()));
 }
 
 void packDateTime(Marshaller_t &marshaller, const DateTime_t &dt) {
-    marshaller.packDateTime(dt.getYear(), dt.getMonth(), dt.getDay(),
-                            dt.getHour(), dt.getMin(), dt.getSec(),
-                            dt.getDayOfWeek(), dt.getUnixTime(),
-                            dt.getTimeZone());
+    marshaller.packDateTime(
+        dt.getYear(),
+        static_cast<char>(dt.getMonth()),
+        static_cast<char>(dt.getDay()),
+        static_cast<char>(dt.getHour()),
+        static_cast<char>(dt.getMin()),
+        static_cast<char>(dt.getSec()),
+        static_cast<char>(dt.getDayOfWeek()),
+        dt.getUnixTime(),
+        dt.getTimeZone()
+    );
 }
 
 template <typename Marshaller_t>
 void packStruct(Marshaller_t &marshaller, const Struct_t &value) {
-    marshaller.packStruct(value.size());
+    marshaller.packStruct(static_cast<uint32_t>(value.size()));
     for (auto &item: value) {
-        marshaller.packStructMember(item.first.data(), item.first.size());
+        marshaller.packStructMember(item.first.data(), static_cast<uint32_t>(item.first.size()));
         feedValueImpl(marshaller, *item.second);
     }
 }
 
 template <typename Marshaller_t>
 void packArray(Marshaller_t &marshaller, const Array_t &array) {
-    marshaller.packArray(array.size());
+    marshaller.packArray(static_cast<uint32_t>(array.size()));
     for (auto &item: array) feedValueImpl(marshaller, *item);
 }
 
