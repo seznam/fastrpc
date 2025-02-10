@@ -30,39 +30,37 @@
  * HISTORY
  *
  */
+#include <cstring>
+
 #include "frpcdatabuilder.h"
-#include <string.h>
 
 namespace FRPC {
 
-DataBuilder_t::DataBuilder_t() {}
+DataBuilder_t::DataBuilder_t() = default;
 
-
-DataBuilder_t::~DataBuilder_t() {}
+DataBuilder_t::~DataBuilder_t() = default;
 
 void DataBuilder_t::buildFault(int errNumber, const char* errMsg) {
-    unsigned int size = strlen(errMsg);
-    buildFault(errNumber, errMsg,size);
+    auto size = static_cast<uint32_t>(strlen(errMsg));
+    buildFault(errNumber, errMsg, size);
 }
 void DataBuilder_t::buildMethodCall(const char* methodName) {
-    unsigned int size = strlen(methodName);
+    auto size = static_cast<uint32_t>(strlen(methodName));
     buildMethodCall(methodName,size);
 }
 void DataBuilder_t::buildString(const char* data) {
 
-    unsigned int size = strlen(data);
+    auto size = static_cast<uint32_t>(strlen(data));
     buildString(data,size);
 }
 void DataBuilder_t::buildStructMember(const char *memberName) {
 
-    unsigned int size = strlen(memberName);
+    auto size = static_cast<uint32_t>(strlen(memberName));
     buildStructMember(memberName,size);
 }
 
-DataBuilderWithNull_t::DataBuilderWithNull_t()
-    : DataBuilder_t() {}
+DataBuilderWithNull_t::DataBuilderWithNull_t() = default;
 
-DataBuilderWithNull_t::~DataBuilderWithNull_t() {}
+DataBuilderWithNull_t::~DataBuilderWithNull_t() = default;
 
-}
-
+} // namespace FRPC

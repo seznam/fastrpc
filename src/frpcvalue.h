@@ -39,9 +39,11 @@
 #include <vector>
 #include <map>
 
-namespace FRPC
-{
+namespace FRPC {
 class Pool_t;
+
+using TypeTag_t = uint16_t;
+
 /**
 @brief Abstract Value type
 @author Miroslav Talasek
@@ -72,7 +74,7 @@ public:
         @li @b  Struct_t::TYPE      - struct value type
         @li @b  Arry_t::TYPE        - array value type
     */
-    virtual unsigned short getType() const = 0;
+    virtual TypeTag_t getType() const = 0;
 
     /**
         @brief Abstract virtual method to getting typename of value

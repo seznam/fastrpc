@@ -136,6 +136,7 @@ std::string unquote(const std::string &str) {
                 }
             }
         }
+       [[fallthrough]];
         default:
             res.append(1, *it);
         }
@@ -151,7 +152,7 @@ std::string unquote(const std::string &str) {
 class Values_t {
 public:
     /// build method type
-    typedef void (Values_t::*Builder_t)(DataBuilder_t &, const std::string &);
+    using Builder_t = void (Values_t::*)(DataBuilder_t &, const std::string &);
 
     /**
      * @short C'tor.
@@ -179,7 +180,7 @@ public:
 
                 // extract type info and push value
                 Builder_t type = resolveType(value);
-                values[name].push_back(std::make_pair(type, value));
+                values[name].emplace_back(type, value);
 #ifdef _DEBUG
                 printf("> %s=%s\n", name.c_str(), value.c_str());
 #endif
@@ -193,30 +194,21 @@ public:
      */
     void dump(DataBuilder_t &builder) {
         // fill global struct
-        for (Values_t::Struct_t::const_iterator
-                ientry = values.begin(),
-                eentry = values.end();
-                ientry != eentry; ++ientry)
-        {
+        for (const auto & value : values) {
             // build struct member
-            std::string member = extractMember(ientry->first);
+            std::string member = extractMember(value.first);
             builder.buildStructMember(member);
 
             // member which ends with [] is array entry
-            if (member.size() != ientry->first.size()) {
-                builder.openArray(ientry->second.size());
-                for (Value_t::const_iterator
-                        iarray = ientry->second.begin(),
-                        earray = ientry->second.end();
-                        iarray != earray; ++iarray)
-                {
-                    (this->*iarray->first)(builder, iarray->second);
-                }
+            if (member.size() != value.first.size()) {
+                builder.openArray(static_cast<uint32_t>(value.second.size()));
+                for (const auto &iarray: value.second)
+                    (this->*iarray.first)(builder, iarray.second);
                 builder.closeArray();
 
             } else {
-                (this->*ientry->second.front().first)
-                    (builder, ientry->second.front().second);
+                (this->*value.second.front().first)
+                    (builder, value.second.front().second);
             }
         }
     }
@@ -375,7 +367,7 @@ void URLUnMarshaller_t::finish() {
 
     // parse values and build values map
     Values_t values(buffer);
-    dataBuilder.openStruct(values.size());
+    dataBuilder.openStruct(static_cast<uint32_t>(values.size()));
     values.dump(dataBuilder);
     dataBuilder.closeStruct();
 }

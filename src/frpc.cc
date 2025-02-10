@@ -50,6 +50,7 @@ extern "C" {
     }
 }
 
+namespace FRPC {
 namespace {
 
 struct HexWriter_t
@@ -71,7 +72,6 @@ struct HexWriter_t
 
 } // namespace
 
-namespace FRPC {
 
 /**
 *@brief method render iso date time forma from parameters
@@ -98,7 +98,9 @@ void parseISODateTime(const char *data, long len, short &year, char &month,
                       char &day, char &hour, char &minute, char &sec,
                       int &timeZone) {
 
-    year = month = day = hour = minute = sec = timeZone = 0;
+    year = 0;
+    month = day = hour = minute = sec = 0;
+    timeZone = 0;
     // iterators
     char *sit = const_cast<char*>(data);
     char *end = const_cast<char*>(data)+len;
@@ -117,7 +119,7 @@ void parseISODateTime(const char *data, long len, short &year, char &month,
     }
     if (tmp.length() == 0)
         throw StreamError_t("Bad DATE format");
-    year = atoi(tmp.c_str());
+    year = static_cast<short>(atoi(tmp.c_str()));
 
     // skip optional delimiter
     if (sit != end && *sit == '-')
@@ -132,7 +134,7 @@ void parseISODateTime(const char *data, long len, short &year, char &month,
     }
     if (tmp.length() == 0)
         throw StreamError_t("Bad DATE format");
-    month = atoi(tmp.c_str());
+    month = static_cast<char>(atoi(tmp.c_str()));
 
     // skip optional delimiter
     if (sit != end && *sit == '-')
@@ -147,7 +149,7 @@ void parseISODateTime(const char *data, long len, short &year, char &month,
     }
     if (tmp.length() == 0)
         throw StreamError_t("Bad DATE format");
-    day = atoi(tmp.c_str());
+    day = static_cast<char>(atoi(tmp.c_str()));
 
     // skip time delimiter
     if (sit != end && (*sit == 'T' || *sit == 't' || *sit == ' ' ))
@@ -167,7 +169,7 @@ void parseISODateTime(const char *data, long len, short &year, char &month,
     if (tmp.length() == 0)
         return;
     //throw StreamError_t("Bad DATE format");
-    hour = atoi(tmp.c_str());
+    hour = static_cast<char>(atoi(tmp.c_str()));
 
     // skip optional delimiter
     if (sit != end && *sit == ':')
@@ -183,7 +185,7 @@ void parseISODateTime(const char *data, long len, short &year, char &month,
     if (tmp.length() == 0)
         return;
     //throw StreamError_t("Bad DATE format");
-    minute = atoi(tmp.c_str());
+    minute = static_cast<char>(atoi(tmp.c_str()));
 
     // skip optional delimiter
     if (sit != end && *sit == ':')
@@ -199,7 +201,7 @@ void parseISODateTime(const char *data, long len, short &year, char &month,
     if (tmp.length() == 0)
         return;
     //throw StreamError_t("Bad DATE format");
-    sec = atoi(tmp.c_str());
+    sec = static_cast<char>(atoi(tmp.c_str()));
 
     // if sec fraction
     if (sit != end && *sit == '.') {

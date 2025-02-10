@@ -22,13 +22,13 @@
  *
  * FILE          $Id: frpctreefeeder.h,v 1.3 2007-06-01 15:06:23 vasek Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #ifndef FRPCFRPCTREEFEEDER_H
 #define FRPCFRPCTREEFEEDER_H
@@ -38,30 +38,26 @@
 #include <frpcmarshaller.h>
 #include <frpc.h>
 
-namespace FRPC
-{
+namespace FRPC {
 
 /**
 @author Miroslav Talasek
 */
-class FRPC_DLLEXPORT TreeFeeder_t
-{
+class FRPC_DLLEXPORT TreeFeeder_t {
 public:
     TreeFeeder_t(Marshaller_t &marshaller):marshaller(marshaller)
     {}
-    
+
     void feedValue(const Value_t &value);
 
-    
-    
     ~TreeFeeder_t();
-    
+
 private:
 
     Marshaller_t &marshaller;
 
 };
 
-};
+} // namespace FRPC
 
 #endif

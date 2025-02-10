@@ -34,6 +34,7 @@
 #define FRPCBINARYREF_H
 
 #include <functional>
+#include <utility>
 
 #include <frpcvalue.h>
 #include <frpcpool.h>
@@ -73,7 +74,7 @@ public:
     /** Container like object that provides iterator interface for chunk list.
      */
     struct Chunks_t {
-        Chunks_t(BinaryRefFeeder_t feeder): feeder(feeder) {}
+        Chunks_t(BinaryRefFeeder_t feeder): feeder(std::move(feeder)) {}
 
         /// The chunks iterator.
         struct const_iterator {
@@ -115,15 +116,15 @@ public:
 
     /** D'tor.
      */
-    virtual ~BinaryRef_t() = default;
+    ~BinaryRef_t() override = default;
 
     /** Returns type of value.
      */
-    virtual unsigned short getType() const { return TYPE;}
+    TypeTag_t getType() const override { return TYPE;}
 
     /** Returns name of type.
      */
-    virtual const char *getTypeName() const { return "binaryref";}
+    const char *getTypeName() const override { return "binaryref";}
 
     /** Returns the size of final binary value.
      */
@@ -140,7 +141,7 @@ public:
 
     /** Returns new BinaryRef_t value.
      */
-    virtual Value_t &clone(Pool_t &newPool) const {
+    Value_t &clone(Pool_t &newPool) const override {
         return newPool.BinaryRef(feeder);
     }
 
@@ -153,7 +154,7 @@ private:
 
     /** C'tor from feeder.
      */
-    BinaryRef_t(BinaryRefFeeder_t feeder): feeder(feeder) {}
+    BinaryRef_t(BinaryRefFeeder_t feeder): feeder(std::move(feeder)) {}
 
     BinaryRefFeeder_t feeder; //!< the data holder
 };

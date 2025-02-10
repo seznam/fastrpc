@@ -37,10 +37,9 @@
 
 namespace FRPC {
 
-Struct_t::Struct_t() {}
+Struct_t::Struct_t() = default;
 
-
-Struct_t::~Struct_t() {}
+Struct_t::~Struct_t() = default;
 
 Struct_t::Struct_t(const Struct_t::pair &value) {
     structData.insert(value);
@@ -57,20 +56,16 @@ Struct_t::Struct_t(const std::string &key, const Value_t &value) {
 Value_t& Struct_t::clone(Pool_t& newPool) const {
     Struct_t *newStruct = &newPool.Struct();
 
-    for (std::map<std::string,Value_t*>::const_iterator
-            istructData = structData.begin();
-            istructData != structData.end(); ++istructData) {
-        newStruct->insert(value_type(istructData->first,
-                                     &(istructData->second)->clone(newPool)));
+    for (const auto & istructData : structData) {
+        newStruct->insert(value_type(istructData.first,
+                                     &(istructData.second)->clone(newPool)));
     }
 
     return  *newStruct;
 }
 
 bool Struct_t::has_key(const Struct_t::key_type &key) const {
-    if (structData.find(key) != structData.end())
-        return true;
-    return false;
+    return structData.find(key) != structData.end();
 }
 
 std::pair<Struct_t::iterator, bool> Struct_t::insert(
@@ -140,7 +135,7 @@ const Value_t* Struct_t::get(const key_type &key) const {
     const_iterator istructData;
 
     if ((istructData = structData.find(key)) == structData.end())
-        return 0;
+        return nullptr;
     return istructData->second;
 
 }
@@ -149,7 +144,7 @@ Value_t* Struct_t::get(const key_type &key) {
     iterator istructData;
 
     if ((istructData = structData.find(key)) == structData.end())
-        return 0;
+        return nullptr;
     return istructData->second;
 
 }
@@ -170,7 +165,7 @@ const Value_t& Struct_t::get(const key_type &key,
     const_iterator istructData;
 
     if ((istructData = structData.find(key)) == structData.end())
-        return defaultValue;
+        return defaultValue; // NOLINT
 
     return *(istructData->second);
 
@@ -203,4 +198,4 @@ Struct_t::size_type Struct_t::erase(const Struct_t::key_type &key) {
     return structData.erase(key);
 }
 
-}
+} // namespace FRPC

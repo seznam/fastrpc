@@ -58,20 +58,14 @@ public:
         @return  @b unsigned @b short always
         @li @b Binary_t::TYPE - identificator of binary value
     */
-    unsigned short getType() const override
-    {
-        return TYPE;
-    }
+    TypeTag_t getType() const override {return TYPE;}
 
     /**
         @brief Getting typename of value
         @return @b const @b char* always
         @li @b "Binary" - typename of Binary_t
     */
-    const char* getTypeName() const override
-    {
-        return "binary";
-    }
+    const char* getTypeName() const override {return "binary";}
 
     /**
         @brief Get data itself. Data are not "\0"-terminated.
@@ -106,12 +100,11 @@ public:
     /**
         @brief operator const std::string
     */
-    operator const std::string& () const
-    {
-        return value;
-    }
+    operator const std::string& () const {return value;}
+
     ///static members
     static const Binary_t &FRPC_EMPTY;
+
 private:
     /**
         @brief Default constructor is disabled
@@ -155,8 +148,7 @@ private:
     @return  If Value_t  can  retype to Binary_t return reference to Binary_t
     @n If Value_t can't retype to Binary_t throw exception TypeError_t
 */
-inline FRPC_DLLEXPORT Binary_t& Binary(Value_t &value)
-{
+inline FRPC_DLLEXPORT Binary_t& Binary(Value_t &value) {
     auto *binary = dynamic_cast<Binary_t*>(&value);
 
     if(!binary)
@@ -172,8 +164,7 @@ inline FRPC_DLLEXPORT Binary_t& Binary(Value_t &value)
     @return  If Value_t  can  retype to Binary_t return reference to Binary_t
     @n If Value_t can't retype to Binary_t throw exception TypeError_t
 */
-inline FRPC_DLLEXPORT const Binary_t& Binary(const Value_t &value)
-{
+inline FRPC_DLLEXPORT const Binary_t& Binary(const Value_t &value) {
     const auto *binary = dynamic_cast<const Binary_t*>(&value);
 
     if(!binary)

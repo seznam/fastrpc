@@ -48,6 +48,8 @@ class Pool_t;
 class FRPC_DLLEXPORT Struct_t : public Value_t {
     friend class Pool_t;
 public:
+    enum{TYPE = 0x0A};
+
     /**
         @brief Struct_t iterator
     */
@@ -77,12 +79,11 @@ public:
     using const_reference = const value_type &;
     using reference = value_type &;
 
-
-    enum{TYPE = 0x0A};
     /**
     `   @brief Default destructor
     */
     ~Struct_t() override;
+
     /**
         @brief Method to clone/copy Struct_t
         @param newPool is pointer of Pool_t which is used for allocate objects
@@ -93,19 +94,13 @@ public:
         @return  @b unsigned @b short always
         @li @b Struct_t::TYPE - identificator of struct value
     */
-    unsigned short getType() const override
-    {
-        return TYPE;
-    }
+    TypeTag_t getType() const override {return TYPE;}
     /**
         @brief Getting typename of value
         @return @b const @b char* always
         @li @b "Struct" - typename of Struct_t
     */
-    const char* getTypeName() const override
-    {
-        return "struct";
-    }
+    const char* getTypeName() const override {return "struct";}
     /**
         @brief Getting info if Struct_t has key
         @param key searched key
@@ -270,8 +265,7 @@ private:
     @n If Value_t can't retype to Struct_t: throw exception TypeError_t
 
 */
-inline FRPC_DLLEXPORT Struct_t& Struct(Value_t &value)
-{
+inline FRPC_DLLEXPORT Struct_t& Struct(Value_t &value) {
     auto *struct_v = dynamic_cast<Struct_t*>(&value);
 
     if(!struct_v)
@@ -289,8 +283,7 @@ inline FRPC_DLLEXPORT Struct_t& Struct(Value_t &value)
     @n If Value_t can't retype to Struct_t: throw exception TypeError_t
 
 */
-inline FRPC_DLLEXPORT const Struct_t& Struct(const Value_t &value)
-{
+inline FRPC_DLLEXPORT const Struct_t& Struct(const Value_t &value) {
     const auto *struct_v = dynamic_cast<const Struct_t*>(&value);
 
     if(!struct_v)

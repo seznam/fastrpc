@@ -51,7 +51,7 @@ void Base64UnMarshaller_t::unMarshall(const char *data,
 {
     std::string decoded = decoder.process(data, size);
     if (!decoded.empty())
-        BinUnMarshaller_t::unMarshall(decoded.data(), decoded.size(), type);
+        BinUnMarshaller_t::unMarshall(decoded.data(), static_cast<uint32_t>(decoded.size()), type);
 }
 
 } // namespace FRPC

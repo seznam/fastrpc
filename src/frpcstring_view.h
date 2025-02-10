@@ -65,19 +65,20 @@ public:
 #endif /* __cplusplus < 201703L */
 
     virtual ~StringView_t() = default;
+
     /**
         @brief Getting type of value
         @return  @b unsigned @b short always
         @li @b Binary_t::TYPE - identificator of binary value
     */
-    virtual unsigned short getType() const {return TYPE;}
+    TypeTag_t getType() const override {return TYPE;}
 
     /**
         @brief Getting typename of value
         @return @b const @b char* always
         @li @b "String" - typename of String_t
     */
-    virtual const char* getTypeName() const {return "string_view";}
+    const char* getTypeName() const override {return "string_view";}
 
     /**
         @brief Get data itself. Data are not "\0"-terminated.
@@ -107,7 +108,7 @@ public:
         @brief Method to clone/copy StringView_t
         @param newPool is reference of Pool_t which is used for allocate objects
     */
-    virtual Value_t &clone(Pool_t &newPool) const;
+    Value_t &clone(Pool_t &newPool) const override;
 
     /**
         @brief operator const std::string_view

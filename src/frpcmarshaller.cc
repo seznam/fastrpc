@@ -30,25 +30,25 @@
  * HISTORY
  *
  */
+#include <cstring>
+
 #include "frpcmarshaller.h"
-#include <frpcwriter.h>
-#include <frpcbinmarshaller.h>
-#include <frpcxmlmarshaller.h>
-#include <frpcjsonmarshaller.h>
-#include <frpcb64marshaller.h>
-#include <frpcerror.h>
-#include <string.h>
+#include "frpcwriter.h"
+#include "frpcbinmarshaller.h"
+#include "frpcxmlmarshaller.h"
+#include "frpcjsonmarshaller.h"
+#include "frpcb64marshaller.h"
+#include "frpcerror.h"
 
 namespace FRPC {
 
-Marshaller_t::Marshaller_t() {}
+Marshaller_t::Marshaller_t() = default;
 
-
-Marshaller_t::~Marshaller_t() {}
+Marshaller_t::~Marshaller_t() = default;
 
 Marshaller_t* Marshaller_t::create(unsigned int contentType, Writer_t& writer,
                                   const ProtocolVersion_t &protocolVersion) {
-    Marshaller_t *marshaller;
+    Marshaller_t *marshaller = nullptr;
 
     switch (contentType) {
     case BINARY_RPC:
@@ -78,22 +78,23 @@ Marshaller_t* Marshaller_t::create(unsigned int contentType, Writer_t& writer,
 }
 
 void Marshaller_t::packStructMember(const char* memberName) {
-    unsigned int size = strlen(memberName);
+    auto size = static_cast<uint32_t>(strlen(memberName));
     packStructMember(memberName, size);
 }
 
 void  Marshaller_t::packString(const char* value){
-    unsigned int size = strlen(value);
+    auto size = static_cast<uint32_t>(strlen(value));
     packString(value,size);
 }
 
 void Marshaller_t::packFault(int errNumber, const char* errMsg){
-    unsigned int size = strlen(errMsg);
+    auto size = static_cast<uint32_t>(strlen(errMsg));
     packFault(errNumber,errMsg,size);
 }
 
 void Marshaller_t::packMethodCall(const char* methodName){
-    unsigned int size = strlen(methodName);
+    auto size = static_cast<uint32_t>(strlen(methodName));
     packMethodCall(methodName,size);
 }
-}
+
+} // namespace FRPC

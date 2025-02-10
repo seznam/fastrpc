@@ -52,25 +52,20 @@ public:
     using value_type = std::string;
 
     ~String_t() override;
+
     /**
         @brief Getting type of value
         @return  @b unsigned @b short always
         @li @b Binary_t::TYPE - identificator of binary value
     */
-    unsigned short getType() const override
-    {
-        return TYPE;
-    }
+    TypeTag_t getType() const override {return TYPE;}
 
     /**
         @brief Getting typename of value
         @return @b const @b char* always
         @li @b "String" - typename of String_t
     */
-    const char* getTypeName() const override
-    {
-        return "string";
-    }
+    const char* getTypeName() const override {return "string";}
 
     /**
         @brief Get data itself. Data are not "\0"-terminated.
@@ -82,7 +77,6 @@ public:
         @brief Get data itself. Data are not "\0"-terminated.
         @return Pointer to the binary data.
     */
-
     const std::string::value_type* data() const;
 
     /**
@@ -113,10 +107,7 @@ public:
     /**
         @brief operator const std::string
     */
-    operator const std::string& () const
-    {
-        return value;
-    }
+    operator const std::string& () const {return value;}
 
     /**
         @brief operator const std::wstring

@@ -30,27 +30,26 @@
  * HISTORY
  *
  */
-#include <time.h>
-#include <frpc.h>
-#include <string.h>
+#include <ctime>
+#include <cstring>
 
+#include "frpc.h"
 #include "frpcdatetime.h"
 #include "frpcpool.h"
 #include "frpcconfig.h"
 
 namespace FRPC {
 
-DateTime_t::~DateTime_t() {}
+DateTime_t::~DateTime_t() = default;
 
-DateTime_t::DateTime_t(short year, char month, char day,
+DateTime_t::DateTime_t(int16_t year, char month, char day,
                        char hour, char minute, char sec, char weekDay,
                        time_t unixTime, int timeZone)
     : year(year), month(month), day(day), hour(hour), minute(minute),
       sec(sec), weekDay(weekDay), unixTime(unixTime), timeZone(timeZone)
 {
-    if ( LibConfig_t::getInstance()->getDatetimeValidationPolicy() == true ) {
-        struct tm time_tm;
-        memset(&time_tm, 0, sizeof(tm));
+    if (LibConfig_t::getInstance()->getDatetimeValidationPolicy()) {
+        struct tm time_tm = {};
         time_tm.tm_year = year - 1900;
         time_tm.tm_mon = month - 1;
         time_tm.tm_mday = day;
@@ -59,12 +58,11 @@ DateTime_t::DateTime_t(short year, char month, char day,
         time_tm.tm_sec = sec;
         time_tm.tm_isdst = -1; // we know nothing about daylight savings time
         time_t time_l = mktime(&time_tm);
-        struct tm timeValid;
-        memset(&timeValid, 0, sizeof(tm));
+        struct tm timeValid = {};
         localtime_r(&time_l, &timeValid);
 
         this->unixTime = time_l;
-        this->weekDay = timeValid.tm_wday;
+        this->weekDay = static_cast<char>(timeValid.tm_wday);
     }
 }
 
@@ -72,8 +70,7 @@ DateTime_t::DateTime_t(short year, char month, char day,
                        char hour, char min, char sec)
     : year(year), month(month), day(day), hour(hour), minute(min), sec(sec)
 {
-    struct tm time_tm;
-    memset(&time_tm, 0, sizeof(tm));
+    struct tm time_tm = {};
     time_tm.tm_year = year - 1900;
     time_tm.tm_mon = month - 1;
     time_tm.tm_mday = day;
@@ -82,88 +79,81 @@ DateTime_t::DateTime_t(short year, char month, char day,
     time_tm.tm_sec = sec;
     time_tm.tm_isdst = -1; // we know nothing about daylight savings time
     time_t time_l = mktime(&time_tm);
-    struct tm timeValid;
-    memset(&timeValid, 0, sizeof(tm));
+    struct tm timeValid = {};
     localtime_r(&time_l, &timeValid);
 
     unixTime = time_l;
-    weekDay = timeValid.tm_wday;
+    weekDay = static_cast<char>(timeValid.tm_wday);
 #ifdef HAVE_ALTZONE
     timeZone = (time_tm.tm_isdst > 0)? ::altzone: ::timezone;
 #else
-    timeZone = (time_tm.tm_isdst > 0)? ::timezone - 3600: ::timezone;
+    timeZone = static_cast<int32_t>((time_tm.tm_isdst > 0)? ::timezone - 3600: ::timezone);
 #endif
 }
 
 DateTime_t::DateTime_t(const time_t &unixTime)
 {
-    struct tm time_tm;
-    memset(&time_tm, 0, sizeof(tm));
+    struct tm time_tm = {};
     localtime_r(&unixTime, &time_tm);
-    year = time_tm.tm_year + 1900;
-    month = time_tm.tm_mon + 1;
-    day = time_tm.tm_mday;
-    hour =  time_tm.tm_hour;
-    minute =  time_tm.tm_min;
-    sec =  time_tm.tm_sec;
-    weekDay =  time_tm.tm_wday;
+    year = static_cast<int16_t>(time_tm.tm_year + 1900);
+    month = static_cast<char>(time_tm.tm_mon + 1);
+    day = static_cast<char>(time_tm.tm_mday);
+    hour =  static_cast<char>(time_tm.tm_hour);
+    minute =  static_cast<char>(time_tm.tm_min);
+    sec =  static_cast<char>(time_tm.tm_sec);
+    weekDay =  static_cast<char>(time_tm.tm_wday);
     this->unixTime = unixTime;
 
 #ifdef HAVE_ALTZONE
     timeZone = (time_tm.tm_isdst > 0)? ::altzone: ::timezone;
 #else
-    timeZone = (time_tm.tm_isdst > 0)? ::timezone - 3600: ::timezone;
+    timeZone = static_cast<int32_t>((time_tm.tm_isdst > 0)? ::timezone - 3600: ::timezone);
 #endif
 }
 
 DateTime_t::DateTime_t(time_t unixTime, int timeZone)
-    : timeZone(timeZone)
+    : unixTime(unixTime), timeZone(timeZone)
 {
-    struct tm time_tm;
-    memset(&time_tm, 0, sizeof(tm));
+    struct tm time_tm = {};
     localtime_r(&unixTime, &time_tm);
-    year = time_tm.tm_year + 1900;
-    month = time_tm.tm_mon + 1;
-    day = time_tm.tm_mday;
-    hour =  time_tm.tm_hour;
-    minute =  time_tm.tm_min;
-    sec =  time_tm.tm_sec;
-    weekDay =  time_tm.tm_wday;
-    this->unixTime = unixTime;
+    year = static_cast<int16_t>(time_tm.tm_year + 1900);
+    month = static_cast<char>(time_tm.tm_mon + 1);
+    day = static_cast<char>(time_tm.tm_mday);
+    hour =  static_cast<char>(time_tm.tm_hour);
+    minute =  static_cast<char>(time_tm.tm_min);
+    sec =  static_cast<char>(time_tm.tm_sec);
+    weekDay =  static_cast<char>(time_tm.tm_wday);
 }
 
 DateTime_t::DateTime_t(const struct tm &tm)
-    : timeZone(0)
-{
-    year = tm.tm_year + 1900;
-    month = tm.tm_mon + 1;
-    day = tm.tm_mday;
-    hour = tm.tm_hour;
-    minute = tm.tm_min;
-    sec =  tm.tm_sec;
-    weekDay = tm.tm_wday;
-    this->unixTime = mktime(const_cast<struct tm *>(&tm));
-}
+    : year(static_cast<int16_t>(tm.tm_year + 1900)),
+      month(static_cast<char>(tm.tm_mon + 1)),
+      day(static_cast<char>(tm.tm_mday)),
+      hour(static_cast<char>(tm.tm_hour)),
+      minute(static_cast<char>(tm.tm_min)),
+      sec(static_cast<char>(tm.tm_sec)),
+      weekDay(static_cast<char>(tm.tm_wday)),
+      unixTime(mktime(const_cast<struct tm *>(&tm))),
+      timeZone(0)
+{}
 
-DateTime_t::DateTime_t()
-{
-    time_t unix_time =  time(0);
-    struct tm time_tm;
-    memset(&time_tm, 0, sizeof(tm));
+DateTime_t::DateTime_t() {
+    time_t unix_time =  time(nullptr);
+    struct tm time_tm = {};
     localtime_r(&unix_time, &time_tm);
-    year = time_tm.tm_year + 1900;
-    month = time_tm.tm_mon + 1;
-    day = time_tm.tm_mday;
-    hour =  time_tm.tm_hour;
-    minute =  time_tm.tm_min;
-    sec =  time_tm.tm_sec;
-    weekDay =  time_tm.tm_wday;
-    this->unixTime = unixTime;
+    year = static_cast<int16_t>(time_tm.tm_year + 1900);
+    month = static_cast<char>(time_tm.tm_mon + 1);
+    day = static_cast<char>(time_tm.tm_mday);
+    hour =  static_cast<char>(time_tm.tm_hour);
+    minute =  static_cast<char>(time_tm.tm_min);
+    sec =  static_cast<char>(time_tm.tm_sec);
+    weekDay =  static_cast<char>(time_tm.tm_wday);
+    this->unixTime = mktime(&time_tm);;
 
 #ifdef HAVE_ALTZONE
     timeZone = (time_tm.tm_isdst > 0)? ::altzone: ::timezone;
 #else
-    timeZone = (time_tm.tm_isdst > 0)? ::timezone - 3600: ::timezone;
+    timeZone = static_cast<int32_t>((time_tm.tm_isdst > 0)? ::timezone - 3600: ::timezone);
 #endif
 }
 
@@ -172,7 +162,7 @@ DateTime_t::DateTime_t(const std::string &isoFormat)
 {
     parseISODateTime(isoFormat.data(), isoFormat.size(), year, month, day, hour,
                      minute, sec, timeZone);
-    struct tm time_tm;
+    struct tm time_tm = {};
     time_tm.tm_year = year - 1900;
     time_tm.tm_mon = month - 1;
     time_tm.tm_mday = day;
@@ -181,12 +171,11 @@ DateTime_t::DateTime_t(const std::string &isoFormat)
     time_tm.tm_sec = sec;
     time_tm.tm_isdst = -1; // we know nothing about daylight savings time
     time_t time_l = mktime(&time_tm);
-    struct tm timeValid;
-    memset(&timeValid, 0, sizeof(tm));
+    struct tm timeValid = {};
     localtime_r(&time_l, &timeValid);
 
     this->unixTime =  time_l;
-    this->weekDay = timeValid.tm_wday;
+    this->weekDay = static_cast<char>(timeValid.tm_wday);
 }
 
 DateTime_t::DateTime_t(short year, char month, char day,
@@ -258,4 +247,4 @@ bool FRPC::DateTime_t::isSaveLightDay() const {
     return timeValid.tm_isdst;
 }
 
-}
+} // namespace FRPC

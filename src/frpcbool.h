@@ -47,6 +47,7 @@ class FRPC_DLLEXPORT Bool_t: public Value_t {
     friend class Pool_t;
 public:
     enum{TYPE = 0x02};
+
     using value_type = bool;
 
     /**
@@ -59,35 +60,23 @@ public:
         @return @b unsigned @b short always
         @li @b Bool_t::TYPE - identificator of boolean value
     */
-    unsigned short getType() const override
-    {
-        return TYPE;
-    }
+    TypeTag_t getType() const override {return TYPE;}
     /**
         @brief Getting typename of value
         @return @b const @b char* always
         @li @b "Bool" - typename of Bool_t
     */
-    const char* getTypeName() const override
-    {
-        return "bool";
-    }
+    const char* getTypeName() const override {return "bool";}
     /**
         @brief Getting internal boolean value
         @return  @b bool - internal value
     */
-    bool getValue() const
-    {
-        return value;
-    }
+    bool getValue() const {return value;}
 
     /**
         @brief Operator bool const
     */
-    operator bool() const
-    {
-        return value;
-    }
+    operator bool() const {return value;}
 
     /**
         @brief Method to clone/copy Bool_t
@@ -124,8 +113,7 @@ private :
     @return  If Value_t  can  retype to Bool_t return reference to Bool_t
     @n If Value_t can't retype to Bool_t throw exception TypeError_t
 */
-inline FRPC_DLLEXPORT Bool_t& Bool(Value_t &value)
-{
+inline FRPC_DLLEXPORT Bool_t& Bool(Value_t &value) {
     auto *boolean = dynamic_cast<Bool_t*>(&value);
 
     if(!boolean)
@@ -135,8 +123,7 @@ inline FRPC_DLLEXPORT Bool_t& Bool(Value_t &value)
     return *boolean;
 }
 
-inline FRPC_DLLEXPORT const Bool_t& Bool(const Value_t &value)
-{
+inline FRPC_DLLEXPORT const Bool_t& Bool(const Value_t &value) {
     const auto *boolean = dynamic_cast<const Bool_t*>(&value);
 
     if(!boolean)

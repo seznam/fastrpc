@@ -55,13 +55,13 @@
 namespace FRPC {
 namespace {
 
-inline void write(Writer_t &writer, const std::string &value) {
+void write(Writer_t &writer, const std::string &value) {
     if (!value.empty())
-        writer.write(value.data(), value.size());
+        writer.write(value.data(), static_cast<uint32_t>(value.size()));
 }
 
 template <typename Context_t>
-inline bool dec(Context_t &ctx, Writer_t &writer) {
+bool dec(Context_t &ctx, Writer_t &writer) {
     if (ctx.empty()) return true;
     switch (ctx.back().second) {
     case 0:
@@ -123,7 +123,7 @@ void quote(Writer_t &writer, const char *ipos, unsigned int size) {
 
 JSONMarshaller_t::JSONMarshaller_t(Writer_t &writer,
                                    const ProtocolVersion_t &protocolVersion)
-        : writer(writer), ctx()
+        : writer(writer)
 {
     if (protocolVersion.versionMajor > FRPC_MAJOR_VERSION)
         throw Error_t("Not supported protocol version");
@@ -158,7 +158,7 @@ void JSONMarshaller_t::packArray(unsigned int numOfItems) {
         dec(ctx, writer);
 
     } else {
-        ctx.push_back(std::make_pair(ARRAY, numOfItems));
+        ctx.emplace_back(ARRAY, numOfItems);
         writer.write("[", 1);
     }
 }
@@ -170,7 +170,7 @@ void JSONMarshaller_t::packStruct(unsigned int numOfMembers) {
         dec(ctx, writer);
 
     } else {
-        ctx.push_back(std::make_pair(STRUCT, numOfMembers));
+        ctx.emplace_back(STRUCT, numOfMembers);
         writer.write("{", 1);
     }
 }

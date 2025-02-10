@@ -39,47 +39,68 @@
 
 #define FRPC_GET_DATA_TYPE_INFO( data ) ((data) & 0x07 )
 
+namespace FRPC {
+namespace {
+
 #ifdef _DEBUG
 #define debugf(...) printf(__VA_ARGS__)
 #else
-static void noop() {}
+void noop() {}
 #define debugf(...) noop()
 #endif
 
-namespace FRPC {
-
 // 1 gig elements max. hard limit
-static const size_t ELEMENT_SIZE_LIMIT = 1 << 30;
+const size_t ELEMENT_SIZE_LIMIT = 1u << 30u;
 
 // unmarshaller state machine states
-enum{S_MAGIC = 0, S_BODY, S_METHOD_NAME, S_METHOD_NAME_LEN,
-     S_METHOD_CALL, S_METHOD_RESPONSE, S_FAULT,
-     S_INT, S_BOOL, S_DOUBLE, S_STRING, S_DATETIME, S_BINARY, S_INTP8, S_INTN8,
-     S_STRUCT, S_ARRAY, S_NULLTYPE,
-     S_MEMBER_NAME, S_VALUE_TYPE, S_REAL_VALUE_TYPE, S_STRING_LEN, S_BINARY_LEN};
+enum {
+    S_MAGIC = 0,
+    S_BODY,
+    S_METHOD_NAME,
+    S_METHOD_NAME_LEN,
+    S_METHOD_CALL,
+    S_METHOD_RESPONSE,
+    S_FAULT,
+    S_INT,
+    S_BOOL,
+    S_DOUBLE,
+    S_STRING,
+    S_DATETIME,
+    S_BINARY,
+    S_INTP8,
+    S_INTN8,
+    S_STRUCT,
+    S_ARRAY,
+    S_NULLTYPE,
+    S_MEMBER_NAME,
+    S_VALUE_TYPE,
+    S_REAL_VALUE_TYPE,
+    S_STRING_LEN,
+    S_BINARY_LEN
+};
 
 /** Decodes zigzag encoded integer back into native integer.
  */
-static int64_t zigzagDecode(int64_t s) {
-    uint64_t n = static_cast<uint64_t>(s);
-    return static_cast<int64_t>((n >> 1) ^ (-(s & 1)));
+int64_t zigzagDecode(int64_t s) {
+    auto n = static_cast<uint64_t>(s);
+    return static_cast<int64_t>((n >> 1u) ^ (-(s & 1)));
 }
 
-static uint8_t getValueType(uint8_t data) {
+uint8_t getValueType(uint8_t data) {
     return ((data) >> 3);
 }
 
 /** Read value from type tag and check its value according to version */
-static uint8_t getVersionedLengthSize(bool longer, uint8_t data) {
-    if (longer) return (data & 0x7) + 1;
-    uint8_t val = (data & 0x7);
+uint8_t getVersionedLengthSize(bool longer, uint8_t data) {
+    if (longer) return (data & 0x7u) + 1;
+    uint8_t val = (data & 0x7u);
     if (val == 0 || val > 4) {
         throw StreamError_t("Illegal element length");
     }
     return val;
 }
 
-static int64_t getInt64(const char *data, size_t size) {
+int64_t getInt64(const char *data, size_t size) {
     union {
         char tmp[8];
         int64_t number;
@@ -98,7 +119,7 @@ static int64_t getInt64(const char *data, size_t size) {
     return number;
 }
 
-static int32_t getInt32(const char *data, size_t size) {
+int32_t getInt32(const char *data, size_t size) {
     union {
         char tmp[4];
         int32_t number;
@@ -117,7 +138,7 @@ static int32_t getInt32(const char *data, size_t size) {
 
 
 // needs 8 bytes of data
-static double getDouble(const char *data) {
+double getDouble(const char *data) {
 #ifdef FRPC_BIG_ENDIAN
     char tmp[8] = {
         data[7], data[6], data[5], data[4], data[3], data[2], data[1], data[0]
@@ -130,29 +151,29 @@ static double getDouble(const char *data) {
 }
 
 // needs 10 bytes of data
-static DateTimeInternal_t getDateTime(const char *data) {
+DateTimeInternal_t getDateTime(const char *data) {
     DateTimeInternal_t dateTime;
-    dateTime.year  = (data[9] << 3) | ((data[8] & 0xe0) >> 5);
-    dateTime.month = (data[8] & 0x1e) >> 1;
-    dateTime.day = ((data[8] & 0x01) << 4) |(((data[7] & 0xf0) >> 4));
-    dateTime.hour = ((data[7] & 0x0f) << 1) | ((data[6] & 0x80) >> 7);
-    dateTime.minute = ((data[6] & 0x7e) >> 1);
-    dateTime.sec = ((data[6] & 0x01) << 5) | ((data[5] & 0xf8) >> 3);
-    dateTime.weekDay = (data[5] & 0x07);
+    dateTime.year  = static_cast<uint16_t>((data[9] << 3) | ((data[8] & 0xe0) >> 5));
+    dateTime.month = static_cast<uint8_t>((data[8] & 0x1e) >> 1);
+    dateTime.day = static_cast<uint8_t>(((data[8] & 0x01) << 4) |(((data[7] & 0xf0) >> 4)));
+    dateTime.hour = static_cast<uint8_t>(((data[7] & 0x0f) << 1) | ((data[6] & 0x80) >> 7));
+    dateTime.minute = static_cast<uint8_t>(((data[6] & 0x7e) >> 1));
+    dateTime.sec = static_cast<uint8_t>(((data[6] & 0x01) << 5) | ((data[5] & 0xf8) >> 3));
+    dateTime.weekDay = static_cast<uint8_t>((data[5] & 0x07));
     dateTime.unixTime = getInt32(&data[1], 4);
     dateTime.timeZone = data[0];
     return dateTime;
 }
 
 // needs 14 bytes of data
-static DateTimeInternal_t getDateTimeV3(const char *data) {
+DateTimeInternal_t getDateTimeV3(const char *data) {
     DateTimeInternal_t dateTime;
-    dateTime.year  = (data[13] << 3) | ((data[12] & 0xe0) >> 5);
-    dateTime.month = (data[12] & 0x1e) >> 1;
-    dateTime.day = ((data[12] & 0x01) << 4) |(((data[11] & 0xf0) >> 4));
-    dateTime.hour = ((data[11] & 0x0f) << 1) | ((data[10] & 0x80) >> 7);
-    dateTime.minute = ((data[10] & 0x7e) >> 1);
-    dateTime.sec = ((data[10] & 0x01) << 5) | ((data[9] & 0xf8) >> 3);
+    dateTime.year  = static_cast<uint16_t>((data[13] << 3) | ((data[12] & 0xe0) >> 5));
+    dateTime.month = static_cast<uint8_t>((data[12] & 0x1e) >> 1);
+    dateTime.day = static_cast<uint8_t>(((data[12] & 0x01) << 4) |(((data[11] & 0xf0) >> 4)));
+    dateTime.hour = static_cast<uint8_t>(((data[11] & 0x0f) << 1) | ((data[10] & 0x80) >> 7));
+    dateTime.minute = static_cast<uint8_t>(((data[10] & 0x7e) >> 1));
+    dateTime.sec = static_cast<uint8_t>(((data[10] & 0x01) << 5) | ((data[9] & 0xf8) >> 3));
     dateTime.weekDay = (data[9] & 0x07);
     int64_t time64 = 0;
     time64 = getInt64(&data[1], 8);
@@ -168,6 +189,8 @@ static DateTimeInternal_t getDateTimeV3(const char *data) {
     dateTime.timeZone = data[0];
     return dateTime;
 }
+
+} // namespace
 
 class BinUnMarshaller_t::Driver_t {
 public:
@@ -187,7 +210,7 @@ public:
             size_t remains = self.dataWanted - self.buffer.size();
             uint64_t toRead = std::min<uint64_t>(remains, inputSize);
             self.buffer.append(&input[0], toRead);
-            inputSize -= toRead;
+            inputSize -= static_cast<uint32_t>(toRead);
             input += toRead;
         }
     }
@@ -203,7 +226,7 @@ public:
             self.buffer.reserve();   // TODO is it good?
         } else {
             input += self.dataWanted;
-            inputSize -= self.dataWanted;
+            inputSize -= static_cast<uint32_t>(self.dataWanted);
         }
         self.dataWanted = newDataWanted;
         newDataWanted = 0;
@@ -349,7 +372,7 @@ public:
         if (driver.faultState() != 2) {
             throw StreamError_t("Only second value of fault can be string");
         }
-        driver.dataBuilder()->buildFault(driver.errNo(), data, size);
+        driver.dataBuilder()->buildFault(static_cast<int>(driver.errNo()), data, size);
         driver.faultState() = 3;
     }
 
@@ -357,7 +380,7 @@ public:
         if (driver.faultState() != 2) {
             throw StreamError_t("Only second value of fault can be string");
         }
-        driver.dataBuilder()->buildFault(driver.errNo(), data);
+        driver.dataBuilder()->buildFault(static_cast<int>(driver.errNo()), data);
         driver.faultState() = 3;
     }
 
@@ -458,14 +481,14 @@ static void unMarshallInternal(BinUnMarshaller_t::Driver_t &d, char reqType) {
         }
         break;
         case S_METHOD_NAME: {
-            dataBuilder->buildMethodCall(d.data(), d.wanted());
+            dataBuilder->buildMethodCall(d.data(), static_cast<uint32_t>(d.wanted()));
             d.newDataWanted = 1;
             d.state = S_VALUE_TYPE;
         }
         break;
         case S_MEMBER_NAME: {
-            dataBuilder->buildStructMember(d.data(), d.wanted());
-            debugf( "struct member: %s \n",
+            dataBuilder->buildStructMember(d.data(), static_cast<uint32_t>(d.wanted()));
+            debugf("struct member: %s \n",
                     std::string(d.data(), d.wanted()).c_str());
 
             d.newDataWanted = 1;
@@ -598,7 +621,7 @@ static void unMarshallInternal(BinUnMarshaller_t::Driver_t &d, char reqType) {
         break;
         case S_STRING: {
             // report whole string
-            dataBuilder->buildString(d.data(), d.wanted());
+            dataBuilder->buildString(d.data(), static_cast<uint32_t>(d.wanted()));
             d.finalizeValue = true;
             d.newDataWanted = 1;
             d.state = S_VALUE_TYPE;
@@ -611,13 +634,13 @@ static void unMarshallInternal(BinUnMarshaller_t::Driver_t &d, char reqType) {
             if (d.newDataWanted >= ELEMENT_SIZE_LIMIT)
                 throw StreamError_t("Binary entity too large");
 
-            debugf( "binary size: %lu\n", d.newDataWanted);
+            debugf("binary size: %lu\n", d.newDataWanted);
             d.state = S_BINARY;
         }
         break;
         case S_BINARY: {
             // report whole data
-            dataBuilder->buildBinary(d.data(), d.wanted());
+            dataBuilder->buildBinary(d.data(), static_cast<uint32_t>(d.wanted()));
             d.finalizeValue = true;
             d.newDataWanted = 1;
             d.state = S_VALUE_TYPE;
@@ -630,7 +653,7 @@ static void unMarshallInternal(BinUnMarshaller_t::Driver_t &d, char reqType) {
             }
 
             dataBuilder->buildInt(number);
-            debugf( "int number: %li\n", number);
+            debugf("int number: %li\n", number);
             d.finalizeValue = true;
             d.newDataWanted = 1;
             d.state = S_VALUE_TYPE;
@@ -700,15 +723,15 @@ static void unMarshallInternal(BinUnMarshaller_t::Driver_t &d, char reqType) {
             if (static_cast<size_t>(acc) >= ELEMENT_SIZE_LIMIT)
                 throw StreamError_t("Struct entity too large");
 
-            dataBuilder->openStruct(acc);
+            dataBuilder->openStruct(static_cast<uint32_t>(acc));
 
             if (acc != 0) {
-                d.pushEntity(STRUCT, acc);
+                d.pushEntity(STRUCT, static_cast<uint32_t>(acc));
             } else {
                 dataBuilder->closeStruct();
                 d.finalizeValue = true;
             }
-            debugf( "struct size: %li \n", acc);
+            debugf("struct size: %li \n", acc);
             d.newDataWanted = 1;
             d.state = S_VALUE_TYPE;
         }
@@ -729,15 +752,15 @@ static void unMarshallInternal(BinUnMarshaller_t::Driver_t &d, char reqType) {
             if (static_cast<size_t>(acc) >= ELEMENT_SIZE_LIMIT)
                     throw StreamError_t("Array entity too large");
 
-            dataBuilder->openArray(acc);
+            dataBuilder->openArray(static_cast<uint32_t>(acc));
 
             if (acc != 0) {
-                d.pushEntity(ARRAY, acc);
+                d.pushEntity(ARRAY, static_cast<uint32_t>(acc));
             } else {
                 dataBuilder->closeArray();
                 d.finalizeValue = true;
             }
-            debugf( "array size: %li\n", acc);
+            debugf("array size: %li\n", acc);
             d.newDataWanted = 1;
             d.state = S_VALUE_TYPE;
         }
@@ -794,4 +817,4 @@ void BinUnMarshaller_t::resetToFaultState() {
     state = S_VALUE_TYPE;
 }
 
-}
+} // namespace FRPC

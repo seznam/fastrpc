@@ -57,7 +57,11 @@
 #    define MSG_NOSIGNAL 0
 #endif
 
-using namespace FRPC;
+namespace FRPC {
+namespace {
+const unsigned int HTTP_BUFF_LENGTH = 1u << 16u;
+
+} // namespace
 
 HTTPIO_t::~HTTPIO_t() {
     // check whether socket is valid fd and close it
@@ -154,11 +158,6 @@ int HTTPIO_t::getHeaderValue(const std::string &line, std::string &name,
     return 0;
 }
 
-namespace
-{
-const unsigned int HTTP_BUFF_LENGTH = 1 << 16;
-}
-
 std::string HTTPIO_t::readLine(bool checkLimit)
 {
     return readLineOpt(checkLimit, false);
@@ -182,7 +181,7 @@ std::string HTTPIO_t::readLineOpt(bool checkLimit, bool optional)
     for (;;)
     {
         // èekání na data na socketu
-        int ready = TEMP_FAILURE_RETRY(
+        auto ready = TEMP_FAILURE_RETRY(
                 poll(&pfd, 1, readTimeout < 0 ? -1 : readTimeout));
 
         switch (ready)
@@ -203,7 +202,7 @@ std::string HTTPIO_t::readLineOpt(bool checkLimit, bool optional)
         }
 
         // pøeèteme data ze socketu, ale neostraníme je z receive bufferu
-        int bytes = TEMP_FAILURE_RETRY(
+        auto bytes = TEMP_FAILURE_RETRY(
                 recv(fd, buff, HTTP_BUFF_LENGTH, MSG_PEEK | MSG_NOSIGNAL));
         switch (bytes)
         {
@@ -230,7 +229,7 @@ std::string HTTPIO_t::readLineOpt(bool checkLimit, bool optional)
         if (end)
         {
             // pokud je znak <LF> nalezen, vyèti pouze potøebný poèet znakù
-            unsigned int toRead = end - buff + 1;
+            auto toRead = end - buff + 1;
             // check line size limit
             if (checkLimit && (lineSizeLimit >= 0) &&
                     ((lineBuff.length() + toRead)
@@ -277,7 +276,7 @@ std::string HTTPIO_t::readLineOpt(bool checkLimit, bool optional)
         else
         {
             // jinak vyèteme v¹echna dostupná data
-            unsigned int toRead = bytes;
+            auto toRead = bytes;
             // check line size limit
             if (checkLimit && (lineSizeLimit >= 0) &&
                     ((lineBuff.length() + toRead)
@@ -329,7 +328,7 @@ void HTTPIO_t::sendData(const char *data, size_t length, bool watchForResponse)
 
     for (;;)
     {
-        int ready = TEMP_FAILURE_RETRY(
+        auto ready = TEMP_FAILURE_RETRY(
                 poll(&pfd, 1, writeTimeout < 0 ? -1 : writeTimeout));
 
         switch (ready)
@@ -349,9 +348,9 @@ void HTTPIO_t::sendData(const char *data, size_t length, bool watchForResponse)
         if (watchForResponse && (pfd.revents & POLLIN))
             throw ResponseError_t();
 
-        int toWrite = (length > HTTP_BUFF_LENGTH)
+        auto toWrite = (length > HTTP_BUFF_LENGTH)
                       ? HTTP_BUFF_LENGTH : length;
-        int bytes = TEMP_FAILURE_RETRY(send(fd, data, toWrite, MSG_NOSIGNAL));
+        auto bytes = TEMP_FAILURE_RETRY(send(fd, data, toWrite, MSG_NOSIGNAL));
         switch (bytes)
         {
         case 0:
@@ -411,7 +410,7 @@ void HTTPIO_t::readBlock(long int contentLength_, DataSink_t &data)
     for (;;)
     {
         // èekání na data na socketu
-        int ready = TEMP_FAILURE_RETRY(
+        auto ready = TEMP_FAILURE_RETRY(
                 poll(&pfd, 1, (readTimeout < 0) ? -1 : readTimeout));
 
         switch (ready)
@@ -428,9 +427,9 @@ void HTTPIO_t::readBlock(long int contentLength_, DataSink_t &data)
         }
 
         // pøeèteme data ze socketu
-        int toRead = (contentLength_ < 0 || contentLength > HTTP_BUFF_LENGTH)
+        auto toRead = (contentLength_ < 0 || contentLength > HTTP_BUFF_LENGTH)
                      ? HTTP_BUFF_LENGTH : contentLength;
-        int bytes = TEMP_FAILURE_RETRY(recv(fd, buff, toRead, MSG_NOSIGNAL));
+        auto bytes = TEMP_FAILURE_RETRY(recv(fd, buff, toRead, MSG_NOSIGNAL));
         switch (bytes)
         {
         case 0:
@@ -459,7 +458,7 @@ void HTTPIO_t::readBlock(long int contentLength_, DataSink_t &data)
                                          "is too large (%u > %d)",
                      data.written(), bodySizeLimit);
 
-            data.write(buff, bytes);
+            data.write(buff, static_cast<uint32_t>(bytes));
             // pokud ji¾ není co zapsat -> konec
             if (!contentLength)
                 return;
@@ -608,3 +607,5 @@ void HTTPIO_t::readContent(HTTPHeader_t &header, DataSink_t &data,
         return readBlock(-1, data);
     }
 }
+
+} // namespace FRPC

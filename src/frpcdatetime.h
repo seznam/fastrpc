@@ -33,13 +33,13 @@
 #ifndef FRPCDATETIME_H
 #define FRPCDATETIME_H
 
-#include <time.h>
+#include <ctime>
 #include <string>
 
 #include <frpcvalue.h>
+#include <frpctypeerror.h>
 
-namespace FRPC
-{
+namespace FRPC {
 class Pool_t;
 
 /**
@@ -52,52 +52,49 @@ class FRPC_DLLEXPORT DateTime_t : public Value_t
 
 public:
     enum{ TYPE = 0x05 };
+
     /**
         @brief Default destructor
     */
-    virtual ~DateTime_t();
+    ~DateTime_t() override;
+
     /**
         @brief Getting type of value
         @return  @b unsigned @b short always
         @li @b DateTime_t::TYPE - identificator of datetime value
     */
-    virtual unsigned short getType() const
-    {
-        return TYPE;
-    }
+    TypeTag_t getType() const override {return TYPE;}
     /**
         @brief Getting typename of value
         @return @b const @b char* always
         @li @b "DateTime" - typename of DateTime_t
     */
-    virtual const char* getTypeName() const
-    {
-        return "dateTime";
-    }
+    const char* getTypeName() const override {return "dateTime";}
+
     /**
         @brief Get localtime day number.
         @return Day (1-31). */
-    short getDay() const;
+    int16_t getDay() const;
     /**
         @brief Get localtime hours.
         @return Hour (0-23).
     */
-    short getHour() const;
+    int16_t getHour() const;
     /**
         @brief Get localtime minutes.
         @return Minute (0-59).
     */
-    short getMin() const;
+    int16_t getMin() const;
     /**
         @brief Get localtime month number.
         @return Month (1-12).
     */
-    short getMonth() const;
+    int16_t getMonth() const;
     /**
         @brief Get localtime seconds.
         @return Second (0-59).
     */
-    short getSec() const;
+    int16_t getSec() const;
     /**
         @brief Get localtime shift in sec relative to GMT (should be local timezone).
 
@@ -111,7 +108,7 @@ public:
         @brief Get localtime year number.
         @return Year (1600-3647).
     */
-    short getYear() const;
+    int16_t getYear() const;
     /**
         @brief Get common unix time number (in UTC).
         @return Number of secs from 1970-01-01 00:00:00 UTC.
@@ -121,7 +118,7 @@ public:
         @brief  Get localtime day of week.
         @return Day of week (0=sunday, 1=monday, ..., 6=saturday).
     */
-    short getDayOfWeek() const;
+    int16_t getDayOfWeek() const;
     /**
         @brief  Return true if datetime have save light day.
         @return true if datetime have is save light day.
@@ -132,12 +129,13 @@ public:
         @brief Method to clone/copy DateTime_t
         @param newPool is reference of Pool_t which is used for allocate objects
     */
-    virtual Value_t& clone(Pool_t &newPool) const;
+    Value_t& clone(Pool_t &newPool) const override;
     /**
         @brief get iso format.
         @return iso format string
     */
     std::string isoFormat() const;
+
     ///static members
     static const DateTime_t &FRPC_EPOCH;
     static const DateTime_t &FRPC_NULL;
@@ -161,7 +159,7 @@ private:
         @param unixTime
         @param timeZone as difference between UTC and localtime in seconds
     */
-    DateTime_t(short year, char month, char day,
+    DateTime_t(int16_t year, char month, char day,
                char hour, char min, char sec, char weekDay,
                time_t unixTime, int timeZone);
 
@@ -175,7 +173,7 @@ private:
         @param min -   Minute is 0 - 59
         @param sec -   Second is 0 - 59
     */
-    DateTime_t(short year, char month, char day,
+    DateTime_t(int16_t year, char month, char day,
                char hour, char min, char sec);
 
     /**
@@ -208,12 +206,12 @@ private:
                No additional check will be performed. Weekday and zone will be
                set to 0 .
     */
-    explicit DateTime_t(short year, char month, char day,
+    explicit DateTime_t(int16_t year, char month, char day,
                         char hour, char min, char sec,
                         time_t unixTime);
 
 
-    short year;        /// year
+    int16_t year;      /// year
     char month;        /// month
     char day;          /// day
     char hour;         /// hour
@@ -231,9 +229,8 @@ private:
     @return  If Value_t  can  retype to DateTime_t return reference to DateTime_t
     @n If Value_t can't retype to DateTime_t throw exception TypeError_t
 */
-inline FRPC_DLLEXPORT DateTime_t& DateTime(Value_t &value)
-{
-    DateTime_t *dateTime = dynamic_cast<DateTime_t*>(&value);
+inline FRPC_DLLEXPORT DateTime_t& DateTime(Value_t &value) {
+    auto *dateTime = dynamic_cast<DateTime_t*>(&value);
 
     if(!dateTime)
         throw TypeError_t::format("Type is %s but not dateTime",
@@ -249,9 +246,8 @@ inline FRPC_DLLEXPORT DateTime_t& DateTime(Value_t &value)
     @return  If Value_t  can  retype to DateTime_t return reference to DateTime_t
     @n If Value_t can't retype to DateTime_t throw exception TypeError_t
 */
-inline FRPC_DLLEXPORT const DateTime_t& DateTime(const Value_t &value)
-{
-    const DateTime_t *dateTime = dynamic_cast<const DateTime_t*>(&value);
+inline FRPC_DLLEXPORT const DateTime_t& DateTime(const Value_t &value) {
+    const auto *dateTime = dynamic_cast<const DateTime_t*>(&value);
 
     if(!dateTime)
         throw TypeError_t::format("Type is %s but not dateTime",
@@ -260,6 +256,6 @@ inline FRPC_DLLEXPORT const DateTime_t& DateTime(const Value_t &value)
     return *dateTime;
 }
 
-};
+} // namespace FRPC
 
 #endif

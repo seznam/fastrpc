@@ -34,49 +34,42 @@
 #define FRPCNULL_H
 
 #include <frpcvalue.h>
-#include <typeinfo>
 
-namespace FRPC
-{
+namespace FRPC {
 class Pool_t;
 
 /**
 @brief Null type
 @author Miroslav Talasek
 */
-class FRPC_DLLEXPORT  Null_t : public Value_t
-{
+class FRPC_DLLEXPORT Null_t: public Value_t {
     friend class Pool_t;
 public:
     enum{TYPE = 0x0C};
+
     /**
         @brief Destructor
     */
-    virtual ~Null_t();
+    ~Null_t() override;
+
     /**
         @brief Getting type of value
         @return @b unsigned @b short always
         @li @b Null_t::TYPE - identificator of null value
     */
-    virtual unsigned short getType() const
-    {
-        return TYPE;
-    }
+    TypeTag_t getType() const override {return TYPE;}
     /**
         @brief Getting typename of value
         @return @b const @b char* always
         @li @b "Null" - typename of Null_t
     */
-    virtual const char* getTypeName() const
-    {
-        return "null";
-    }
+    const char* getTypeName() const override {return "null";}
 
     /**
         @brief Method to clone/copy Null_t
         @param newPool is reference of Pool_t which is used for allocate objects
     */
-    virtual Value_t& clone(Pool_t &newPool) const;
+    Value_t& clone(Pool_t &newPool) const override;
 
 private :
     /**
@@ -87,15 +80,10 @@ private :
     static Null_t staticValue;
 };
 
-inline FRPC_DLLEXPORT bool isNull(const Value_t &value)
-{
-    if (dynamic_cast<const Null_t*>(&value)) {
-        return true;
-    } else {
-        return false;
-    }
+inline FRPC_DLLEXPORT bool isNull(const Value_t &value) {
+    return dynamic_cast<const Null_t*>(&value) != nullptr;
 }
 
-};
+} // namespace FRPC
 
 #endif

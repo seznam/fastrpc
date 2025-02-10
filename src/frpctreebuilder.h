@@ -124,7 +124,7 @@ public:
     const std::string getUnMarshaledMethodName() {return methodName;}
 
     const std::string getUnMarshaledErrorMessage() {
-        if(errMsg.size() != 0)
+        if (errMsg.size() != 0)
             return errMsg;
         return "No data unmarshalled";
     }

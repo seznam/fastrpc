@@ -55,24 +55,24 @@ public:
     XmlMarshaller_t(Writer_t &writer,
                     const ProtocolVersion_t &protocolVersion);
 
-    virtual ~XmlMarshaller_t();
+    ~XmlMarshaller_t() override;
 
-    virtual void packArray(unsigned int numOfItems);
-    virtual void packBinary(const char* value, unsigned int size);
-    virtual void packBool(bool value);
-    virtual void packDateTime(short year, char month, char day, char hour,
+    void packArray(unsigned int numOfItems) override;
+    void packBinary(const char* value, unsigned int size) override;
+    void packBool(bool value) override;
+    void packDateTime(short year, char month, char day, char hour,
                               char min, char sec, char weekDay, time_t unixTime,
-                              int timeZone);
-    virtual void packDouble(double value);
-    virtual void packFault(int errNumber, const char* errMsg,
-                           unsigned int size);
-    virtual void packInt(Int_t::value_type value);
-    virtual void packMethodCall(const char* methodName, unsigned int size);
-    virtual void packMethodResponse();
-    virtual void packString(const char* value, unsigned int size);
-    virtual void packStruct(unsigned int numOfMembers);
-    virtual void packStructMember(const char* memberName, unsigned int size);
-    virtual void flush();
+                              int timeZone) override;
+    void packDouble(double value) override;
+    void packFault(int errNumber, const char* errMsg,
+                           unsigned int size) override;
+    void packInt(Int_t::value_type value) override;
+    void packMethodCall(const char* methodName, unsigned int size) override;
+    void packMethodResponse() override;
+    void packString(const char* value, unsigned int size) override;
+    void packStruct(unsigned int numOfMembers) override;
+    void packStructMember(const char* memberName, unsigned int size) override;
+    void flush() override;
 
     void packNull();
 
@@ -101,12 +101,12 @@ private:
             writer.write(" ",1);
     }
 #else
-    inline void packSpaces(unsigned int /*numSpaces*/)
+    void packSpaces(unsigned int /*numSpaces*/)
     {
     }
 #endif
 
-    inline void decrementItem()
+    void decrementItem()
     {
         //is vaule any ittem or no ?
         if(!entityStorage.empty())
@@ -165,6 +165,6 @@ private:
     ProtocolVersion_t protocolVersion;
 };
 
-};
+} // namespace FRPC
 
 #endif

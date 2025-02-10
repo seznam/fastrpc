@@ -35,11 +35,9 @@
 
 #include <sys/types.h>
 #include <sys/un.h>
-#include <string.h>
-#include <errno.h>
-#include <ctype.h>
+#include <cstring>
+#include <cerrno>
 #include <fcntl.h>
-#include <errno.h>
 
 #ifndef UNIX_PATH_MAX
 # define UNIX_PATH_MAX   108
@@ -50,14 +48,14 @@
 #include "frpchttperror.h"
 #include "frpcsocket.h"
 
-using namespace FRPC;
+namespace FRPC {
 
 Connector_t::Connector_t(const URL_t &url, int connectTimeout,
                          bool keepAlive)
     : url(url), connectTimeout(connectTimeout), keepAlive(keepAlive)
 {}
 
-Connector_t::~Connector_t() {}
+Connector_t::~Connector_t() = default;
 
 namespace {
     struct SocketCloser_t {
@@ -165,7 +163,7 @@ namespace {
         pfd.events = POLLOUT;
 
         // wait for connect completion or timeout
-        int ready = TEMP_FAILURE_RETRY(
+        auto ready = TEMP_FAILURE_RETRY(
                 ::poll(&pfd, 1, (connectTimeout < 0) ? -1 : connectTimeout));
 
         if (ready <= 0) {
@@ -328,7 +326,7 @@ void SimpleConnector_t::connectSocket(int &fd) {
 
 SimpleConnectorIPv6_t::SimpleConnectorIPv6_t(const URL_t &url, int connectTimeout,
                                      bool keepAlive)
-    : Connector_t(url, connectTimeout, keepAlive), addrInfo(0)
+    : Connector_t(url, connectTimeout, keepAlive), addrInfo(nullptr)
 {
     int errcode;
     struct addrinfo hints;
@@ -501,3 +499,5 @@ void SimpleConnectorUnix_t::connectSocket(int &fd) {
     }
 }
 #endif // !WIN32
+
+} // namespace FRPC
