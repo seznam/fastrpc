@@ -90,11 +90,6 @@ void Base64Writer_t::write(const char *data, unsigned int size) {
             writer.write(&B64_ALPHABET[*ud & 0x03f], 1);
             state.next(0, 2);
 
-            if (state.lineLen > 72) {
-                writer.write("\r\n", 2);
-                state.lineLen = 0;
-            }
-
             ++ud;
             if (!--size)
                 return;
