@@ -49,10 +49,9 @@ public:
 
     /// Complex encoder's state
     struct State_t {
-        State_t() : state(STATE_FIRST), lineLen(0), prev(0x0) {}
+        State_t() : state(STATE_FIRST), prev(0x0) {}
 
         void next(unsigned char pr, size_t count) {
-            lineLen += count;
             prev = pr;
             state = STATE_NEXT[state];
         }
@@ -60,11 +59,9 @@ public:
         void reset() {
             state = STATE_FIRST;
             prev = 0;
-            lineLen = 0;
         }
 
         States_t state;
-        size_t lineLen;
         unsigned char prev;
 
         static const States_t STATE_NEXT[3];
