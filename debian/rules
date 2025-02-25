@@ -6,8 +6,8 @@
 %:
 	dh $@
 
-override_dh_auto_install:
-	dh_auto_install
+override_dh_auto_vonfigure:
+	dh_auto_configure -- -Ddefault_library=both
 
 .PHONY: override_dh_strip
 override_dh_strip:
