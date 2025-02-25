@@ -1,3 +1,10 @@
+libfastrpc (8.1.16) stable; urgency=medium
+
+  * fix packaging
+  * fix tests
+
+ -- Lubos Vondra <lubos.vondra@firma.seznam.cz>  Tue, 25 Feb 2025 11:34:09 +0100
+
 libfastrpc (8.1.15) stable; urgency=medium
 
   * #! v8.1.14
