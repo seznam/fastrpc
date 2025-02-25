@@ -234,9 +234,9 @@ const char *errorTypeStr(ErrorType_t et) {
     case ERROR_UNEXPECTED_END:       return "unexpected data end";
     case ERROR_FAULT_TEST:           return "fault test";
     case ERROR_INVALID_TYPE:         return "unknown type";
-    case ERROR_INVALID_INT_SIZE:     return "bad int size";
-    case ERROR_INVALID_STR_SIZE:     return "bad string size";
-    case ERROR_INVALID_BIN_SIZE:     return "bad binary size";
+    case ERROR_INVALID_INT_SIZE:
+    case ERROR_INVALID_STR_SIZE:
+    case ERROR_INVALID_BIN_SIZE:     return "bad size";
     case ERROR_INVALID_STRUCT_KEY_SIZE: return "bad key length";
     case ERROR_INVALID_FAULT:        return "invalid fault";
     case ERROR_INVALID_BOOL_VALUE:   return "invalid bool value";
