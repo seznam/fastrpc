@@ -1,3 +1,9 @@
+libfastrpc (8.1.17) stable; urgency=medium
+
+  * create static library too
+
+ -- Lubos Vondra <lubos.vondra@firma.seznam.cz>  Tue, 25 Feb 2025 13:08:37 +0100
+
 libfastrpc (8.1.16) stable; urgency=medium
 
   * fix packaging
