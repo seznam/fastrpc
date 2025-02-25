@@ -1,3 +1,5 @@
 usr/include/*.h
 usr/lib/x86_64-linux-gnu/pkgconfig/libfastrpc.pc
-usr/lib/x86_64-linux-gnu/libfastrpc.so*
+usr/lib/x86_64-linux-gnu/libfastrpc.la
+usr/lib/x86_64-linux-gnu/libfastrpc.a
+usr/lib/x86_64-linux-gnu/libfastrpc.so
