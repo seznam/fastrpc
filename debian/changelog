@@ -1,3 +1,14 @@
+libfastrpc (8.1.14~lubosperpartes-1) stable; urgency=medium
+
+  * moving to std::unique_ptr, should be safe
+  * fix - this broke marshalling. reverting to a better solution
+  * removing more warnings
+  * removing warnings
+  * removing more warnings
+  * fixing warnings
+
+ -- Lubos Vondra <lubos.vondra@firma.seznam.cz>  Fri, 28 Feb 2025 14:37:07 +0100
+
 libfastrpc (8.1.14) stable; urgency=medium
 
   * initialize struct tm
