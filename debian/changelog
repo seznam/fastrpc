@@ -1,3 +1,10 @@
+libfastrpc (8.1.14~lubosperpartes-5) stable; urgency=medium
+
+  * revert error message change
+  * fix tests
+
+ -- Lubos Vondra <lubos.vondra@firma.seznam.cz>  Mon, 03 Mar 2025 15:06:29 +0100
+
 libfastrpc (8.1.14~lubosperpartes-4) stable; urgency=medium
 
   * fix: another big portion of warnings fixed
