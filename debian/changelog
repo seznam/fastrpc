@@ -1,3 +1,9 @@
+libfastrpc (8.1.14~lubosperpartes-7) stable; urgency=medium
+
+  * remove "\r\n" from frpcb64writer, it should not be there
+
+ -- Lubos Vondra <lubos.vondra@firma.seznam.cz>  Tue, 04 Mar 2025 10:36:51 +0100
+
 libfastrpc (8.1.14~lubosperpartes-6) stable; urgency=medium
 
   * fix: some other warnings
