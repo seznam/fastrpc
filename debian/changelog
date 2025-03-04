@@ -1,3 +1,9 @@
+libfastrpc (8.1.14~lubosperpartes-8) stable; urgency=medium
+
+  * in debug mode dump parameters into array to pass to the client logger
+
+ -- Lubos Vondra <lubos.vondra@firma.seznam.cz>  Tue, 04 Mar 2025 12:52:40 +0100
+
 libfastrpc (8.1.14~lubosperpartes-7) stable; urgency=medium
 
   * remove "\r\n" from frpcb64writer, it should not be there
