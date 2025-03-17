@@ -7,7 +7,7 @@
 	dh $@
 
 override_dh_auto_configure:
-»       dh_auto_configure -- --buildtype=debugoptimized -Ddefault_library=both --wrap-mode=nofallback
+	dh_auto_configure -- --buildtype=debugoptimized -Ddefault_library=both --wrap-mode=nofallback
 
 .PHONY: override_dh_strip
 override_dh_strip:
