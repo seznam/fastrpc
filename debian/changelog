@@ -1,3 +1,9 @@
+libfastrpc (8.1.14~lubosmeson-8) stable; urgency=medium
+
+  * fix rules syntax
+
+ -- Lubos Vondra <lubos.vondra@firma.seznam.cz>  Mon, 17 Mar 2025 13:08:27 +0100
+
 libfastrpc (8.1.14~lubosmeson-7) stable; urgency=medium
 
   * build type debugoptimized
