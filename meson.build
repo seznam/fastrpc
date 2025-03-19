@@ -3,7 +3,7 @@ project(
   'cpp',
   version: '8.1.14~lubosmeson-10',
   default_options: [
-    'cpp_std=c++11',
+    'cpp_std=c++14',
     'warning_level=2',
     'buildtype=debugoptimized',
     'wrap_mode=nofallback',
