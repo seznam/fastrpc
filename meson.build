@@ -6,7 +6,8 @@ project(
     'cpp_std=c++14',
     'warning_level=2',
     'buildtype=debugoptimized',
-    'wrap_mode=nofallback'
+    'wrap_mode=nofallback',
+    'default_library=both'
   ]
 )
 
