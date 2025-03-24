@@ -1,3 +1,10 @@
+libfastrpc (8.1.19) stable; urgency=medium
+
+  * fix building of package hopefully
+  * revert error message change
+
+ -- Lubos Vondra <lubos.vondra@firma.seznam.cz>  Mon, 24 Mar 2025 08:52:23 +0100
+
 libfastrpc (8.1.18) stable; urgency=medium
 
   * typo
