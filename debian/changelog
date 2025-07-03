@@ -1,3 +1,9 @@
+libfastrpc (8.2.0) stable; urgency=medium
+
+  * feat: support for secret values
+
+ -- Michal Bukovsky <michal.bukovsky@firma.seznam.cz>  Thu, 03 Jul 2025 17:47:17 +0100
+
 libfastrpc (8.1.19) stable; urgency=medium
 
   * fix building of package hopefully
