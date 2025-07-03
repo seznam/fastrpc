@@ -1,3 +1,9 @@
+libfastrpc (8.2.1) stable; urgency=medium
+
+  * fix: UB
+
+ -- Michal Bukovský <burlog@seznam.cz>  Thu, 03 Jul 2025 18:32:35 +0100
+
 libfastrpc (8.2.0) stable; urgency=medium
 
   * feat: support for secret values
