@@ -41,6 +41,14 @@
 namespace FRPC {
 namespace {
 
+template <typename T>
+ std::make_unsigned_t<T> safe_abs(T val) {
+    using U =  std::make_unsigned_t<T>;
+    if (val < 0)
+        return static_cast<U>(~val) + 1; // two's complement
+    return static_cast<U>(val);
+}
+
 uint32_t getNumberSize(const ProtocolVersion_t &protocolVersion, uint32_t size) {
     if (protocolVersion.versionMajor < 2)
         return size;
@@ -113,7 +121,8 @@ uint64_t zigzagEncode(int64_t n) {
     // positive numbers become all binary 0s
     // effectively inverting bits of the result in
     // case of negative number
-    return ((n << 1) ^ (n >> 63)); // NOLINT
+    // NOLINTNEXTLINE
+    return (static_cast<uint64_t>(n) << 1u) ^ static_cast<uint64_t>(n >> 63u);
 }
 
 } // namespace
@@ -300,9 +309,9 @@ void BinMarshaller_t::packInt(Int_t::value_type value) {
 
         if (value < 0) { // negative int8
             //obtain int size for compress
-            unsigned int numType = getNumberType(protocolVersion, -value);
+            unsigned int numType = getNumberType(protocolVersion, safe_abs(value));
             char type = data_type(INTN8,numType);
-            Number_t  number(-value);
+            Number_t  number(safe_abs(value));
             //write type
             writer.write(&type,1);
             writer.write(number.data, getNumberSize(protocolVersion, numType));

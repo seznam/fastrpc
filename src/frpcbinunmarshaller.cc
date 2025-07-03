@@ -35,6 +35,7 @@
 #include "frpcinternals.h"
 #include <frpcstreamerror.h>
 #include "frpctreebuilder.h"
+#include <limits>
 #include <memory.h>
 
 #define FRPC_GET_DATA_TYPE_INFO( data ) ((data) & 0x07 )
@@ -48,6 +49,17 @@ namespace {
 void noop() {}
 #define debugf(...) noop()
 #endif
+
+template <typename T>
+T safe_negate(T val) {
+    // In two's complement, negating the minimum value (e.g. -9223372036854775808)
+    // would overflow and cause undefined behavior in C++.
+    // On Intel platforms, this wraps around to the same bit pattern.
+    // To preserve binary compatibility and avoid UB, we return the value as-is.
+    if (val == std::numeric_limits<T>::min())
+        return val;
+    return -val;
+}
 
 // 1 gig elements max. hard limit
 const size_t ELEMENT_SIZE_LIMIT = 1u << 30u;
@@ -146,7 +158,9 @@ double getDouble(const char *data) {
 
     return *reinterpret_cast<double*>(tmp);
 #else
-    return *reinterpret_cast<const double*>(data);
+    double value = 0;
+    memcpy(&value, data, sizeof(value));
+    return value;
 #endif
 }
 
@@ -662,7 +676,7 @@ static void unMarshallInternal(BinUnMarshaller_t::Driver_t &d, char reqType) {
 
         case S_INTN8: {
             //unpack value
-            dataBuilder->buildInt(-getInt64(d.data(), d.wanted()));
+            dataBuilder->buildInt(safe_negate(getInt64(d.data(), d.wanted())));
             d.finalizeValue = true;
             d.newDataWanted = 1;
             d.state = S_VALUE_TYPE;
