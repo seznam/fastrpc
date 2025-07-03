@@ -230,7 +230,7 @@ void Server_t::readRequest(DataBuilder_t &builder,
             }
             protocol =  header[2];
             // save request line parts
-            if(protocol != "HTTP/1.1" && protocol != "HTTP/1.0")
+            if (protocol != "HTTP/1.1" && protocol != "HTTP/1.0")
             {
                 throw HTTPError_t::format(
                         HTTP_HTTP_VERSION_NOT_SUPPORTED,
@@ -240,28 +240,7 @@ void Server_t::readRequest(DataBuilder_t &builder,
 
             uriPath = header[1];
 
-//             if (!path.empty())
-//             {
-//                if (uriPath != path)
-//                {
-//                   throw HTTPError_t(HTTP_NOT_FOUND,
-//                                   "Uri not found '%s'.",
-//                                   header[1].c_str());
-//                }
-
-//             }
-
             transferMethod =  header[0];
-
-
-            /*std::istringstream is(header[1].c_str());
-            int status;
-            is >> status;
-            if(status != 200)
-            {
-                throw HTTPError_t(status, "%s",header[2].c_str());
-            }*/
-
             break;
         }
 
@@ -295,12 +274,6 @@ void Server_t::readRequest(DataBuilder_t &builder,
 
         std::string accept("");
         if (headerIn.get(HTTP_HEADER_ACCEPT, accept) == 0) {
-
-            /* xmlrpc is default
-            if (accept.find("text/xml") != std::string::npos) {
-                outType = XML_RPC;
-                useChunks = false;
-            } */
 
             if (accept.find("application/x-frpc") != std::string::npos) {
                 if (useBinary) {

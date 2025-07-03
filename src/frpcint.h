@@ -46,7 +46,7 @@ class Pool_t;
 class FRPC_DLLEXPORT Int_t : public Value_t {
     friend class Pool_t;
 public:
-    enum{ TYPE = 0x01 };
+    enum{ TYPE = TYPE_INT };
 
     using value_type = int64_t;
 

@@ -56,7 +56,7 @@ struct string_view {
 */
 class FRPC_DLLEXPORT StringView_t : public Value_t {
 public:
-    enum { TYPE = 0x0E };
+    enum { TYPE = TYPE_STRING_VIEW };
 
 #if __cplusplus < 201703L
     typedef string_view value_type;
@@ -126,7 +126,7 @@ public:
     */
     static void validateBytes(const char *ptr, std::size_t length);
 
-private:
+protected:
     friend class Pool_t;
 
     /**

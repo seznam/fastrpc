@@ -36,32 +36,26 @@
 
 #include "frpcarray.h"
 
+#include "frpcpool.h"
+#include "frpcnull.h"
+#include "frpcvalue.h"
 #include "frpcindexerror.h"
 #include "frpclenerror.h"
 #include "frpctypeerror.h"
-#include "frpc.h"
 #include "frpcconfig.h"
 
-namespace FRPC
-{
+namespace FRPC {
 
+Array_t::~Array_t() = default;
 
-Array_t::~Array_t()
-{}
+Value_t &Array_t::clone(Pool_t& newPool) const {
+    Array_t &newArray = newPool.Array();
+    newArray.reserve(size());
 
+    for (auto *iarrayData: arrayData)
+        newArray.push_back(iarrayData->clone(newPool));
 
-Value_t& Array_t::clone(Pool_t& newPool) const
-{
-    Array_t *newArray =&newPool.Array();
-    newArray->reserve(size());
-
-    for(std::vector<Value_t*>::const_iterator iarrayData = arrayData.begin();
-            iarrayData != arrayData.end(); ++iarrayData)
-    {
-        newArray->push_back((*iarrayData)->clone( newPool ));
-    }
-
-    return *newArray;
+    return newArray;
 }
 
 Array_t::Array_t()
@@ -69,6 +63,10 @@ Array_t::Array_t()
     arrayData.reserve(LibConfig_t::getInstance()->getDefaultArraySize());
 }
 
+Array_t::Array_t(Array_t::size_type size)
+{
+    arrayData.reserve(size);
+}
 
 Array_t::Array_t(const Value_t &item)
 {
@@ -135,7 +133,7 @@ bool Array_t::empty() const
 
 Value_t& Array_t::operator[] (Array_t::size_type index)
 {
-    if(index >= arrayData.size())
+    if (index >= arrayData.size())
         throw(IndexError_t::format("index %zd is out of range 0 - %zd.", index,
                                    arrayData.size()));
 
@@ -144,15 +142,14 @@ Value_t& Array_t::operator[] (Array_t::size_type index)
 
 const Value_t& Array_t::operator[] (Array_t::size_type index) const
 {
-    if(index >= arrayData.size())
+    if (index >= arrayData.size())
         throw(IndexError_t::format("index %zd is out of range 0 - %zd.", index,
                                    arrayData.size()));
 
     return *(arrayData[index]);
 }
 
-void Array_t::checkItems(const std::string &items) const
-{
+void Array_t::checkItems(const std::string &items) const {
     size_t itemsSize(0);
     for (size_t i(0) ; i < items.size() ; ++i) {
         if (items[i] != '?') {
@@ -160,72 +157,69 @@ void Array_t::checkItems(const std::string &items) const
         }
     }
 
-    if(arrayData.size() != itemsSize) {
+    if (arrayData.size() != itemsSize) {
         throw LenError_t::format("Array must have %zd parameters.",
                                  itemsSize);
     }
 
     unsigned int itemNum = 0;
 
-    for (std::vector<Value_t *>::const_iterator i = arrayData.begin();
-         i != arrayData.end(); ++i)
-    {
-        bool canBeNull(itemNum < items.size()-1 && items[itemNum+1] == '?');
+    for (auto i: arrayData) {
+        bool canBeNull(itemNum < items.size() - 1 && items[itemNum + 1] == '?');
 
-        if (canBeNull && (*i)->getType() == Null_t::TYPE) {
+        if (canBeNull && (*i).getType() == Null_t::TYPE) {
             itemNum += 2;
             continue;
         }
 
-        switch(items[itemNum])
-        {
+        switch(items[itemNum]) {
         case 'i':
-            if((*i)->getType() != Int_t::TYPE)
+            if (i->getType() != TYPE_INT)
                 throw TypeError_t::format("Parameter %d must be int not %s.",
-                                          itemNum + 1, (*i)->getTypeName());
+                                          itemNum + 1, i->getTypeName());
             break;
 
         case 's':
-            if((*i)->getType() != String_t::TYPE)
+            if (i->getType() != TYPE_STRING)
                 throw TypeError_t::format("Parameter %d must be string not %s.",
-                                          itemNum + 1, (*i)->getTypeName());
+                                          itemNum + 1, i->getTypeName());
             break;
 
         case 'd':
-            if((*i)->getType() != Double_t::TYPE)
+            if (i->getType() != TYPE_DOUBLE)
                 throw TypeError_t::format("Parameter %d must be double not %s.",
-                                          itemNum + 1, (*i)->getTypeName());
+                                          itemNum + 1, i->getTypeName());
             break;
 
         case 'b':
-            if((*i)->getType() != Bool_t::TYPE)
+            if (i->getType() != TYPE_BOOL)
                 throw TypeError_t::format("Parameter %d must be bool not %s.",
-                                          itemNum + 1, (*i)->getTypeName());
+                                          itemNum + 1, i->getTypeName());
             break;
 
         case 'D':
-            if((*i)->getType() != DateTime_t::TYPE)
+            if (i->getType() != TYPE_DATETIME)
                 throw TypeError_t::format(
                     "Parameter %d must be dateTime not %s.", itemNum + 1,
-                    (*i)->getTypeName());
+                    i->getTypeName());
             break;
 
         case 'B':
-            if((*i)->getType() != Binary_t::TYPE)
+            if (i->getType() != TYPE_BINARY)
                 throw TypeError_t::format("Parameter %d must be binary not %s.",
-                                          itemNum + 1, (*i)->getTypeName());
+                                          itemNum + 1, i->getTypeName());
             break;
 
         case 'S':
-            if((*i)->getType() != Struct_t::TYPE)
+            if (i->getType() != TYPE_STRUCT)
                 throw TypeError_t::format("Parameter %d must be struct not %s.",
-                                          itemNum + 1, (*i)->getTypeName());
+                                          itemNum + 1, i->getTypeName());
             break;
 
         case 'A':
-            if((*i)->getType() != Array_t::TYPE)
+            if (i->getType() != TYPE_ARRAY)
                 throw TypeError_t::format("Parameter %d must be array not %s.",
-                                          itemNum + 1, (*i)->getTypeName());
+                                          itemNum + 1, i->getTypeName());
             break;
 
         }
@@ -234,4 +228,4 @@ void Array_t::checkItems(const std::string &items) const
     }
 }
 
-}
+} // namespace FRPC

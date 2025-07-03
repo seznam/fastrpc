@@ -48,7 +48,7 @@ class Pool_t;
 class FRPC_DLLEXPORT Struct_t : public Value_t {
     friend class Pool_t;
 public:
-    enum{TYPE = 0x0A};
+    enum{TYPE = TYPE_STRUCT};
 
     /**
         @brief Struct_t iterator
@@ -232,7 +232,7 @@ public:
     /// static member
     static const Struct_t &FRPC_EMPTY;
 
-private:
+protected:
     using Value_t::operator[];
 
     /**
@@ -292,6 +292,7 @@ inline FRPC_DLLEXPORT const Struct_t& Struct(const Value_t &value) {
     return *struct_v;
 
 }
+
 } // namespace FRPC
 
 #endif

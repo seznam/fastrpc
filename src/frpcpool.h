@@ -40,9 +40,7 @@
 #include <string>
 #include <frpcint.h>
 
-namespace FRPC
-{
-
+namespace FRPC {
 
 class Bool_t;
 class Double_t;
@@ -55,15 +53,15 @@ class Array_t;
 class DateTime_t;
 class Struct_t;
 class Null_t;
+class SecretValue_t;
 
 /**
 @author Miroslav Talasek
 @brief Memory pool
 
-Thic obbject has completely control of pointers to all Value_t
+This object has completely control of pointers to all Value_t
 */
-class FRPC_DLLEXPORT Pool_t
-{
+class FRPC_DLLEXPORT Pool_t {
 public:
     /**
         @brief Constructor of memory pool
@@ -79,25 +77,28 @@ public:
     */
     ~Pool_t();
 
-    void  free();
+    void free();
     /**
         @brief Create new Int_t object from long number
         @param value is a long number
         @return reference to Int_t
     */
-    Int_t&  Int(const Int_t::value_type &value);
+    Int_t& Int(const Int_t::value_type &value);
+
     /**
         @brief Create new Bool_t object from bool value
         @param value is a bool value
         @return reference to Bool_t
     */
     Bool_t& Bool(const bool &value);
+
     /**
         @brief Create new Double_t object from double number
         @param value is a double number
         @return reference to Double_t
     */
     Double_t& Double(const double &value);
+
     /**
         @brief Create new Binary_t object from pointer and size of data
         @param data is a  pointer to binary data
@@ -106,6 +107,7 @@ public:
     */
     Binary_t& Binary(std::string::value_type *data,
                      std::string::size_type dataSize);
+
     /**
         @brief Create new Binary_t object from pointer and size of data
         @param data is a  pointer to binary data
@@ -114,6 +116,7 @@ public:
     */
     Binary_t& Binary(const std::string::value_type *data,
                      std::string::size_type dataSize);
+
     /**
         @brief Create new Binary_t object from pointer and size of data
         @param data is a  pointer to binary data
@@ -121,16 +124,19 @@ public:
         @return reference to Binary_t
     */
     Binary_t& Binary(const uint8_t *data, std::size_t dataSize);
+
     /**
         @brief Create new Binary_t object from pointer and size of data
         @param value is a std::string
         @return reference to Binary_t
     */
     Binary_t& Binary(const std::string &value);
+
     /**
         @brief Create new BinaryRef_t object from chunks feeder.
     */
     BinaryRef_t& BinaryRef(BinaryRefFeeder_t feeder);
+
     /*
         @brief Create new DateTime_t object from unix tm structure
         You should specify your timezone!
@@ -237,12 +243,14 @@ public:
         @return reference to String_t
     */
     String_t&  String(const std::string &value);
+
     /**
         @brief Create new String_t object from std::wstring
         @param value is a std::wstring
         @return reference to String_t
     */
     String_t&  String(const std::wstring &value);
+
     /**
         @brief Create new String_t object from pointer and size of data
         @param data is a  pointer to string data
@@ -284,12 +292,14 @@ public:
         @return reference to Array_t
     */
     Array_t& Array();
+
     /**
         @brief Create new  Array_t with one item
         @param item1 is a Value_t reference
         @return reference to Array_t
     */
     Array_t& Array(const Value_t &item1);
+
     /**
         @brief Create new  Array_t with two items
         @param item1 is a Value_t reference
@@ -297,6 +307,7 @@ public:
         @return reference to Array_t
     */
     Array_t& Array(const Value_t &item1, const Value_t &item2);
+
     /**
         @brief Create new  Array_t with three items
         @param item1 is a Value_t reference
@@ -306,6 +317,7 @@ public:
     */
     Array_t& Array(const Value_t &item1, const Value_t &item2,
                    const Value_t &item3);
+
     /**
         @brief Create new  Array_t with four items
         @param item1 is a Value_t reference
@@ -316,6 +328,7 @@ public:
     */
     Array_t& Array(const Value_t &item1, const Value_t &item2,
                    const Value_t &item3, const Value_t &item4);
+
     /**
         @brief Create new  Array_t with five items
         @param item1 is a Value_t reference
@@ -328,12 +341,13 @@ public:
     Array_t& Array(const Value_t &item1, const Value_t &item2,
                    const Value_t &item3, const Value_t &item4,
                    const Value_t &item5);
+
     /**
     @brief Create new empty Struct_t
     @return reference to Struct_t
     */
-
     Struct_t& Struct();
+
     /**
         @brief Create new  Struct_t with one item
         @param key1  is a const std::string reference
@@ -341,6 +355,7 @@ public:
         @return reference to Struct_t
     */
     Struct_t& Struct(const std::string &key1, const Value_t &item1);
+
     /**
         @brief Create new  Struct_t with two items
         @param key1  is a const std::string reference
@@ -351,6 +366,7 @@ public:
     */
     Struct_t& Struct(const std::string &key1, const Value_t &item1,
                      const std::string &key2, const Value_t &item2);
+
     /**
         @brief Create new  Struct_t with three items
         @param key1  is a const std::string reference
@@ -364,6 +380,7 @@ public:
     Struct_t& Struct(const std::string &key1, const Value_t &item1,
                      const std::string &key2, const Value_t &item2,
                      const std::string &key3, const Value_t &item3);
+
     /**
         @brief Create new  Struct_t with four items
         @param key1  is a const std::string reference
@@ -380,6 +397,7 @@ public:
                      const std::string &key2, const Value_t &item2,
                      const std::string &key3, const Value_t &item3,
                      const std::string &key4, const Value_t &item4);
+
     /**
         @brief Create new  Struct_t with five items
         @param key1  is a const std::string reference
@@ -405,7 +423,28 @@ public:
     */
     Null_t& Null();
 
-    void steal_pointers(Pool_t &o) throw() {
+    /**
+        @brief Create new SecretValue_t
+        @param value the value with sensitive data
+        @return reference to SecretValue_t
+    */
+    SecretValue_t &Secret(const Value_t &value);
+
+    /** @brief Create new Value_t object of type ValueT
+        @param args are arguments for ValueT constructor
+        @return pointer to Value_t object
+        @note This method is used to create any Value_t object with given
+              constructor arguments. It is useful for creating custom Value_t
+              types that are not predefined in the Pool_t class.
+     */
+    template <typename ValueT, typename... ArgsT>
+    ValueT *create(ArgsT &&...args) {
+        auto *newValue = new ValueT(std::forward<ArgsT>(args)...);
+        pointerStorage.push_back(newValue);
+        return newValue;
+    }
+
+    void steal_pointers(Pool_t &o) noexcept {
         pointerStorage.reserve(pointerStorage.size() + o.pointerStorage.size());
         for (auto &ptr: o.pointerStorage)
             pointerStorage.push_back(ptr);
@@ -426,6 +465,6 @@ private:
     const Pool_t &operator=(const Pool_t &);
 };
 
-}
+} // namespace FRPC
 
 #endif

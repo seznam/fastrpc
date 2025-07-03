@@ -50,7 +50,7 @@ class Pool_t;
 class FRPC_DLLEXPORT Array_t : public Value_t {
     friend class Pool_t;
 public:
-    enum{TYPE = 0x0B};
+    enum{TYPE = TYPE_ARRAY};
 
     /**
        @brief Array_t iterator
@@ -192,18 +192,22 @@ public:
     ///static member
     static const Array_t &FRPC_EMPTY;
 
-private:
+protected:
     using Value_t::operator[];
 
     /**
         @brief Costructor empty Array_t
-        @param pool is a reference to Pool_t used for allocating
     */
     Array_t();
 
     /**
+        @brief Costructor Array_t with reserved size
+        @param size to reserve
+    */
+    explicit Array_t(size_type size);
+
+    /**
         @brief Costructor Array_t with one Value_t item
-        @param pool is a reference to Pool_t used for allocating
         @param item  is a new item
     */
     explicit Array_t(const Value_t &item);

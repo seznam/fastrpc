@@ -53,6 +53,7 @@
 #include <frpcstruct.h>
 #include <frpcnull.h>
 #include <frpcstring_view.h>
+#include <frpcsecret.h>
 
 #include <frpcerror.h>
 #include <frpctypeerror.h>

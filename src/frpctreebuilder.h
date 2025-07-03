@@ -38,6 +38,7 @@
 #include <frpcdatabuilder.h>
 #include <frpc.h>
 #include <frpcfault.h>
+#include <memory>
 
 namespace FRPC {
 
@@ -133,7 +134,7 @@ public:
         return errNum;
     }
 
-private:
+protected:
     Pool_t &pool;
     bool first;
     Value_t *retValue;
@@ -142,6 +143,57 @@ private:
     int errNum;
     std::string errMsg;
     std::vector<ValueTypeStorage_t> entityStorage;
+};
+
+class FRPC_DLLEXPORT ExtTreeBuilder_t : public DataBuilder_t {
+public:
+    ExtTreeBuilder_t(Pool_t &pool, const std::vector<std::string> &secrets);
+
+    ~ExtTreeBuilder_t() override;
+
+    void buildNull();
+    void buildInt(Int_t::value_type value) override;
+    void buildBool(bool value) override;
+    void buildDouble(double value) override;
+    void buildString(const char *data, unsigned int size) override;
+    void buildString(const std::string &data) override {
+        buildString(data.data(), static_cast<unsigned int>(data.size()));
+    }
+    void buildBinary(const char *data, unsigned int size) override;
+    void buildBinary(const std::string &data) override {
+        buildBinary(data.data(), static_cast<unsigned int>(data.size()));
+    }
+    void buildDateTime(short year, char month, char day, char hour, char min, char sec, char weekDay, time_t unixTime, int timeZone) override;
+
+    void openArray(unsigned int numOfItems) override;
+    void closeArray() override;
+
+    void openStruct(unsigned int numOfMembers) override;
+    void closeStruct() override;
+
+    void buildStructMember(const char *name, unsigned int size) override;
+    void buildStructMember(const std::string &name) override {
+        buildStructMember(name.c_str(), static_cast<unsigned int>(name.size()));
+    }
+
+    void buildFault(int code, const char *msg, unsigned int size) override;
+    void buildFault(int code, const std::string &msg) override {
+        buildFault(code, msg.c_str(), static_cast<unsigned int>(msg.size()));
+    }
+
+    void buildMethodCall(const char *name, unsigned int size) override;
+    void buildMethodCall(const std::string &name) override {
+        buildMethodCall(name.c_str(), static_cast<unsigned int>(name.size()));
+    }
+
+    void buildMethodResponse() override;
+
+    std::pair<std::string, Array_t *> getMethodCall() const;
+    Fault_t *getFault() const;
+
+protected:
+    struct Pimpl_t;
+    std::unique_ptr<Pimpl_t> pimpl;
 };
 
 } // namespace FRPC

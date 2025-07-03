@@ -45,7 +45,7 @@ class Pool_t;
 class FRPC_DLLEXPORT Null_t: public Value_t {
     friend class Pool_t;
 public:
-    enum{TYPE = 0x0C};
+    enum{TYPE = TYPE_NULL};
 
     /**
         @brief Destructor

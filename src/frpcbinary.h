@@ -47,7 +47,7 @@ class Pool_t;
 class FRPC_DLLEXPORT Binary_t : public Value_t {
     friend class Pool_t;
 public:
-    enum{ TYPE = 0x06 };
+    enum{ TYPE = TYPE_BINARY };
 
     using value_type = std::string;
 
@@ -105,7 +105,7 @@ public:
     ///static members
     static const Binary_t &FRPC_EMPTY;
 
-private:
+protected:
     /**
         @brief Default constructor is disabled
     */

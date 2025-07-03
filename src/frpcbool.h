@@ -46,7 +46,7 @@ class Pool_t;
 class FRPC_DLLEXPORT Bool_t: public Value_t {
     friend class Pool_t;
 public:
-    enum{TYPE = 0x02};
+    enum{TYPE = TYPE_BOOL};
 
     using value_type = bool;
 

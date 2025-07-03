@@ -32,13 +32,13 @@
  */
 
 
-#include <frpc.h>
-#include <frpcinternals.h>
 #include <cstdio>
 #include <cstdlib>
 #include <sstream>
 #include <algorithm>
 
+#include "frpc.h"
+#include "frpcinternals.h"
 #include "frpcxmlunmarshaller.h"
 
 /**
@@ -289,6 +289,10 @@ int FRPC_DLLEXPORT dumpFastrpcTree(
     std::ostringstream out;
 
     switch (value.getType()) {
+    case SecretValue_t::TYPE:
+        out << "-hidden-";
+        break;
+
     case Int_t::TYPE: {
             out << Int(value).getValue();
         }
@@ -491,10 +495,14 @@ use for debug
 */
 void printValue(const Value_t &value, long spaces ) {
     switch (value.getType()) {
+    case SecretValue_t::TYPE:
+        printf("secret(");
+        printValue(SecretValue(value).getValue(), spaces);
+        printf(")");
+        break;
+
     case Int_t::TYPE: {
-            std::ostringstream os;
-            os << Int(value).getValue();
-            printf("%s\n",os.str().c_str());
+            printf("%ld\n", Int(value).getValue());
         }
         break;
 

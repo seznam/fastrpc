@@ -3,7 +3,7 @@ project(
   'cpp',
   version: '8.1.19',
   default_options: [
-    'cpp_std=c++14',
+    'cpp_std=c++17',
     'warning_level=2',
     'buildtype=debugoptimized',
     'wrap_mode=nofallback',
@@ -83,6 +83,7 @@ headers = [
   'src/frpcbinaryref.h',
   'src/frpclogging.h',
   'src/frpcstring_view.h',
+  'src/frpcsecret.h',
 ]
 
 sources = [
@@ -134,6 +135,7 @@ sources = [
   'src/frpcconfig.cc',
   'src/frpccompare.cc',
   'src/frpcstring_view.cc',
+  'src/frpcsecret.cc',
 ]
 
 frpc_version_h = configuration_data()

@@ -51,7 +51,7 @@ class FRPC_DLLEXPORT DateTime_t : public Value_t
     friend class Pool_t;
 
 public:
-    enum{ TYPE = 0x05 };
+    enum{ TYPE = TYPE_DATETIME };
 
     /**
         @brief Default destructor

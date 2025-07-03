@@ -44,6 +44,22 @@ class Pool_t;
 
 using TypeTag_t = uint16_t;
 
+// all known types
+enum TypeTag: TypeTag_t {
+    TYPE_INT          = 0x01, // Int_t
+    TYPE_BOOL         = 0x02, // Bool_t
+    TYPE_DOUBLE       = 0x03, // Double_t
+    TYPE_STRING       = 0x04, // String_t
+    TYPE_DATETIME     = 0x05, // DateTime_t
+    TYPE_BINARY       = 0x06, // Binary_t
+    TYPE_STRUCT       = 0x0A, // Struct_t
+    TYPE_ARRAY        = 0x0B, // Array_t
+    TYPE_NULL         = 0x0C, // Null_t
+    TYPE_BINARY_REF   = 0x0D, // BinaryRef_t
+    TYPE_STRING_VIEW  = 0x0E, // StringView_t
+    TYPE_SECRET_VALUE = 0x3E  // SecretValue_t
+};
+
 /**
 @brief Abstract Value type
 @author Miroslav Talasek

@@ -69,7 +69,7 @@ inline bool operator==(const BinaryRefFeeder_t::Chunk_t &lhs,
  */
 class FRPC_DLLEXPORT BinaryRef_t: public Value_t {
 public:
-    enum { TYPE = 0x0D };
+    enum { TYPE = TYPE_BINARY_REF };
 
     /** Container like object that provides iterator interface for chunk list.
      */
@@ -145,7 +145,7 @@ public:
         return newPool.BinaryRef(feeder);
     }
 
-private:
+protected:
     friend class Pool_t;
 
     /** Default constructor is disabled

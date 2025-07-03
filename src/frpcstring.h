@@ -47,7 +47,7 @@ class Pool_t;
 class FRPC_DLLEXPORT String_t : public Value_t {
     friend class Pool_t;
 public:
-    enum{ TYPE = 0x04 };
+    enum{ TYPE = TYPE_STRING };
 
     using value_type = std::string;
 
@@ -123,7 +123,7 @@ public:
     */
     static void validateBytes(const std::string::value_type *pData, std::string::size_type dataSize);
 
-private:
+protected:
     /**
         @brief Default constructor is disabled
     */

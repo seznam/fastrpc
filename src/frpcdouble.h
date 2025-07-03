@@ -46,7 +46,7 @@ class Pool_t;
 class FRPC_DLLEXPORT Double_t : public Value_t {
     friend class Pool_t;
 public:
-    enum{TYPE = 0x03};
+    enum{TYPE = TYPE_DOUBLE};
 
     using value_type = double;
 

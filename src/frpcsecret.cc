@@ -20,45 +20,24 @@
  * Radlicka 2, Praha 5, 15000, Czech Republic
  * http://www.seznam.cz, mailto:fastrpc@firma.seznam.cz
  *
- * FILE          $Id: frpctreefeeder.h,v 1.3 2007-06-01 15:06:23 vasek Exp $
+ * FILE          $Id: $
  *
  * DESCRIPTION
  *
- * AUTHOR
- *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
+ * AUTHOR Michal Bukovsky <michal.bukovsky@firma.seznam.cz>
  *
- * HISTORY
+ * Copyright (C) Seznam.cz a.s. 2025
+ * All Rights Reserved
  *
  */
-#ifndef FRPCFRPCTREEFEEDER_H
-#define FRPCFRPCTREEFEEDER_H
 
-#include <frpcplatform.h>
-
-#include <frpcmarshaller.h>
-#include <frpc.h>
+#include "frpcpool.h"
+#include "frpcsecret.h"
 
 namespace FRPC {
 
-/**
-@author Miroslav Talasek
-*/
-class FRPC_DLLEXPORT TreeFeeder_t {
-public:
-    TreeFeeder_t(Marshaller_t &marshaller)
-        :marshaller(marshaller)
-    {}
-
-    void feedValue(const Value_t &value);
-
-    std::vector<std::string> feedValueAndGatherSecrets(const Value_t &value);
-
-    ~TreeFeeder_t();
-
-private:
-    Marshaller_t &marshaller;
-};
+Value_t &SecretValue_t::clone(Pool_t &pool) const {
+    return pool.Secret(value->clone(pool));
+}
 
 } // namespace FRPC
-
-#endif

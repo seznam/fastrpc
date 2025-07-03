@@ -32,9 +32,20 @@
  */
 
 #include <cstdio>
+#include <utility>
 
-#include "frpc.h"
 #include "frpcpool.h"
+#include "frpcarray.h"
+#include "frpcbinary.h"
+#include "frpcbool.h"
+#include "frpcdatetime.h"
+#include "frpcdouble.h"
+#include "frpcbinaryref.h"
+#include "frpcnull.h"
+#include "frpcsecret.h"
+#include "frpcstring.h"
+#include "frpcstring_view.h"
+#include "frpcstruct.h"
 
 namespace FRPC {
 
@@ -117,7 +128,7 @@ Binary_t& Pool_t::Binary(const std::string &value)
 }
 
 BinaryRef_t& Pool_t::BinaryRef(BinaryRefFeeder_t feeder) {
-    auto *newValue = new BinaryRef_t(feeder);
+    auto *newValue = new BinaryRef_t(std::move(feeder));
 
     pointerStorage.push_back(newValue);
 
@@ -266,8 +277,6 @@ StringView_t &Pool_t::StringView(const char *ptr, std::size_t length) {
     return *newValue;
 }
 
-
-
 Array_t& Pool_t::Array()
 {
     auto *newValue =  new Array_t();
@@ -277,8 +286,6 @@ Array_t& Pool_t::Array()
     return *newValue;
 }
 
-
-
 Array_t& Pool_t::Array(const Value_t & item1)
 {
     auto *newValue =  new Array_t(item1);
@@ -287,8 +294,6 @@ Array_t& Pool_t::Array(const Value_t & item1)
 
     return *newValue;
 }
-
-
 
 Array_t& Pool_t::Array(const Value_t& item1, const Value_t& item2)
 {
@@ -301,8 +306,6 @@ Array_t& Pool_t::Array(const Value_t& item1, const Value_t& item2)
 
     return *newValue;
 }
-
-
 
 Array_t& Pool_t::Array(const Value_t& item1, const Value_t& item2,
                        const Value_t& item3)
@@ -317,8 +320,6 @@ Array_t& Pool_t::Array(const Value_t& item1, const Value_t& item2,
     return *newValue;
 }
 
-
-
 Array_t& Pool_t::Array(const Value_t& item1, const Value_t& item2,
                        const Value_t& item3, const Value_t& item4)
 {
@@ -332,8 +333,6 @@ Array_t& Pool_t::Array(const Value_t& item1, const Value_t& item2,
 
     return *newValue;
 }
-
-
 
 Array_t& Pool_t::Array(const Value_t& item1, const Value_t& item2,
                        const Value_t& item3, const Value_t& item4,
@@ -434,6 +433,12 @@ Struct_t& Pool_t::Struct(const std::string &key1, const Value_t &item1,
 
 Null_t& Pool_t::Null() {
     return Null_t::staticValue;
+}
+
+SecretValue_t &Pool_t::Secret(const Value_t &value) {
+    auto *newValue = new SecretValue_t(&value);
+    pointerStorage.emplace_back(newValue);
+    return *newValue;
 }
 
 } // namespace FRPC
