@@ -137,7 +137,7 @@ struct Secrets_t {
                 item
             );
         }
-        return result;
+        return !result.empty()? result: "/";
     }
 
     std::vector<std::string> &secrets;
