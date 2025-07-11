@@ -538,11 +538,14 @@ static void unMarshallInternal(BinUnMarshaller_t::Driver_t &d, char reqType) {
                 if (d.version().versionMajor == 1) {
                     throw StreamError_t("Unknown value type");
                 }
-                TreeBuilder_t *treeBuilder(dynamic_cast<TreeBuilder_t*>(dataBuilder));
-                if (treeBuilder) {
-                    treeBuilder->buildNull();
+                if (auto *builder = dynamic_cast<ExtTreeBuilder_t*>(dataBuilder)) {
+                    builder->buildNull();
+                } else if (auto *builder = dynamic_cast<TreeBuilder_t*>(dataBuilder)) {
+                    builder->buildNull();
+                } else if (auto *builder = dynamic_cast<DataBuilderWithNull_t*>(dataBuilder)) {
+                    builder->buildNull();
                 } else {
-                    dynamic_cast<DataBuilderWithNull_t*>(dataBuilder)->buildNull();
+                    throw StreamError_t("Unknown builder type for null value");
                 }
                 d.finalizeValue = true;
                 d.newDataWanted = 1;

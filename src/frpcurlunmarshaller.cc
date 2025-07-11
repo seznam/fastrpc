@@ -271,10 +271,14 @@ public:
      */
     void buildNull(DataBuilder_t &builder, const std::string &) {
         // only some builders know null
-        if (TreeBuilder_t *tBuilder = dynamic_cast<TreeBuilder_t *>(&builder)) {
-            tBuilder->buildNull();
+        if (auto *tbuilder = dynamic_cast<ExtTreeBuilder_t*>(&builder)) {
+            tbuilder->buildNull();
+        } else if (auto *tbuilder = dynamic_cast<TreeBuilder_t*>(&builder)) {
+            tbuilder->buildNull();
+        } else if (auto *tbuilder = dynamic_cast<DataBuilderWithNull_t*>(&builder)) {
+            tbuilder->buildNull();
         } else {
-            dynamic_cast<DataBuilderWithNull_t &>(builder).buildNull();
+            throw StreamError_t("Unknown builder type for null value");
         }
     }
 

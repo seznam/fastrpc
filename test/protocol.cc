@@ -63,7 +63,8 @@ FRPC::Value_t &makeTestValue(FRPC::Pool_t &pool) {
        .append(pool.Int(-3))
        .append(pool.Int(std::numeric_limits<int64_t>::min()))
        .append(pool.Int(std::numeric_limits<int64_t>::max()))
-       .append(pool.Int(std::numeric_limits<int64_t>::min() + 1));
+       .append(pool.Int(std::numeric_limits<int64_t>::min() + 1))
+       .append(pool.Null());
     return arr;
 }
 
@@ -94,6 +95,8 @@ void reviewValue(FRPC::Value_t &val, int verMaj, int /*verMin*/)
     TEST(FRPC::Int(arr[8]) == std::numeric_limits<int64_t>::min());
     TEST(FRPC::Int(arr[9]) == std::numeric_limits<int64_t>::max());
     TEST(FRPC::Int(arr[10]) == (std::numeric_limits<int64_t>::min() + 1));
+
+    TEST(arr[11].isNull());
 }
 
 void testEncodeDecode(char major, char minor) {

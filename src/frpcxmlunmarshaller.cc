@@ -577,11 +577,14 @@ void XmlUnMarshaller_t::setValueData(const char *data, unsigned int len) {
     }
     break;
     case NULLTYPE: {
-        TreeBuilder_t *treeBuilder(dynamic_cast<TreeBuilder_t*>(&dataBuilder));
-        if (treeBuilder) {
-            treeBuilder->buildNull();
+        if (auto *builder = dynamic_cast<ExtTreeBuilder_t*>(&dataBuilder)) {
+            builder->buildNull();
+        } else if (auto *builder = dynamic_cast<TreeBuilder_t*>(&dataBuilder)) {
+            builder->buildNull();
+        } else if (auto *builder = dynamic_cast<DataBuilderWithNull_t*>(&dataBuilder)) {
+            builder->buildNull();
         } else {
-            dynamic_cast<DataBuilderWithNull_t&>(dataBuilder).buildNull();
+            throw StreamError_t("Unknown builder type for null value");
         }
         internalType = NONE;
     }
