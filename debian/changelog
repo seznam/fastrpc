@@ -1,3 +1,9 @@
+libfastrpc (8.2.5) stable; urgency=medium
+
+  * fix: SIGSEGV when ExtTreeBuilder used to build Null
+
+ -- Michal Bukovský <burlog@seznam.cz>  Fri, 11 Jul 2025 11:00:51 +0100
+
 libfastrpc (8.2.4) stable; urgency=medium
 
   * fix: return valud secret pointer for root element
