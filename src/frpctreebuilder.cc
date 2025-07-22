@@ -48,11 +48,16 @@ struct MethodCall_t {
     Array_t *args = {}; //!< arguments of the method call
 };
 
+struct MethodResponse_t {
+    Value_t *value = nullptr; //!< value of the method response
+};
+
 /** Node of the secret tree.
  */
 using Node_t = std::variant<
     Fault_t,
     MethodCall_t,
+    MethodResponse_t,
     std::string,
     Array_t *,
     Struct_t *
@@ -421,6 +426,10 @@ struct ExtTreeBuilder_t::Pimpl_t {
                     return {!edge->second, edge->second.get()};
                 return {false, nullptr};
 
+            } else if constexpr (std::is_same_v<NodeT, MethodResponse_t>) {
+                // MethodResponse_t does not have a secret node
+                return {false, nullptr};
+
             } else if constexpr (std::is_same_v<NodeT, Array_t *>) {
                 auto *array = static_cast<Array_t *>(node);
                 auto i = array->size();
@@ -471,6 +480,12 @@ struct ExtTreeBuilder_t::Pimpl_t {
             } else if constexpr (std::is_same_v<NodeT, MethodCall_t>) {
                 auto &method_call = static_cast<MethodCall_t &>(node);
                 method_call.args->push_back(*value);
+
+            } else if constexpr (std::is_same_v<NodeT, MethodResponse_t>) {
+                auto &method_response = static_cast<MethodResponse_t &>(node);
+                if (method_response.value)
+                    throw std::runtime_error(__PRETTY_FUNCTION__);
+                method_response.value = value;
 
             } else if constexpr (std::is_same_v<NodeT, Array_t *>) {
                 auto *array = static_cast<Array_t *>(node);
@@ -534,6 +549,9 @@ struct ExtTreeBuilder_t::Pimpl_t {
                 MethodCall_t{{std::forward<ArgsT>(args)...}, &pool.Array()},
                 &secret_tree
             });
+
+        } else if constexpr (std::is_same_v<TypeT, MethodResponse_t>) {
+            path.push_back({MethodResponse_t(), &secret_tree});
 
         } else if constexpr (std::is_same_v<TypeT, Fault_t>) {
             path.push_back({
@@ -713,12 +731,19 @@ void ExtTreeBuilder_t::buildMethodCall(const char *name, unsigned int size) {
 }
 
 void ExtTreeBuilder_t::buildMethodResponse() {
+    pimpl->start<MethodResponse_t>();
 }
 
 std::pair<std::string, Array_t *> ExtTreeBuilder_t::getMethodCall() const {
     if (auto *call = pimpl->bottom<MethodCall_t>())
         return {call->name, call->args};
     throw Error_t("unmarshalled method call not found");
+}
+
+Value_t *ExtTreeBuilder_t::getMethodResponse() const {
+    if (auto *response = pimpl->bottom<MethodResponse_t>())
+        return response->value;
+    throw Error_t("unmarshalled method response not found");
 }
 
 Fault_t *ExtTreeBuilder_t::getFault() const {

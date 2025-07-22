@@ -189,6 +189,7 @@ public:
     void buildMethodResponse() override;
 
     std::pair<std::string, Array_t *> getMethodCall() const;
+    Value_t *getMethodResponse() const;
     Fault_t *getFault() const;
 
 protected:
