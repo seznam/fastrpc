@@ -1,3 +1,9 @@
+libfastrpc (8.2.6) stable; urgency=medium
+
+  * fix: add support for method response to ext-treebuilder
+
+ -- Michal Bukovsky <michal.bukovsky@firma.seznam.cz>  Tue, 22 Jul 2025 16:11:12 +0100
+
 libfastrpc (8.2.5) stable; urgency=medium
 
   * fix: SIGSEGV when ExtTreeBuilder used to build Null
