@@ -29,7 +29,7 @@
 
 namespace FRPC {
 // forwards
-class URL_t;
+struct URL_t;
 class Value_t;
 class Array_t;
 class HTTPHeader_t;
@@ -42,7 +42,7 @@ enum class LogEvent_t {
 };
 
 union LogEventData_t {
-    LogEventData_t() {}
+    LogEventData_t() = default;
 
     struct CallBasics_t {
         const char *methodName;
@@ -84,6 +84,6 @@ using LoggerFn_t = void (*)(LogEvent_t event, LogEventData_t &eventData, void *l
  */
 void FRPC_DLLEXPORT setLoggerCallback(LoggerFn_t loggerFn, void *loggerData);
 
-}
+} // namespace FRPC
 
 #endif
