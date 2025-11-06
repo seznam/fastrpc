@@ -36,6 +36,7 @@
 #include <cstdlib>
 #include <sstream>
 #include <algorithm>
+#include <unordered_set>
 
 #include "frpc.h"
 #include "frpcinternals.h"
@@ -617,7 +618,65 @@ void FRPC_DLLEXPORT setLoggerCallback(LoggerFn_t loggerFn, void *loggerData) {
     FRPC::loggerData = loggerData;
 }
 
+namespace {
+
+void logStructuredCalls(LogEventData_t &eventData) {
+    static std::unordered_set<std::string> structuerdMethods = {
+        "system.multicall",
+        "system.parallelcall"
+    };
+
+    auto &callData = eventData.callSuccess;
+
+    // Only structured calls are parsed and deep logged
+    if (!structuerdMethods.count(callData.methodName)) return;
+
+    auto &calls = Array((*callData.params)[0]);
+    auto &responses = Array(*callData.response);
+
+    for (size_t i = 0; i < calls.size() && i < responses.size(); ++i) {
+        auto &callVal = calls[i];
+        auto &responseVal = responses[i];
+
+        auto &callStruct = Struct(callVal);
+        auto methodName = String(callStruct["methodName"]).getString();
+        auto &paramsArray = Array(callStruct["params"]);
+
+        LogEventData_t subEventData;
+        auto &responseStruct = Struct(responseVal);
+        if (responseStruct.find("faultCode") != responseStruct.end()) {
+            subEventData.callFault.methodName = methodName.c_str();
+            subEventData.callFault.params = &paramsArray;
+            subEventData.callFault.url = callData.url;
+            subEventData.callFault.statusCode = static_cast<int>
+                (Int(responseStruct["faultCode"]).getValue());
+            auto msgStr = String(responseStruct["faultString"]).getString();
+            subEventData.callFault.msg = &msgStr;
+            subEventData.callFault.responseHeaders = callData.responseHeaders;
+
+            loggerFn(LogEvent_t::CALL_FAULT, subEventData, loggerData);
+            continue;
+        } else {
+            subEventData.callSuccess.methodName = methodName.c_str();
+            subEventData.callSuccess.params = &paramsArray;
+            subEventData.callSuccess.url = callData.url;
+            subEventData.callSuccess.response = &responseVal;
+            subEventData.callSuccess.responseHeaders = callData.responseHeaders;
+
+            loggerFn(LogEvent_t::CALL_SUCCESS, subEventData, loggerData);
+        }
+    }
+}
+
+} // namespace
+
+
+
+
 void FRPC_DLLEXPORT callLoggerCallback(LogEvent_t event, LogEventData_t &eventData) {
+    if (event == LogEvent_t::CALL_SUCCESS) {
+        logStructuredCalls(eventData);
+    }
     loggerFn(event, eventData, loggerData);
 }
 
@@ -642,4 +701,3 @@ const FRPC::Binary_t &FRPC::Binary_t::FRPC_EMPTY = pool.Binary("");
 const FRPC::DateTime_t &FRPC::DateTime_t::FRPC_EPOCH = pool.DateTime(0, 0);
 const FRPC::DateTime_t &
     FRPC::DateTime_t::FRPC_NULL = pool.DateTime(0, 0, 0, 0, 0, 0, 0, -1, 0);
-
