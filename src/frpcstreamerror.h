@@ -57,6 +57,6 @@ private:
      StreamError_t();
 };
 
-};
+}
 
 #endif

@@ -94,6 +94,6 @@ private:
     std::string faultString;
 };
 
-};
+}
 
 #endif

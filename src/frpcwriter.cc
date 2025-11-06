@@ -22,13 +22,13 @@
  *
  * FILE          $Id: frpcwriter.cc,v 1.2 2007-04-02 15:28:20 vasek Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #include "frpcwriter.h"
 
@@ -44,4 +44,3 @@ Writer_t::~Writer_t()
 
 
 }
-;

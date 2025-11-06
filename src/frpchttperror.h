@@ -58,6 +58,6 @@ private:
     HTTPError_t();
 };
 
-};
+}
 
 #endif

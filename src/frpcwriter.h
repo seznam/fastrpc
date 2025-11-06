@@ -22,13 +22,13 @@
  *
  * FILE          $Id: frpcwriter.h,v 1.3 2007-05-21 15:10:13 mirecta Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #ifndef FRPCFRPCWRITER_H
 #define FRPCFRPCWRITER_H
@@ -51,10 +51,10 @@ public:
     virtual void write(const char *data, unsigned int size ) = 0;
     virtual void flush() = 0;
 
-    
-    
-};
+
 
 };
+
+}
 
 #endif

@@ -164,6 +164,6 @@ namespace FRPC {
 
     };
 
-};
+}
 
 #endif

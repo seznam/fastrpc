@@ -55,6 +55,6 @@ private:
     LenError_t();
 };
 
-};
+}
 
 #endif
