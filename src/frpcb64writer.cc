@@ -45,7 +45,7 @@ const char B64_ALPHABET[] = {
     'w', 'x', 'y', 'z', '0', '1', '2', '3',
     '4', '5', '6', '7', '8', '9', '+', '/',
 };
-}; // namespace
+} // namespace
 
 const Base64Writer_t::States_t Base64Writer_t::State_t::STATE_NEXT[3] = {
     Base64Writer_t::STATE_SECOND,
@@ -118,4 +118,4 @@ void Base64Writer_t::flush() {
     writer.flush();
 }
 
-}; // namespace FRPC
+} // namespace FRPC

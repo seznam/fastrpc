@@ -88,6 +88,6 @@ protected:
 
 };
 
-};
+}
 
 #endif

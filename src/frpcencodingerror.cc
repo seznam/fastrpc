@@ -59,4 +59,3 @@ EncodingError_t::~EncodingError_t() throw()
 
 
 }
-;

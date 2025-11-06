@@ -52,6 +52,6 @@ protected:
     std::unique_ptr<Base64Writer_t> b64writer;
 };
 
-}; // namespace FRPC
+} // namespace FRPC
 
 #endif // FRPCB64MARSHALLER_H

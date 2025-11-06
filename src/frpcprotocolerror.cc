@@ -61,4 +61,3 @@ ProtocolError_t::~ProtocolError_t() throw ()
 
 
 }
-;

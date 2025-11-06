@@ -59,6 +59,6 @@ private:
     IndexError_t();
 };
 
-};
+}
 
 #endif

@@ -60,4 +60,3 @@ StreamError_t::~StreamError_t() throw () {}
 
 
 }
-;

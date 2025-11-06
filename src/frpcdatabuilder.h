@@ -22,13 +22,13 @@
  *
  * FILE          $Id: frpcdatabuilder.h,v 1.6 2010-04-21 08:48:03 edois Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 
 #ifndef FRPCFRPCDATABUILDER_H
@@ -111,6 +111,6 @@ public:
     virtual void buildNull() = 0;
 };
 
-};
+}
 
 #endif

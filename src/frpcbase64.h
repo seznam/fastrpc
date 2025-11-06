@@ -61,6 +61,6 @@ private:
     unsigned char b[4];
 };
 
-}; // namespace FRPC
+} // namespace FRPC
 
 #endif // FRPCBASE64_H
