@@ -83,7 +83,7 @@ public:
         @brief Method for clone/copy Double_t
         @param newPool is reference of Pool_t which is used for allocate objects
     */
-    virtual Value_t& clone(Pool_t &newPool) const;
+    Value_t& clone(Pool_t &newPool) const override;
 
     ///static members
     static const Double_t &FRPC_ZERO;
