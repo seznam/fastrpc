@@ -626,31 +626,60 @@ void logStructuredCalls(LogEventData_t &eventData) {
         "system.parallelcall"
     };
 
+    static FRPC::Pool_t pool;
+    static auto &dummyString = pool.String("");
+
     auto &callData = eventData.callSuccess;
 
     // Only structured calls are parsed and deep logged
     if (!structuerdMethods.count(callData.methodName)) return;
 
-    auto &calls = Array((*callData.params)[0]);
+    if (!callData.params || callData.params->size() == 0) return;
+
+    auto &callsIt = (*callData.params)[0];
+    if (callsIt.getType() != FRPC::Array_t::TYPE) return;
+    auto &calls = Array(callsIt);
+    if (!callData.response || callData.response->getType() != FRPC::Array_t::TYPE)
+        return;
     auto &responses = Array(*callData.response);
 
     for (size_t i = 0; i < calls.size() && i < responses.size(); ++i) {
         auto &callVal = calls[i];
         auto &responseVal = responses[i];
 
+        if (callVal.getType() != FRPC::Struct_t::TYPE ||
+            responseVal.getType() != FRPC::Struct_t::TYPE)
+        {
+            continue;
+        }
         auto &callStruct = Struct(callVal);
-        auto methodName = String(callStruct["methodName"]).getString();
-        auto &paramsArray = Array(callStruct["params"]);
+        auto &responseStruct = Struct(responseVal);
+
+        auto methodNameIt = callStruct.find("methodName");
+        if (methodNameIt == callStruct.end() ||
+            methodNameIt->second->getType() != FRPC::String_t::TYPE)
+        {
+            continue;
+        }
+        auto methodName = String(*methodNameIt->second).getString();
+
+        auto paramsIt = callStruct.find("params");
+        if (paramsIt == callStruct.end() ||
+            paramsIt->second->getType() != FRPC::Array_t::TYPE)
+        {
+            continue;
+        }
+        auto &paramsArray = Array(*paramsIt->second);
 
         LogEventData_t subEventData;
-        auto &responseStruct = Struct(responseVal);
-        if (responseStruct.find("faultCode") != responseStruct.end()) {
+        auto faultCodeIt = responseStruct.find("faultCode");
+        if (faultCodeIt != responseStruct.end()) {
             subEventData.callFault.methodName = methodName.c_str();
             subEventData.callFault.params = &paramsArray;
             subEventData.callFault.url = callData.url;
             subEventData.callFault.statusCode = static_cast<int>
-                (Int(responseStruct["faultCode"]).getValue());
-            auto msgStr = String(responseStruct["faultString"]).getString();
+                (Int(*faultCodeIt->second).getValue());
+            auto msgStr = String(responseStruct.get("faultString", dummyString)).getString();
             subEventData.callFault.msg = &msgStr;
             subEventData.callFault.responseHeaders = callData.responseHeaders;
 
