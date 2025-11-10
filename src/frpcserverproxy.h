@@ -94,7 +94,8 @@ public:
                  bool keepAlive, unsigned int useBinary, bool useHTTP10 = false)
             : connectTimeout(connectTimeout),readTimeout(readTimeout),
               writeTimeout(writeTimeout),
-              keepAlive(keepAlive), useBinary(useBinary), useHTTP10(useHTTP10)
+              keepAlive(keepAlive), useBinary(useBinary), useHTTP10(useHTTP10),
+              useChunks(!useHTTP10)
         {}
 
         /**
@@ -204,7 +205,7 @@ public:
             @n Where ret is return Value_t from remote method
     */
     Value_t& operator()(Pool_t &pool, const std::string &methodName) {
-        return call(pool, methodName.c_str(), static_cast<void*>(0x0));
+        return call(pool, methodName.c_str(), nullptr);
     }
 
     /**
@@ -225,8 +226,7 @@ public:
     Value_t& operator()(Pool_t &pool, const std::string &methodName,
                         const Value_t &param1)
     {
-        return call(pool, methodName.c_str(), &param1,
-                    static_cast<void*>(0x0));
+        return call(pool, methodName.c_str(), &param1, nullptr);
     }
 
     /**
@@ -249,8 +249,7 @@ public:
     Value_t& operator()(Pool_t &pool, const std::string &methodName,
                         const Value_t &param1, const Value_t &param2)
     {
-        return call(pool, methodName.c_str(), &param1, &param2,
-                    static_cast<void*>(0x0));
+        return call(pool, methodName.c_str(), &param1, &param2, nullptr);
     }
 
     /**
@@ -274,8 +273,7 @@ public:
                         const Value_t &param1, const Value_t &param2,
                         const Value_t &param3)
     {
-        return call(pool, methodName.c_str(), &param1, &param2, &param3,
-                    static_cast<void*>(0x0));
+        return call(pool, methodName.c_str(), &param1, &param2, &param3, nullptr);
     }
 
     /**
@@ -302,7 +300,7 @@ public:
                         const Value_t &param3, const Value_t &param4)
     {
         return call(pool, methodName.c_str(), &param1, &param2, &param3,
-                    &param4, static_cast<void*>(0x0));
+                    &param4, nullptr);
     }
 
     /**
@@ -331,7 +329,7 @@ public:
                         const Value_t &param5)
     {
         return call(pool, methodName.c_str(), &param1, &param2,
-                    &param3, &param4, &param5, static_cast<void*>(0x0));
+                    &param3, &param4, &param5, nullptr);
     }
 
     /**
@@ -361,7 +359,7 @@ public:
                         const Value_t &param5, const Value_t &param6)
     {
         return call(pool, methodName.c_str(), &param1, &param2, &param3,
-                    &param4, &param5, &param6, static_cast<void*>(0x0));
+                    &param4, &param5, &param6, nullptr);
     }
 
     /**
@@ -390,7 +388,7 @@ public:
     {
         return call(pool, methodName.c_str(), &param1, &param2, &param3,
                     &param4, &param5, &param6, &param7,
-                    static_cast<void*>(0x0));
+                    nullptr);
     }
 
     /**
@@ -420,7 +418,7 @@ public:
     {
         return call(pool, methodName.c_str(), &param1, &param2, &param3,
                     &param4, &param5, &param6, &param7, &param8,
-                    static_cast<void*>(0x0));
+                    nullptr);
     }
 
     /**
@@ -452,7 +450,7 @@ public:
     {
         return call(pool, methodName.c_str(), &param1, &param2, &param3,
                     &param4, &param5, &param6, &param7, &param8, &param9,
-                    static_cast<void*>(0x0));
+                    nullptr);
     }
 
     /**
@@ -485,7 +483,7 @@ public:
     {
         return call(pool, methodName.c_str(), &param1, &param2, &param3,
                     &param4, &param5, &param6, &param7, &param8, &param9,
-                    &param10, static_cast<void*>(0x0));
+                    &param10, nullptr);
     }
 
 
