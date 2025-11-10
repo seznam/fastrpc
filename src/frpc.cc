@@ -53,9 +53,15 @@ extern "C" {
 namespace FRPC {
 namespace {
 
-struct HexWriter_t
-    : std::iterator<std::output_iterator_tag, void, void, void, void>
-{
+struct HexWriter_t {
+    
+    // standard typedefs
+    using iterator_category = std::output_iterator_tag;
+    using value_type        = void;
+    using difference_type   = void;
+    using pointer           = void;
+    using reference         = void;
+
     HexWriter_t(std::ostream &os): os(os), space() {}
     HexWriter_t &operator*() { return *this;}
     HexWriter_t &operator++() { return *this;}
