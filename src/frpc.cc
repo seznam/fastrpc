@@ -627,7 +627,7 @@ void logStructuredCalls(LogEventData_t &eventData) {
     };
 
     static FRPC::Pool_t pool;
-    static auto &dummyString = pool.String("");
+    const static auto &dummyString = pool.String("");
 
     auto &callData = eventData.callSuccess;
 
@@ -655,27 +655,27 @@ void logStructuredCalls(LogEventData_t &eventData) {
         auto &callStruct = Struct(callVal);
         auto &responseStruct = Struct(responseVal);
 
+        const char *methodNameP{nullptr};
         auto methodNameIt = callStruct.find("methodName");
-        if (methodNameIt == callStruct.end() ||
-            methodNameIt->second->getType() != FRPC::String_t::TYPE)
+        if (methodNameIt != callStruct.end() &&
+            methodNameIt->second->getType() == FRPC::String_t::TYPE)
         {
-            continue;
+            methodNameP = String(*methodNameIt->second).c_str();
         }
-        auto methodName = String(*methodNameIt->second).getString();
 
+        Array_t *paramsArrayP{nullptr};
         auto paramsIt = callStruct.find("params");
-        if (paramsIt == callStruct.end() ||
-            paramsIt->second->getType() != FRPC::Array_t::TYPE)
+        if (paramsIt != callStruct.end() ||
+            paramsIt->second->getType() == FRPC::Array_t::TYPE)
         {
-            continue;
+            paramsArrayP = &Array(*paramsIt->second);
         }
-        auto &paramsArray = Array(*paramsIt->second);
 
         LogEventData_t subEventData;
         auto faultCodeIt = responseStruct.find("faultCode");
         if (faultCodeIt != responseStruct.end()) {
-            subEventData.callFault.methodName = methodName.c_str();
-            subEventData.callFault.params = &paramsArray;
+            subEventData.callFault.methodName = methodNameP;
+            subEventData.callFault.params = paramsArrayP;
             subEventData.callFault.url = callData.url;
             subEventData.callFault.statusCode = static_cast<int>
                 (Int(*faultCodeIt->second).getValue());
@@ -686,8 +686,8 @@ void logStructuredCalls(LogEventData_t &eventData) {
             loggerFn(LogEvent_t::CALL_FAULT, subEventData, loggerData);
             continue;
         } else {
-            subEventData.callSuccess.methodName = methodName.c_str();
-            subEventData.callSuccess.params = &paramsArray;
+            subEventData.callSuccess.methodName = methodNameP;
+            subEventData.callSuccess.params = paramsArrayP;
             subEventData.callSuccess.url = callData.url;
             subEventData.callSuccess.response = &responseVal;
             subEventData.callSuccess.responseHeaders = callData.responseHeaders;
