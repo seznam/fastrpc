@@ -1,3 +1,16 @@
+libfastrpc (8.2.7) stable; urgency=medium
+
+  * if there are no valid data log at least something (nullptr)
+  * style: clang-tidy fixes
+  * style: clang-tidy fixes
+  * be more benevolent
+  * style: modernize
+  * style: modernize
+  * add logging of mutlicall inner methods
+  * remove excessive semicolons
+
+ -- Michal Bukovský <burlog@seznam.cz>  Wed, 12 Nov 2025 16:06:52 +0100
+
 libfastrpc (8.2.6) stable; urgency=medium
 
   * fix: add support for method response to ext-treebuilder
