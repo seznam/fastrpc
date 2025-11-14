@@ -22,13 +22,13 @@
  *
  * FILE          $Id: frpcdefaultmethod.h,v 1.2 2007-04-02 15:28:21 vasek Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #ifndef FRPCFRPCDEFAULTMETHOD_H
 #define FRPCFRPCDEFAULTMETHOD_H
@@ -37,51 +37,38 @@
 
 #include <frpc.h>
 
-namespace FRPC
-{
+namespace FRPC {
 
 /**
 @author Miroslav Talasek
 */
-class FRPC_DLLEXPORT DefaultMethod_t
-{
+class FRPC_DLLEXPORT DefaultMethod_t {
 public:
-    DefaultMethod_t()
-    {}
+    DefaultMethod_t() = default;
 
-    virtual ~DefaultMethod_t()
-    {}
+    virtual ~DefaultMethod_t() = default;
 
     virtual Value_t& call(Pool_t &pool, const std::string &methodName, Array_t &params) = 0;
-
 };
 
-
-
 template <typename Object_t>
-class DefaultBoundMethod_t : public DefaultMethod_t
-{
+class DefaultBoundMethod_t : public DefaultMethod_t {
 
 public:
-    typedef Value_t& (Object_t::*Handler_t) (Pool_t &pool, const std::string &methodName,
-            Array_t &params);
+    using Handler_t = Value_t &(Object_t::*)(Pool_t &, const std::string &, Array_t &);
 
     DefaultBoundMethod_t(Object_t &object, Handler_t handler)
             :DefaultMethod_t(),object(object),handler(handler)
     {}
 
-    virtual ~DefaultBoundMethod_t()
-    {}
+    ~DefaultBoundMethod_t() override = default;
 
-    virtual Value_t& call(Pool_t& pool, const std::string &methodName, Array_t& params)
-    {
+    Value_t& call(Pool_t& pool, const std::string &methodName, Array_t& params) override {
         return (object.*handler)(pool, methodName, params);
     }
 private:
-
     Object_t &object;
     Handler_t handler;
-
 };
 
 template <typename Object_t>
@@ -92,24 +79,17 @@ DefaultBoundMethod_t<Object_t>* boundDefaultMethod(
 }
 
 template <typename UserData_t>
-class DefaultUnboundMethod_t : public DefaultMethod_t
-{
-
-
+class DefaultUnboundMethod_t : public DefaultMethod_t {
 public:
-
-    typedef Value_t& (*Handler_t)(Pool_t &pool, const std::string &methodName,
-                                  Array_t &params, UserData_t &data);
+    using Handler_t = Value_t &(*)(Pool_t &, const std::string &, Array_t &, UserData_t &);
 
     DefaultUnboundMethod_t(Handler_t handler, UserData_t &data)
             :DefaultMethod_t(),handler(handler),data(data)
     {}
 
-    virtual ~DefaultUnboundMethod_t()
-    {}
+    ~DefaultUnboundMethod_t() override = default;
 
-    virtual Value_t& call(Pool_t& pool, const std::string &methodName, Array_t& params)
-    {
+    Value_t& call(Pool_t& pool, const std::string &methodName, Array_t& params) override {
         return handler(pool, methodName, params, data);
     }
 
@@ -126,8 +106,6 @@ DefaultUnboundMethod_t<UserData_t>* unboundDefaultMethod(
     return new DefaultUnboundMethod_t<UserData_t>(handler, data);
 }
 
-
-
-};
+} // namespace FRPC
 
 #endif

@@ -22,28 +22,22 @@
  *
  * FILE          $Id: frpcresponseerror.cc,v 1.3 2007-05-18 15:29:45 mirecta Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #include "frpcresponseerror.h"
 
-namespace FRPC
-{
+namespace FRPC {
 
 ResponseError_t::ResponseError_t()
     : Error_t("Response error")
-{
-}
-
-
-ResponseError_t::~ResponseError_t() throw()
 {}
 
+ResponseError_t::~ResponseError_t() noexcept = default;
 
-}
-;
+} // namespace FRPC

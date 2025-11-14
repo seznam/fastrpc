@@ -22,35 +22,30 @@
  *
  * FILE          $Id: frpcresponseerror.h,v 1.3 2007-05-18 15:29:45 mirecta Exp $
  *
- * DESCRIPTION   
+ * DESCRIPTION
  *
- * AUTHOR        
+ * AUTHOR
  *              Miroslav Talasek <miroslav.talasek@firma.seznam.cz>
  *
  * HISTORY
- *       
+ *
  */
 #ifndef FRPCFRPCRESPONSEERROR_H
 #define FRPCFRPCRESPONSEERROR_H
 
 #include <frpcerror.h>
 
-namespace FRPC
-{
+namespace FRPC {
 
 /**
 @author Miroslav Talasek
 */
-class FRPC_DLLEXPORT ResponseError_t : public Error_t
-{
+class FRPC_DLLEXPORT ResponseError_t: public Error_t {
 public:
     ResponseError_t();
-
-    
-    ~ResponseError_t() throw ();
-
+    ~ResponseError_t() noexcept override;
 };
 
-};
+} // namespace FRPC
 
 #endif
