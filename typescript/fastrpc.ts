@@ -43,6 +43,7 @@ type BYTES = number[];
 export interface Options {
 	version: number;
 	arrayBuffers: boolean;
+	sharedArrayBuffers?: boolean;
 }
 
 export interface Binary {
@@ -69,6 +70,7 @@ let _data: Uint8Array;
 let _pointer = 0;
 let _version: number;
 let _arrayBuffers: boolean;
+let _sharedArrayBuffers: boolean;
 
 export let surrogateFlag = false;
 let te = new TextEncoder();
@@ -147,7 +149,12 @@ function _parseValue(): any {
 			if (_version > 1) { lengthBytes++; }
 			if (!lengthBytes) { throw new Error("Bad binary size"); }
 			length = _getInt(lengthBytes);
-			if (_arrayBuffers) {
+			if (_sharedArrayBuffers) {
+				let buffer = new SharedArrayBuffer(length);
+				let view = new Uint8Array(buffer);
+				for (let i=0;i<length;i++) { view[i] = _getByte(); }
+				result = buffer;
+			} else if (_arrayBuffers) {
 				let view = new Uint8Array(length);
 				for (let i=0;i<length;i++) { view[i] = _getByte(); }
 				result = view.buffer;
@@ -313,7 +320,7 @@ function _serializeValue(result: BYTES, value: unknown) {
 		break;
 
 		case "object":
-			if (value instanceof ArrayBuffer) {
+			if (value instanceof ArrayBuffer || value instanceof SharedArrayBuffer) {
 				_serializeArrayBuffer(result, value);
 			} else if (value instanceof Date) {
 				_serializeDate(result, value);
@@ -338,7 +345,7 @@ function _serializeValue(result: BYTES, value: unknown) {
 	}
 }
 
-function _serializeArrayBuffer(result: BYTES, data: ArrayBuffer) {
+function _serializeArrayBuffer(result: BYTES, data: ArrayBuffer | SharedArrayBuffer) {
 	let first = TYPE_BINARY << 3;
 	let intData = _encodeInt(data.byteLength);
 	first += (intData.length-1);
@@ -597,10 +604,16 @@ export function serializeCall(method: string, data: unknown, hints?: Hints, opti
 
 /**
  * @param {BYTES} data
+ * @param {Partial<Options>} options Options for parsing:
+ *   - arrayBuffers: if true, binary data is returned as ArrayBuffer instead of byte arrays
+ *   - sharedArrayBuffers: if true, binary data is returned as SharedArrayBuffer instead of byte arrays or ArrayBuffer
+ *     (takes precedence over arrayBuffers if both are true)
+ *   - version: protocol version (default: 2)
  * @returns {object}
  */
 export function parse(data: Uint8Array, options?: Partial<Options>) {
 	_arrayBuffers = (options && options.arrayBuffers) || false;
+	_sharedArrayBuffers = (options && options.sharedArrayBuffers) || false;
 
 	surrogateFlag = false;
 	_pointer = 0;
