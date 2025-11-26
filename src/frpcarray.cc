@@ -126,6 +126,15 @@ Array_t& Array_t::append(const Value_t &value)
     return *this;
 }
 
+Array_t &Array_t::replace(size_type index, const Value_t &value) {
+    if (index >= arrayData.size())
+        throw IndexError_t::format("index %zd is out of range 0 - %zd.", index,
+                                   arrayData.size());
+
+    arrayData[index] = const_cast<Value_t*>(&value);
+    return *this;
+}
+
 bool Array_t::empty() const
 {
     return arrayData.empty();

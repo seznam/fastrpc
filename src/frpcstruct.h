@@ -174,6 +174,7 @@ public:
         @return Struct_t& reference with apended value
     */
     Struct_t& append(const pair &value);
+
     /**
         @brief Insert Value_t to Struct_t with key
         @param key is reference to Struct_t::key_type
@@ -181,6 +182,26 @@ public:
         @return Struct_t& reference with apended value
     */
     Struct_t& append(const key_type &key, const Value_t &value);
+
+    /**
+        @brief Replace Value_t in Struct_t with key
+        @param value is is new pair Struct_t::pair(std::string key, Value_t* value)
+        @return Struct_t& reference with replaced value
+    */
+    Struct_t &replace(const pair &value) {
+        return append(value);
+    }
+
+    /**
+        @brief Replace Value_t in Struct_t with key
+        @param key is reference to Struct_t::key_type
+        @param value is reference to new Value_t
+        @return Struct_t& reference with replaced value
+     */
+    Struct_t &replace(const key_type &key, const Value_t &value) {
+        return append(key, value);
+    }
+
     /**
         @brief Get poiter to value or zero if not exists
         @param key is reference to Struct_t::key_type
@@ -188,6 +209,7 @@ public:
     */
     const Value_t* get(const key_type &key) const;
     Value_t* get(const key_type &key);
+
     /**
         @brief Get reference to value or defaultValue if not exists
         @param key is reference to Struct_t::key_type
@@ -196,6 +218,7 @@ public:
     */
     const Value_t& get(const key_type &key, const Value_t &defaultValue) const;
     Value_t& get(const key_type &key, Value_t &defaultValue);
+
     /**
         @brief operator []
         @return reference to Value_t or exeption KeyError_t if key isn't exist

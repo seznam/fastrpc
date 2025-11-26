@@ -171,7 +171,15 @@ public:
         @param value is new Value_t
         @return Array_t& reference with apended value
     */
-    Array_t& append(const Value_t &value);
+    Array_t &append(const Value_t &value);
+
+    /**
+        @brief replace Value_t at index
+        @param index is position where Value_t will be replaced
+        @param value is new Value_t
+    */
+    Array_t &replace(size_type index, const Value_t &value);
+
     /**
         @brief check array for items
         @param items is std::string contains  signatures as
