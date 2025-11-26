@@ -1,3 +1,12 @@
+libfastrpc (8.2.8) stable; urgency=medium
+
+  * feat: add replace methods to frpcarray and frpcstruct
+  * chore: update version
+  * feat: add sharedArrayBuffer support for typescript
+  * style: more clang-tidy/warnings fixes
+
+ -- Michal Bukovský <burlog@seznam.cz>  Wed, 26 Nov 2025 17:59:29 +0100
+
 libfastrpc (8.2.7) stable; urgency=medium
 
   * if there are no valid data log at least something (nullptr)
