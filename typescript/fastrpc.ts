@@ -76,6 +76,8 @@ export let surrogateFlag = false;
 let te = new TextEncoder();
 let td = new TextDecoder();
 
+const sabSupported = (typeof SharedArrayBuffer !== 'undefined');
+
 
 function _parseValue(): any {
 	/* pouzite optimalizace:
@@ -320,7 +322,7 @@ function _serializeValue(result: BYTES, value: unknown) {
 		break;
 
 		case "object":
-			if (value instanceof ArrayBuffer || (typeof SharedArrayBuffer !== 'undefined' && value instanceof SharedArrayBuffer)) {
+			if (value instanceof ArrayBuffer || (sabSupported && value instanceof SharedArrayBuffer)) {
 				_serializeArrayBuffer(result, value);
 			} else if (value instanceof Date) {
 				_serializeDate(result, value);
@@ -374,7 +376,7 @@ function _serializeBinary(result: BYTES, data: any[]) {
 	let first = TYPE_BINARY << 3;
 	const intData = _encodeInt(data.length);
 	first += (intData.length-1);
-	
+
 	result.push(first);
 	_append(result, intData);
 	_append(result, data);
@@ -613,7 +615,7 @@ export function serializeCall(method: string, data: unknown, hints?: Hints, opti
  */
 export function parse(data: Uint8Array, options?: Partial<Options>) {
 	_arrayBuffers = (options && options.arrayBuffers) || false;
-	_sharedArrayBuffers = (options?.sharedArrayBuffers && typeof SharedArrayBuffer !== 'undefined') || false;
+	_sharedArrayBuffers = (options?.sharedArrayBuffers && sabSupported) || false;
 
 	surrogateFlag = false;
 	_pointer = 0;

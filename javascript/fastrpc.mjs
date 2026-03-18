@@ -46,9 +46,11 @@ let _data;
 let _pointer = 0;
 let _version;
 let _arrayBuffers;
+let _sharedArrayBuffers;
 export let surrogateFlag = false;
 let te = new TextEncoder();
 let td = new TextDecoder();
+const sabSupported = (typeof SharedArrayBuffer !== 'undefined');
 function _parseValue() {
     /* pouzite optimalizace:
      * - zkracena cesta ke konstantam v ramci redukce tecek
@@ -138,7 +140,15 @@ function _parseValue() {
                 throw new Error("Bad binary size");
             }
             length = _getInt(lengthBytes);
-            if (_arrayBuffers) {
+            if (_sharedArrayBuffers) {
+                let buffer = new SharedArrayBuffer(length);
+                let view = new Uint8Array(buffer);
+                for (let i = 0; i < length; i++) {
+                    view[i] = _getByte();
+                }
+                result = buffer;
+            }
+            else if (_arrayBuffers) {
                 let view = new Uint8Array(length);
                 for (let i = 0; i < length; i++) {
                     view[i] = _getByte();
@@ -296,7 +306,7 @@ function _serializeValue(result, value) {
             result.push(data);
             break;
         case "object":
-            if (value instanceof ArrayBuffer) {
+            if (value instanceof ArrayBuffer || (sabSupported && value instanceof SharedArrayBuffer)) {
                 _serializeArrayBuffer(result, value);
             }
             else if (value instanceof Date) {
@@ -567,10 +577,16 @@ export function serializeCall(method, data, hints, options) {
 }
 /**
  * @param {BYTES} data
+ * @param {Partial<Options>} options Options for parsing:
+ *   - arrayBuffers: if true, binary data is returned as ArrayBuffer instead of byte arrays
+ *   - sharedArrayBuffers: if true, binary data is returned as SharedArrayBuffer instead of byte arrays or ArrayBuffer
+ *     (takes precedence over arrayBuffers if both are true)
+ *   - version: protocol version (default: 2)
  * @returns {object}
  */
 export function parse(data, options) {
     _arrayBuffers = (options && options.arrayBuffers) || false;
+    _sharedArrayBuffers = ((options === null || options === void 0 ? void 0 : options.sharedArrayBuffers) && sabSupported) || false;
     surrogateFlag = false;
     _pointer = 0;
     _data = data;
