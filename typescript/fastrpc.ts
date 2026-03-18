@@ -320,7 +320,7 @@ function _serializeValue(result: BYTES, value: unknown) {
 		break;
 
 		case "object":
-			if (value instanceof ArrayBuffer || value instanceof SharedArrayBuffer) {
+			if (value instanceof ArrayBuffer || (typeof SharedArrayBuffer !== 'undefined' && value instanceof SharedArrayBuffer)) {
 				_serializeArrayBuffer(result, value);
 			} else if (value instanceof Date) {
 				_serializeDate(result, value);
@@ -613,7 +613,7 @@ export function serializeCall(method: string, data: unknown, hints?: Hints, opti
  */
 export function parse(data: Uint8Array, options?: Partial<Options>) {
 	_arrayBuffers = (options && options.arrayBuffers) || false;
-	_sharedArrayBuffers = (options && options.sharedArrayBuffers) || false;
+	_sharedArrayBuffers = (options?.sharedArrayBuffers && typeof SharedArrayBuffer !== 'undefined') || false;
 
 	surrogateFlag = false;
 	_pointer = 0;
