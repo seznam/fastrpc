@@ -1,3 +1,16 @@
+libfastrpc (8.2.9) stable; urgency=medium
+
+  * Fix -Wconversion in base64 decode output assembly
+  * The bitwise assembly of decoded bytes promotes the unsigned char inputs
+  * to int, so assigning the result back into the unsigned char output array
+  * tripped -Wconversion. The values are guaranteed to fit in a byte; make
+  * the narrowing explicit with static_cast<unsigned char>.
+  * Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+  * sab detection, mjs version
+  * feat: add additional condition for SharedArrayBuffer implementation
+
+ -- Michal Bukovský <burlog@seznam.cz>  Fri, 10 Jul 2026 16:04:10 +0200
+
 libfastrpc (8.2.8) stable; urgency=medium
 
   * feat: add replace methods to frpcarray and frpcstruct
