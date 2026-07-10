@@ -124,9 +124,9 @@ std::string Base64::process(const char *data, long len)
             break;
 
         unsigned char o[4];
-        o[0] = (b[0] << 2) | (b[1] >> 4);
-        o[1] = (b[1] << 4) | (b[2] >> 2);
-        o[2] = (b[2] << 6) | b[3];
+        o[0] = static_cast<unsigned char>((b[0] << 2) | (b[1] >> 4));
+        o[1] = static_cast<unsigned char>((b[1] << 4) | (b[2] >> 2));
+        o[2] = static_cast<unsigned char>((b[2] << 6) | b[3]);
 
         int len = (a[2] == '=') ? 1 : ((a[3] == '=') ? 2 : 3);
         result.append((char *)o, len);
