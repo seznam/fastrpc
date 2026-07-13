@@ -126,6 +126,6 @@ HeadUnboundMethod_t<UserData_t>* unboundHeadMethod(
 
 
 
-};
+} // namespace FRPC
 
 #endif
