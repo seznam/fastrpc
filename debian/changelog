@@ -1,3 +1,13 @@
+libfastrpc (8.2.10) stable; urgency=medium
+
+  * Fix -Wextra-semi on FRPC namespace close in frpcheadmethod.h
+  * The FRPC namespace was closed with a stray `;`, triggering -Wextra-semi.
+  * Drop the semicolon and annotate the closing brace with the namespace
+  * name for consistency with the rest of the header.
+  * Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+
+ -- Michal Bukovský <burlog@seznam.cz>  Mon, 13 Jul 2026 13:41:55 +0200
+
 libfastrpc (8.2.9) stable; urgency=medium
 
   * Fix -Wconversion in base64 decode output assembly
