@@ -1,7 +1,7 @@
 project(
   'fastrpc',
   'cpp',
-  version: '8.2.10',
+  version: '8.2.11',
   default_options: [
     'cpp_std=c++17',
     'warning_level=2',
