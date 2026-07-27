@@ -1,3 +1,14 @@
+python-fastrpc (8.1.13) stable; urgency=medium
+
+  * Fix Python 3.13+ compatibility: '#' formats in PyArg_ParseTuple always
+    write Py_ssize_t; passing int corrupted adjacent stack variables and
+    broke ServerProxy timeouts
+  * Define PY_SSIZE_T_CLEAN (required for '#' formats since Python 3.10)
+  * debian: remove comma from Maintainer field (rejected by newer dpkg)
+  * debian: build python3 packages only, prefer python3 build dependencies
+
+ -- Peter Puškár <peter.puskar@firma.seznam.cz>  Mon, 27 Jul 2026 18:04:54 +0200
+
 python-fastrpc (8.1.12) stable; urgency=medium
 
   * enforcing newest fastrpc in dependency

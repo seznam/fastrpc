@@ -35,6 +35,9 @@
 #ifndef PYFASTRPCMODULE_H_
 #define PYFASTRPCMODULE_H_
 
+// defined here to indicate # args to PyArgs_ParseTuple use Py_ssize_t instead of int
+#define PY_SSIZE_T_CLEAN
+
 #include <Python.h>
 
 #include "pythoncompat.h"

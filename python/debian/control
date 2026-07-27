@@ -1,19 +1,15 @@
 Source: python-fastrpc
 Section: python
 Priority: extra
-Maintainer: Seznam.cz, a.s. <opensource@firma.seznam.cz>
+Maintainer: Seznam.cz a.s. <opensource@firma.seznam.cz>
 Build-Depends:
  debhelper (>= 7.0.50~),
  libfastrpc-dev (>= 8.1.7),
  dh-python,
- python-all-dev (>= 2.6.6-3~),
- python-debian,
- python-setuptools,
- python-pkginfo,
- python3-all-dev,
- python3-setuptools,
- python3-debian,
- python3-pkginfo
+ python3-all-dev | python-all-dev (>= 2.6.6-3~),
+ python3-setuptools | python-setuptools,
+ python3-debian | python-debian,
+ python3-pkginfo | python-pkginfo
 # NOTE: we depend on Python >= 3.3, but on Wheezy there is only Python 3.2.
 # However, we want to have single build specs for both Jessie and Wheezy. For
 # this reason we drop the version restriction here and put it into the package
