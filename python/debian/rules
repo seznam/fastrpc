@@ -4,7 +4,7 @@
 export PYBUILD_NAME = fastrpc
 
 %:
-	dh $@ --with=python2,python3 --buildsystem=pybuild
+	dh $@ --with=python3 --buildsystem=pybuild
 
 override_dh_strip:
 	dh_strip --dbg-package=python-fastrpc-dbg

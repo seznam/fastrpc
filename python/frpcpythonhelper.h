@@ -35,6 +35,9 @@
 #ifndef FRPCPYTHONHELPER_H
 #define FRPCPYTHONHELPER_H
 
+// defined here to indicate # args to PyArgs_ParseTuple use Py_ssize_t instead of int
+#define PY_SSIZE_T_CLEAN
+
 #include <Python.h>
 #include <frpcmarshaller.h>
 #include <frpcdatabuilder.h>

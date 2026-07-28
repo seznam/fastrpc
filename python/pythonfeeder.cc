@@ -32,6 +32,9 @@
  *              Created
  */
 
+// defined here to indicate # args to PyArgs_ParseTuple use Py_ssize_t instead of int
+#define PY_SSIZE_T_CLEAN
+
 // Included first to get rid of the _POSIX_C_SOURCE warning
 #include <Python.h>
 
