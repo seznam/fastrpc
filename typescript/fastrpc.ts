@@ -630,6 +630,10 @@ export function parse(data: Uint8Array, options?: Partial<Options>) {
 	}
 	_version = _getByte();
 	_getByte(); // minor
+	if (_version < 1 || _version > 3) {
+		_data = new Uint8Array();
+		throw new Error("Unsupported FRPC version " + _version);
+	}
 
 	let first = _getInt(1);
 	let type = first >> 3;
