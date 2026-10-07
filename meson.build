@@ -275,6 +275,21 @@ test(
   args: ['testfile', meson.current_source_dir() + '/test/frpc.tests']
 )
 
+# Runner for the FastRPC conformance vectors (email/fastrpc-conformance).
+# Optional, so that projects using libfastrpc as a subproject do not need
+# nlohmann_json.
+nlohmann_json_dep = dependency('nlohmann_json', required: false)
+if nlohmann_json_dep.found()
+  executable(
+    'conformance-runner',
+    'test/conformance-runner.cc',
+    include_directories: [includes],
+    cpp_args: '-DLIBFASTRPC_VERSION="' + meson.project_version() + '"',
+    link_with: lib,
+    dependencies: [dependecies, nlohmann_json_dep]
+  )
+endif
+
 clang_tidy = find_program('clang-tidy', required: false)
 if clang_tidy.found()
   input = files(sources + headers)
